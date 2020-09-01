@@ -1,0 +1,14 @@
+{
+  "presets": ["@babel/preset-typescript", "babel-preset-solid"],
+  "plugins": [
+    [
+      "babel-plugin-prismjs",
+      {
+        "languages": ["javascript", "tsx"],
+        "plugins": ["line-numbers"],
+        "theme": "twilight",
+        "css": true
+      }
+    ]
+  ]
+}
