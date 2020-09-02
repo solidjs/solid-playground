@@ -1,48 +1,59 @@
 import { render } from "solid-js/dom";
-import { Component, createState, Show } from "solid-js";
+import { Component, createState, Show, createEffect } from "solid-js";
 import { transform } from "@babel/standalone";
 import jsxTransform from "babel-plugin-jsx-dom-expressions";
 import jsx from "@babel/plugin-syntax-jsx";
 import "./tailwind.css";
 import { Editor } from "./editor";
+import rename from "babel-plugin-transform-rename-import";
+
+import debounce from "lodash/debounce";
+import { Icon } from "@amoutonbrady/solid-heroicons";
+import { x } from "@amoutonbrady/solid-heroicons/outline";
+// @ts-ignore
+import logo from "url:./logo.svg";
+import pkg from "../package.json";
 
 const App: Component = () => {
   const [compiled, setCompiled] = createState({
     input: "",
     output: "",
     error: "",
+    mode: "DOM",
   });
 
-  function compile() {
+  function compile(input: string, mode: string) {
     try {
-      const { code } = transform(compiled.input, {
-        code: true,
-        plugins: [
-          jsx,
-          [
-            jsxTransform,
-            {
-              moduleName: "solid-js/dom",
-              builtIns: [
-                "For",
-                "Show",
-                "Switch",
-                "Match",
-                "Suspense",
-                "SuspenseList",
-                "Portal",
-                "Index",
-                "Dynamic",
-                "ErrorBoundary",
-              ],
-              delegateEvents: true,
-              contextToCustomElements: true,
-              wrapConditionals: true,
-              generate: "dom",
-            },
-          ],
+      const plugins: any[] = [
+        jsx,
+        [
+          jsxTransform,
+          {
+            moduleName: "solid-js/dom",
+            // prettier-ignore
+            builtIns: [ "For", "Show", "Switch", "Match", "Suspense", "SuspenseList", "Portal", "Index", "Dynamic", "ErrorBoundary"],
+            delegateEvents: true,
+            contextToCustomElements: true,
+            wrapConditionals: true,
+            generate: "dom",
+          },
         ],
-      });
+      ];
+
+      if (mode === "SSR") {
+        plugins.push([
+          rename,
+          {
+            replacements: [
+              { original: "solid-js/dom", replacement: "solid-js" },
+              { original: "solid-js/server", replacement: "solid-js" },
+              { original: "solid-js", replacement: "solid-js/server" },
+            ],
+          },
+        ]);
+      }
+
+      const { code } = transform(input, { plugins });
 
       setCompiled("output", code);
     } catch (e) {
@@ -50,28 +61,60 @@ const App: Component = () => {
     }
   }
 
+  createEffect(() => compile(compiled.input, compiled.mode));
+
+  const handleDocChange = debounce((input: string) => {
+    setCompiled({ input, error: "" });
+  }, 1000);
+
   return (
-    <>
-      <Show when={compiled.error}>
-        <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10">
-          <code innerText={compiled.error}></code>
-        </pre>
-      </Show>
+    <div
+      class="relative grid grid-cols-2 h-screen gap-x-1 overflow-hidden bg-gray-700 text-gray-50"
+      style="grid-template-rows: auto 1fr"
+    >
+      <header class="col-span-2 p-2 flex justify-between items-center text-sm">
+        <h1 class="flex items-center space-x-4 uppercase font-semibold">
+          <a href="https://https://github.com/ryansolid/solid">
+            <img src={logo} alt="solid-js logo" class="h-8" />
+          </a>{" "}
+          <span>Template Explorer</span>
+        </h1>
+
+        <div class="flex items-center space-x-2">
+          <select
+            value={compiled.mode}
+            onChange={(e) => setCompiled("mode", e.target.value)}
+            class="bg-transparent border rounded border-gray-400 px-2 py-1 text-sm"
+          >
+            <option class="bg-gray-700">DOM</option>
+            <option class="bg-gray-700">SSR</option>
+          </select>
+          <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
+        </div>
+      </header>
       <Editor
-        onDocChange={(input) => setCompiled("input", input)}
-        class="h-full max-h-screen overflow-auto flex-1"
+        onDocChange={(input) => handleDocChange(input)}
+        class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
       />
       <Editor
         value={compiled.output}
-        class="h-full max-h-screen overflow-auto flex-1"
+        class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
+        disabled
       />
-      <button
-        onClick={compile}
-        class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded shadow py-1 px-2 uppercase text-blue-800 bg-blue-200 border text-sm leading-tight border-blue-400 hover:bg-blue-300"
-      >
-        Compile!
-      </button>
-    </>
+
+      <Show when={compiled.error}>
+        <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10">
+          <button
+            title="close"
+            onClick={() => setCompiled("error", "")}
+            class="absolute top-1 right-1 hover:text-red-900"
+          >
+            <Icon path={x} class="h-6 " />
+          </button>
+          <code innerText={compiled.error}></code>
+        </pre>
+      </Show>
+    </div>
   );
 };
 

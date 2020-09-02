@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+div[contenteditable="true"]:focus,
+.ͼ1.cm-wrap.cm-focused {
+  outline: none !important;
+}
