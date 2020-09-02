@@ -21,11 +21,16 @@
     "@babel/plugin-syntax-jsx": "^7.10.4",
     "@babel/standalone": "^7.11.5",
     "@babel/types": "^7.11.5",
+    "@codemirror/next": "^0.10.0",
     "babel-plugin-jsx-dom-expressions": "^0.20.0",
-    "babel-plugin-prismjs": "^2.0.1",
+    "babel-plugin-transform-rename-import": "^2.3.0",
+    "lezer": "^0.10.1",
+    "lezer-javascript": "^0.10.0",
+    "lezer-tree": "^0.10.0",
     "lodash": "^4.17.20",
-    "prismjs": "^1.21.0",
     "solid-js": "^0.19.1",
-    "to-fast-properties": "^3.0.1"
+    "style-mod": "^2.2.3",
+    "to-fast-properties": "^3.0.1",
+    "w3c-keyname": "^2.2.4"
   }
 }
