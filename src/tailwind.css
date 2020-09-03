@@ -6,3 +6,13 @@ div[contenteditable="true"]:focus,
 .ͼ1.cm-wrap.cm-focused {
   outline: none !important;
 }
+
+.wrapper {
+  grid-template-rows: auto 1fr 1fr;
+}
+
+@screen md {
+  .wrapper {
+    grid-template-rows: auto 1fr;
+  }
+}

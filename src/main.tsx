@@ -78,11 +78,8 @@ const App: Component = () => {
   }, 1000);
 
   return (
-    <div
-      class="relative grid grid-cols-2 h-screen gap-x-1 overflow-hidden bg-gray-700 text-gray-50"
-      style="grid-template-rows: auto 1fr"
-    >
-      <header class="col-span-2 p-2 flex justify-between items-center text-sm">
+    <div class="relative grid md:grid-cols-2 h-screen gap-y-1 md:gap-y-0 gap-x-1 overflow-hidden bg-gray-700 text-gray-50 wrapper">
+      <header class="md:col-span-2 p-2 flex justify-between items-center text-sm">
         <h1 class="flex items-center space-x-4 uppercase font-semibold">
           <a href="https://https://github.com/ryansolid/solid">
             <img src={logo} alt="solid-js logo" class="h-8" />
@@ -102,6 +99,7 @@ const App: Component = () => {
           <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
         </div>
       </header>
+
       <Editor
         value={compiled.input}
         onDocChange={(input) => handleDocChange(input)}
