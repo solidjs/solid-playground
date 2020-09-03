@@ -6,6 +6,10 @@ import jsx from "@babel/plugin-syntax-jsx";
 import "./tailwind.css";
 import { Editor } from "./editor";
 import rename from "babel-plugin-transform-rename-import";
+import {
+  compressToEncodedURIComponent,
+  decompressFromEncodedURIComponent,
+} from "lz-string";
 
 import debounce from "lodash/debounce";
 import { Icon } from "@amoutonbrady/solid-heroicons";
@@ -16,7 +20,9 @@ import pkg from "../package.json";
 
 const App: Component = () => {
   const [compiled, setCompiled] = createState({
-    input: "",
+    input: location.hash
+      ? decompressFromEncodedURIComponent(location.hash.slice(1))
+      : "",
     output: "",
     error: "",
     mode: "DOM",
@@ -62,6 +68,10 @@ const App: Component = () => {
   }
 
   createEffect(() => compile(compiled.input, compiled.mode));
+  createEffect(() => {
+    const compressed = compressToEncodedURIComponent(compiled.input);
+    history.pushState(null, null, `#${compressed}`);
+  });
 
   const handleDocChange = debounce((input: string) => {
     setCompiled({ input, error: "" });
@@ -93,6 +103,7 @@ const App: Component = () => {
         </div>
       </header>
       <Editor
+        value={compiled.input}
         onDocChange={(input) => handleDocChange(input)}
         class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
       />

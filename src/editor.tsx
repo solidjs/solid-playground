@@ -26,7 +26,7 @@ export const Editor: Component<Props> = (props) => {
 
   requestAnimationFrame(() => {
     state = EditorState.create({
-      doc: "",
+      doc: internal.value || "",
       extensions: [
         ...extensions,
         EditorView.updateListener.of(
@@ -42,12 +42,18 @@ export const Editor: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    if (!internal.value) return;
+    if (!internal.value || !view) return;
     view.setState(
       EditorState.create({
         doc: internal.value,
         extensions: [
           ...extensions,
+          EditorView.updateListener.of(
+            (update) =>
+              update.docChanged &&
+              internal.onDocChange &&
+              internal.onDocChange(update.state.doc.toString())
+          ),
           ...(internal.disabled ? [EditorView.editable.of(false)] : []),
         ],
       })
