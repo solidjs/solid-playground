@@ -1,11 +1,13 @@
 import { render } from "solid-js/dom";
-import { Component, createState, Show, createEffect } from "solid-js";
-import { transform } from "@babel/standalone";
-import jsxTransform from "babel-plugin-jsx-dom-expressions";
-import jsx from "@babel/plugin-syntax-jsx";
+import {
+  Component,
+  createState,
+  Show,
+  createEffect,
+  Suspense,
+  lazy,
+} from "solid-js";
 import "./tailwind.css";
-import { Editor } from "./editor";
-import rename from "babel-plugin-transform-rename-import";
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
@@ -18,6 +20,53 @@ import { x } from "@amoutonbrady/solid-heroicons/outline";
 import logo from "url:./logo.svg";
 import pkg from "../package.json";
 
+const Editor = lazy(() => import("./editor"));
+
+async function compile(input: string, mode: string) {
+  const { transform } = await import("@babel/standalone");
+  const jsxTransform = await import("babel-plugin-jsx-dom-expressions");
+  const jsx = await import("@babel/plugin-syntax-jsx");
+  const rename = await import("babel-plugin-transform-rename-import");
+
+  try {
+    const plugins: any[] = [
+      jsx,
+      [
+        jsxTransform,
+        {
+          moduleName: "solid-js/dom",
+          // prettier-ignore
+          builtIns: [ "For", "Show", "Switch", "Match", "Suspense", "SuspenseList", "Portal", "Index", "Dynamic", "ErrorBoundary"],
+          delegateEvents: true,
+          contextToCustomElements: true,
+          wrapConditionals: true,
+          generate: "dom",
+        },
+      ],
+    ];
+
+    if (mode === "SSR") {
+      plugins.push([
+        rename,
+        {
+          replacements: [
+            { original: "solid-js/dom", replacement: "solid-js" },
+            { original: "solid-js/server", replacement: "solid-js" },
+            { original: "solid-js", replacement: "solid-js/server" },
+          ],
+        },
+      ]);
+    }
+
+    const { code } = transform(input, { plugins });
+
+    return [null, code] as const;
+  } catch (e) {
+    console.error(e);
+    return [e.message, null] as const;
+  }
+}
+
 const App: Component = () => {
   const [compiled, setCompiled] = createState({
     input: location.hash
@@ -28,46 +77,11 @@ const App: Component = () => {
     mode: "DOM",
   });
 
-  function compile(input: string, mode: string) {
-    try {
-      const plugins: any[] = [
-        jsx,
-        [
-          jsxTransform,
-          {
-            moduleName: "solid-js/dom",
-            // prettier-ignore
-            builtIns: [ "For", "Show", "Switch", "Match", "Suspense", "SuspenseList", "Portal", "Index", "Dynamic", "ErrorBoundary"],
-            delegateEvents: true,
-            contextToCustomElements: true,
-            wrapConditionals: true,
-            generate: "dom",
-          },
-        ],
-      ];
-
-      if (mode === "SSR") {
-        plugins.push([
-          rename,
-          {
-            replacements: [
-              { original: "solid-js/dom", replacement: "solid-js" },
-              { original: "solid-js/server", replacement: "solid-js" },
-              { original: "solid-js", replacement: "solid-js/server" },
-            ],
-          },
-        ]);
-      }
-
-      const { code } = transform(input, { plugins });
-
-      setCompiled("output", code);
-    } catch (e) {
-      setCompiled("error", e.message);
-    }
-  }
-
-  createEffect(() => compile(compiled.input, compiled.mode));
+  createEffect(async () => {
+    const [error, output] = await compile(compiled.input, compiled.mode);
+    if (error) setCompiled({ error });
+    else setCompiled({ output });
+  });
   createEffect(() => {
     const compressed = compressToEncodedURIComponent(compiled.input);
     history.pushState(null, null, `#${compressed}`);
@@ -100,16 +114,18 @@ const App: Component = () => {
         </div>
       </header>
 
-      <Editor
-        value={compiled.input}
-        onDocChange={(input) => handleDocChange(input)}
-        class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
-      />
-      <Editor
-        value={compiled.output}
-        class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
-        disabled
-      />
+      <Suspense fallback={<p>Loading the REPL</p>}>
+        <Editor
+          defaultValue={compiled.input}
+          onDocChange={(input) => handleDocChange(input)}
+          class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
+        />
+        <Editor
+          value={compiled.output}
+          class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
+          disabled
+        />
+      </Suspense>
 
       <Show when={compiled.error}>
         <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10">
