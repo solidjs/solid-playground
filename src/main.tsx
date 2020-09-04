@@ -30,9 +30,7 @@ async function compile(input: string, mode: string) {
     const options =
       mode === "SSR"
         ? { generate: "ssr", hydratable: true }
-        : mode === "SSR_ASYNC"
-        ? { generate: "ssr", hydratable: true, async: true }
-        : mode === "SSR_CLIENT"
+        : mode === "HYDRATION"
         ? { generate: "dom", hydratable: true }
         : { generate: "dom", hydratable: false };
 
@@ -88,14 +86,11 @@ const App: Component = () => {
             <option class="bg-gray-700" value="DOM">
               DOM
             </option>
-            <option class="bg-gray-700" value="SSR_CLIENT">
-              SSR Client
+            <option class="bg-gray-700" value="HYDRATION">
+              Hydration
             </option>
             <option class="bg-gray-700" value="SSR">
               SSR Server
-            </option>
-            <option class="bg-gray-700" value="SSR_ASYNC">
-              SSR Server Async
             </option>
           </select>
           <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
