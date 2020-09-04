@@ -1,3 +1,4 @@
+import "./tailwind.css";
 import { render } from "solid-js/dom";
 import {
   Component,
@@ -7,7 +8,6 @@ import {
   Suspense,
   lazy,
 } from "solid-js";
-import "./tailwind.css";
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
@@ -23,42 +23,20 @@ import pkg from "../package.json";
 const Editor = lazy(() => import("./editor"));
 
 async function compile(input: string, mode: string) {
-  const { transform } = await import("@babel/standalone");
-  const jsxTransform = await import("babel-plugin-jsx-dom-expressions");
-  const jsx = await import("@babel/plugin-syntax-jsx");
-  const rename = await import("babel-plugin-transform-rename-import");
-
   try {
-    const plugins: any[] = [
-      jsx,
-      [
-        jsxTransform,
-        {
-          moduleName: "solid-js/dom",
-          // prettier-ignore
-          builtIns: [ "For", "Show", "Switch", "Match", "Suspense", "SuspenseList", "Portal", "Index", "Dynamic", "ErrorBoundary"],
-          delegateEvents: true,
-          contextToCustomElements: true,
-          wrapConditionals: true,
-          generate: "dom",
-        },
-      ],
-    ];
+    const { transform } = await import("@babel/standalone");
+    const solid = await import("babel-preset-solid");
 
-    if (mode === "SSR") {
-      plugins.push([
-        rename,
-        {
-          replacements: [
-            { original: "solid-js/dom", replacement: "solid-js" },
-            { original: "solid-js/server", replacement: "solid-js" },
-            { original: "solid-js", replacement: "solid-js/server" },
-          ],
-        },
-      ]);
-    }
+    const options =
+      mode === "SSR"
+        ? { generate: "ssr", hydratable: true }
+        : mode === "SSR_ASYNC"
+        ? { generate: "ssr", hydratable: true, async: true }
+        : mode === "SSR_CLIENT"
+        ? { generate: "dom", hydratable: true }
+        : { generate: "dom", hydratable: false };
 
-    const { code } = transform(input, { plugins });
+    const { code } = transform(input, { presets: [[solid, options]] });
 
     return [null, code] as const;
   } catch (e) {
@@ -107,8 +85,18 @@ const App: Component = () => {
             onChange={(e) => setCompiled("mode", e.target.value)}
             class="bg-transparent border rounded border-gray-400 px-2 py-1 text-sm"
           >
-            <option class="bg-gray-700">DOM</option>
-            <option class="bg-gray-700">SSR</option>
+            <option class="bg-gray-700" value="DOM">
+              DOM
+            </option>
+            <option class="bg-gray-700" value="SSR_CLIENT">
+              SSR Client
+            </option>
+            <option class="bg-gray-700" value="SSR">
+              SSR Server
+            </option>
+            <option class="bg-gray-700" value="SSR_ASYNC">
+              SSR Server Async
+            </option>
           </select>
           <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
         </div>
