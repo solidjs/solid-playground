@@ -1,5 +1,6 @@
 import "./tailwind.css";
 import { render } from "solid-js/dom";
+import { register } from "register-service-worker";
 import {
   Component,
   createState,
@@ -127,3 +128,14 @@ const App: Component = () => {
 };
 
 render(() => App, document.getElementById("app"));
+
+if (process.env.NODE_ENV === "production") {
+  register("/sw.js", {
+    registered(registration) {
+      console.log(`Service Worker registered!`);
+    },
+    error(err) {
+      console.log(`Service Worker registration failed: ${err}`);
+    },
+  });
+}
