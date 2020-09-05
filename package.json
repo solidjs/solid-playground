@@ -11,10 +11,10 @@
     "@types/lodash": "^4.14.161",
     "@types/lz-string": "^1.3.34",
     "@types/prismjs": "^1.16.1",
+    "@types/workbox-sw": "^4.3.1",
     "autoprefixer": "^9.8.6",
     "parcel": "^2.0.0-nightly.388",
-    "tailwindcss": "^1.8.0",
-    "workbox-cli": "^5.1.3"
+    "tailwindcss": "^1.8.2"
   },
   "dependencies": {
     "@amoutonbrady/solid-heroicons": "^0.1.1",
@@ -36,6 +36,10 @@
     "solid-js": "^0.19.2",
     "style-mod": "^2.2.3",
     "to-fast-properties": "^3.0.1",
-    "w3c-keyname": "^2.2.4"
+    "w3c-keyname": "^2.2.4",
+    "workbox-core": "^5.1.3",
+    "workbox-expiration": "^5.1.3",
+    "workbox-routing": "^5.1.3",
+    "workbox-strategies": "^5.1.3"
   }
 }
