@@ -1,11 +1,7 @@
 import { Component, createEffect, splitProps } from "solid-js";
-import { oneDark } from "@codemirror/next/theme-one-dark";
+import { oneDark } from "./theme";
 import { javascript } from "@codemirror/next/lang-javascript";
-import {
-  basicSetup,
-  EditorState,
-  EditorView,
-} from "@codemirror/next/basic-setup";
+import { basicSetup, EditorState, EditorView } from "./basicSetup";
 import { Extension } from "@codemirror/next/state";
 
 const Editor: Component<Props> = (props) => {
@@ -20,9 +16,9 @@ const Editor: Component<Props> = (props) => {
   let view: EditorView;
 
   const extensions: Extension[] = [
-    oneDark,
-    javascript({ jsx: true, typescript: true }),
     basicSetup,
+    javascript({ jsx: true, typescript: true }),
+    oneDark,
   ];
 
   function createState(doc: string) {
