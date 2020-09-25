@@ -4,7 +4,7 @@ import {
   indentOnInput,
 } from "@codemirror/next/view";
 import { Extension, EditorState } from "@codemirror/next/state";
-import { history } from "@codemirror/next/history";
+import { history, historyKeymap } from "@codemirror/next/history";
 import { foldGutter } from "@codemirror/next/fold";
 import { lineNumbers } from "@codemirror/next/gutter";
 import { defaultKeymap } from "@codemirror/next/commands";
@@ -30,7 +30,7 @@ export const basicSetup: Extension = [
   rectangularSelection(),
   highlightActiveLine(),
   highlightSelectionMatches(),
-  keymap(defaultKeymap),
+  keymap([...defaultKeymap, ...historyKeymap]),
 ];
 
 export { EditorView } from "@codemirror/next/view";
