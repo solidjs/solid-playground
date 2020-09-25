@@ -11,8 +11,7 @@ There are 3 modes available:
 
 ## Getting up and running
 
-This project is built using the [pnpm](https://pnpm.js.org/) package manager.
-You should therefore [install it](https://pnpm.js.org/en/installation) before anything else.
+This project is built using the [yarn 2](https://yarnpkg.com/) package manager.
 
 Once you got it up and running you can follow these steps the have a fully working environement:
 
@@ -21,13 +20,13 @@ Once you got it up and running you can follow these steps the have a fully worki
 $ git clone git@github.com:amoutonbrady/solid-repl-poc.git
 
 # cd into the project and install the dependencies
-$ cd solid-repl-poc && pnpm install
+$ cd solid-repl-poc && yarn
 
 # Start the dev server, the address is available at http://localhost:1234
-$ pnpm dev
+$ yarn dev
 
 # Build the project
-$ pnpm build
+$ yarn build
 ```
 
 ## Credits / Technologies used
@@ -38,5 +37,5 @@ $ pnpm build
 - [tailwindcss](https://tailwindcss.com/): The CSS framework
 - [parcel 2](https://v2.parceljs.org/): The module bundler
 - [workbox](https://developers.google.com/web/tools/workbox): The service worker generator
-- [pnpm](https://pnpm.js.org/): The package manager
+- [yarn 2](https://yarnpkg.com/): The package manager
 - [lz-string](https://github.com/pieroxy/lz-string): The string compression algorith used to share REPL

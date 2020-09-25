@@ -1,3 +1,10 @@
 node_modules
 dist
 .parcel-cache
+
+.yarn/*
+!.yarn/cache
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
