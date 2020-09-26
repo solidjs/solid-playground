@@ -8,6 +8,8 @@ import {
   createEffect,
   Suspense,
   lazy,
+  Switch,
+  Match,
 } from "solid-js";
 import {
   compressToEncodedURIComponent,
@@ -20,6 +22,7 @@ import { x } from "@amoutonbrady/solid-heroicons/outline";
 // @ts-ignore
 import logo from "url:./logo.svg";
 import pkg from "../package.json";
+import { Preview } from "./preview";
 
 const Editor = lazy(() => import("./editor"));
 
@@ -52,6 +55,7 @@ const App: Component = () => {
     output: "",
     error: "",
     mode: "DOM",
+    preview: false,
   });
 
   createEffect(async () => {
@@ -79,6 +83,17 @@ const App: Component = () => {
         </h1>
 
         <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-2">
+            <input
+              id="preview"
+              type="checkbox"
+              checked={compiled.preview}
+              onChange={(e) => setCompiled("preview", e.target.checked)}
+            />
+            <label for="preview" class="cursor-pointer leading-none">
+              Experimental preview
+            </label>
+          </div>
           <select
             value={compiled.mode}
             onChange={(e) => setCompiled("mode", e.target.value)}
@@ -104,9 +119,15 @@ const App: Component = () => {
           onDocChange={(input) => handleDocChange(input)}
           class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
         />
+        <Preview
+          code={compiled.output}
+          class="h-full max-h-screen overflow-auto flex-1 pr-4 pt-2 w-full bg-gray-100"
+          classList={{ hidden: !compiled.preview }}
+        />
         <Editor
           value={compiled.output}
           class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
+          classList={{ hidden: compiled.preview }}
           disabled
         />
       </Suspense>
