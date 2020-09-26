@@ -11,7 +11,7 @@ module.exports = {
     layers: ["base", "components", "utilities"],
     content: ["src/**/*.html", "src/**/*.tsx"],
   },
-  // purge: false,
+  purge: false,
   future: {
     removeDeprecatedGapUtilities: true,
     purgeLayersByDefault: true,
