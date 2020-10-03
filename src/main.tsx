@@ -129,7 +129,7 @@ const App: Component = () => {
           class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
         />
         <Preview
-          code={compiled.output}
+          code={compiled.preview ? compiled.output : ""}
           class="h-full max-h-screen overflow-auto flex-1 pr-4 pt-2 w-full bg-gray-100"
           classList={{ hidden: !compiled.preview }}
         />
