@@ -29,6 +29,7 @@
     "babel-preset-solid": "^0.20.2",
     "lodash": "^4.17.20",
     "lz-string": "^1.4.4",
+    "mitt": "^2.1.0",
     "register-service-worker": "^1.7.1",
     "solid-js": "^0.20.2"
   }
