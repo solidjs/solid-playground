@@ -6,12 +6,12 @@ module.exports = {
       },
     },
   },
-  purge: {
-    mode: "layers",
-    layers: ["base", "components", "utilities"],
-    content: ["src/**/*.html", "src/**/*.tsx"],
-  },
-  // purge: false,
+  // purge: {
+  //   mode: "layers",
+  //   layers: ["base", "components", "utilities"],
+  //   content: ["src/**/*.html", "src/**/*.tsx"],
+  // },
+  purge: false,
   future: {
     removeDeprecatedGapUtilities: true,
     purgeLayersByDefault: true,

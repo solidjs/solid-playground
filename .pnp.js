@@ -55,6 +55,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["babel-preset-solid", "npm:0.20.2"],
             ["lodash", "npm:4.17.20"],
             ["lz-string", "npm:1.4.4"],
+            ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.415"],
             ["register-service-worker", "npm:1.7.1"],
             ["solid-js", "npm:0.20.2"],
@@ -8867,6 +8868,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["mitt", [
+        ["npm:2.1.0", {
+          "packageLocation": "./.yarn/cache/mitt-npm-2.1.0-77f3c96db4-549fd125e9.zip/node_modules/mitt/",
+          "packageDependencies": [
+            ["mitt", "npm:2.1.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["mixin-deep", [
         ["npm:1.3.2", {
           "packageLocation": "./.yarn/cache/mixin-deep-npm-1.3.2-29b528e571-68da98bc1a.zip/node_modules/mixin-deep/",
@@ -11417,6 +11427,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["babel-preset-solid", "npm:0.20.2"],
             ["lodash", "npm:4.17.20"],
             ["lz-string", "npm:1.4.4"],
+            ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.415"],
             ["register-service-worker", "npm:1.7.1"],
             ["solid-js", "npm:0.20.2"],

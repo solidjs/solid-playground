@@ -8,13 +8,14 @@ import {
   createEffect,
   Suspense,
   lazy,
-  Switch,
-  Match,
+  createSignal,
+  onCleanup,
 } from "solid-js";
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
 } from "lz-string";
+import mitt from "mitt";
 
 import debounce from "lodash/debounce";
 import { Icon } from "@amoutonbrady/solid-heroicons";
@@ -25,6 +26,10 @@ import pkg from "../package.json";
 import { Preview } from "./preview";
 
 const Editor = lazy(() => import("./editor"));
+
+const emitter = mitt();
+let swUpdatedBeforeRender = false;
+emitter.on("sw-update", () => (swUpdatedBeforeRender = true));
 
 async function compile(input: string, mode: string) {
   try {
@@ -48,6 +53,10 @@ async function compile(input: string, mode: string) {
 }
 
 const App: Component = () => {
+  const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
+  emitter.on("new-sw", () => setNewUpdate(true));
+  onCleanup(() => emitter.all.clear());
+
   const [compiled, setCompiled] = createState({
     input: location.hash
       ? decompressFromEncodedURIComponent(location.hash.slice(1))
@@ -144,19 +153,66 @@ const App: Component = () => {
           <code innerText={compiled.error}></code>
         </pre>
       </Show>
+
+      <Show when={newUpdate()}>
+        <div class="fixed bottom-10 left-10 bg-blue-200 text-blue-800 border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
+          <button
+            title="close"
+            onClick={() => setNewUpdate(false)}
+            class="absolute top-1 right-1 hover:text-blue-900"
+          >
+            <Icon path={x} class="h-6 " />
+          </button>
+          <p class="font-semibold">There's a new update available.</p>
+          <p class="mt-2">
+            Refresh your browser or click the button below to get the latest
+            update of the REPL.
+          </p>
+          <button
+            onClick={() => location.reload()}
+            class="bg-blue-800 text-blue-200 px-3 py-1 rounded mt-4 text-sm uppercase tracking-wide hover:bg-blue-900"
+          >
+            Refresh
+          </button>
+        </div>
+      </Show>
     </div>
   );
 };
 
 render(() => App, document.getElementById("app"));
 
-if (process.env.NODE_ENV === "production") {
-  register("/sw.js", {
-    registered(registration) {
-      console.log(`Service Worker registered!`);
-    },
-    error(err) {
-      console.log(`Service Worker registration failed: ${err}`);
-    },
+if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+  window.addEventListener("load", () => {
+    register("/sw.js", {
+      ready(registration) {
+        console.log("Service worker is active.", { registration });
+      },
+      registered(registration) {
+        console.log("✔ Application is now available offline", { registration });
+      },
+      cached(registration) {
+        console.log("Content has been cached for offline use.", {
+          registration,
+        });
+      },
+      updatefound(registration) {
+        console.log("New content is downloading.", { registration });
+      },
+      updated(registration) {
+        emitter.emit("sw-update", registration);
+        console.log("New content is available; please refresh.", {
+          registration,
+        });
+      },
+      offline() {
+        console.log(
+          "No internet connection found. App is running in offline mode."
+        );
+      },
+      error(error) {
+        console.error("❌ Application couldn't be registered offline:", error);
+      },
+    });
   });
 }
