@@ -54,7 +54,7 @@ async function compile(input: string, mode: string) {
 
 const App: Component = () => {
   const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
-  emitter.on("new-sw", () => setNewUpdate(true));
+  emitter.on("sw-update", () => setNewUpdate(true));
   onCleanup(() => emitter.all.clear());
 
   const [compiled, setCompiled] = createState({
