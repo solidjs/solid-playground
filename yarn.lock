@@ -3089,7 +3089,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autoprefixer@npm:^9.4.5, autoprefixer@npm:^9.8.6":
+"autoprefixer@npm:^10.0.1":
+  version: 10.0.1
+  resolution: "autoprefixer@npm:10.0.1"
+  dependencies:
+    browserslist: ^4.14.5
+    caniuse-lite: ^1.0.30001137
+    colorette: ^1.2.1
+    normalize-range: ^0.1.2
+    num2fraction: ^1.2.2
+    postcss-value-parser: ^4.1.0
+  peerDependencies:
+    postcss: ^8.1.0
+  bin:
+    autoprefixer: bin/autoprefixer
+  checksum: c2b08a13003464fdb367a713e303f93cee0fb6c93512630505fa5cf5da9d4cefc33e70bf5841787b3ec4c67cb7ee0dbf1f7fdec1987dc17473ec93ba8bf5e7bf
+  languageName: node
+  linkType: hard
+
+"autoprefixer@npm:^9.4.5":
   version: 9.8.6
   resolution: "autoprefixer@npm:9.8.6"
   dependencies:
@@ -3435,7 +3453,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.0.0, browserslist@npm:^4.12.0, browserslist@npm:^4.6.6, browserslist@npm:^4.8.5":
+"browserslist@npm:^4.0.0, browserslist@npm:^4.12.0, browserslist@npm:^4.14.5, browserslist@npm:^4.6.6, browserslist@npm:^4.8.5":
   version: 4.14.5
   resolution: "browserslist@npm:4.14.5"
   dependencies:
@@ -3613,6 +3631,13 @@ __metadata:
   version: 1.0.30001137
   resolution: "caniuse-lite@npm:1.0.30001137"
   checksum: 8cc7405638f4d89a77a6db51f4162bb539c6f180f8c1151d3a8efd3c2e634214b6b1897d74c93c00908d5b7ad33a16f92696be053f391747819ba68945e82f12
+  languageName: node
+  linkType: hard
+
+"caniuse-lite@npm:^1.0.30001137":
+  version: 1.0.30001148
+  resolution: "caniuse-lite@npm:1.0.30001148"
+  checksum: 3231c85a2cffcd39d2371f4f0640ff3297946abf9f90eb30030e2ec0bffc5d16e3ab8953f9a63e1504431a869a45e0541c4bb01c469d9ef8313fd074e863dd7f
   languageName: node
   linkType: hard
 
@@ -8689,7 +8714,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.0.5":
+"postcss@npm:^8.0.5, postcss@npm:^8.1.1":
   version: 8.1.1
   resolution: "postcss@npm:8.1.1"
   dependencies:
@@ -9314,6 +9339,17 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"rimraf@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "rimraf@npm:3.0.2"
+  dependencies:
+    glob: ^7.1.3
+  bin:
+    rimraf: bin.js
+  checksum: f0de3e445581e64a8a077af476cc30708e659f5779ec2ca2a161556d0792aa318a685923798ae22055b4ecd02b9aff444ef619578f7af53cf8e0e248031e3dee
+  languageName: node
+  linkType: hard
+
 "ripemd160@npm:^2.0.0, ripemd160@npm:^2.0.1":
   version: 2.0.2
   resolution: "ripemd160@npm:2.0.2"
@@ -9695,14 +9731,16 @@ fsevents@^1.2.7:
     "@types/lz-string": ^1.3.34
     "@types/node": ^14.11.8
     "@types/workbox-sw": ^4.3.1
-    autoprefixer: ^9.8.6
+    autoprefixer: ^10.0.1
     babel-plugin-jsx-dom-expressions: ^0.21.1
     babel-preset-solid: ^0.20.2
     lodash: ^4.17.20
     lz-string: ^1.4.4
     mitt: ^2.1.0
     parcel: ^2.0.0-nightly.425
+    postcss: ^8.1.1
     register-service-worker: ^1.7.1
+    rimraf: ^3.0.2
     solid-js: ^0.20.3
     tailwindcss: ^1.9.1
     typescript: ^4.0.3

@@ -50,14 +50,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/lz-string", "npm:1.3.34"],
             ["@types/node", "npm:14.11.8"],
             ["@types/workbox-sw", "npm:4.3.1"],
-            ["autoprefixer", "npm:9.8.6"],
+            ["autoprefixer", "virtual:ddb0d95f4ed0181e83405382888fdff53bd22d98ddd94d30044d3131992e384da63cb3cefde0b65efffd0c6835b2e064587f7e12376cfe5f087aab62082bc4db#npm:10.0.1"],
             ["babel-plugin-jsx-dom-expressions", "npm:0.21.1"],
             ["babel-preset-solid", "npm:0.20.2"],
             ["lodash", "npm:4.17.20"],
             ["lz-string", "npm:1.4.4"],
             ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.425"],
+            ["postcss", "npm:8.1.1"],
             ["register-service-worker", "npm:1.7.1"],
+            ["rimraf", "npm:3.0.2"],
             ["solid-js", "npm:0.20.3"],
             ["tailwindcss", "npm:1.9.1"],
             ["typescript", "patch:typescript@npm%3A4.0.3#builtin<compat/typescript>::version=4.0.3&hash=5b02a2"],
@@ -4119,6 +4121,25 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["postcss-value-parser", "npm:4.1.0"]
           ],
           "linkType": "HARD",
+        }],
+        ["virtual:ddb0d95f4ed0181e83405382888fdff53bd22d98ddd94d30044d3131992e384da63cb3cefde0b65efffd0c6835b2e064587f7e12376cfe5f087aab62082bc4db#npm:10.0.1", {
+          "packageLocation": "./.yarn/$$virtual/autoprefixer-virtual-a6f9d812cb/0/cache/autoprefixer-npm-10.0.1-0f2e7dc91a-c2b08a1300.zip/node_modules/autoprefixer/",
+          "packageDependencies": [
+            ["autoprefixer", "virtual:ddb0d95f4ed0181e83405382888fdff53bd22d98ddd94d30044d3131992e384da63cb3cefde0b65efffd0c6835b2e064587f7e12376cfe5f087aab62082bc4db#npm:10.0.1"],
+            ["@types/postcss", null],
+            ["browserslist", "npm:4.14.5"],
+            ["caniuse-lite", "npm:1.0.30001148"],
+            ["colorette", "npm:1.2.1"],
+            ["normalize-range", "npm:0.1.2"],
+            ["num2fraction", "npm:1.2.2"],
+            ["postcss", "npm:8.1.1"],
+            ["postcss-value-parser", "npm:4.1.0"]
+          ],
+          "packagePeers": [
+            "@types/postcss",
+            "postcss"
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["available-typed-arrays", [
@@ -4692,6 +4713,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/caniuse-lite-npm-1.0.30001137-19927c6020-8cc7405638.zip/node_modules/caniuse-lite/",
           "packageDependencies": [
             ["caniuse-lite", "npm:1.0.30001137"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:1.0.30001148", {
+          "packageLocation": "./.yarn/cache/caniuse-lite-npm-1.0.30001148-a57d5a6274-3231c85a2c.zip/node_modules/caniuse-lite/",
+          "packageDependencies": [
+            ["caniuse-lite", "npm:1.0.30001148"]
           ],
           "linkType": "HARD",
         }]
@@ -11055,6 +11083,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["glob", "npm:7.1.6"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:3.0.2", {
+          "packageLocation": "./.yarn/cache/rimraf-npm-3.0.2-2cb7dac69a-f0de3e4455.zip/node_modules/rimraf/",
+          "packageDependencies": [
+            ["rimraf", "npm:3.0.2"],
+            ["glob", "npm:7.1.6"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["ripemd160", [
@@ -11472,14 +11508,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/lz-string", "npm:1.3.34"],
             ["@types/node", "npm:14.11.8"],
             ["@types/workbox-sw", "npm:4.3.1"],
-            ["autoprefixer", "npm:9.8.6"],
+            ["autoprefixer", "virtual:ddb0d95f4ed0181e83405382888fdff53bd22d98ddd94d30044d3131992e384da63cb3cefde0b65efffd0c6835b2e064587f7e12376cfe5f087aab62082bc4db#npm:10.0.1"],
             ["babel-plugin-jsx-dom-expressions", "npm:0.21.1"],
             ["babel-preset-solid", "npm:0.20.2"],
             ["lodash", "npm:4.17.20"],
             ["lz-string", "npm:1.4.4"],
             ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.425"],
+            ["postcss", "npm:8.1.1"],
             ["register-service-worker", "npm:1.7.1"],
+            ["rimraf", "npm:3.0.2"],
             ["solid-js", "npm:0.20.3"],
             ["tailwindcss", "npm:1.9.1"],
             ["typescript", "patch:typescript@npm%3A4.0.3#builtin<compat/typescript>::version=4.0.3&hash=5b02a2"],
