@@ -1,5 +1,6 @@
 {
-  "name": "solid-repl",
+  "name": "solid-template-explorer",
+  "description": "Quickly discover what the solid compiler will generate from your JSX template",
   "scripts": {
     "dev": "parcel src/index.html",
     "build": "rimraf dist && parcel build src/index.html && workbox generateSW workbox-config.js"
