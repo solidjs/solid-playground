@@ -9,14 +9,14 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-typescript": "^7.12.1",
     "@babel/types": "^7.12.1",
-    "@parcel/config-default": "^2.0.0-alpha.3",
+    "@parcel/config-default": "^2.0.0-nightly.432",
     "@types/babel__standalone": "^7.1.3",
     "@types/lodash": "^4.14.162",
     "@types/lz-string": "^1.3.34",
     "@types/node": "^14.14.2",
     "@types/workbox-sw": "^4.3.1",
     "autoprefixer": "^10.0.1",
-    "parcel": "^2.0.0-nightly.425",
+    "parcel": "^2.0.0-nightly.430",
     "postcss": "^8.1.4",
     "rimraf": "^3.0.2",
     "tailwindcss": "^1.9.6",
@@ -29,11 +29,11 @@
     "@babel/standalone": "^7.12.4",
     "@codemirror/next": "^0.14.0",
     "babel-plugin-jsx-dom-expressions": "^0.22.1",
-    "babel-preset-solid": "^0.21.2",
+    "babel-preset-solid": "latest",
     "lodash": "^4.17.20",
     "lz-string": "^1.4.4",
     "mitt": "^2.1.0",
     "register-service-worker": "^1.7.1",
-    "solid-js": "^0.21.2"
+    "solid-js": "latest"
   }
 }

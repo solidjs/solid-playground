@@ -108,15 +108,9 @@ const App: Component = () => {
             onChange={(e) => setCompiled("mode", e.target.value)}
             class="bg-transparent border rounded border-gray-400 px-2 py-1 text-sm"
           >
-            <option class="bg-gray-700" value="DOM">
-              DOM
-            </option>
-            <option class="bg-gray-700" value="HYDRATION">
-              Hydration
-            </option>
-            <option class="bg-gray-700" value="SSR">
-              SSR Server
-            </option>
+            <option class="bg-gray-700">DOM</option>
+            <option class="bg-gray-700">HYDRATION</option>
+            <option class="bg-gray-700">SSRE</option>
           </select>
           <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
         </div>
