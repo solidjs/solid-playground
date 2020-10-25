@@ -3399,7 +3399,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-preset-solid@npm:latest":
+"babel-preset-solid@npm:^0.21.2":
   version: 0.21.2
   resolution: "babel-preset-solid@npm:0.21.2"
   dependencies:
@@ -9928,7 +9928,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"solid-js@npm:latest":
+"solid-js@npm:^0.21.2":
   version: 0.21.2
   resolution: "solid-js@npm:0.21.2"
   checksum: ab13c49abecf3c936ccc0fb1ea814475b1ade3fa9f6242bfdc63c3e8e5ce852d5bdc7a9626547478bf70fb594432501784dc76261e2cfea5b99ab82ef1f4144a
@@ -9954,7 +9954,7 @@ fsevents@^1.2.7:
     "@types/workbox-sw": ^4.3.1
     autoprefixer: ^10.0.1
     babel-plugin-jsx-dom-expressions: ^0.22.1
-    babel-preset-solid: latest
+    babel-preset-solid: ^0.21.2
     lodash: ^4.17.20
     lz-string: ^1.4.4
     mitt: ^2.1.0
@@ -9962,7 +9962,7 @@ fsevents@^1.2.7:
     postcss: ^8.1.4
     register-service-worker: ^1.7.1
     rimraf: ^3.0.2
-    solid-js: latest
+    solid-js: ^0.21.2
     tailwindcss: ^1.9.6
     typescript: ^4.0.3
     workbox-cli: ^5.1.4

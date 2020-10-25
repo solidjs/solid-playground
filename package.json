@@ -29,11 +29,11 @@
     "@babel/standalone": "^7.12.4",
     "@codemirror/next": "^0.14.0",
     "babel-plugin-jsx-dom-expressions": "^0.22.1",
-    "babel-preset-solid": "latest",
+    "babel-preset-solid": "^0.21.2",
     "lodash": "^4.17.20",
     "lz-string": "^1.4.4",
     "mitt": "^2.1.0",
     "register-service-worker": "^1.7.1",
-    "solid-js": "latest"
+    "solid-js": "^0.21.2"
   }
 }
