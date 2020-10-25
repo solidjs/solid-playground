@@ -110,7 +110,7 @@ const App: Component = () => {
           >
             <option class="bg-gray-700">DOM</option>
             <option class="bg-gray-700">HYDRATION</option>
-            <option class="bg-gray-700">SSRE</option>
+            <option class="bg-gray-700">SSR</option>
           </select>
           <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
         </div>
