@@ -7,18 +7,20 @@ export const Preview: Component<Props> = (props) => {
     const html = btoa(
       `
         <body>
-            <div id="app"></div>
-            <script type="module">
-              ${internal.code
-                .replace(
-                  /(?:"|')solid-js(?:"|')/gm,
-                  '"https://cdn.skypack.dev/pin/solid-js@v0.22.0-HXOUi1bsabcdTm7pdkd1/min/solid-js.js"'
-                )
-                .replace(
-                  /(?:"|')solid-js\/(dom)|(web)(?:"|')/gm,
-                  '"https://cdn.skypack.dev/pin/solid-js@v0.22.0-HXOUi1bsabcdTm7pdkd1/min/solid-js/web.js"'
-                )}
-            </script>
+          <p id="loader">Loading...</p>
+          <div id="app"></div>
+          <script type="module" id="script">
+            ${internal.code.replace(
+              /(import(?:.)*from\s*(?:'|"))(.*)((?:'|"))/gim,
+              "$1https://cdn.skypack.dev/$2$3"
+            )}
+          </script>
+
+          <script>
+            window.addEventListener('load', () => {
+              document.getElementById('loader').remove()
+            })
+          </script>
         </body>`
     );
 
