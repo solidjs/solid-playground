@@ -1,9 +1,15 @@
 import { Extension } from "@codemirror/next/state";
 import { oneDark } from "@codemirror/next/theme-one-dark";
 import { javascript } from "@codemirror/next/lang-javascript";
-import { Component, createEffect, splitProps } from "solid-js";
+import { Component, createEffect, onMount, splitProps } from "solid-js";
 
 import { basicSetup, EditorState, EditorView } from "./basicSetup";
+
+const extensions: Extension[] = [
+  basicSetup,
+  javascript({ jsx: true, typescript: true }),
+  oneDark,
+];
 
 const Editor: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, [
@@ -12,15 +18,10 @@ const Editor: Component<Props> = (props) => {
     "disabled",
     "defaultValue",
   ]);
-  let parent: HTMLDivElement;
+
+  let parent!: HTMLDivElement;
   let state: EditorState;
   let view: EditorView;
-
-  const extensions: Extension[] = [
-    basicSetup,
-    javascript({ jsx: true, typescript: true }),
-    oneDark,
-  ];
 
   function createState(doc: string) {
     return EditorState.create({
@@ -38,7 +39,7 @@ const Editor: Component<Props> = (props) => {
     });
   }
 
-  requestAnimationFrame(() => {
+  onMount(() => {
     state = createState(internal.defaultValue || "");
     view = new EditorView({ state, parent });
   });
@@ -48,7 +49,7 @@ const Editor: Component<Props> = (props) => {
     view.setState(createState(internal.value));
   });
 
-  return <div ref={parent!} {...external}></div>;
+  return <div ref={parent} {...external}></div>;
 };
 
 export default Editor;
