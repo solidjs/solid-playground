@@ -9,15 +9,15 @@ export const Preview: Component<Props> = (props) => {
         <body>
             <div id="app"></div>
             <script type="module">
-                ${internal.code
-                  .replace(
-                    /(?:"|')solid-js(?:"|')/gm,
-                    '"https://cdn.jsdelivr.net/npm/solid-js@0.20.1/dist/index.js"'
-                  )
-                  .replace(
-                    /(?:"|')solid-js\/dom(?:"|')/gm,
-                    '"https://cdn.jsdelivr.net/npm/solid-js@0.20.1/dist/dom/index.js"'
-                  )}
+              ${internal.code
+                .replace(
+                  /(?:"|')solid-js(?:"|')/gm,
+                  '"https://cdn.skypack.dev/pin/solid-js@v0.22.0-HXOUi1bsabcdTm7pdkd1/min/solid-js.js"'
+                )
+                .replace(
+                  /(?:"|')solid-js\/(dom)|(web)(?:"|')/gm,
+                  '"https://cdn.skypack.dev/pin/solid-js@v0.22.0-HXOUi1bsabcdTm7pdkd1/min/solid-js/web.js"'
+                )}
             </script>
         </body>`
     );
