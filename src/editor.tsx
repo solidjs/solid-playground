@@ -1,8 +1,9 @@
-import { Component, createEffect, splitProps } from "solid-js";
-import { oneDark } from "./theme";
-import { javascript } from "@codemirror/next/lang-javascript";
-import { basicSetup, EditorState, EditorView } from "./basicSetup";
 import { Extension } from "@codemirror/next/state";
+import { oneDark } from "@codemirror/next/theme-one-dark";
+import { javascript } from "@codemirror/next/lang-javascript";
+import { Component, createEffect, splitProps } from "solid-js";
+
+import { basicSetup, EditorState, EditorView } from "./basicSetup";
 
 const Editor: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, [
@@ -47,7 +48,7 @@ const Editor: Component<Props> = (props) => {
     view.setState(createState(internal.value));
   });
 
-  return <div ref={parent} {...external}></div>;
+  return <div ref={parent!} {...external}></div>;
 };
 
 export default Editor;
