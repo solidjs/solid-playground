@@ -1,5 +1,6 @@
 import "./tailwind.css";
-import { render } from "solid-js/dom";
+
+import { render } from "solid-js/web";
 import { register } from "register-service-worker";
 import {
   Component,
@@ -59,8 +60,8 @@ const App: Component = () => {
 
   const [compiled, setCompiled] = createState({
     input: location.hash
-      ? decompressFromEncodedURIComponent(location.hash.slice(1))
-      : "",
+      ? decompressFromEncodedURIComponent(location.hash.slice(1))!
+      : "const h1 = <h1>Hello world</h1>",
     output: "",
     error: "",
     mode: "DOM",
@@ -74,7 +75,7 @@ const App: Component = () => {
   });
   createEffect(() => {
     const compressed = compressToEncodedURIComponent(compiled.input);
-    history.pushState(null, null, `#${compressed}`);
+    history.pushState(null, "", `#${compressed}`);
   });
 
   const handleDocChange = debounce((input: string) => {
@@ -135,6 +136,7 @@ const App: Component = () => {
         />
       </Suspense>
 
+      {/* TODO: Use portal */}
       <Show when={compiled.error}>
         <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10">
           <button
@@ -148,6 +150,7 @@ const App: Component = () => {
         </pre>
       </Show>
 
+      {/* TODO: Use portal */}
       <Show when={newUpdate()}>
         <div class="fixed bottom-10 left-10 bg-blue-200 text-blue-800 border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
           <button
@@ -174,7 +177,7 @@ const App: Component = () => {
   );
 };
 
-render(() => App, document.getElementById("app"));
+render(() => <App />, document.getElementById("app")!);
 
 if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
   window.addEventListener("load", () => {
