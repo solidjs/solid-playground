@@ -9,15 +9,15 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-typescript": "^7.12.1",
     "@babel/types": "^7.12.6",
-    "@parcel/config-default": "^2.0.0-nightly.449",
+    "@parcel/config-default": "^2.0.0-nightly.454",
     "@types/babel__standalone": "^7.1.3",
     "@types/lodash": "^4.14.165",
     "@types/lz-string": "^1.3.34",
-    "@types/node": "^14.14.7",
+    "@types/node": "^14.14.8",
     "@types/workbox-sw": "^4.3.1",
     "autoprefixer": "^10.0.2",
-    "parcel": "^2.0.0-nightly.447",
-    "postcss": "^8.1.7",
+    "parcel": "^2.0.0-nightly.452",
+    "postcss": "^8.1.8",
     "rimraf": "^3.0.2",
     "tailwindcss": "^1.9.6",
     "typescript": "^4.0.5",
@@ -34,6 +34,6 @@
     "lz-string": "^1.4.4",
     "mitt": "^2.1.0",
     "register-service-worker": "^1.7.1",
-    "solid-js": "^0.22.0"
+    "solid-js": "^0.22.3"
   }
 }
