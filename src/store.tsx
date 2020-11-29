@@ -97,7 +97,7 @@ function createStore() {
             {
               id: nextId,
               name: `tab${state.tabs.length}`,
-              type: "jsx",
+              type: "tsx",
               source: "",
             },
           ],
