@@ -111,14 +111,25 @@ const Editor: Component<Props> = (props) => {
     const docLength = view.state.doc.length;
     const selectionTarget = cursor().ranges[0].to;
 
-    const transaction = view.state.update({
-      changes: { from: 0, to: docLength, insert: internal.value },
-      scrollIntoView: false,
-      selection:
-        selectionTarget <= docLength ? cursor() : placeCursor(docLength),
-    });
+    // FIXME: Handle this in a better way perhaps with the eventBus?
+    try {
+      const updateDocTransation = view.state.update({
+        changes: { from: 0, to: docLength, insert: internal.value },
+        scrollIntoView: false,
+        selection:
+          selectionTarget <= docLength ? cursor() : placeCursor(docLength),
+      });
 
-    view.dispatch(transaction);
+      view.dispatch(updateDocTransation);
+    } catch {
+      const updateDocTransation = view.state.update({
+        changes: { from: 0, to: docLength, insert: internal.value },
+        scrollIntoView: false,
+        selection: placeCursor(0),
+      });
+
+      view.dispatch(updateDocTransation);
+    }
   });
 
   return <div ref={parent} {...external}></div>;
