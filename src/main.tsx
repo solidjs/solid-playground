@@ -40,7 +40,7 @@ const App: Component = () => {
   eventBus.on("sw-update", () => setNewUpdate(true));
   onCleanup(() => eventBus.all.clear());
 
-  const refs = new Map<number, HTMLSpanElement>();
+  const refs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
   const [edit, setEdit] = createSignal(-1);
@@ -90,19 +90,19 @@ const App: Component = () => {
       <TabList class="row-start-2">
         <For each={store.tabs}>
           {(tab, index) => (
-            <TabItem active={store.current === index()}>
+            <TabItem active={store.current === tab.id}>
               <button
                 type="button"
-                onClick={[actions.setCurrentTab, index()]}
+                onClick={[actions.setCurrentTab, tab.id]}
                 onDblClick={() => index() > 0 && setEdit(index())}
-                class="border-0 bg-transparent cursor-pointer pr-0"
+                class="cursor-pointer"
               >
                 <span
-                  ref={(el) => refs.set(index(), el)}
-                  contentEditable={store.current === index() && edit() >= 0}
+                  ref={(el) => refs.set(tab.id, el)}
+                  contentEditable={store.current === tab.id && edit() >= 0}
                   onBlur={(e) => {
                     setEdit(-1);
-                    actions.setTabName(index(), e.target.textContent!);
+                    actions.setTabName(tab.id, e.target.textContent!);
                   }}
                   class="outline-none"
                 >
@@ -115,7 +115,7 @@ const App: Component = () => {
                 <button
                   type="button"
                   class="border-0 bg-transparent cursor-pointer"
-                  onClick={[actions.removeTab, index()]}
+                  onClick={[actions.removeTab, tab.id]}
                 >
                   <span class="sr-only">Delete this tab</span>
                   <svg
