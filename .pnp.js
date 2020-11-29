@@ -62,7 +62,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["postcss", "npm:8.1.10"],
             ["register-service-worker", "npm:1.7.1"],
             ["rimraf", "npm:3.0.2"],
-            ["rollup", "npm:2.33.3"],
+            ["rollup", "npm:2.34.0"],
             ["solid-js", "npm:0.22.8"],
             ["tailwindcss", "virtual:c6f8b4f6b16db27fe77e4a5a968be20ff21949fb1f72f450c2c7237ff651b91cb5a3749d472bc694fe8399a104a94a9f4e25a915730235c434e9799f9843c57f#npm:2.0.1"],
             ["typescript", "patch:typescript@npm%3A4.1.2#builtin<compat/typescript>::version=4.1.2&hash=5bf698"],
@@ -11196,10 +11196,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "HARD",
         }],
-        ["npm:2.33.3", {
-          "packageLocation": "./.yarn/cache/rollup-npm-2.33.3-a1246831e8-b14dc27a1c.zip/node_modules/rollup/",
+        ["npm:2.34.0", {
+          "packageLocation": "./.yarn/cache/rollup-npm-2.34.0-f9bf69059d-8404d8cf93.zip/node_modules/rollup/",
           "packageDependencies": [
-            ["rollup", "npm:2.33.3"],
+            ["rollup", "npm:2.34.0"],
             ["fsevents", "patch:fsevents@npm%3A2.1.3#builtin<compat/fsevents>::version=2.1.3&hash=127e8e"]
           ],
           "linkType": "HARD",
@@ -11609,7 +11609,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["postcss", "npm:8.1.10"],
             ["register-service-worker", "npm:1.7.1"],
             ["rimraf", "npm:3.0.2"],
-            ["rollup", "npm:2.33.3"],
+            ["rollup", "npm:2.34.0"],
             ["solid-js", "npm:0.22.8"],
             ["tailwindcss", "virtual:c6f8b4f6b16db27fe77e4a5a968be20ff21949fb1f72f450c2c7237ff651b91cb5a3749d472bc694fe8399a104a94a9f4e25a915730235c434e9799f9843c57f#npm:2.0.1"],
             ["typescript", "patch:typescript@npm%3A4.1.2#builtin<compat/typescript>::version=4.1.2&hash=5bf698"],
