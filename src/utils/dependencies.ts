@@ -1,8 +1,3 @@
-import solid from "babel-preset-solid";
-import ts from "@babel/preset-typescript";
-
-// TODO: Use these
-
 // Those two function should be used to dynamically load rollup & babel
 // The problem is how to bundle those as seperate chunks and then
 // from a consumer still being able to resolve them.
@@ -34,6 +29,8 @@ export async function loadBabel(_SOLID_VERSION: string) {
   if (globalThis.$babel) return globalThis.$babel;
 
   const { transform } = await import("@babel/standalone");
+  const ts = await import("@babel/preset-typescript");
+  const solid = await import("babel-preset-solid");
 
   globalThis.$babel = (code: string, opts?: any) =>
     transform(code, {
