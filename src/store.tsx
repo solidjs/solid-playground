@@ -1,7 +1,7 @@
 import { decompressFromEncodedURIComponent } from "lz-string";
 import { createState, createContext, useContext, Component } from "solid-js";
 
-const defaultTabs = [
+const defaultTabs: Tab[] = [
   {
     id: 0,
     name: "app",
@@ -11,10 +11,16 @@ const defaultTabs = [
   },
 ];
 
+function parseHash(hash: string, fallback = defaultTabs) {
+  try {
+    return JSON.parse(decompressFromEncodedURIComponent(hash)!);
+  } catch {
+    return fallback;
+  }
+}
+
 function createStore() {
-  const initialTabs =
-    location.hash &&
-    JSON.parse(decompressFromEncodedURIComponent(location.hash.slice(1))!);
+  const initialTabs = location.hash && parseHash(location.hash.slice(1));
 
   const [state, setState] = createState<{
     current: number;
