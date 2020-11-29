@@ -53,7 +53,7 @@ const App: Component = () => {
     if (!compiled) return;
 
     actions.setState({ compiled });
-  }, 1000);
+  }, 750);
 
   createEffect(() => {
     for (const tab of store.tabs) tab.source;
