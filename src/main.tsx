@@ -1,152 +1,208 @@
-import "./tailwind.css";
+import "./assets/tailwind.css";
 
-import { render } from "solid-js/web";
-import { register } from "register-service-worker";
+import debounce from "lodash/debounce";
+
 import {
   Component,
-  createState,
   Show,
   createEffect,
   Suspense,
   lazy,
   createSignal,
   onCleanup,
+  For,
 } from "solid-js";
-import {
-  compressToEncodedURIComponent,
-  decompressFromEncodedURIComponent,
-} from "lz-string";
-import mitt from "mitt";
+import { render } from "solid-js/web";
 
-import debounce from "lodash/debounce";
+import { compressToEncodedURIComponent } from "lz-string";
+
 import { Icon } from "@amoutonbrady/solid-heroicons";
 import { x } from "@amoutonbrady/solid-heroicons/outline";
+
+import { compile } from "./utils/worker";
+import { eventBus } from "./utils/eventBus";
+import TabItem from "./components/tab/item";
+import TabList from "./components/tab/list";
+import { Preview } from "./components/preview";
+import { StoreProvider, useStore } from "./store";
+
 // @ts-ignore
-import logo from "url:./logo.svg";
+import logo from "url:./assets/images/logo.svg";
 import pkg from "../package.json";
-import { Preview } from "./preview";
 
-const Editor = lazy(() => import("./editor"));
+const Editor = lazy(() => import("./components/editor"));
 
-const emitter = mitt();
 let swUpdatedBeforeRender = false;
-emitter.on("sw-update", () => (swUpdatedBeforeRender = true));
-
-async function compile(input: string, mode: string) {
-  try {
-    const { transform } = await import("@babel/standalone");
-    const solid = await import("babel-preset-solid");
-
-    const options =
-      mode === "SSR"
-        ? { generate: "ssr", hydratable: true }
-        : mode === "HYDRATION"
-        ? { generate: "dom", hydratable: true }
-        : { generate: "dom", hydratable: false };
-
-    const { code } = transform(input, { presets: [[solid, options]] });
-
-    return [null, code] as const;
-  } catch (e) {
-    console.error(e);
-    return [e.message, null] as const;
-  }
-}
+eventBus.on("sw-update", () => (swUpdatedBeforeRender = true));
 
 const App: Component = () => {
   const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
-  emitter.on("sw-update", () => setNewUpdate(true));
-  onCleanup(() => emitter.all.clear());
+  eventBus.on("sw-update", () => setNewUpdate(true));
+  onCleanup(() => eventBus.all.clear());
 
-  const [compiled, setCompiled] = createState({
-    input: location.hash
-      ? decompressFromEncodedURIComponent(location.hash.slice(1))!
-      : "const h1 = <h1>Hello world</h1>",
-    output: "",
-    error: "",
-    mode: "DOM",
-    preview: false,
-  });
+  const refs = new Map<number, HTMLSpanElement>();
 
-  createEffect(async () => {
-    const [error, output] = await compile(compiled.input, compiled.mode);
-    if (error) setCompiled({ error });
-    else setCompiled({ output });
-  });
+  const [store, actions] = useStore();
+  const [edit, setEdit] = createSignal(-1);
+  const [showPreview, setShowPreview] = createSignal(true);
+
+  const compileOnChange = debounce(async (tabs) => {
+    const [error, compiled] = await compile(tabs);
+
+    if (error) return actions.setState({ error });
+    if (!compiled) return;
+
+    actions.setState({ compiled });
+  }, 1000);
+
   createEffect(() => {
-    const compressed = compressToEncodedURIComponent(compiled.input);
+    for (const tab of store.tabs) tab.source;
+    compileOnChange(store.tabs);
+  });
+
+  createEffect(() => {
+    const compressed = compressToEncodedURIComponent(
+      JSON.stringify(store.tabs)
+    );
     history.pushState(null, "", `#${compressed}`);
   });
 
-  const handleDocChange = debounce((input: string) => {
-    setCompiled({ input, error: "" });
-  }, 1000);
+  const handleDocChange = (source: string) => {
+    actions.setCurrentSource(source);
+    actions.setState({ error: "" });
+  };
 
   return (
-    <div class="relative grid md:grid-cols-2 h-screen gap-y-1 md:gap-y-0 gap-x-1 overflow-hidden bg-gray-700 text-gray-50 wrapper">
-      <header class="md:col-span-2 p-2 flex justify-between items-center text-sm">
+    <div class="relative grid md:grid-cols-2 h-screen gap-0.5 overflow-hidden bg-gray-400 text-gray-900 wrapper">
+      <header class="md:col-span-2 p-2 flex justify-between items-center bg-gray-50">
         <h1 class="flex items-center space-x-4 uppercase font-semibold">
           <a href="https://github.com/ryansolid/solid">
             <img src={logo} alt="solid-js logo" class="h-8" />
-          </a>{" "}
-          <span>Template Explorer</span>
+          </a>
+          <span>Solid REPL</span>
         </h1>
 
         <div class="flex items-center space-x-2">
-          <div class="flex items-center space-x-2">
-            <input
-              id="preview"
-              type="checkbox"
-              checked={compiled.preview}
-              onChange={(e) => setCompiled("preview", e.target.checked)}
-            />
-            <label for="preview" class="cursor-pointer leading-none">
-              Experimental preview
-            </label>
-          </div>
-          <select
-            value={compiled.mode}
-            onChange={(e) => setCompiled("mode", e.target.value)}
-            class="bg-transparent border rounded border-gray-400 px-2 py-1 text-sm"
-          >
-            <option class="bg-gray-700">DOM</option>
-            <option class="bg-gray-700">HYDRATION</option>
-            <option class="bg-gray-700">SSR</option>
-          </select>
           <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
         </div>
       </header>
 
+      <TabList class="row-start-2">
+        <For each={store.tabs}>
+          {(tab, index) => (
+            <TabItem active={store.current === index()}>
+              <button
+                type="button"
+                onClick={[actions.setCurrentTab, index()]}
+                onDblClick={() => index() > 0 && setEdit(index())}
+                class="border-0 bg-transparent cursor-pointer pr-0"
+              >
+                <span
+                  ref={(el) => refs.set(index(), el)}
+                  contentEditable={store.current === index() && edit() >= 0}
+                  onBlur={(e) => {
+                    setEdit(-1);
+                    actions.setTabName(index(), e.target.textContent!);
+                  }}
+                  class="outline-none"
+                >
+                  {tab.name}
+                </span>
+                <span>.{tab.type}</span>
+              </button>
+
+              <Show when={index() > 0}>
+                <button
+                  type="button"
+                  class="border-0 bg-transparent cursor-pointer"
+                  onClick={[actions.removeTab, index()]}
+                >
+                  <span class="sr-only">Delete this tab</span>
+                  <svg
+                    style="stroke: currentColor; fill: none;"
+                    class="h-4"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </Show>
+            </TabItem>
+          )}
+        </For>
+
+        <TabItem>
+          <button onClick={actions.addTab} title="Add a new tab">
+            <span class="sr-only">Add a new tab</span>
+            <svg
+              viewBox="0 0 24 24"
+              style="stroke: currentColor; fill: none;"
+              class="h-5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+          </button>
+        </TabItem>
+      </TabList>
+
+      <TabList class="row-start-4 md:row-start-2">
+        <TabItem class="flex-1" active={showPreview()}>
+          <button type="button" class="w-full" onClick={[setShowPreview, true]}>
+            Result
+          </button>
+        </TabItem>
+        <TabItem class="flex-1" active={!showPreview()}>
+          <button
+            type="button"
+            class="w-full"
+            onClick={[setShowPreview, false]}
+          >
+            Output
+          </button>
+        </TabItem>
+      </TabList>
+
       <Suspense fallback={<p>Loading the REPL</p>}>
         <Editor
-          defaultValue={compiled.input}
-          onDocChange={(input) => handleDocChange(input)}
-          class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
+          value={actions.currentSource}
+          onDocChange={handleDocChange}
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-trueGray-100 row-start-3"
+        />
+
+        <Editor
+          value={store.compiled}
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 bg-trueGray-100 row-start-5 md:row-start-3"
+          classList={{ hidden: showPreview() }}
+          disabled
         />
         <Preview
-          code={compiled.preview ? compiled.output : ""}
-          class="h-full max-h-screen overflow-auto flex-1 pr-4 pt-2 w-full bg-gray-100"
-          classList={{ hidden: !compiled.preview }}
-        />
-        <Editor
-          value={compiled.output}
-          class="h-full max-h-screen overflow-auto flex-1 bg-twilight focus:outline-none pr-4 pt-2 whitespace-normal"
-          classList={{ hidden: compiled.preview }}
-          disabled
+          code={store.compiled}
+          class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-gray-50 row-start-5 md:row-start-3"
+          classList={{ hidden: !showPreview() }}
         />
       </Suspense>
 
       {/* TODO: Use portal */}
-      <Show when={compiled.error}>
-        <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10">
+      <Show when={store.error}>
+        <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10 max-w-2xl whitespace-pre-line">
           <button
             title="close"
-            onClick={() => setCompiled("error", "")}
+            onClick={() => actions.setState("error", "")}
             class="absolute top-1 right-1 hover:text-red-900"
           >
             <Icon path={x} class="h-6 " />
           </button>
-          <code innerText={compiled.error}></code>
+          <code innerText={store.error}></code>
         </pre>
       </Show>
 
@@ -177,39 +233,11 @@ const App: Component = () => {
   );
 };
 
-render(() => <App />, document.getElementById("app")!);
-
-if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
-  window.addEventListener("load", () => {
-    register("/sw.js", {
-      ready(registration) {
-        console.log("Service worker is active.", { registration });
-      },
-      registered(registration) {
-        console.log("✔ Application is now available offline", { registration });
-      },
-      cached(registration) {
-        console.log("Content has been cached for offline use.", {
-          registration,
-        });
-      },
-      updatefound(registration) {
-        console.log("New content is downloading.", { registration });
-      },
-      updated(registration) {
-        emitter.emit("sw-update", registration);
-        console.log("New content is available; please refresh.", {
-          registration,
-        });
-      },
-      offline() {
-        console.log(
-          "No internet connection found. App is running in offline mode."
-        );
-      },
-      error(error) {
-        console.error("❌ Application couldn't be registered offline:", error);
-      },
-    });
-  });
-}
+render(
+  () => (
+    <StoreProvider>
+      <App />
+    </StoreProvider>
+  ),
+  document.getElementById("app")!
+);

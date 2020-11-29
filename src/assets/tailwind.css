@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+div[contenteditable="true"]:focus,
+.ͼ1.cm-wrap.cm-focused {
+  outline: none !important;
+}
+
+.wrapper {
+  grid-template-rows: auto auto 1fr auto 1fr;
+}
+
+@screen md {
+  .wrapper {
+    grid-template-rows: auto auto 1fr;
+  }
+}
