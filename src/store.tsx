@@ -1,9 +1,11 @@
 import { decompressFromEncodedURIComponent } from "lz-string";
 import { createState, createContext, useContext, Component } from "solid-js";
 
+import { uid } from "./utils/uid";
+
 const defaultTabs: Tab[] = [
   {
-    id: 0,
+    id: uid(),
     name: "app",
     type: "jsx",
     source:
@@ -21,15 +23,16 @@ function parseHash(hash: string, fallback = defaultTabs) {
 
 function createStore() {
   const initialTabs = location.hash && parseHash(location.hash.slice(1));
+  const tabs = initialTabs || defaultTabs;
 
   const [state, setState] = createState<{
-    current: number;
+    current: string;
     tabs: Tab[];
     error: string;
     compiled: string;
   }>({
-    current: 0,
-    tabs: initialTabs || defaultTabs,
+    current: tabs[0].id,
+    tabs,
     error: "",
     compiled: "",
   });
@@ -39,46 +42,61 @@ function createStore() {
     {
       setState,
       get currentTab() {
-        return state.tabs[state.current];
+        return state.tabs.find((tab) => tab.id === state.current);
       },
-      setCurrentTab: (current: number) => {
+      setCurrentTab: (current: string) => {
         setState("current", current);
       },
-      setTabName(id: number, name: string) {
-        setState("tabs", id, "name", name);
+      setTabName(id: string, name: string) {
+        // FIXME: Use the below function, at the moment TS is not content
+        // ref: https://github.com/ryansolid/solid/blob/master/documentation/state.md#setstatepath-changes
+        // setState("tabs", (tabs) => tabs.id === id, "name", name);
+
+        const idx = state.tabs.findIndex((tab) => tab.id === id);
+        if (idx < 0) return;
+
+        setState("tabs", idx, "name", name);
       },
-      removeTab(id: number) {
-        // TODO: log the actual tab name here
+      removeTab(id: string) {
+        const idx = state.tabs.findIndex((tab) => tab.id === id);
+        const tab = state.tabs[idx];
+
+        if (!tab) return;
+
         const confirmDeletion = confirm(
-          "Are you sure you want to delete this tab?"
+          `Are you sure you want to delete ${tab.name}.${tab.type}?`
         );
         if (!confirmDeletion) return;
 
         // We want to redirect to another tab if we are deleting the current one
-        if (state.current === id) {
-          setState("current", (current) => (current > 0 ? current - 1 : 0));
-        }
+        if (state.current === id) setState("current", state.tabs[idx - 1].id);
 
-        setState("tabs", (tabs) => {
-          const idx = tabs.findIndex((tab) => tab.id === id);
-          return [...tabs.slice(0, idx), ...tabs.slice(idx + 1)];
-        });
+        setState("tabs", (tabs) => [
+          ...tabs.slice(0, idx),
+          ...tabs.slice(idx + 1),
+        ]);
       },
       get currentSource() {
-        return state.tabs[state.current].source;
+        const idx = state.tabs.findIndex((tab) => tab.id === state.current);
+        if (idx < 0) return;
+
+        return state.tabs[idx].source;
       },
       setCurrentSource(source: string) {
-        setState("tabs", state.current, "source", source);
+        const idx = state.tabs.findIndex((tab) => tab.id === state.current);
+        if (idx < 0) return;
+
+        setState("tabs", idx, "source", source);
       },
       addTab() {
-        const nextId = state.tabs.length;
+        const nextId = uid();
 
         setState({
           tabs: [
             ...state.tabs,
             {
               id: nextId,
-              name: `tab${nextId}`,
+              name: `tab${state.tabs.length}`,
               type: "jsx",
               source: "",
             },
@@ -109,7 +127,7 @@ export function useStore() {
 }
 
 export interface Tab {
-  id: number;
+  id: string;
   name: string;
   type: string;
   source: string;
