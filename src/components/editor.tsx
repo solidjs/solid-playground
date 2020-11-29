@@ -19,6 +19,7 @@ import {
   indentMore,
   indentLess,
 } from "@codemirror/next/commands";
+import { historyKeymap } from "@codemirror/next/history";
 
 /**
  * This function creates a new EditorSelection that's used to
@@ -28,10 +29,11 @@ import {
  * If we don't do that the cursor will reset to the begining
  * of the editor everytime the input changes.
  *
- * @param pos {number} The position to reset to
+ * @param pos {number} The start position to reset to
+ * @param pos {number} The end position to reset to
  */
-function placeCursor(pos: number) {
-  return EditorSelection.create([EditorSelection.range(pos, pos)]);
+function placeCursor(startPos: number, envPos = startPos) {
+  return EditorSelection.create([EditorSelection.range(startPos, envPos)]);
 }
 
 const Editor: Component<Props> = (props) => {
@@ -59,15 +61,8 @@ const Editor: Component<Props> = (props) => {
     doc: string,
     disabled: boolean = false
   ): EditorState {
-    // There are some cases (like deletion) where the cusor isn't at the right
-    // place. We need to make sure the range we are about to use from
-    // cursor() is now bigger than the document length.
-    const selection =
-      cursor().ranges[0].to <= doc.length ? cursor() : placeCursor(doc.length);
-
     return EditorState.create({
       doc,
-      selection,
       extensions: [
         basicSetup,
         javascript({ jsx: true, typescript: true }),
@@ -75,6 +70,8 @@ const Editor: Component<Props> = (props) => {
           // This trigger the onDocChange event and save the cursor
           // for the next state.
           if (update.docChanged && internal.onDocChange) {
+            if (internal.value === update.state.doc.toString()) return;
+
             internal.onDocChange(update.state.doc.toString());
             setCursor(update.state.selection);
           }
@@ -82,6 +79,7 @@ const Editor: Component<Props> = (props) => {
         EditorView.lineWrapping,
         keymap([
           ...defaultKeymap,
+          ...historyKeymap,
           {
             key: "Tab",
             preventDefault: true,
@@ -109,7 +107,18 @@ const Editor: Component<Props> = (props) => {
 
   createEffect(() => {
     if (!view) return;
-    view.setState(createEditorState(internal.value || "", internal.disabled));
+
+    const docLength = view.state.doc.length;
+    const selectionTarget = cursor().ranges[0].to;
+
+    const transaction = view.state.update({
+      changes: { from: 0, to: docLength, insert: internal.value },
+      scrollIntoView: false,
+      selection:
+        selectionTarget <= docLength ? cursor() : placeCursor(docLength),
+    });
+
+    view.dispatch(transaction);
   });
 
   return <div ref={parent} {...external}></div>;

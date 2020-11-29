@@ -21,11 +21,18 @@ export const Preview: Component<Props> = (props) => {
         <link href="https://unpkg.com/tailwindcss@2.0.1/dist/base.min.css" rel="stylesheet">
         <link href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" rel="stylesheet">
 
-        <script>
+        <script type="module">
           window.addEventListener('message', ({ data }) => {
             const oldScript = document.getElementById('script');
             if (oldScript) oldScript.remove();
+
             window.dispose && typeof window.dispose === 'function' && window.dispose()
+
+            if (!document.getElementById('app')) {
+              const app = document.createElement('app');
+              app.id = 'app';
+              document.body.appendChild(app);
+            }
 
             const script = document.createElement('script');
             script.innerHTML = data;
@@ -35,9 +42,7 @@ export const Preview: Component<Props> = (props) => {
           })
         </script>
       </head>
-      <body class="prose">
-        <div id="app"></div>
-      </body>
+      <body class="prose"></body>
     </html>
   `);
 
