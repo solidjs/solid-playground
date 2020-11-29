@@ -1,4 +1,5 @@
 import solid from "babel-preset-solid";
+import ts from "@babel/preset-typescript";
 
 // TODO: Use these
 
@@ -33,11 +34,10 @@ export async function loadBabel(_SOLID_VERSION: string) {
   if (globalThis.$babel) return globalThis.$babel;
 
   const { transform } = await import("@babel/standalone");
-  // console.log({ solid });
 
   globalThis.$babel = (code: string, opts?: any) =>
     transform(code, {
-      presets: [solid],
+      presets: [solid, ts],
       ...opts,
     });
 

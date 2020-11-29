@@ -47,11 +47,11 @@ function virtual({ SOLID_VERSION }) {
       return tab ? generateCodeString(tab) : null;
     },
 
-    async transform(code: string, id: string) {
+    async transform(code: string, filename: string) {
       // Compile solid code
       const babel = await loadBabel(SOLID_VERSION);
 
-      if (/\.jsx$/.test(id)) return babel(code);
+      if (/\.(j|t)sx$/.test(filename)) return babel(code, { filename });
     },
   };
 }
