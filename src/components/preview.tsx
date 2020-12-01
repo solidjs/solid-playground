@@ -1,18 +1,36 @@
-import { Component, createEffect, createMemo, splitProps } from "solid-js";
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onMount,
+  splitProps,
+} from "solid-js";
 
 export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ["code"]);
 
   let iframe!: HTMLIFrameElement;
+  const [isIframeReady, setIframeReady] = createSignal();
 
   createEffect(() => {
-    iframe.contentWindow!.postMessage(
-      internal.code.replace("render(", "window.dispose = render("),
-      "*"
-    );
+    isIframeReady();
+
+    const code = internal.code.replace("render(", "window.dispose = render(");
+    const event = "CODE_UPDATE";
+
+    iframe.contentWindow!.postMessage({ event, code }, "*");
   });
 
-  const html = btoa(`
+  onMount(() => {
+    iframe.contentWindow!.addEventListener("message", ({ data }) => {
+      switch (data.event) {
+        case "DOM_READY":
+          return setIframeReady(undefined);
+      }
+    });
+  });
+
+  const html = `
     <!doctype html>
     <html>
       <head>
@@ -23,6 +41,9 @@ export const Preview: Component<Props> = (props) => {
 
         <script type="module">
           window.addEventListener('message', ({ data }) => {
+            const { event, code } = data;
+            if (event === 'DOM_READY') return;
+
             const oldScript = document.getElementById('script');
             if (oldScript) oldScript.remove();
 
@@ -35,20 +56,20 @@ export const Preview: Component<Props> = (props) => {
             }
 
             const script = document.createElement('script');
-            script.innerHTML = data;
+            script.innerHTML = code;
             script.type = 'module';
             script.id = 'script';
             document.body.appendChild(script);
           })
+
+          window.postMessage({ event: 'DOM_READY' }, '*');
         </script>
       </head>
       <body class="prose"></body>
     </html>
-  `);
+  `;
 
-  const srcDoc = `data:text/html;base64,${html}`;
-
-  return <iframe ref={iframe} {...external} src={srcDoc}></iframe>;
+  return <iframe ref={iframe} {...external} srcdoc={html}></iframe>;
 };
 
 interface Props extends JSX.HTMLAttributes<HTMLIFrameElement> {

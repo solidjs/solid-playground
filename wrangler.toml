@@ -1,0 +1,10 @@
+name = "solid-playground"
+type = "webpack"
+account_id = ""
+workers_dev = false
+route = "playground.solidjs.com/*"
+zone_id = ""
+
+[site]
+bucket = "./dist"
+entry-point = "workers-site"

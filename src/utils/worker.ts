@@ -24,7 +24,7 @@ function generateCodeString(tab: Tab) {
  *
  * Note: Passing in the Solid Version for letter use
  */
-function virtual({ SOLID_VERSION }) {
+function virtual({ SOLID_VERSION, solidOptions = {} }) {
   return {
     name: "repl-plugin",
 
@@ -51,12 +51,13 @@ function virtual({ SOLID_VERSION }) {
       // Compile solid code
       const babel = await loadBabel(SOLID_VERSION);
 
-      if (/\.(j|t)sx$/.test(filename)) return babel(code, { filename });
+      if (/\.(j|t)sx$/.test(filename))
+        return babel(code, { babel: { filename }, solid: solidOptions });
     },
   };
 }
 
-export async function compile(tabs: Tab[]) {
+export async function compile(tabs: Tab[], solidOptions = {}) {
   try {
     const rollup = await loadRollup();
 
@@ -66,7 +67,7 @@ export async function compile(tabs: Tab[]) {
 
     const compiler = await rollup({
       input: `./${tabs[0].name}.${tabs[0].type}`,
-      plugins: [virtual({ SOLID_VERSION })],
+      plugins: [virtual({ SOLID_VERSION, solidOptions })],
     });
 
     const {

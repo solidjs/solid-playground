@@ -2482,6 +2482,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tailwindcss/forms@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "@tailwindcss/forms@npm:0.2.1"
+  dependencies:
+    mini-svg-data-uri: ^1.2.3
+  checksum: 968520113161a4720f79af53e3efd1354ec7ab560ad457891246fb044cc1b23d31e909f9ac04b515a71acf5cf9642434c86a277475474cae5fe9b7efa2938804
+  languageName: node
+  linkType: hard
+
 "@types/babel__standalone@npm:^7.1.3":
   version: 7.1.3
   resolution: "@types/babel__standalone@npm:7.1.3"
@@ -7165,6 +7174,13 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"mini-svg-data-uri@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "mini-svg-data-uri@npm:1.2.3"
+  checksum: a354646418956856a3906dbe3418684d83084296a4d47a9d8945c256a7f9f9e06600e3d3760a0555229f09d8bf37a4817facd7ac5000cca334d3a6d7ec42a02f
+  languageName: node
+  linkType: hard
+
 "minimalistic-assert@npm:^1.0.0, minimalistic-assert@npm:^1.0.1":
   version: 1.0.1
   resolution: "minimalistic-assert@npm:1.0.1"
@@ -9456,6 +9472,7 @@ fsevents@~2.1.2:
     "@codemirror/next": ^0.14.0
     "@parcel/config-default": ^2.0.0-nightly.465
     "@parcel/core": ^2.0.0-nightly.463
+    "@tailwindcss/forms": ^0.2.1
     "@types/babel__standalone": ^7.1.3
     "@types/codemirror": ^0.0.100
     "@types/lodash": ^4.14.165

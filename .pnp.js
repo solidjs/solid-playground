@@ -45,6 +45,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@codemirror/next", "npm:0.14.0"],
             ["@parcel/config-default", "virtual:2fed8ff418628bdddc8cbde140c339e6362ac29eddb0d13e323b97cefb1437297c110dc1c733a81be7849bc7a4545c84b98ae6f5257ffd445ab4f5c16a1d5519#npm:2.0.0-nightly.465"],
             ["@parcel/core", "npm:2.0.0-nightly.463"],
+            ["@tailwindcss/forms", "npm:0.2.1"],
             ["@types/babel__standalone", "npm:7.1.3"],
             ["@types/codemirror", "npm:0.0.100"],
             ["@types/lodash", "npm:4.14.165"],
@@ -3803,6 +3804,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@szmarczak/http-timer", "npm:1.1.2"],
             ["defer-to-connect", "npm:1.1.3"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["@tailwindcss/forms", [
+        ["npm:0.2.1", {
+          "packageLocation": "./.yarn/cache/@tailwindcss-forms-npm-0.2.1-57bde29e00-9685201131.zip/node_modules/@tailwindcss/forms/",
+          "packageDependencies": [
+            ["@tailwindcss/forms", "npm:0.2.1"],
+            ["mini-svg-data-uri", "npm:1.2.3"]
           ],
           "linkType": "HARD",
         }]
@@ -9113,6 +9124,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["mini-svg-data-uri", [
+        ["npm:1.2.3", {
+          "packageLocation": "./.yarn/cache/mini-svg-data-uri-npm-1.2.3-8ed0f77365-a354646418.zip/node_modules/mini-svg-data-uri/",
+          "packageDependencies": [
+            ["mini-svg-data-uri", "npm:1.2.3"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["minimalistic-assert", [
         ["npm:1.0.1", {
           "packageLocation": "./.yarn/cache/minimalistic-assert-npm-1.0.1-dc8bb23d29-28f1de3cf9.zip/node_modules/minimalistic-assert/",
@@ -11683,6 +11703,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@codemirror/next", "npm:0.14.0"],
             ["@parcel/config-default", "virtual:2fed8ff418628bdddc8cbde140c339e6362ac29eddb0d13e323b97cefb1437297c110dc1c733a81be7849bc7a4545c84b98ae6f5257ffd445ab4f5c16a1d5519#npm:2.0.0-nightly.465"],
             ["@parcel/core", "npm:2.0.0-nightly.463"],
+            ["@tailwindcss/forms", "npm:0.2.1"],
             ["@types/babel__standalone", "npm:7.1.3"],
             ["@types/codemirror", "npm:0.0.100"],
             ["@types/lodash", "npm:4.14.165"],
