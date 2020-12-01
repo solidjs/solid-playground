@@ -61,10 +61,7 @@ const App: Component = () => {
   });
 
   createEffect(() => {
-    const compressed = compressToEncodedURIComponent(
-      JSON.stringify(store.tabs)
-    );
-    history.pushState(null, "", `#${compressed}`);
+    location.hash = compressToEncodedURIComponent(JSON.stringify(store.tabs));
   });
 
   const handleDocChange = (source: string) => {
