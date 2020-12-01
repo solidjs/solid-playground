@@ -24,7 +24,7 @@ import { eventBus } from "./utils/eventBus";
 import TabItem from "./components/tab/item";
 import TabList from "./components/tab/list";
 import { Preview } from "./components/preview";
-import { StoreProvider, useStore } from "./store";
+import { compileMode, StoreProvider, useStore } from "./store";
 
 // @ts-ignore
 import logo from "url:./assets/images/logo.svg";
@@ -46,8 +46,11 @@ const App: Component = () => {
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
 
-  const compileOnChange = debounce(async (tabs) => {
-    const [error, compiled] = await compile(tabs);
+  // TODO: Use `useTransition` to show a loading state when it's compiling
+  const compileOnChange = debounce(async (tabs, compileOpts) => {
+    const [error, compiled] = await compile(tabs, compileOpts);
+
+    console.log(compiled);
 
     if (error) return actions.setState({ error });
     if (!compiled) return;
@@ -56,8 +59,13 @@ const App: Component = () => {
   }, 750);
 
   createEffect(() => {
+    if (!showPreview()) actions.setState("mode", "DOM");
+  });
+
+  createEffect(() => {
     for (const tab of store.tabs) tab.source;
-    compileOnChange(store.tabs);
+    console.log(compileMode[store.mode]);
+    compileOnChange(store.tabs, compileMode[store.mode]);
   });
 
   createEffect(() => {
@@ -71,10 +79,7 @@ const App: Component = () => {
 
   return (
     <div class="relative grid md:grid-cols-2 h-screen gap-0.5 overflow-hidden bg-gray-400 text-gray-900 wrapper">
-      <Show
-        when={store.withHeader}
-        fallback={<div class="md:col-span-2"></div>}
-      >
+      <Show when={store.header} fallback={<div class="md:col-span-2"></div>}>
         <header class="md:col-span-2 p-2 flex justify-between items-center bg-gray-50">
           <h1 class="flex items-center space-x-4 uppercase font-semibold">
             <a href="https://github.com/ryansolid/solid">
@@ -97,7 +102,7 @@ const App: Component = () => {
                 type="button"
                 onClick={[actions.setCurrentTab, tab.id]}
                 onDblClick={() => {
-                  if (index() <= 0 || !store.isInteractive) return;
+                  if (index() <= 0 || !store.interactive) return;
                   setEdit(index());
                 }}
                 class="cursor-pointer"
@@ -126,9 +131,9 @@ const App: Component = () => {
                 <button
                   type="button"
                   class="border-0 bg-transparent cursor-pointer"
-                  disabled={!store.isInteractive}
+                  disabled={!store.interactive}
                   onClick={() => {
-                    if (!store.isInteractive) return;
+                    if (!store.interactive) return;
                     actions.removeTab(tab.id);
                   }}
                 >
@@ -154,8 +159,8 @@ const App: Component = () => {
         <TabItem>
           <button
             type="button"
-            onClick={store.isInteractive && actions.addTab}
-            disabled={!store.isInteractive}
+            onClick={store.interactive && actions.addTab}
+            disabled={!store.interactive}
             title="Add a new tab"
           >
             <span class="sr-only">Add a new tab</span>
@@ -197,20 +202,74 @@ const App: Component = () => {
           value={actions.currentSource}
           onDocChange={handleDocChange}
           class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-trueGray-100 row-start-3"
-          disabled={!store.isInteractive}
+          disabled={!store.interactive}
         />
 
-        <Editor
-          value={store.compiled}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 bg-trueGray-100 row-start-5 md:row-start-3"
-          classList={{ hidden: showPreview() }}
-          disabled
-        />
-        <Preview
-          code={store.compiled}
-          class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-gray-50 row-start-5 md:row-start-3"
-          classList={{ hidden: !showPreview() }}
-        />
+        <Show when={!showPreview()}>
+          <section class="h-full max-h-screen overflow-hidden flex flex-col flex-1 focus:outline-none bg-trueGray-100 row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
+            <Editor
+              value={store.compiled}
+              class="h-full overflow-auto focus:outline-none flex-1 overflow-auto p-2"
+              disabled
+            />
+            <div class="bg-gray-100 p-2">
+              <label class="font-semibold text-sm uppercase">
+                Compile mode
+              </label>
+
+              <div class="flex flex-col mt-1">
+                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                  <input
+                    checked={store.mode === "DOM"}
+                    value="DOM"
+                    class="text-primary"
+                    onChange={(e) =>
+                      actions.setState("mode", e.target.value as any)
+                    }
+                    type="radio"
+                    name="dom"
+                    id="dom"
+                  />
+                  <span>Client side rendering</span>
+                </label>
+                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                  <input
+                    checked={store.mode === "SSR"}
+                    value="SSR"
+                    class="text-primary"
+                    onChange={(e) =>
+                      actions.setState("mode", e.target.value as any)
+                    }
+                    type="radio"
+                    name="dom"
+                    id="dom"
+                  />
+                  <span>Server side rendering</span>
+                </label>
+                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                  <input
+                    checked={store.mode === "HYDRATABLE"}
+                    value="HYDRATABLE"
+                    class="text-primary"
+                    onChange={(e) =>
+                      actions.setState("mode", e.target.value as any)
+                    }
+                    type="radio"
+                    name="dom"
+                    id="dom"
+                  />
+                  <span>Client side rendering with hydratation</span>
+                </label>
+              </div>
+            </div>
+          </section>
+        </Show>
+        <Show when={showPreview()}>
+          <Preview
+            code={store.compiled}
+            class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-gray-50 row-start-5 md:row-start-3"
+          />
+        </Show>
       </Suspense>
 
       {/* TODO: Use portal */}
@@ -230,7 +289,7 @@ const App: Component = () => {
 
       {/* TODO: Use portal */}
       <Show when={newUpdate()}>
-        <div class="fixed bottom-10 left-10 bg-blue-200 text-blue-800 border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
+        <div class="fixed bottom-10 left-10 bg-blue-200 text-primary border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
           <button
             title="close"
             onClick={() => setNewUpdate(false)}

@@ -16,6 +16,7 @@
     "@babel/types": "^7.12.7",
     "@parcel/config-default": "^2.0.0-nightly.465",
     "@parcel/core": "^2.0.0-nightly.463",
+    "@tailwindcss/forms": "^0.2.1",
     "@types/babel__standalone": "^7.1.3",
     "@types/codemirror": "^0.0.100",
     "@types/lodash": "^4.14.165",

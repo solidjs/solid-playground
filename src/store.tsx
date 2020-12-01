@@ -13,6 +13,14 @@ const defaultTabs: Tab[] = [
   },
 ];
 
+export const compileMode = {
+  SSR: { generate: "ssr", hydratable: true },
+  DOM: { generate: "dom", hydratable: false },
+  HYDRATABLE: { generate: "dom", hydratable: true },
+} as const;
+
+type ValueOf<T> = T[keyof T];
+
 function parseHash(hash: string, fallback = defaultTabs) {
   try {
     return JSON.parse(decompressFromEncodedURIComponent(hash)!);
@@ -25,22 +33,23 @@ function createStore() {
   const url = new URL(location.href);
   const initialTabs = url.hash && parseHash(url.hash.slice(1));
   const params = Object.fromEntries(url.searchParams.entries());
-  const tabs = initialTabs || defaultTabs;
+  const tabs: Tab[] = initialTabs || defaultTabs;
 
-  const [state, setState] = createState<{
-    current: string;
-    tabs: Tab[];
-    error: string;
-    compiled: string;
-    withHeader: boolean;
-    isInteractive: boolean;
-  }>({
+  const [noHeader, noInteractive] = ["noHeader", "noInteractive"].map(
+    (key) => key in params
+  );
+
+  const [state, setState] = createState({
     current: tabs[0].id,
     tabs,
     error: "",
     compiled: "",
-    withHeader: params.withHeader !== undefined,
-    isInteractive: params.isInteractive !== undefined,
+    mode: "DOM" as keyof typeof compileMode,
+    header: !noHeader,
+    interactive: !noInteractive,
+    get compileMode(): ValueOf<typeof compileMode> {
+      return compileMode[this.mode];
+    },
   });
 
   return [

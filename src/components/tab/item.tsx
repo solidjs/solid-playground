@@ -3,11 +3,11 @@ import { Component } from "solid-js";
 const TabItem: Component<Props> = (props) => {
   return (
     <li
-      class={`inline-flex items-center space-x-2 py-1 px-2 text-sm hover:bg-orange-50 ${
+      class={`inline-flex items-center space-x-2 py-1 px-2 text-sm hover:bg-blue-50 ${
         props.class || ""
       }`}
       classList={{
-        "text-orange-800": props.active || false,
+        "text-primary": props.active || false,
       }}
     >
       {props.children}

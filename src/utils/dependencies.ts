@@ -32,10 +32,13 @@ export async function loadBabel(_SOLID_VERSION: string) {
   const ts = await import("@babel/preset-typescript");
   const solid = await import("babel-preset-solid");
 
-  globalThis.$babel = (code: string, opts?: any) =>
+  globalThis.$babel = (
+    code: string,
+    opts: { babel: any; solid: any } = { babel: {}, solid: {} }
+  ) =>
     transform(code, {
-      presets: [solid, ts],
-      ...opts,
+      presets: [[solid, { ...opts.solid }], ts],
+      ...opts.babel,
     });
 
   return globalThis.$babel;
