@@ -22,7 +22,9 @@ function parseHash(hash: string, fallback = defaultTabs) {
 }
 
 function createStore() {
-  const initialTabs = location.hash && parseHash(location.hash.slice(1));
+  const url = new URL(location.href);
+  const initialTabs = url.hash && parseHash(url.hash.slice(1));
+  const params = Object.fromEntries(url.searchParams.entries());
   const tabs = initialTabs || defaultTabs;
 
   const [state, setState] = createState<{
@@ -30,11 +32,15 @@ function createStore() {
     tabs: Tab[];
     error: string;
     compiled: string;
+    withHeader: boolean;
+    isInteractive: boolean;
   }>({
     current: tabs[0].id,
     tabs,
     error: "",
     compiled: "",
+    withHeader: params.withHeader !== undefined,
+    isInteractive: params.isInteractive !== undefined,
   });
 
   return [

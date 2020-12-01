@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "moduleResolution": "node",
+    "declarationDir": "./dist/types",
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "newLine": "lf",
+    "outDir": "./dist/raw",
+    "sourceMap": true
+  },
+  "include": ["./src"],
+  "exclude": ["node_modules/"]
+}
