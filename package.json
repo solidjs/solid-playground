@@ -14,8 +14,8 @@
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/types": "^7.12.7",
-    "@parcel/config-default": "^2.0.0-nightly.462",
-    "@parcel/core": "^2.0.0-nightly.462",
+    "@parcel/config-default": "^2.0.0-nightly.465",
+    "@parcel/core": "^2.0.0-nightly.463",
     "@types/babel__standalone": "^7.1.3",
     "@types/codemirror": "^0.0.100",
     "@types/lodash": "^4.14.165",
@@ -23,12 +23,12 @@
     "@types/node": "^14.14.10",
     "@types/workbox-sw": "^4.3.1",
     "autoprefixer": "^10.0.4",
-    "parcel": "^2.0.0-nightly.462",
+    "parcel": "^2.0.0-nightly.463",
     "postcss": "^8.1.10",
     "rimraf": "^3.0.2",
     "tailwindcss": "^2.0.1",
     "typescript": "^4.1.2",
-    "workbox-cli": "^5.1.4"
+    "workbox-cli": "^6.0.0"
   },
   "dependencies": {
     "@amoutonbrady/solid-heroicons": "^0.4.2",
