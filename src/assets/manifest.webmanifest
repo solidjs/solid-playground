@@ -5,12 +5,12 @@
   "short_name": "Solid REPL",
   "scope": "/",
   "display": "browser",
-  "start_url": "https://solid-template-explorer.netlify.app/",
+  "start_url": "https://solid-playground.netlify.app/",
   "background_color": "transparent",
   "theme_color": "transparent",
   "description": "Solid REPL",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [],
-  "url": "https://solid-template-explorer.netlify.app"
+  "url": "https://solid-playground.netlify.app"
 }
