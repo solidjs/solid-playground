@@ -50,7 +50,7 @@ export const Preview: Component<Props> = (props) => {
             window.dispose && typeof window.dispose === 'function' && window.dispose()
 
             if (!document.getElementById('app')) {
-              const app = document.createElement('app');
+              const app = document.createElement('div');
               app.id = 'app';
               document.body.appendChild(app);
             }
@@ -64,6 +64,12 @@ export const Preview: Component<Props> = (props) => {
 
           window.postMessage({ event: 'DOM_READY' }, '*');
         </script>
+
+        <style>
+          body {
+            max-width: 100%;
+          }
+        </style>
       </head>
       <body class="prose"></body>
     </html>
