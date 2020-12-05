@@ -1,4 +1,4 @@
-import type { Component } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
 const TabList: Component<JSX.HTMLAttributes<HTMLUListElement>> = (props) => {
   return (

@@ -1,5 +1,7 @@
-import type { rollup } from "rollup";
-import type { transform } from "@babel/standalone";
+declare module "global" {
+    var $rollup: typeof import('rollup').rollup;
+    var $babel: (code: string) => ReturnType<typeof import("@babel/standalone").transform>;
 
-declare var $rollup: typeof rollup;
-declare var $babel: (code: string) => ReturnType<typeof transform>;
+    export { $rollup, $babel }
+}
+
