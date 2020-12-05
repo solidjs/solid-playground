@@ -50,8 +50,6 @@ const App: Component = () => {
   const compileOnChange = debounce(async (tabs, compileOpts) => {
     const [error, compiled] = await compile(tabs, compileOpts);
 
-    console.log(compiled);
-
     if (error) return actions.setState({ error });
     if (!compiled) return;
 
@@ -64,7 +62,6 @@ const App: Component = () => {
 
   createEffect(() => {
     for (const tab of store.tabs) tab.source;
-    console.log(compileMode[store.mode]);
     compileOnChange(store.tabs, compileMode[store.mode]);
   });
 
