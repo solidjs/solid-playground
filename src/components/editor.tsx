@@ -1,5 +1,4 @@
 import { EditorSelection } from "@codemirror/next/state";
-import { oneDark } from "@codemirror/next/theme-one-dark";
 import { javascript } from "@codemirror/next/lang-javascript";
 import {
   Component,
@@ -7,6 +6,7 @@ import {
   createSignal,
   onMount,
   splitProps,
+  JSX,
 } from "solid-js";
 import {
   basicSetup,

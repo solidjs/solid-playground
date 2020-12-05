@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
 const TabItem: Component<Props> = (props) => {
   return (

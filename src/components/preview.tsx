@@ -4,6 +4,7 @@ import {
   createSignal,
   onMount,
   splitProps,
+  JSX,
 } from "solid-js";
 
 export const Preview: Component<Props> = (props) => {
