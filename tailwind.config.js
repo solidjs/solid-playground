@@ -1,4 +1,5 @@
 const colors = require("tailwindcss/colors");
+const isProd = process.env["npm_lifecycle_event"] === "build";
 
 module.exports = {
   theme: {
@@ -17,10 +18,10 @@ module.exports = {
   },
   dark: false,
   purge: {
+    enabled: isProd,
     mode: "layers",
     layers: ["base", "components", "utilities"],
     content: ["src/**/*.html", "src/**/*.tsx"],
   },
-  // purge: false,
   plugins: [require("@tailwindcss/forms")],
 };
