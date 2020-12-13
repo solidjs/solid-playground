@@ -1,9 +1,10 @@
 import type { Tab } from "../store";
+import pkg from "../../package.json";
 import { loadBabel, loadRollup } from "./dependencies";
 
 // TODO: Make this file a web worker
 
-const SOLID_VERSION = "0.22";
+const SOLID_VERSION = pkg.dependencies["solid-js"].slice(1);
 const CDN_URL = "https://cdn.skypack.dev";
 const tabsLookup: Map<string, Tab> = new Map();
 
