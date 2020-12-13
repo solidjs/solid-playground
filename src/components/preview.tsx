@@ -43,7 +43,7 @@ export const Preview: Component<Props> = (props) => {
         <script type="module">
           window.addEventListener('message', ({ data }) => {
             const { event, code } = data;
-            if (event === 'DOM_READY') return;
+            if (event === 'DOM_READY' || !code) return;
 
             const oldScript = document.getElementById('script');
             if (oldScript) oldScript.remove();
@@ -60,7 +60,10 @@ export const Preview: Component<Props> = (props) => {
             script.innerHTML = code;
             script.type = 'module';
             script.id = 'script';
+
             document.body.appendChild(script);
+
+            if (code) document.getElementById('load').remove();
           })
 
           window.postMessage({ event: 'DOM_READY' }, '*');
@@ -72,7 +75,9 @@ export const Preview: Component<Props> = (props) => {
           }
         </style>
       </head>
-      <body class="prose"></body>
+      <body class="prose">
+        <div id="load">Loading the REPL...</div>
+      </body>
     </html>
   `;
 
