@@ -1,32 +1,25 @@
 import "./assets/tailwind.css";
-
 import debounce from "lodash/debounce";
-
-import {
-  Component,
-  Show,
-  createEffect,
-  Suspense,
-  lazy,
-  createSignal,
-  onCleanup,
-  For,
-} from "solid-js";
-import { render } from "solid-js/web";
-
-import { compressToEncodedURIComponent } from "lz-string";
 
 import { Icon } from "@amoutonbrady/solid-heroicons";
 import { x } from "@amoutonbrady/solid-heroicons/outline";
+import { compressToEncodedURIComponent } from "lz-string";
 
-import { compile } from "./utils/worker";
-import { eventBus } from "./utils/eventBus";
-import TabItem from "./components/tab/item";
-import TabList from "./components/tab/list";
-import { Preview } from "./components/preview";
-import { compileMode, StoreProvider, useStore } from "./store";
+import {
+  For,
+  lazy,
+  Show,
+  Suspense,
+  onCleanup,
+  Component,
+  createEffect,
+  createSignal,
+} from "solid-js";
 
-// @ts-ignore
+import { compile, eventBus } from "./utils";
+import { compileMode, useStore } from "./store";
+import { TabItem, TabList, Preview } from "./components";
+
 import logo from "url:./assets/images/logo.svg";
 import pkg from "../package.json";
 
@@ -35,7 +28,7 @@ const Editor = lazy(() => import("./components/editor"));
 let swUpdatedBeforeRender = false;
 eventBus.on("sw-update", () => (swUpdatedBeforeRender = true));
 
-const App: Component = () => {
+export const App: Component = () => {
   const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
   eventBus.on("sw-update", () => setNewUpdate(true));
   onCleanup(() => eventBus.all.clear());
@@ -48,17 +41,16 @@ const App: Component = () => {
 
   // TODO: Use `useTransition` to show a loading state when it's compiling
   const compileOnChange = debounce(async (tabs, compileOpts) => {
+    actions.set("isCompiling", true);
     const [error, compiled] = await compile(tabs, compileOpts);
 
-    if (error) return actions.setState({ error });
+    if (error) return actions.set({ error });
     if (!compiled) return;
 
-    actions.setState({ compiled });
-  }, 750);
+    actions.set({ compiled, isCompiling: false });
+  }, 250);
 
-  createEffect(() => {
-    if (!showPreview()) actions.setState("mode", "DOM");
-  });
+  createEffect(() => showPreview() && actions.set("mode", "DOM"));
 
   createEffect(() => {
     for (const tab of store.tabs) tab.source;
@@ -71,7 +63,7 @@ const App: Component = () => {
 
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
-    actions.setState({ error: "" });
+    actions.set({ error: "" });
   };
 
   return (
@@ -196,7 +188,7 @@ const App: Component = () => {
 
       <Suspense fallback={<p>Loading the REPL</p>}>
         <Editor
-          value={actions.currentSource}
+          value={actions.getCurrentSource()}
           onDocChange={handleDocChange}
           class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-trueGray-100 row-start-3"
           disabled={!store.interactive}
@@ -206,7 +198,7 @@ const App: Component = () => {
           <section class="h-full max-h-screen overflow-hidden flex flex-col flex-1 focus:outline-none bg-trueGray-100 row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
             <Editor
               value={store.compiled}
-              class="h-full overflow-auto focus:outline-none flex-1 overflow-auto p-2"
+              class="h-full overflow-auto focus:outline-none flex-1 p-2"
               disabled
             />
             <div class="bg-gray-100 p-2">
@@ -220,9 +212,7 @@ const App: Component = () => {
                     checked={store.mode === "DOM"}
                     value="DOM"
                     class="text-primary"
-                    onChange={(e) =>
-                      actions.setState("mode", e.target.value as any)
-                    }
+                    onChange={(e) => actions.set("mode", e.target.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -234,9 +224,7 @@ const App: Component = () => {
                     checked={store.mode === "SSR"}
                     value="SSR"
                     class="text-primary"
-                    onChange={(e) =>
-                      actions.setState("mode", e.target.value as any)
-                    }
+                    onChange={(e) => actions.set("mode", e.target.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -248,9 +236,7 @@ const App: Component = () => {
                     checked={store.mode === "HYDRATABLE"}
                     value="HYDRATABLE"
                     class="text-primary"
-                    onChange={(e) =>
-                      actions.setState("mode", e.target.value as any)
-                    }
+                    onChange={(e) => actions.set("mode", e.target.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -275,7 +261,7 @@ const App: Component = () => {
           <button
             title="close"
             type="button"
-            onClick={() => actions.setState("error", "")}
+            onClick={() => actions.set("error", "")}
             class="absolute top-1 right-1 hover:text-red-900"
           >
             <Icon path={x} class="h-6 " />
@@ -310,12 +296,3 @@ const App: Component = () => {
     </div>
   );
 };
-
-render(
-  () => (
-    <StoreProvider>
-      <App />
-    </StoreProvider>
-  ),
-  document.getElementById("app")!
-);

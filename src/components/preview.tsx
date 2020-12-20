@@ -5,16 +5,24 @@ import {
   onMount,
   splitProps,
   JSX,
+  untrack,
 } from "solid-js";
+import { useStore } from "../store";
 
 export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ["code"]);
+  const [store] = useStore();
 
   let iframe!: HTMLIFrameElement;
-  const [isIframeReady, setIframeReady] = createSignal();
+  const [isIframeReady, setIframeReady] = createSignal(false);
 
   createEffect(() => {
-    isIframeReady();
+    // HACK: This helps prevent unnecessary updates
+    const isNotDom =
+      internal.code.includes("getNextElement") ||
+      internal.code.includes("getHydrationKey");
+
+    if (isNotDom || !isIframeReady()) return;
 
     const code = internal.code.replace("render(", "window.dispose = render(");
     const event = "CODE_UPDATE";
@@ -26,7 +34,7 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.addEventListener("message", ({ data }) => {
       switch (data.event) {
         case "DOM_READY":
-          return setIframeReady(undefined);
+          return setIframeReady(true);
       }
     });
   });
@@ -37,6 +45,13 @@ export const Preview: Component<Props> = (props) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- Ressource hints -->
+        <link rel="dns-prefetch" href="//unpkg.com">
+        <link href="https://unpkg.com" rel="preconnect" crossorigin>
+        <link rel="preload" href="https://unpkg.com/tailwindcss@2.0.1/dist/base.min.css" as="style">
+        <link rel="preload" href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" as="style">
+
         <link href="https://unpkg.com/tailwindcss@2.0.1/dist/base.min.css" rel="stylesheet">
         <link href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" rel="stylesheet">
 
@@ -63,7 +78,8 @@ export const Preview: Component<Props> = (props) => {
 
             document.body.appendChild(script);
 
-            if (code) document.getElementById('load').remove();
+            const load = document.getElementById('load');
+            if (code && load) load.remove();
           })
 
           window.postMessage({ event: 'DOM_READY' }, '*');
