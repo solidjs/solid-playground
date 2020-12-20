@@ -63,7 +63,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["rimraf", "npm:3.0.2"],
             ["rollup", "npm:2.35.1"],
             ["solid-js", "npm:0.23.4"],
-            ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.2"],
+            ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.3"],
             ["tailwindcss", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:2.0.2"],
             ["typescript", "patch:typescript@npm%3A4.1.3#builtin<compat/typescript>::version=4.1.3&hash=cc6730"],
             ["workbox-cli", "npm:6.0.2"]
@@ -11748,7 +11748,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["rimraf", "npm:3.0.2"],
             ["rollup", "npm:2.35.1"],
             ["solid-js", "npm:0.23.4"],
-            ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.2"],
+            ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.3"],
             ["tailwindcss", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:2.0.2"],
             ["typescript", "patch:typescript@npm%3A4.1.3#builtin<compat/typescript>::version=4.1.3&hash=cc6730"],
             ["workbox-cli", "npm:6.0.2"]
@@ -11757,17 +11757,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["solid-utils", [
-        ["npm:0.0.2", {
-          "packageLocation": "./.yarn/cache/solid-utils-npm-0.0.2-e368a1e647-4d3f4b1b43.zip/node_modules/solid-utils/",
+        ["npm:0.0.3", {
+          "packageLocation": "./.yarn/cache/solid-utils-npm-0.0.3-bda3b2ec7b-eed2d1b663.zip/node_modules/solid-utils/",
           "packageDependencies": [
-            ["solid-utils", "npm:0.0.2"]
+            ["solid-utils", "npm:0.0.3"]
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.2", {
-          "packageLocation": "./.yarn/$$virtual/solid-utils-virtual-1a29c1a30a/0/cache/solid-utils-npm-0.0.2-e368a1e647-4d3f4b1b43.zip/node_modules/solid-utils/",
+        ["virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.3", {
+          "packageLocation": "./.yarn/$$virtual/solid-utils-virtual-0cdd9983e6/0/cache/solid-utils-npm-0.0.3-bda3b2ec7b-eed2d1b663.zip/node_modules/solid-utils/",
           "packageDependencies": [
-            ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.2"],
+            ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.0.3"],
             ["@types/solid-js", null],
             ["solid-js", "npm:0.23.4"]
           ],

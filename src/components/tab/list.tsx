@@ -1,6 +1,8 @@
 import type { Component, JSX } from "solid-js";
 
-const TabList: Component<JSX.HTMLAttributes<HTMLUListElement>> = (props) => {
+export const TabList: Component<JSX.HTMLAttributes<HTMLUListElement>> = (
+  props
+) => {
   return (
     <ul
       class={`divide-x-2 divide-gray-400 flex items-center px-0 list-none bg-gray-50 m-0 overflow-auto ${
@@ -11,5 +13,3 @@ const TabList: Component<JSX.HTMLAttributes<HTMLUListElement>> = (props) => {
     </ul>
   );
 };
-
-export default TabList;

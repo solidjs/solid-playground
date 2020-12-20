@@ -1,5 +1,4 @@
 import { EditorSelection } from "@codemirror/next/state";
-import { javascript } from "@codemirror/next/lang-javascript";
 import {
   Component,
   createEffect,
@@ -8,18 +7,7 @@ import {
   splitProps,
   JSX,
 } from "solid-js";
-import {
-  basicSetup,
-  EditorState,
-  EditorView,
-} from "@codemirror/next/basic-setup";
-import { keymap } from "@codemirror/next/view";
-import {
-  defaultKeymap,
-  indentMore,
-  indentLess,
-} from "@codemirror/next/commands";
-import { historyKeymap } from "@codemirror/next/history";
+import { basicSetup, EditorState, EditorView } from "./editor/basicSetup";
 
 /**
  * This function creates a new EditorSelection that's used to
@@ -65,7 +53,6 @@ const Editor: Component<Props> = (props) => {
       doc,
       extensions: [
         basicSetup,
-        javascript({ jsx: true, typescript: true }),
         EditorView.updateListener.of((update) => {
           // This trigger the onDocChange event and save the cursor
           // for the next state.
@@ -76,21 +63,6 @@ const Editor: Component<Props> = (props) => {
             setCursor(update.state.selection);
           }
         }),
-        EditorView.lineWrapping,
-        keymap([
-          ...defaultKeymap,
-          ...historyKeymap,
-          {
-            key: "Tab",
-            preventDefault: true,
-            run: indentMore,
-          },
-          {
-            key: "Shift-Tab",
-            preventDefault: true,
-            run: indentLess,
-          },
-        ]),
         ...(disabled ? [EditorView.editable.of(false)] : []),
       ],
     });

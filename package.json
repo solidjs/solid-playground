@@ -43,6 +43,6 @@
     "register-service-worker": "^1.7.2",
     "rollup": "^2.35.1",
     "solid-js": "^0.23.4",
-    "solid-utils": "^0.0.2"
+    "solid-utils": "^0.0.3"
   }
 }
