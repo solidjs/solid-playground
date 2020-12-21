@@ -21,6 +21,7 @@ import { TabItem, TabList, Preview } from "./components";
 
 import logo from "url:./assets/images/logo.svg";
 import pkg from "../package.json";
+import { debounce } from "./utils/debounce";
 
 const Editor = lazy(() => import("./components/editor"));
 
@@ -63,9 +64,12 @@ export const App: Component = () => {
     }
   });
 
-  createEffect(() => {
-    for (const tab of store.tabs) tab.source;
-
+  /**
+   * We need to debounce a bit the compilation because
+   * it takes ~15ms to compile with the web worker...
+   * Also, real time feedback can be stressful
+   */
+  const applyCompilation = debounce(() => {
     actions.set("isCompiling", true);
     now = performance.now();
 
@@ -74,6 +78,11 @@ export const App: Component = () => {
       tabs: unwrap(store.tabs),
       compileOpts: unwrap(compileMode[store.mode]),
     });
+  }, 100);
+
+  createEffect(() => {
+    for (const tab of store.tabs) tab.source;
+    applyCompilation();
   });
 
   createEffect(() => {
