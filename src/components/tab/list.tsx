@@ -5,7 +5,7 @@ export const TabList: Component<JSX.HTMLAttributes<HTMLUListElement>> = (
 ) => {
   return (
     <ul
-      class={`divide-x-2 divide-gray-400 flex items-center px-0 list-none bg-gray-50 m-0 overflow-auto ${
+      class={`flex flex-wrap items-center list-none bg-white m-0 ${
         props.class || ""
       }`}
     >

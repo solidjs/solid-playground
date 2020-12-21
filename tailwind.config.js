@@ -6,14 +6,33 @@ module.exports = {
     extend: {
       colors: {
         ...colors,
-        twilight: "#282c34",
-        // This color has accessibility issues
-        primary: "#4483c1",
+        brand: {
+          default: "#2c4f7c",
+          dark: "#335d92",
+          medium: "#446b9e",
+          light: "#4f88c6",
+        },
       },
       fontFamily: {
         // This font doesn't render properly, it has a lien-height issue it seems
-        // sans: ["Gordita"],
-        mono: ["Fira Code"],
+        display: [
+          "Gordita",
+          " ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "Noto Sans",
+          "sans-serif",
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol",
+          "Noto Color Emoji",
+        ],
+        mono: ["Fira Code", "monospace"],
       },
     },
   },
