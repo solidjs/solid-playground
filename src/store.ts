@@ -7,7 +7,7 @@ const defaultTabs: Tab[] = [
     name: "app",
     type: "tsx",
     source:
-      "import { render } from 'solid-js/web'\n\nconst App = () => <h1>Hello world</h1>\n\nrender(App, document.body)",
+      "import { render } from 'solid-js/web'\n\nconst App = () => <h1>Hello world</h1>\n\nrender(App, document.getElementById('app'))",
   },
 ];
 
