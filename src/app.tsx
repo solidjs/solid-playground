@@ -16,7 +16,7 @@ import {
 } from "solid-js";
 
 import { eventBus, formatMs } from "./utils";
-import { compileMode, useStore } from "./store";
+import { compileMode, Tab, useStore } from "./store";
 import { TabItem, TabList, Preview } from "./components";
 
 import logo from "url:./assets/images/logo.svg";
@@ -29,13 +29,19 @@ let swUpdatedBeforeRender = false;
 eventBus.on("sw-update", () => (swUpdatedBeforeRender = true));
 
 export const App: Component = () => {
+  /**
+   * Those next three lines are useful to display a popup
+   * if the client code has been updated. This trigger a signal
+   * via an EventBus initiated in the service worker and
+   * the couple line above.
+   */
   const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
   eventBus.on("sw-update", () => setNewUpdate(true));
   onCleanup(() => eventBus.all.clear());
 
   let now: number;
   const worker = new Worker("./worker.ts");
-  const refs = new Map<string, HTMLSpanElement>();
+  const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
 
@@ -45,6 +51,10 @@ export const App: Component = () => {
 
   onMount(() => setCurrentCode(actions.getCurrentSource()));
 
+  /**
+   * If we show the preview of the code, we want it to be DOM
+   * to be able to render into the iframe.
+   */
   createEffect(() => showPreview() && actions.set("mode", "DOM"));
 
   worker.addEventListener("message", ({ data }) => {
@@ -69,26 +79,44 @@ export const App: Component = () => {
    * it takes ~15ms to compile with the web worker...
    * Also, real time feedback can be stressful
    */
-  const applyCompilation = debounce(() => {
-    actions.set("isCompiling", true);
-    now = performance.now();
+  const applyCompilation = debounce(
+    (tabs: Tab[], compileOpts: Record<string, any>) => {
+      actions.set("isCompiling", true);
+      now = performance.now();
 
-    worker.postMessage({
-      event: "COMPILE",
-      tabs: unwrap(store.tabs),
-      compileOpts: unwrap(compileMode[store.mode]),
-    });
-  }, 100);
+      worker.postMessage({
+        event: "COMPILE",
+        tabs,
+        compileOpts,
+      });
+    },
+    100
+  );
 
+  /**
+   * The heart of the playground. This recompile on
+   * every tab source changes.
+   */
   createEffect(() => {
     for (const tab of store.tabs) tab.source;
-    applyCompilation();
+    applyCompilation(unwrap(store.tabs), unwrap(compileMode[store.mode]));
   });
 
+  /**
+   * This syncs the URL hash with the state of the current tab.
+   * This is an optimized encoding for limiting URL size...
+   *
+   * TODO: Find a way to URL shoten this
+   */
   createEffect(() => {
     location.hash = encode(JSON.stringify(store.tabs));
   });
 
+  /**
+   * This sync the editor state with the current selected tab.
+   *
+   * @param source {string} - The source code from the editor
+   */
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
     actions.set({ error: "" });
@@ -128,7 +156,7 @@ export const App: Component = () => {
                 class="cursor-pointer"
               >
                 <span
-                  ref={(el) => refs.set(tab.id, el)}
+                  ref={(el) => tabRefs.set(tab.id, el)}
                   contentEditable={store.current === tab.id && edit() >= 0}
                   onBlur={(e) => {
                     setEdit(-1);
