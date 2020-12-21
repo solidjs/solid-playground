@@ -91,7 +91,7 @@ export const App: Component = () => {
         <header class="md:col-span-2 p-2 flex justify-between items-center bg-gray-50">
           <h1 class="flex items-center space-x-4 uppercase font-semibold">
             <a href="https://github.com/ryansolid/solid">
-              <img src={logo} alt="solid-js logo" class="h-8" />
+              <img src={logo} alt="solid-js logo" class="w-8" />
             </a>
             <span>Solid REPL</span>
           </h1>
