@@ -46,9 +46,6 @@ const [Store, useStore] = createStore(
   },
 
   (set, store) => ({
-    get currentTab() {
-      return store.tabs.find((tab) => tab.id === store.current);
-    },
     setCurrentTab: (current: string) => set("current", current),
     setTabName(id: string, name: string) {
       // FIXME: Use the below function, at the moment TS is not content
