@@ -32,6 +32,7 @@ const [Store, useStore] = createStore(
 
     return {
       current: tabs[0].id,
+      currentCode: "",
       tabs,
       error: "",
       compiled: "",
@@ -46,7 +47,14 @@ const [Store, useStore] = createStore(
   },
 
   (set, store) => ({
-    setCurrentTab: (current: string) => set("current", current),
+    setCurrentTab: (current: string) => {
+      set({ current });
+
+      const idx = store.tabs.findIndex((tab) => tab.id === current);
+      if (idx < 0) return;
+
+      set({ currentCode: store.tabs[idx].source });
+    },
     setTabName(id: string, name: string) {
       // FIXME: Use the below function, at the moment TS is not content
       // ref: https://github.com/ryansolid/solid/blob/master/documentation/store.md#setpath-changes
@@ -69,7 +77,12 @@ const [Store, useStore] = createStore(
       if (!confirmDeletion) return;
 
       // We want to redirect to another tab if we are deleting the current one
-      if (store.current === id) set("current", store.tabs[idx - 1].id);
+      if (store.current === id) {
+        set({
+          current: store.tabs[idx - 1].id,
+          currentCode: store.tabs[idx - 1].source,
+        });
+      }
 
       set("tabs", (tabs) => [...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
     },
@@ -99,6 +112,7 @@ const [Store, useStore] = createStore(
           },
         ],
         current: nextId,
+        currentCode: "",
       });
     },
   })

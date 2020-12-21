@@ -1,9 +1,8 @@
-/* @font-face {
+@font-face {
   font-family: "Gordita";
   src: url("./fonts/Gordita/Gordita-Regular.woff") format("woff");
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
 }
 
 @font-face {
@@ -11,8 +10,7 @@
   src: url("./fonts/Gordita/Gordita-Bold.woff") format("woff");
   font-weight: bold;
   font-style: normal;
-  font-display: swap;
-} */
+}
 
 @font-face {
   font-family: "Fira Code";
@@ -37,6 +35,10 @@ div[contenteditable="true"]:focus,
 
 @screen md {
   .wrapper {
+    --left: 1fr;
+    --right: 1fr;
+
     grid-template-rows: auto auto 1fr;
+    grid-template-columns: var(--left) 4px var(--right);
   }
 }

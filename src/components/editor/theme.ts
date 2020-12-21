@@ -3,10 +3,10 @@ import { highlightStyle, tags } from "@codemirror/next/highlight";
 
 export function getTheme() {
   return [
-    EditorView.baseTheme({
+    EditorView.theme({
       $: {
-        backgroundColor: "#fff",
-        color: "#24292e",
+        backgroundColor: "#F8FAFC", // bg-blueGray-50
+        color: "#0F172A", // bg-blueGray-900
         position: "relative !important",
         boxSizing: "border-box",
         "&$focused": {
@@ -18,6 +18,11 @@ export function getTheme() {
         },
         display: "flex !important",
         flexDirection: "column",
+      },
+
+      "$$light $gutters": {
+        backgroundColor: "transparent",
+        borderRightWidth: 0,
       },
 
       $scroller: {

@@ -22,6 +22,7 @@ import { TabItem, TabList, Preview } from "./components";
 import logo from "url:./assets/images/logo.svg";
 import pkg from "../package.json";
 import { debounce } from "./utils/debounce";
+import { throttle } from "./utils/throttle";
 
 const Editor = lazy(() => import("./components/editor"));
 
@@ -46,10 +47,9 @@ export const App: Component = () => {
   const [store, actions] = useStore();
 
   const [edit, setEdit] = createSignal(-1);
-  const [currentCode, setCurrentCode] = createSignal("");
   const [showPreview, setShowPreview] = createSignal(true);
 
-  onMount(() => setCurrentCode(actions.getCurrentSource()));
+  onMount(() => actions.set("currentCode", actions.getCurrentSource()));
 
   /**
    * If we show the preview of the code, we want it to be DOM
@@ -122,38 +122,66 @@ export const App: Component = () => {
     actions.set({ error: "" });
   };
 
+  /**
+   * This whole block before the slice of view
+   * is an experimental resizer, need to tidy this up
+   */
+  const [left, setLeft] = createSignal(1);
+  const [isDragging, setIsDragging] = createSignal(false);
+
+  const onMouseMove = throttle((e: MouseEvent) => {
+    const percentage = e.clientX / (document.body.offsetWidth / 2);
+    if (percentage < 0.5 || percentage > 1.5) return;
+
+    setLeft(percentage);
+  }, 10);
+
+  const onMouseUp = () => setIsDragging(false);
+
+  createEffect(() => {
+    if (isDragging()) {
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    } else {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    }
+  });
+
   return (
-    <div class="relative grid md:grid-cols-2 h-screen gap-0.5 overflow-hidden bg-gray-400 text-gray-900 wrapper">
+    <div
+      class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 wrapper transition-all duration-100 font-display"
+      style={{ "--left": `${left()}fr`, "--right": `${2 - left()}fr` }}
+    >
       <Show when={store.header} fallback={<div class="md:col-span-2"></div>}>
-        <header class="md:col-span-2 p-2 flex justify-between items-center bg-gray-50">
-          <h1 class="flex items-center space-x-4 uppercase font-semibold">
+        <header class="md:col-span-3 p-2 flex justify-between items-center bg-brand-default text-white">
+          <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
             <a href="https://github.com/ryansolid/solid">
               <img src={logo} alt="solid-js logo" class="w-8" />
             </a>
-            <span>Solid REPL</span>
+            <span class="inline-block -mb-1">Solid Playground</span>
           </h1>
 
           <div class="flex items-center space-x-2">
-            <span>v{pkg.dependencies["solid-js"].slice(1)}</span>
+            <span class="-mb-1 leading-0 text-white">
+              v{pkg.dependencies["solid-js"].slice(1)}
+            </span>
           </div>
         </header>
       </Show>
 
-      <TabList class="row-start-2">
+      <TabList class="row-start-2 space-x-2">
         <For each={store.tabs}>
           {(tab, index) => (
             <TabItem active={store.current === tab.id}>
               <button
                 type="button"
-                onClick={() => {
-                  actions.setCurrentTab(tab.id);
-                  setCurrentCode(actions.getCurrentSource());
-                }}
+                onClick={() => actions.setCurrentTab(tab.id)}
                 onDblClick={() => {
                   if (index() <= 0 || !store.interactive) return;
                   setEdit(index());
                 }}
-                class="cursor-pointer"
+                class="cursor-pointer focus:outline-none"
               >
                 <span
                   ref={(el) => tabRefs.set(tab.id, el)}
@@ -178,7 +206,7 @@ export const App: Component = () => {
               <Show when={index() > 0}>
                 <button
                   type="button"
-                  class="border-0 bg-transparent cursor-pointer"
+                  class="border-0 bg-transparent cursor-pointer focus:outline-none"
                   disabled={!store.interactive}
                   onClick={() => {
                     if (!store.interactive) return;
@@ -188,7 +216,7 @@ export const App: Component = () => {
                   <span class="sr-only">Delete this tab</span>
                   <svg
                     style="stroke: currentColor; fill: none;"
-                    class="h-4"
+                    class="h-4 opacity-60"
                     viewBox="0 0 24 24"
                   >
                     <path
@@ -204,9 +232,10 @@ export const App: Component = () => {
           )}
         </For>
 
-        <TabItem>
+        <li class="inline-flex items-center m-0 border-b-2 border-transparent">
           <button
             type="button"
+            class="focus:outline-none"
             onClick={store.interactive && actions.addTab}
             disabled={!store.interactive}
             title="Add a new tab"
@@ -215,7 +244,7 @@ export const App: Component = () => {
             <svg
               viewBox="0 0 24 24"
               style="stroke: currentColor; fill: none;"
-              class="h-5"
+              class="h-5 text-brand-default"
             >
               <path
                 stroke-linecap="round"
@@ -225,19 +254,23 @@ export const App: Component = () => {
               />
             </svg>
           </button>
-        </TabItem>
+        </li>
       </TabList>
 
-      <TabList class="row-start-4 md:row-start-2">
+      <TabList class="row-start-4 md:row-start-2 md:col-start-3">
         <TabItem class="flex-1" active={showPreview()}>
-          <button type="button" class="w-full" onClick={[setShowPreview, true]}>
+          <button
+            type="button"
+            class="w-full focus:outline-none"
+            onClick={[setShowPreview, true]}
+          >
             Result
           </button>
         </TabItem>
         <TabItem class="flex-1" active={!showPreview()}>
           <button
             type="button"
-            class="w-full"
+            class="w-full focus:outline-none"
             onClick={[setShowPreview, false]}
           >
             Output
@@ -247,16 +280,24 @@ export const App: Component = () => {
 
       <Suspense fallback={<p>Loading the REPL</p>}>
         <Editor
-          value={currentCode()}
+          value={store.currentCode}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-white row-start-3"
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-blueGray-50 row-start-3"
           disabled={!store.interactive}
         />
 
+        <div
+          class="h-full w-full row-start-2 row-span-2 col-start-2 hidden md:block"
+          style="cursor: col-resize"
+          onMouseDown={[setIsDragging, true]}
+        >
+          <div class="h-full border-blueGray-200 border-l border-r rounded-lg mx-auto w-0"></div>
+        </div>
+
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
+          <section class="h-full max-h-screen bg-blueGray-50 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
             <Editor
-              value={store.compiled}
+              value={store.compiled.replace("https://cdn.skypack.dev/", "")}
               class="h-full overflow-auto focus:outline-none flex-1 p-2"
               disabled
             />
@@ -271,7 +312,7 @@ export const App: Component = () => {
                   <input
                     checked={store.mode === "DOM"}
                     value="DOM"
-                    class="text-primary"
+                    class="text-brand-default"
                     onChange={(e) => actions.set("mode", e.target.value as any)}
                     type="radio"
                     name="dom"
@@ -283,7 +324,7 @@ export const App: Component = () => {
                   <input
                     checked={store.mode === "SSR"}
                     value="SSR"
-                    class="text-primary"
+                    class="text-brand-default"
                     onChange={(e) => actions.set("mode", e.target.value as any)}
                     type="radio"
                     name="dom"
@@ -295,7 +336,7 @@ export const App: Component = () => {
                   <input
                     checked={store.mode === "HYDRATABLE"}
                     value="HYDRATABLE"
-                    class="text-primary"
+                    class="text-brand-default"
                     onChange={(e) => actions.set("mode", e.target.value as any)}
                     type="radio"
                     name="dom"
@@ -310,7 +351,8 @@ export const App: Component = () => {
         <Show when={showPreview()}>
           <Preview
             code={store.compiled}
-            class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-gray-50 row-start-5 md:row-start-3"
+            class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-white row-start-5 md:row-start-3"
+            classList={{ "pointer-events-none": isDragging() }}
           />
         </Show>
       </Suspense>
@@ -332,7 +374,7 @@ export const App: Component = () => {
 
       {/* TODO: Use portal */}
       <Show when={newUpdate()}>
-        <div class="fixed bottom-10 left-10 bg-blue-200 text-primary border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
+        <div class="fixed bottom-10 left-10 bg-blue-200 text-brand-default border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
           <button
             title="close"
             onClick={() => setNewUpdate(false)}
