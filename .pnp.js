@@ -48,13 +48,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tailwindcss/forms", "npm:0.2.1"],
             ["@types/babel__standalone", "npm:7.1.3"],
             ["@types/codemirror", "npm:0.0.102"],
-            ["@types/lodash", "npm:4.14.165"],
             ["@types/lz-string", "npm:1.3.34"],
             ["@types/node", "npm:14.14.14"],
             ["@types/workbox-sw", "npm:4.3.1"],
             ["autoprefixer", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:10.1.0"],
             ["babel-preset-solid", "npm:0.23.4"],
-            ["lodash", "npm:4.17.20"],
             ["lz-string", "npm:1.4.4"],
             ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.486"],
@@ -3887,15 +3885,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@types/keyv", "npm:3.1.1"],
             ["@types/node", "npm:14.14.14"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["@types/lodash", [
-        ["npm:4.14.165", {
-          "packageLocation": "./.yarn/cache/@types-lodash-npm-4.14.165-fad4191e95-525bfc34b0.zip/node_modules/@types/lodash/",
-          "packageDependencies": [
-            ["@types/lodash", "npm:4.14.165"]
           ],
           "linkType": "HARD",
         }]
@@ -11733,13 +11722,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tailwindcss/forms", "npm:0.2.1"],
             ["@types/babel__standalone", "npm:7.1.3"],
             ["@types/codemirror", "npm:0.0.102"],
-            ["@types/lodash", "npm:4.14.165"],
             ["@types/lz-string", "npm:1.3.34"],
             ["@types/node", "npm:14.14.14"],
             ["@types/workbox-sw", "npm:4.3.1"],
             ["autoprefixer", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:10.1.0"],
             ["babel-preset-solid", "npm:0.23.4"],
-            ["lodash", "npm:4.17.20"],
             ["lz-string", "npm:1.4.4"],
             ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.486"],

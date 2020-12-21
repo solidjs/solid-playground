@@ -21,6 +21,7 @@ import { rectangularSelection } from "@codemirror/next/rectangular-selection";
 import { highlightSelectionMatches } from "@codemirror/next/highlight-selection";
 import { defaultHighlightStyle } from "@codemirror/next/highlight";
 import { javascript } from "@codemirror/next/lang-javascript";
+import { getTheme } from "./theme";
 
 export const basicSetup: Extension = [
   lineNumbers(),
@@ -52,7 +53,8 @@ export const basicSetup: Extension = [
     },
   ]),
   javascript({ jsx: true, typescript: true }),
+  getTheme(),
 ];
 
-export { EditorView } from "@codemirror/next/view";
-export { EditorState } from "@codemirror/next/state";
+export { EditorView };
+export { EditorState };

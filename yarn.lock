@@ -2556,13 +2556,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.165":
-  version: 4.14.165
-  resolution: "@types/lodash@npm:4.14.165"
-  checksum: 525bfc34b0b591cc957125a961c70e63e5ad8b23cbd89b7594a5ea74823285b6d96993a7eec506e26b379ee52dc9dcd3a894ff210be4c97bccb536e62361dbc8
-  languageName: node
-  linkType: hard
-
 "@types/lz-string@npm:^1.3.34":
   version: 1.3.34
   resolution: "@types/lz-string@npm:1.3.34"
@@ -9499,13 +9492,11 @@ fsevents@~2.1.2:
     "@tailwindcss/forms": ^0.2.1
     "@types/babel__standalone": ^7.1.3
     "@types/codemirror": ^0.0.102
-    "@types/lodash": ^4.14.165
     "@types/lz-string": ^1.3.34
     "@types/node": ^14.14.14
     "@types/workbox-sw": ^4.3.1
     autoprefixer: ^10.1.0
     babel-preset-solid: ^0.23.4
-    lodash: ^4.17.20
     lz-string: ^1.4.4
     mitt: ^2.1.0
     parcel: ^2.0.0-nightly.486

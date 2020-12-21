@@ -1,9 +1,6 @@
-import "./assets/tailwind.css";
-import debounce from "lodash/debounce";
-
 import { Icon } from "@amoutonbrady/solid-heroicons";
 import { x } from "@amoutonbrady/solid-heroicons/outline";
-import { compressToEncodedURIComponent } from "lz-string";
+import { compressToEncodedURIComponent as encode } from "lz-string";
 
 import {
   For,
@@ -14,9 +11,11 @@ import {
   Component,
   createEffect,
   createSignal,
+  onMount,
+  unwrap,
 } from "solid-js";
 
-import { compile, eventBus } from "./utils";
+import { eventBus, formatMs } from "./utils";
 import { compileMode, useStore } from "./store";
 import { TabItem, TabList, Preview } from "./components";
 
@@ -33,32 +32,52 @@ export const App: Component = () => {
   eventBus.on("sw-update", () => setNewUpdate(true));
   onCleanup(() => eventBus.all.clear());
 
+  let now: number;
+  const worker = new Worker("./worker.ts");
   const refs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
+
   const [edit, setEdit] = createSignal(-1);
+  const [currentCode, setCurrentCode] = createSignal("");
   const [showPreview, setShowPreview] = createSignal(true);
 
-  // TODO: Use `useTransition` to show a loading state when it's compiling
-  const compileOnChange = debounce(async (tabs, compileOpts) => {
-    actions.set("isCompiling", true);
-    const [error, compiled] = await compile(tabs, compileOpts);
-
-    if (error) return actions.set({ error });
-    if (!compiled) return;
-
-    actions.set({ compiled, isCompiling: false });
-  }, 250);
+  onMount(() => setCurrentCode(actions.getCurrentSource()));
 
   createEffect(() => showPreview() && actions.set("mode", "DOM"));
 
-  createEffect(() => {
-    for (const tab of store.tabs) tab.source;
-    compileOnChange(store.tabs, compileMode[store.mode]);
+  worker.addEventListener("message", ({ data }) => {
+    const { event, result } = data;
+
+    switch (event) {
+      case "RESULT":
+        const [error, compiled] = result;
+
+        if (error) return actions.set({ error });
+        if (!compiled) return;
+
+        actions.set({ compiled, isCompiling: false });
+
+        console.log("Compilation took:", formatMs(performance.now() - now));
+        break;
+    }
   });
 
   createEffect(() => {
-    location.hash = compressToEncodedURIComponent(JSON.stringify(store.tabs));
+    for (const tab of store.tabs) tab.source;
+
+    actions.set("isCompiling", true);
+    now = performance.now();
+
+    worker.postMessage({
+      event: "COMPILE",
+      tabs: unwrap(store.tabs),
+      compileOpts: unwrap(compileMode[store.mode]),
+    });
+  });
+
+  createEffect(() => {
+    location.hash = encode(JSON.stringify(store.tabs));
   });
 
   const handleDocChange = (source: string) => {
@@ -89,7 +108,10 @@ export const App: Component = () => {
             <TabItem active={store.current === tab.id}>
               <button
                 type="button"
-                onClick={[actions.setCurrentTab, tab.id]}
+                onClick={() => {
+                  actions.setCurrentTab(tab.id);
+                  setCurrentCode(actions.getCurrentSource());
+                }}
                 onDblClick={() => {
                   if (index() <= 0 || !store.interactive) return;
                   setEdit(index());
@@ -188,19 +210,20 @@ export const App: Component = () => {
 
       <Suspense fallback={<p>Loading the REPL</p>}>
         <Editor
-          value={actions.getCurrentSource()}
+          value={currentCode()}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-trueGray-100 row-start-3"
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-white row-start-3"
           disabled={!store.interactive}
         />
 
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen overflow-hidden flex flex-col flex-1 focus:outline-none bg-trueGray-100 row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
+          <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
             <Editor
               value={store.compiled}
               class="h-full overflow-auto focus:outline-none flex-1 p-2"
               disabled
             />
+
             <div class="bg-gray-100 p-2">
               <label class="font-semibold text-sm uppercase">
                 Compile mode

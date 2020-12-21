@@ -1,12 +1,29 @@
-import type { Tab } from "../store";
-import pkg from "../../package.json";
-import { loadBabel, loadRollup } from "./dependencies";
+import type { Tab } from "./store";
+import pkg from "../package.json";
 
-// TODO: Make this file a web worker
+import { transform } from "@babel/standalone";
+import solid from "babel-preset-solid";
+import ts from "@babel/preset-typescript";
+import { rollup } from "rollup/dist/rollup.browser.js";
 
 const SOLID_VERSION = pkg.dependencies["solid-js"].slice(1);
 const CDN_URL = "https://cdn.skypack.dev";
 const tabsLookup: Map<string, Tab> = new Map();
+
+export function loadBabel() {
+  if (globalThis.$babel) return globalThis.$babel;
+
+  globalThis.$babel = (
+    code: string,
+    opts: { babel: any; solid: any } = { babel: {}, solid: {} }
+  ) =>
+    transform(code, {
+      presets: [[solid, { ...opts.solid }], ts],
+      ...opts.babel,
+    });
+
+  return globalThis.$babel;
+}
 
 /**
  * This function helps identify each section of the final compiled
@@ -50,18 +67,16 @@ function virtual({ SOLID_VERSION, solidOptions = {} }) {
 
     async transform(code: string, filename: string) {
       // Compile solid code
-      const babel = await loadBabel(SOLID_VERSION);
-
-      if (/\.(j|t)sx$/.test(filename))
-        return babel(code, { babel: { filename }, solid: solidOptions });
+      if (/\.(j|t)sx$/.test(filename)) {
+        const babel = loadBabel();
+        return babel(code, { solid: solidOptions, babel: { filename } });
+      }
     },
   };
 }
 
-export async function compile(tabs: Tab[], solidOptions = {}) {
+async function compile(tabs: Tab[], solidOptions = {}) {
   try {
-    const rollup = await loadRollup();
-
     for (const tab of tabs) {
       tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
     }
@@ -81,23 +96,16 @@ export async function compile(tabs: Tab[], solidOptions = {}) {
   }
 }
 
-// async function compile(input: string, mode: string) {
-//   try {
-//     const { transform } = await import("@babel/standalone");
-//     const solid = await import("babel-preset-solid");
+self.addEventListener("message", async ({ data }) => {
+  const { event, tabs, compileOpts } = data;
 
-//     const options =
-//       mode === "SSR"
-//         ? { generate: "ssr", hydratable: true }
-//         : mode === "HYDRATION"
-//         ? { generate: "dom", hydratable: true }
-//         : { generate: "dom", hydratable: false };
-
-//     const { code } = transform(input, { presets: [[solid, options]] });
-
-//     return [null, code] as const;
-//   } catch (e) {
-//     console.error(e);
-//     return [e.message, null] as const;
-//   }
-// }
+  switch (event) {
+    case "COMPILE":
+      // @ts-ignore
+      self.postMessage({
+        event: "RESULT",
+        result: await compile(tabs, compileOpts),
+      });
+      break;
+  }
+});

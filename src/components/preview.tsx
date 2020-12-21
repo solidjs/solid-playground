@@ -5,13 +5,10 @@ import {
   onMount,
   splitProps,
   JSX,
-  untrack,
 } from "solid-js";
-import { useStore } from "../store";
 
 export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ["code"]);
-  const [store] = useStore();
 
   let iframe!: HTMLIFrameElement;
   const [isIframeReady, setIframeReady] = createSignal(false);
@@ -57,29 +54,31 @@ export const Preview: Component<Props> = (props) => {
 
         <script type="module">
           window.addEventListener('message', ({ data }) => {
-            const { event, code } = data;
-            if (event === 'DOM_READY' || !code) return;
-
-            const oldScript = document.getElementById('script');
-            if (oldScript) oldScript.remove();
-
-            window.dispose && typeof window.dispose === 'function' && window.dispose()
-
-            if (!document.getElementById('app')) {
-              const app = document.createElement('div');
-              app.id = 'app';
-              document.body.appendChild(app);
-            }
-
-            const script = document.createElement('script');
-            script.innerHTML = code;
-            script.type = 'module';
-            script.id = 'script';
-
-            document.body.appendChild(script);
-
-            const load = document.getElementById('load');
-            if (code && load) load.remove();
+            try {
+              const { event, code } = data;
+              if (event === 'DOM_READY' || !code) return;
+  
+              const oldScript = document.getElementById('script');
+              if (oldScript) oldScript.remove();
+  
+              window.dispose && typeof window.dispose === 'function' && window.dispose()
+  
+              if (!document.getElementById('app')) {
+                const app = document.createElement('div');
+                app.id = 'app';
+                document.body.appendChild(app);
+              }
+  
+              const script = document.createElement('script');
+              script.innerHTML = code;
+              script.type = 'module';
+              script.id = 'script';
+  
+              document.body.appendChild(script);
+  
+              const load = document.getElementById('load');
+              if (code && load) load.remove();
+            } catch {}
           })
 
           window.postMessage({ event: 'DOM_READY' }, '*');

@@ -25,7 +25,7 @@ export async function loadRollup() {
  *
  * @param _SOLID_VERSION {string} - The solid compiler version
  */
-export async function loadBabel(_SOLID_VERSION: string) {
+export async function loadBabel() {
   if (globalThis.$babel) return globalThis.$babel;
 
   const { transform } = await import("@babel/standalone");
