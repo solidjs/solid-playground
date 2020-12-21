@@ -13,6 +13,7 @@ module.exports = {
       fontFamily: {
         // This font doesn't render properly, it has a lien-height issue it seems
         // sans: ["Gordita"],
+        mono: ["Fira Code"],
       },
     },
   },

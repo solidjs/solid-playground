@@ -1,6 +1,6 @@
 /* @font-face {
   font-family: "Gordita";
-  src: url("./fonts/Gordita-Regular.woff") format("woff");
+  src: url("./fonts/Gordita/Gordita-Regular.woff") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -8,11 +8,19 @@
 
 @font-face {
   font-family: "Gordita";
-  src: url("./fonts/Gordita-Bold.woff") format("woff");
+  src: url("./fonts/Gordita/Gordita-Bold.woff") format("woff");
   font-weight: bold;
   font-style: normal;
   font-display: swap;
 } */
+
+@font-face {
+  font-family: "Fira Code";
+  src: url("./fonts/FiraCode/fira_code.woff2") format("woff2-variations"),
+    url("./fonts/FiraCode/fira_code.woff") format("woff-variations");
+  font-weight: 300 700;
+  font-style: normal;
+}
 
 @tailwind base;
 @tailwind components;

@@ -1,3 +1,4 @@
+import "./assets/tailwind.css";
 import { createApp } from "solid-utils";
 
 import { App } from "./app";

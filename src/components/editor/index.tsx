@@ -1,28 +1,5 @@
-import { EditorSelection } from "@codemirror/next/state";
-import {
-  Component,
-  createEffect,
-  createSignal,
-  onMount,
-  splitProps,
-  JSX,
-} from "solid-js";
-import { basicSetup, EditorState, EditorView } from "./editor/basicSetup";
-
-/**
- * This function creates a new EditorSelection that's used to
- * reset the cursor on every new input changes. This is needed
- * because we made the CodeMirror editor "controlled".
- *
- * If we don't do that the cursor will reset to the begining
- * of the editor everytime the input changes.
- *
- * @param pos {number} The start position to reset to
- * @param pos {number} The end position to reset to
- */
-function placeCursor(startPos: number, envPos = startPos) {
-  return EditorSelection.create([EditorSelection.range(startPos, envPos)]);
-}
+import { Component, createEffect, onMount, splitProps, JSX } from "solid-js";
+import { basicSetup, EditorState, EditorView } from "./basicSetup";
 
 const Editor: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, [
@@ -31,8 +8,6 @@ const Editor: Component<Props> = (props) => {
     "disabled",
     "defaultValue",
   ]);
-
-  const [cursor, setCursor] = createSignal<EditorSelection>(placeCursor(0));
 
   let parent!: HTMLDivElement;
   let state: EditorState;
@@ -60,7 +35,6 @@ const Editor: Component<Props> = (props) => {
             if (internal.value === update.state.doc.toString()) return;
 
             internal.onDocChange(update.state.doc.toString());
-            setCursor(update.state.selection);
           }
         }),
         ...(disabled ? [EditorView.editable.of(false)] : []),
@@ -79,29 +53,7 @@ const Editor: Component<Props> = (props) => {
 
   createEffect(() => {
     if (!view) return;
-
-    const docLength = view.state.doc.length;
-    const selectionTarget = cursor().ranges[0].to;
-
-    // FIXME: Handle this in a better way perhaps with the eventBus?
-    try {
-      const updateDocTransation = view.state.update({
-        changes: { from: 0, to: docLength, insert: internal.value },
-        scrollIntoView: false,
-        selection:
-          selectionTarget <= docLength ? cursor() : placeCursor(docLength),
-      });
-
-      view.dispatch(updateDocTransation);
-    } catch {
-      const updateDocTransation = view.state.update({
-        changes: { from: 0, to: docLength, insert: internal.value },
-        scrollIntoView: false,
-        selection: placeCursor(0),
-      });
-
-      view.dispatch(updateDocTransation);
-    }
+    view.setState(createEditorState(internal.value, internal.disabled));
   });
 
   return <div ref={parent} {...external}></div>;
