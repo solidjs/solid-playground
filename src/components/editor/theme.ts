@@ -1,11 +1,11 @@
 import { EditorView } from "./basicSetup";
 import { highlightStyle, tags } from "@codemirror/next/highlight";
 
-export function getTheme() {
+export function getTheme({ backgroundColor = "#F8FAFC" }) {
   return [
     EditorView.theme({
       $: {
-        backgroundColor: "#F8FAFC", // bg-blueGray-50
+        backgroundColor, // bg-blueGray-50
         color: "#0F172A", // bg-blueGray-900
         position: "relative !important",
         boxSizing: "border-box",

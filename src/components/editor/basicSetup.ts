@@ -23,7 +23,7 @@ import { defaultHighlightStyle } from "@codemirror/next/highlight";
 import { javascript } from "@codemirror/next/lang-javascript";
 import { getTheme } from "./theme";
 
-export const basicSetup: Extension = [
+export const basicSetup: (opts: Record<string, any>) => Extension = (opts) => [
   lineNumbers(),
   highlightSpecialChars(),
   history(),
@@ -53,7 +53,7 @@ export const basicSetup: Extension = [
     },
   ]),
   javascript({ jsx: true, typescript: true }),
-  getTheme(),
+  getTheme(opts),
 ];
 
 export { EditorView };

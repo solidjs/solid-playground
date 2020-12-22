@@ -1,4 +1,19 @@
-import { Component, createEffect, onMount, splitProps, JSX } from "solid-js";
+import {
+  Component,
+  createEffect,
+  onMount,
+  splitProps,
+  JSX,
+  Show,
+  createSignal,
+} from "solid-js";
+
+import { Icon } from "@amoutonbrady/solid-heroicons";
+import {
+  clipboard,
+  clipboardCheck,
+} from "@amoutonbrady/solid-heroicons/outline";
+
 import { basicSetup, EditorState, EditorView } from "./basicSetup";
 
 const Editor: Component<Props> = (props) => {
@@ -7,6 +22,9 @@ const Editor: Component<Props> = (props) => {
     "value",
     "disabled",
     "defaultValue",
+    "styles",
+    "canCopy",
+    "classList",
   ]);
 
   let parent!: HTMLDivElement;
@@ -27,7 +45,7 @@ const Editor: Component<Props> = (props) => {
     return EditorState.create({
       doc,
       extensions: [
-        basicSetup,
+        basicSetup(internal.styles),
         EditorView.updateListener.of((update) => {
           // This trigger the onDocChange event and save the cursor
           // for the next state.
@@ -39,6 +57,14 @@ const Editor: Component<Props> = (props) => {
         }),
         ...(disabled ? [EditorView.editable.of(false)] : []),
       ],
+    });
+  }
+
+  const [clip, setClip] = createSignal(false);
+  function copyToClipboard() {
+    navigator.clipboard.writeText(view.state.doc.toString()).then(() => {
+      setClip(true);
+      setTimeout(setClip, 3000, false);
     });
   }
 
@@ -56,7 +82,29 @@ const Editor: Component<Props> = (props) => {
     view.setState(createEditorState(internal.value, internal.disabled));
   });
 
-  return <div ref={parent} {...external}></div>;
+  return (
+    <div
+      {...external}
+      classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
+    >
+      <div ref={parent}></div>
+
+      <Show when={internal.canCopy}>
+        <button
+          type="button"
+          onClick={copyToClipboard}
+          class="absolute bottom-5 right-5 inline-flex items-center space-x-1 px-3 py-2 rounded-lg text-sm uppercase leading-none focus:outline-none focus:ring-1"
+          classList={{
+            "bg-brand-default text-white": !clip(),
+            "text-green-900 bg-green-50": clip(),
+          }}
+        >
+          <span class="-mb-0.5">{clip() ? "Copied!" : "Copy"}</span>
+          <Icon path={clip() ? clipboardCheck : clipboard} class="h-4" />
+        </button>
+      </Show>
+    </div>
+  );
 };
 
 export default Editor;
@@ -66,4 +114,6 @@ interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   value?: string;
   defaultValue?: string;
   disabled?: boolean;
+  styles?: Record<string, any>;
+  canCopy?: boolean;
 }
