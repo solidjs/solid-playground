@@ -42,3 +42,13 @@ div[contenteditable="true"]:focus,
     grid-template-columns: var(--left) 4px var(--right);
   }
 }
+
+.tabs {
+  @apply relative;
+}
+
+.tabs::after {
+  content: "";
+  height: 2px;
+  @apply absolute w-full left-0 bottom-0 bg-blueGray-200 z-0;
+}
