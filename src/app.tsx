@@ -166,7 +166,7 @@ export const App: Component = () => {
                   if (index() <= 0 || !store.interactive) return;
                   setEdit(index());
                 }}
-                class="cursor-pointer focus:outline-none"
+                class="cursor-pointer focus:outline-none -mb-0.5"
               >
                 <span
                   ref={(el) => tabRefs.set(tab.id, el)}
@@ -181,7 +181,7 @@ export const App: Component = () => {
                     setEdit(-1);
                     actions.setTabName(tab.id, e.target.textContent!);
                   }}
-                  class="outline-none -mb-0.5"
+                  class="outline-none"
                 >
                   {tab.name}
                 </span>
@@ -191,7 +191,7 @@ export const App: Component = () => {
               <Show when={index() > 0}>
                 <button
                   type="button"
-                  class="border-0 bg-transparent cursor-pointer focus:outline-none"
+                  class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
                   disabled={!store.interactive}
                   onClick={() => {
                     if (!store.interactive) return;
@@ -246,7 +246,7 @@ export const App: Component = () => {
         <TabItem class="flex-1" active={showPreview()}>
           <button
             type="button"
-            class="w-full focus:outline-none"
+            class="w-full focus:outline-none -mb-0.5"
             onClick={[setShowPreview, true]}
           >
             Result
@@ -255,7 +255,7 @@ export const App: Component = () => {
         <TabItem class="flex-1" active={!showPreview()}>
           <button
             type="button"
-            class="w-full focus:outline-none"
+            class="w-full focus:outline-none -mb-0.5"
             onClick={[setShowPreview, false]}
           >
             Output
