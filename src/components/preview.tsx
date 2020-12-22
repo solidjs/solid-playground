@@ -91,7 +91,9 @@ export const Preview: Component<Props> = (props) => {
         </style>
       </head>
       <body class="prose">
-        <div id="load">Loading the REPL...</div>
+        <div id="load" style="display: flex; height: 100vh; align-items: center; justify-content: center;">
+          <p style="font-size: 1.5rem">Loading the playground...</p>
+        </div>
       </body>
     </html>
   `;

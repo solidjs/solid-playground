@@ -1,5 +1,3 @@
-import { Icon } from "@amoutonbrady/solid-heroicons";
-import { x } from "@amoutonbrady/solid-heroicons/outline";
 import { compressToEncodedURIComponent as encode } from "lz-string";
 
 import {
@@ -17,10 +15,8 @@ import {
 
 import { eventBus, formatMs } from "./utils";
 import { compileMode, Tab, useStore } from "./store";
-import { TabItem, TabList, Preview } from "./components";
+import { TabItem, TabList, Preview, Header, Error, Update } from "./components";
 
-import logo from "url:./assets/images/logo.svg";
-import pkg from "../package.json";
 import { debounce } from "./utils/debounce";
 import { throttle } from "./utils/throttle";
 
@@ -153,22 +149,11 @@ export const App: Component = () => {
       class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 wrapper transition-all duration-100 font-display"
       style={{ "--left": `${left()}fr`, "--right": `${2 - left()}fr` }}
     >
-      <Show when={store.header} fallback={<div class="md:col-span-2"></div>}>
-        <header class="md:col-span-3 p-2 flex justify-between items-center bg-brand-default text-white">
-          <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
-            <a href="https://github.com/ryansolid/solid">
-              <img src={logo} alt="solid-js logo" class="w-8" />
-            </a>
-            <span class="inline-block -mb-1">Solid Playground</span>
-          </h1>
-
-          <div class="flex items-center space-x-2">
-            <span class="-mb-1 leading-0 text-white">
-              v{pkg.dependencies["solid-js"].slice(1)}
-            </span>
-          </div>
-        </header>
-      </Show>
+      <Show
+        when={store.header}
+        children={<Header />}
+        fallback={<div class="md:col-span-2"></div>}
+      />
 
       <TabList class="row-start-2 space-x-2">
         <For each={store.tabs}>
@@ -196,7 +181,7 @@ export const App: Component = () => {
                     setEdit(-1);
                     actions.setTabName(tab.id, e.target.textContent!);
                   }}
-                  class="outline-none"
+                  class="outline-none -mb-0.5"
                 >
                   {tab.name}
                 </span>
@@ -278,12 +263,22 @@ export const App: Component = () => {
         </TabItem>
       </TabList>
 
-      <Suspense fallback={<p>Loading the REPL</p>}>
+      <Suspense
+        fallback={
+          <div class="row-start-3 col-span-3 flex items-center justify-center">
+            <p class="animate-pulse text-xl font-display">
+              Loading the playground...
+            </p>
+          </div>
+        }
+      >
         <Editor
           value={store.currentCode}
           onDocChange={handleDocChange}
           class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-blueGray-50 row-start-3"
+          styles={{ backgroundColor: "#F8FAFC" }}
           disabled={!store.interactive}
+          canCopy
         />
 
         <div
@@ -295,19 +290,21 @@ export const App: Component = () => {
         </div>
 
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen bg-blueGray-50 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-gray-400">
+          <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
             <Editor
               value={store.compiled.replace("https://cdn.skypack.dev/", "")}
               class="h-full overflow-auto focus:outline-none flex-1 p-2"
+              styles={{ backgroundColor: "#fff" }}
               disabled
+              canCopy
             />
 
-            <div class="bg-gray-100 p-2">
+            <div class="bg-white p-5">
               <label class="font-semibold text-sm uppercase">
                 Compile mode
               </label>
 
-              <div class="flex flex-col mt-1">
+              <div class="flex flex-col mt-1 space-y-1 text-sm">
                 <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
                   <input
                     checked={store.mode === "DOM"}
@@ -320,6 +317,7 @@ export const App: Component = () => {
                   />
                   <span>Client side rendering</span>
                 </label>
+
                 <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
                   <input
                     checked={store.mode === "SSR"}
@@ -332,6 +330,7 @@ export const App: Component = () => {
                   />
                   <span>Server side rendering</span>
                 </label>
+
                 <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
                   <input
                     checked={store.mode === "HYDRATABLE"}
@@ -348,6 +347,7 @@ export const App: Component = () => {
             </div>
           </section>
         </Show>
+
         <Show when={showPreview()}>
           <Preview
             code={store.compiled}
@@ -357,44 +357,17 @@ export const App: Component = () => {
         </Show>
       </Suspense>
 
-      {/* TODO: Use portal */}
-      <Show when={store.error}>
-        <pre class="fixed bottom-10 right-10 bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10 max-w-2xl whitespace-pre-line">
-          <button
-            title="close"
-            type="button"
-            onClick={() => actions.set("error", "")}
-            class="absolute top-1 right-1 hover:text-red-900"
-          >
-            <Icon path={x} class="h-6 " />
-          </button>
-          <code innerText={store.error}></code>
-        </pre>
-      </Show>
+      <Show
+        when={store.error}
+        children={
+          <Error onDismiss={actions.resetError} message={store.error} />
+        }
+      />
 
-      {/* TODO: Use portal */}
-      <Show when={newUpdate()}>
-        <div class="fixed bottom-10 left-10 bg-blue-200 text-brand-default border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
-          <button
-            title="close"
-            onClick={() => setNewUpdate(false)}
-            class="absolute top-1 right-1 hover:text-blue-900"
-          >
-            <Icon path={x} class="h-6 " />
-          </button>
-          <p class="font-semibold">There's a new update available.</p>
-          <p class="mt-2">
-            Refresh your browser or click the button below to get the latest
-            update of the REPL.
-          </p>
-          <button
-            onClick={() => location.reload()}
-            class="bg-blue-800 text-blue-200 px-3 py-1 rounded mt-4 text-sm uppercase tracking-wide hover:bg-blue-900"
-          >
-            Refresh
-          </button>
-        </div>
-      </Show>
+      <Show
+        when={newUpdate()}
+        children={<Update onDismiss={() => setNewUpdate(false)} />}
+      />
     </div>
   );
 };

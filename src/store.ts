@@ -47,6 +47,7 @@ const [Store, useStore] = createStore(
   },
 
   (set, store) => ({
+    resetError: () => set("error", ""),
     setCurrentTab: (current: string) => {
       set({ current });
 
