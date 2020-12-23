@@ -11,6 +11,8 @@ import {
 import { Icon } from "@amoutonbrady/solid-heroicons";
 import {
   clipboard,
+  code,
+  checkCircle,
   clipboardCheck,
 } from "@amoutonbrady/solid-heroicons/outline";
 
@@ -25,6 +27,9 @@ const Editor: Component<Props> = (props) => {
     "styles",
     "canCopy",
     "classList",
+    "canFormat",
+    "onFormat",
+    "class",
   ]);
 
   let parent!: HTMLDivElement;
@@ -60,11 +65,19 @@ const Editor: Component<Props> = (props) => {
     });
   }
 
+  const [format, setFormat] = createSignal(false);
+  function formatCode() {
+    internal.onFormat(view.state.doc.toString());
+    setFormat(true);
+    setTimeout(setFormat, 750, false);
+  }
+
   const [clip, setClip] = createSignal(false);
+
   function copyToClipboard() {
     navigator.clipboard.writeText(view.state.doc.toString()).then(() => {
       setClip(true);
-      setTimeout(setClip, 3000, false);
+      setTimeout(setClip, 750, false);
     });
   }
 
@@ -85,24 +98,49 @@ const Editor: Component<Props> = (props) => {
   return (
     <div
       {...external}
+      class={`flex flex-col ${internal.class || ""}`}
       classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
     >
-      <div ref={parent}></div>
+      <div class="flex-1 p-2" ref={parent}></div>
 
-      <Show when={internal.canCopy}>
-        <button
-          type="button"
-          onClick={copyToClipboard}
-          class="absolute bottom-5 right-5 inline-flex items-center space-x-1 px-3 py-2 rounded-lg text-sm uppercase leading-none focus:outline-none focus:ring-1"
-          classList={{
-            "bg-brand-default text-white": !clip(),
-            "text-green-900 bg-green-50": clip(),
-          }}
-        >
-          <span class="-mb-0.5">{clip() ? "Copied!" : "Copy"}</span>
-          <Icon path={clip() ? clipboardCheck : clipboard} class="h-4" />
-        </button>
-      </Show>
+      <div
+        class="flex justify-end space-x-2 p-2"
+        classList={{ hidden: !internal.canFormat && !internal.canCopy }}
+      >
+        <Show when={internal.canFormat}>
+          <button
+            type="button"
+            onClick={formatCode}
+            class="inline-flex items-center p-1 rounded-lg text-sm uppercase leading-none focus:outline-none focus:ring-1"
+            title="Format the source code"
+            classList={{
+              "text-blueGray-400": !format(),
+              "text-green-900": format(),
+            }}
+          >
+            <span class="sr-only">
+              {format() ? "Code formatted!" : "Format code"}
+            </span>
+            <Icon path={format() ? checkCircle : code} class="h-6" />
+          </button>
+        </Show>
+
+        <Show when={internal.canCopy}>
+          <button
+            type="button"
+            onClick={copyToClipboard}
+            class="inline-flex items-center p-1 rounded-lg text-sm uppercase leading-none focus:outline-none focus:ring-1"
+            title="Copy the source code"
+            classList={{
+              "text-blueGray-400": !clip(),
+              "text-green-900": clip(),
+            }}
+          >
+            <span class="sr-only">{clip() ? "Copied!" : "Copy"}</span>
+            <Icon path={clip() ? clipboardCheck : clipboard} class="h-6" />
+          </button>
+        </Show>
+      </div>
     </div>
   );
 };
@@ -116,4 +154,6 @@ interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
   styles?: Record<string, any>;
   canCopy?: boolean;
+  canFormat?: boolean;
+  onFormat?: (code: string) => unknown;
 }

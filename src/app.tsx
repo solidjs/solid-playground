@@ -37,7 +37,8 @@ export const App: Component = () => {
   onCleanup(() => eventBus.all.clear());
 
   let now: number;
-  const worker = new Worker("./worker.ts");
+  const compiler = new Worker("./workers/compiler.ts");
+  const formatter = new Worker("./workers/formatter.ts");
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
@@ -53,7 +54,7 @@ export const App: Component = () => {
    */
   createEffect(() => showPreview() && actions.set("mode", "DOM"));
 
-  worker.addEventListener("message", ({ data }) => {
+  compiler.addEventListener("message", ({ data }) => {
     const { event, result } = data;
 
     switch (event) {
@@ -80,7 +81,7 @@ export const App: Component = () => {
       actions.set("isCompiling", true);
       now = performance.now();
 
-      worker.postMessage({
+      compiler.postMessage({
         event: "COMPILE",
         tabs,
         compileOpts,
@@ -118,11 +119,31 @@ export const App: Component = () => {
     actions.set({ error: "" });
   };
 
+  formatter.addEventListener("message", ({ data }) => {
+    const { event, code } = data;
+
+    console.log({ data });
+
+    switch (event) {
+      case "RESULT":
+        actions.setCurrentSource(code);
+        actions.set({ currentCode: code });
+        break;
+    }
+  });
+
+  const formatCode = (code: string) => {
+    formatter.postMessage({
+      event: "FORMAT",
+      code,
+    });
+  };
+
   /**
    * This whole block before the slice of view
    * is an experimental resizer, need to tidy this up
    */
-  const [left, setLeft] = createSignal(1);
+  const [left, setLeft] = createSignal(1.25);
   const [isDragging, setIsDragging] = createSignal(false);
 
   const onMouseMove = throttle((e: MouseEvent) => {
@@ -275,10 +296,12 @@ export const App: Component = () => {
         <Editor
           value={store.currentCode}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none p-2 whitespace-pre-line bg-blueGray-50 row-start-3"
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 row-start-3"
           styles={{ backgroundColor: "#F8FAFC" }}
           disabled={!store.interactive}
           canCopy
+          canFormat
+          onFormat={formatCode}
         />
 
         <div
@@ -293,7 +316,7 @@ export const App: Component = () => {
           <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
             <Editor
               value={store.compiled.replace("https://cdn.skypack.dev/", "")}
-              class="h-full overflow-auto focus:outline-none flex-1 p-2"
+              class="h-full overflow-auto focus:outline-none flex-1"
               styles={{ backgroundColor: "#fff" }}
               disabled
               canCopy

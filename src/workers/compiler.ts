@@ -1,5 +1,5 @@
-import type { Tab } from "./store";
-import pkg from "../package.json";
+import type { Tab } from "../store";
+import pkg from "../../package.json";
 
 import { transform } from "@babel/standalone";
 import solid from "babel-preset-solid";
