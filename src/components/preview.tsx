@@ -46,11 +46,51 @@ export const Preview: Component<Props> = (props) => {
         <!-- Ressource hints -->
         <link rel="dns-prefetch" href="//unpkg.com">
         <link href="https://unpkg.com" rel="preconnect" crossorigin>
-        <link rel="preload" href="https://unpkg.com/tailwindcss@2.0.1/dist/base.min.css" as="style">
         <link rel="preload" href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" as="style">
 
-        <link href="https://unpkg.com/tailwindcss@2.0.1/dist/base.min.css" rel="stylesheet">
         <link href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" rel="stylesheet">
+
+        <style>
+          html, body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+          }
+
+          body {
+            color: #333;
+            margin: 0;
+            padding: 8px;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+          }
+
+          input, button, select, textarea {
+            padding: 0.4em;
+            margin: 0 0 0.5em 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+          }
+
+          button {
+            color: #333;
+            background-color: #f4f4f4;
+            outline: none;
+          }
+
+          button:disabled {
+            color: #999;
+          }
+
+          button:not(:disabled):active {
+            background-color: #ddd;
+          }
+
+          button:focus {
+            border-color: #666;
+          }
+		    </style>
 
         <script type="module">
           window.addEventListener('message', ({ data }) => {
