@@ -1,4 +1,4 @@
-import { decompressFromEncodedURIComponent } from "lz-string";
+import { decompressFromEncodedURIComponent } from 'lz-string';
 
 export function parseHash<T>(hash: string, fallback: T) {
   try {

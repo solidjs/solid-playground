@@ -1,7 +1,4 @@
-export const throttle = (
-  fn: (...params: unknown[]) => unknown,
-  wait: number
-) => {
+export const throttle = (fn: (...params: unknown[]) => unknown, wait: number) => {
   let previouslyRun: number;
   let queuedToRun: NodeJS.Timeout;
 
@@ -15,10 +12,7 @@ export const throttle = (
       fn.apply(null, args);
       previouslyRun = now;
     } else {
-      queuedToRun = setTimeout(
-        invokeFn.bind(null, ...args),
-        wait - (now - previouslyRun)
-      );
+      queuedToRun = setTimeout(invokeFn.bind(null, ...args), wait - (now - previouslyRun));
     }
   };
 };

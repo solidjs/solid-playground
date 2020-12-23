@@ -1,7 +1,7 @@
-import { Component } from "solid-js";
+import { Component } from 'solid-js';
 
-import logo from "url:../assets/images/logo.svg";
-import pkg from "../../package.json";
+import logo from 'url:../assets/images/logo.svg';
+import pkg from '../../package.json';
 
 export const Header: Component = () => {
   return (
@@ -14,9 +14,7 @@ export const Header: Component = () => {
       </h1>
 
       <div class="flex items-center space-x-2">
-        <span class="-mb-1 leading-0 text-white">
-          v{pkg.dependencies["solid-js"].slice(1)}
-        </span>
+        <span class="-mb-1 leading-0 text-white">v{pkg.dependencies['solid-js'].slice(1)}</span>
       </div>
     </header>
   );

@@ -1,7 +1,4 @@
-export function debounce(
-  callback: (...params: unknown[]) => unknown,
-  wait: number
-) {
+export function debounce(callback: (...params: unknown[]) => unknown, wait: number) {
   let timeout: NodeJS.Timeout;
 
   return (...args: unknown[]) => {

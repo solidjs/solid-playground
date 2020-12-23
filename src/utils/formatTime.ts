@@ -1,6 +1,6 @@
-const formatter = new Intl.NumberFormat("en-US", {
-  unit: "millisecond",
-  style: "unit",
+const formatter = new Intl.NumberFormat('en-US', {
+  unit: 'millisecond',
+  style: 'unit',
 });
 
 export function formatMs(ms: number) {

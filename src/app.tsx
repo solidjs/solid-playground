@@ -1,4 +1,4 @@
-import { compressToEncodedURIComponent as encode } from "lz-string";
+import { compressToEncodedURIComponent as encode } from 'lz-string';
 
 import {
   For,
@@ -11,19 +11,19 @@ import {
   createSignal,
   onMount,
   unwrap,
-} from "solid-js";
+} from 'solid-js';
 
-import { eventBus, formatMs } from "./utils";
-import { compileMode, Tab, useStore } from "./store";
-import { TabItem, TabList, Preview, Header, Error, Update } from "./components";
+import { eventBus, formatMs } from './utils';
+import { compileMode, Tab, useStore } from './store';
+import { TabItem, TabList, Preview, Header, Error, Update } from './components';
 
-import { debounce } from "./utils/debounce";
-import { throttle } from "./utils/throttle";
+import { debounce } from './utils/debounce';
+import { throttle } from './utils/throttle';
 
-const Editor = lazy(() => import("./components/editor"));
+const Editor = lazy(() => import('./components/editor'));
 
 let swUpdatedBeforeRender = false;
-eventBus.on("sw-update", () => (swUpdatedBeforeRender = true));
+eventBus.on('sw-update', () => (swUpdatedBeforeRender = true));
 
 export const App: Component = () => {
   /**
@@ -33,12 +33,12 @@ export const App: Component = () => {
    * the couple line above.
    */
   const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
-  eventBus.on("sw-update", () => setNewUpdate(true));
+  eventBus.on('sw-update', () => setNewUpdate(true));
   onCleanup(() => eventBus.all.clear());
 
   let now: number;
-  const compiler = new Worker("./workers/compiler.ts");
-  const formatter = new Worker("./workers/formatter.ts");
+  const compiler = new Worker('./workers/compiler.ts');
+  const formatter = new Worker('./workers/formatter.ts');
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
@@ -46,19 +46,19 @@ export const App: Component = () => {
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
 
-  onMount(() => actions.set("currentCode", actions.getCurrentSource()));
+  onMount(() => actions.set('currentCode', actions.getCurrentSource()));
 
   /**
    * If we show the preview of the code, we want it to be DOM
    * to be able to render into the iframe.
    */
-  createEffect(() => showPreview() && actions.set("mode", "DOM"));
+  createEffect(() => showPreview() && actions.set('mode', 'DOM'));
 
-  compiler.addEventListener("message", ({ data }) => {
+  compiler.addEventListener('message', ({ data }) => {
     const { event, result } = data;
 
     switch (event) {
-      case "RESULT":
+      case 'RESULT':
         const [error, compiled] = result;
 
         if (error) return actions.set({ error });
@@ -66,7 +66,7 @@ export const App: Component = () => {
 
         actions.set({ compiled, isCompiling: false });
 
-        console.log("Compilation took:", formatMs(performance.now() - now));
+        console.log('Compilation took:', formatMs(performance.now() - now));
         break;
     }
   });
@@ -76,19 +76,16 @@ export const App: Component = () => {
    * it takes ~15ms to compile with the web worker...
    * Also, real time feedback can be stressful
    */
-  const applyCompilation = debounce(
-    (tabs: Tab[], compileOpts: Record<string, any>) => {
-      actions.set("isCompiling", true);
-      now = performance.now();
+  const applyCompilation = debounce((tabs: Tab[], compileOpts: Record<string, any>) => {
+    actions.set('isCompiling', true);
+    now = performance.now();
 
-      compiler.postMessage({
-        event: "COMPILE",
-        tabs,
-        compileOpts,
-      });
-    },
-    100
-  );
+    compiler.postMessage({
+      event: 'COMPILE',
+      tabs,
+      compileOpts,
+    });
+  }, 100);
 
   /**
    * The heart of the playground. This recompile on
@@ -116,16 +113,16 @@ export const App: Component = () => {
    */
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
-    actions.set({ error: "" });
+    actions.set({ error: '' });
   };
 
-  formatter.addEventListener("message", ({ data }) => {
+  formatter.addEventListener('message', ({ data }) => {
     const { event, code } = data;
 
     console.log({ data });
 
     switch (event) {
-      case "RESULT":
+      case 'RESULT':
         actions.setCurrentSource(code);
         actions.set({ currentCode: code });
         break;
@@ -134,7 +131,7 @@ export const App: Component = () => {
 
   const formatCode = (code: string) => {
     formatter.postMessage({
-      event: "FORMAT",
+      event: 'FORMAT',
       code,
     });
   };
@@ -157,18 +154,18 @@ export const App: Component = () => {
 
   createEffect(() => {
     if (isDragging()) {
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
     } else {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     }
   });
 
   return (
     <div
       class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 wrapper transition-all duration-100 font-display"
-      style={{ "--left": `${left()}fr`, "--right": `${2 - left()}fr` }}
+      style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
     >
       <Show
         when={store.header}
@@ -197,8 +194,8 @@ export const App: Component = () => {
                     actions.setTabName(tab.id, e.target.textContent!);
                   }}
                   onKeyDown={(e) => {
-                    if (e.code === "Space") e.preventDefault();
-                    if (e.code !== "Enter") return;
+                    if (e.code === 'Space') e.preventDefault();
+                    if (e.code !== 'Enter') return;
                     setEdit(-1);
                     actions.setTabName(tab.id, e.target.textContent!);
                   }}
@@ -287,9 +284,7 @@ export const App: Component = () => {
       <Suspense
         fallback={
           <div class="row-start-3 col-span-3 flex items-center justify-center">
-            <p class="animate-pulse text-xl font-display">
-              Loading the playground...
-            </p>
+            <p class="animate-pulse text-xl font-display">Loading the playground...</p>
           </div>
         }
       >
@@ -297,7 +292,7 @@ export const App: Component = () => {
           value={store.currentCode}
           onDocChange={handleDocChange}
           class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 row-start-3"
-          styles={{ backgroundColor: "#F8FAFC" }}
+          styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
           canFormat
@@ -315,25 +310,23 @@ export const App: Component = () => {
         <Show when={!showPreview()}>
           <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
             <Editor
-              value={store.compiled.replace("https://cdn.skypack.dev/", "")}
+              value={store.compiled.replace('https://cdn.skypack.dev/', '')}
               class="h-full overflow-auto focus:outline-none flex-1"
-              styles={{ backgroundColor: "#fff" }}
+              styles={{ backgroundColor: '#fff' }}
               disabled
               canCopy
             />
 
             <div class="bg-white p-5">
-              <label class="font-semibold text-sm uppercase">
-                Compile mode
-              </label>
+              <label class="font-semibold text-sm uppercase">Compile mode</label>
 
               <div class="flex flex-col mt-1 space-y-1 text-sm">
                 <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
                   <input
-                    checked={store.mode === "DOM"}
+                    checked={store.mode === 'DOM'}
                     value="DOM"
                     class="text-brand-default"
-                    onChange={(e) => actions.set("mode", e.target.value as any)}
+                    onChange={(e) => actions.set('mode', e.target.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -343,10 +336,10 @@ export const App: Component = () => {
 
                 <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
                   <input
-                    checked={store.mode === "SSR"}
+                    checked={store.mode === 'SSR'}
                     value="SSR"
                     class="text-brand-default"
-                    onChange={(e) => actions.set("mode", e.target.value as any)}
+                    onChange={(e) => actions.set('mode', e.target.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -356,10 +349,10 @@ export const App: Component = () => {
 
                 <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
                   <input
-                    checked={store.mode === "HYDRATABLE"}
+                    checked={store.mode === 'HYDRATABLE'}
                     value="HYDRATABLE"
                     class="text-brand-default"
-                    onChange={(e) => actions.set("mode", e.target.value as any)}
+                    onChange={(e) => actions.set('mode', e.target.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -375,22 +368,17 @@ export const App: Component = () => {
           <Preview
             code={store.compiled}
             class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-white row-start-5 md:row-start-3"
-            classList={{ "pointer-events-none": isDragging() }}
+            classList={{ 'pointer-events-none': isDragging() }}
           />
         </Show>
       </Suspense>
 
       <Show
         when={store.error}
-        children={
-          <Error onDismiss={actions.resetError} message={store.error} />
-        }
+        children={<Error onDismiss={actions.resetError} message={store.error} />}
       />
 
-      <Show
-        when={newUpdate()}
-        children={<Update onDismiss={() => setNewUpdate(false)} />}
-      />
+      <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
     </div>
   );
 };

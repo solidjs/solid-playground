@@ -12,7 +12,7 @@ export async function loadRollup() {
   if (globalThis.$rollup) return globalThis.$rollup;
 
   // @ts-ignore
-  const { rollup } = await import("rollup/dist/rollup.browser.js");
+  const { rollup } = await import('rollup/dist/rollup.browser.js');
   globalThis.$rollup = rollup;
 
   return globalThis.$rollup!;
@@ -28,14 +28,11 @@ export async function loadRollup() {
 export async function loadBabel() {
   if (globalThis.$babel) return globalThis.$babel;
 
-  const { transform } = await import("@babel/standalone");
-  const ts = await import("@babel/preset-typescript");
-  const solid = await import("babel-preset-solid");
+  const { transform } = await import('@babel/standalone');
+  const ts = await import('@babel/preset-typescript');
+  const solid = await import('babel-preset-solid');
 
-  globalThis.$babel = (
-    code: string,
-    opts: { babel: any; solid: any } = { babel: {}, solid: {} }
-  ) =>
+  globalThis.$babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
     transform(code, {
       presets: [[solid, { ...opts.solid }], ts],
       ...opts.babel,
