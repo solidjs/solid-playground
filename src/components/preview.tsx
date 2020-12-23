@@ -1,14 +1,7 @@
-import {
-  Component,
-  createEffect,
-  createSignal,
-  onMount,
-  splitProps,
-  JSX,
-} from "solid-js";
+import { Component, createEffect, createSignal, onMount, splitProps, JSX } from 'solid-js';
 
 export const Preview: Component<Props> = (props) => {
-  const [internal, external] = splitProps(props, ["code"]);
+  const [internal, external] = splitProps(props, ['code']);
 
   let iframe!: HTMLIFrameElement;
   const [isIframeReady, setIframeReady] = createSignal(false);
@@ -16,21 +9,20 @@ export const Preview: Component<Props> = (props) => {
   createEffect(() => {
     // HACK: This helps prevent unnecessary updates
     const isNotDom =
-      internal.code.includes("getNextElement") ||
-      internal.code.includes("getHydrationKey");
+      internal.code.includes('getNextElement') || internal.code.includes('getHydrationKey');
 
     if (isNotDom || !isIframeReady()) return;
 
-    const code = internal.code.replace("render(", "window.dispose = render(");
-    const event = "CODE_UPDATE";
+    const code = internal.code.replace('render(', 'window.dispose = render(');
+    const event = 'CODE_UPDATE';
 
-    iframe.contentWindow!.postMessage({ event, code }, "*");
+    iframe.contentWindow!.postMessage({ event, code }, '*');
   });
 
   onMount(() => {
-    iframe.contentWindow!.addEventListener("message", ({ data }) => {
+    iframe.contentWindow!.addEventListener('message', ({ data }) => {
       switch (data.event) {
-        case "DOM_READY":
+        case 'DOM_READY':
           return setIframeReady(true);
       }
     });

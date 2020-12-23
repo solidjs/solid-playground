@@ -1,8 +1,8 @@
-import { Component } from "solid-js";
-import { Portal } from "solid-js/web";
+import { Component } from 'solid-js';
+import { Portal } from 'solid-js/web';
 
-import { Icon } from "@amoutonbrady/solid-heroicons";
-import { x } from "@amoutonbrady/solid-heroicons/outline";
+import { Icon } from '@amoutonbrady/solid-heroicons';
+import { x } from '@amoutonbrady/solid-heroicons/outline';
 
 interface Props {
   onDismiss: (...args: unknown[]) => unknown;
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const Error: Component<Props> = (props) => {
-  const mount = document.getElementById("error");
+  const mount = document.getElementById('error');
 
   return (
     <Portal mount={mount}>

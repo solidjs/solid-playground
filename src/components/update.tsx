@@ -1,15 +1,15 @@
-import { Component } from "solid-js";
-import { Portal } from "solid-js/web";
+import { Component } from 'solid-js';
+import { Portal } from 'solid-js/web';
 
-import { Icon } from "@amoutonbrady/solid-heroicons";
-import { x } from "@amoutonbrady/solid-heroicons/outline";
+import { Icon } from '@amoutonbrady/solid-heroicons';
+import { x } from '@amoutonbrady/solid-heroicons/outline';
 
 interface Props {
   onDismiss: (...args: unknown[]) => unknown;
 }
 
 export const Update: Component<Props> = (props) => {
-  const mount = document.getElementById("update");
+  const mount = document.getElementById('update');
 
   return (
     <Portal mount={mount}>
@@ -23,8 +23,7 @@ export const Update: Component<Props> = (props) => {
         </button>
         <p class="font-semibold">There's a new update available.</p>
         <p class="mt-2">
-          Refresh your browser or click the button below to get the latest
-          update of the REPL.
+          Refresh your browser or click the button below to get the latest update of the REPL.
         </p>
         <button
           onClick={() => location.reload()}

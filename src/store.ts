@@ -1,34 +1,34 @@
-import { createStore } from "solid-utils";
-import { uid, parseHash } from "./utils";
+import { createStore } from 'solid-utils';
+import { uid, parseHash } from './utils';
 
 const defaultTabs: Tab[] = [
   {
     id: uid(),
-    name: "main",
-    type: "tsx",
+    name: 'main',
+    type: 'tsx',
     source:
       "import { render } from 'solid-js/web';\n" +
       "import { createSignal } from 'solid-js';\n" +
-      "\n" +
-      "function Counter() {\n" +
-      "  const [count, setCount] = createSignal(0);\n" +
-      "  const increment = () => setCount(count() + 1)\n" +
-      "\n" +
-      "  return (\n" +
+      '\n' +
+      'function Counter() {\n' +
+      '  const [count, setCount] = createSignal(0);\n' +
+      '  const increment = () => setCount(count() + 1)\n' +
+      '\n' +
+      '  return (\n' +
       '    <button type="button" onClick={increment}>\n' +
-      "      {count()}\n" +
-      "    </button>\n" +
-      "  );\n" +
-      "}\n" +
-      "\n" +
+      '      {count()}\n' +
+      '    </button>\n' +
+      '  );\n' +
+      '}\n' +
+      '\n' +
       "render(() => <Counter />, document.getElementById('app'))\n",
   },
 ];
 
 export const compileMode = {
-  SSR: { generate: "ssr", hydratable: true },
-  DOM: { generate: "dom", hydratable: false },
-  HYDRATABLE: { generate: "dom", hydratable: true },
+  SSR: { generate: 'ssr', hydratable: true },
+  DOM: { generate: 'dom', hydratable: false },
+  HYDRATABLE: { generate: 'dom', hydratable: true },
 } as const;
 
 type ValueOf<T> = T[keyof T];
@@ -40,17 +40,15 @@ const [Store, useStore] = createStore(
     const params = Object.fromEntries(url.searchParams.entries());
     const tabs: Tab[] = initialTabs || defaultTabs;
 
-    const [noHeader, noInteractive] = ["noHeader", "noInteractive"].map(
-      (key) => key in params
-    );
+    const [noHeader, noInteractive] = ['noHeader', 'noInteractive'].map((key) => key in params);
 
     return {
       current: tabs[0].id,
-      currentCode: "",
+      currentCode: '',
       tabs,
-      error: "",
-      compiled: "",
-      mode: "DOM" as keyof typeof compileMode,
+      error: '',
+      compiled: '',
+      mode: 'DOM' as keyof typeof compileMode,
       header: !noHeader,
       interactive: !noInteractive,
       isCompiling: false,
@@ -61,7 +59,7 @@ const [Store, useStore] = createStore(
   },
 
   (set, store) => ({
-    resetError: () => set("error", ""),
+    resetError: () => set('error', ''),
     setCurrentTab: (current: string) => {
       set({ current });
 
@@ -78,7 +76,7 @@ const [Store, useStore] = createStore(
       const idx = store.tabs.findIndex((tab) => tab.id === id);
       if (idx < 0) return;
 
-      set("tabs", idx, "name", name);
+      set('tabs', idx, 'name', name);
     },
     removeTab(id: string) {
       const idx = store.tabs.findIndex((tab) => tab.id === id);
@@ -86,9 +84,7 @@ const [Store, useStore] = createStore(
 
       if (!tab) return;
 
-      const confirmDeletion = confirm(
-        `Are you sure you want to delete ${tab.name}.${tab.type}?`
-      );
+      const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}.${tab.type}?`);
       if (!confirmDeletion) return;
 
       // We want to redirect to another tab if we are deleting the current one
@@ -99,7 +95,7 @@ const [Store, useStore] = createStore(
         });
       }
 
-      set("tabs", (tabs) => [...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
+      set('tabs', (tabs) => [...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
     },
     getCurrentSource() {
       const idx = store.tabs.findIndex((tab) => tab.id === store.current);
@@ -111,7 +107,7 @@ const [Store, useStore] = createStore(
       const idx = store.tabs.findIndex((tab) => tab.id === store.current);
       if (idx < 0) return;
 
-      set("tabs", idx, "source", source);
+      set('tabs', idx, 'source', source);
     },
     addTab() {
       const nextId = uid();
@@ -122,15 +118,15 @@ const [Store, useStore] = createStore(
           {
             id: nextId,
             name: `tab${store.tabs.length}`,
-            type: "tsx",
-            source: "",
+            type: 'tsx',
+            source: '',
           },
         ],
         current: nextId,
-        currentCode: "",
+        currentCode: '',
       });
     },
-  })
+  }),
 );
 
 export { Store, useStore };
@@ -142,4 +138,4 @@ export interface Tab {
   source: string;
 }
 
-export type ReplTab = Pick<Tab, "name" | "source">;
+export type ReplTab = Pick<Tab, 'name' | 'source'>;

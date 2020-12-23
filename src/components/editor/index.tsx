@@ -1,35 +1,27 @@
-import {
-  Component,
-  createEffect,
-  onMount,
-  splitProps,
-  JSX,
-  Show,
-  createSignal,
-} from "solid-js";
+import { Component, createEffect, onMount, splitProps, JSX, Show, createSignal } from 'solid-js';
 
-import { Icon } from "@amoutonbrady/solid-heroicons";
+import { Icon } from '@amoutonbrady/solid-heroicons';
 import {
   clipboard,
   code,
   checkCircle,
   clipboardCheck,
-} from "@amoutonbrady/solid-heroicons/outline";
+} from '@amoutonbrady/solid-heroicons/outline';
 
-import { basicSetup, EditorState, EditorView } from "./basicSetup";
+import { basicSetup, EditorState, EditorView } from './basicSetup';
 
 const Editor: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, [
-    "onDocChange",
-    "value",
-    "disabled",
-    "defaultValue",
-    "styles",
-    "canCopy",
-    "classList",
-    "canFormat",
-    "onFormat",
-    "class",
+    'onDocChange',
+    'value',
+    'disabled',
+    'defaultValue',
+    'styles',
+    'canCopy',
+    'classList',
+    'canFormat',
+    'onFormat',
+    'class',
   ]);
 
   let parent!: HTMLDivElement;
@@ -43,10 +35,7 @@ const Editor: Component<Props> = (props) => {
    * @param doc {string} - The new document string
    * @param disabled {boolean} - Whether the editor is readonly or not
    */
-  function createEditorState(
-    doc: string,
-    disabled: boolean = false
-  ): EditorState {
+  function createEditorState(doc: string, disabled: boolean = false): EditorState {
     return EditorState.create({
       doc,
       extensions: [
@@ -83,10 +72,7 @@ const Editor: Component<Props> = (props) => {
 
   // Initialize CodeMirror
   onMount(() => {
-    state = createEditorState(
-      internal.defaultValue || internal.value || "",
-      internal.disabled
-    );
+    state = createEditorState(internal.defaultValue || internal.value || '', internal.disabled);
     view = new EditorView({ state, parent });
   });
 
@@ -98,7 +84,7 @@ const Editor: Component<Props> = (props) => {
   return (
     <div
       {...external}
-      class={`flex flex-col ${internal.class || ""}`}
+      class={`flex flex-col ${internal.class || ''}`}
       classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
     >
       <div class="flex-1 p-2" ref={parent}></div>
@@ -114,13 +100,11 @@ const Editor: Component<Props> = (props) => {
             class="inline-flex items-center p-1 rounded-lg text-sm uppercase leading-none focus:outline-none focus:ring-1"
             title="Format the source code"
             classList={{
-              "text-blueGray-400": !format(),
-              "text-green-900": format(),
+              'text-blueGray-400': !format(),
+              'text-green-900': format(),
             }}
           >
-            <span class="sr-only">
-              {format() ? "Code formatted!" : "Format code"}
-            </span>
+            <span class="sr-only">{format() ? 'Code formatted!' : 'Format code'}</span>
             <Icon path={format() ? checkCircle : code} class="h-6" />
           </button>
         </Show>
@@ -132,11 +116,11 @@ const Editor: Component<Props> = (props) => {
             class="inline-flex items-center p-1 rounded-lg text-sm uppercase leading-none focus:outline-none focus:ring-1"
             title="Copy the source code"
             classList={{
-              "text-blueGray-400": !clip(),
-              "text-green-900": clip(),
+              'text-blueGray-400': !clip(),
+              'text-green-900': clip(),
             }}
           >
-            <span class="sr-only">{clip() ? "Copied!" : "Copy"}</span>
+            <span class="sr-only">{clip() ? 'Copied!' : 'Copy'}</span>
             <Icon path={clip() ? clipboardCheck : clipboard} class="h-6" />
           </button>
         </Show>

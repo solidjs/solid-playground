@@ -1,22 +1,19 @@
-import type { Tab } from "../store";
-import pkg from "../../package.json";
+import type { Tab } from '../store';
+import pkg from '../../package.json';
 
-import { transform } from "@babel/standalone";
-import solid from "babel-preset-solid";
-import ts from "@babel/preset-typescript";
-import { rollup } from "rollup/dist/rollup.browser.js";
+import { transform } from '@babel/standalone';
+import solid from 'babel-preset-solid';
+import ts from '@babel/preset-typescript';
+import { rollup } from 'rollup/dist/rollup.browser.js';
 
-const SOLID_VERSION = pkg.dependencies["solid-js"].slice(1);
-const CDN_URL = "https://cdn.skypack.dev";
+const SOLID_VERSION = pkg.dependencies['solid-js'].slice(1);
+const CDN_URL = 'https://cdn.skypack.dev';
 const tabsLookup: Map<string, Tab> = new Map();
 
 export function loadBabel() {
   if (globalThis.$babel) return globalThis.$babel;
 
-  globalThis.$babel = (
-    code: string,
-    opts: { babel: any; solid: any } = { babel: {}, solid: {} }
-  ) =>
+  globalThis.$babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
     transform(code, {
       presets: [[solid, { ...opts.solid }], ts],
       ...opts.babel,
@@ -44,18 +41,15 @@ function generateCodeString(tab: Tab) {
  */
 function virtual({ SOLID_VERSION, solidOptions = {} }) {
   return {
-    name: "repl-plugin",
+    name: 'repl-plugin',
 
     async resolveId(importee: string) {
       // This is a tab being imported
-      if (importee.startsWith(".")) return importee;
+      if (importee.startsWith('.')) return importee;
 
       // This is an external module
       return {
-        id: `${CDN_URL}/${importee.replace(
-          "solid-js",
-          `solid-js@${SOLID_VERSION}`
-        )}`,
+        id: `${CDN_URL}/${importee.replace('solid-js', `solid-js@${SOLID_VERSION}`)}`,
         external: true,
       };
     },
@@ -88,7 +82,7 @@ async function compile(tabs: Tab[], solidOptions = {}) {
 
     const {
       output: [{ code }],
-    } = await compiler.generate({ format: "esm" });
+    } = await compiler.generate({ format: 'esm' });
 
     return [null, code as string] as const;
   } catch (e) {
@@ -96,14 +90,14 @@ async function compile(tabs: Tab[], solidOptions = {}) {
   }
 }
 
-self.addEventListener("message", async ({ data }) => {
+self.addEventListener('message', async ({ data }) => {
   const { event, tabs, compileOpts } = data;
 
   switch (event) {
-    case "COMPILE":
+    case 'COMPILE':
       // @ts-ignore
       self.postMessage({
-        event: "RESULT",
+        event: 'RESULT',
         result: await compile(tabs, compileOpts),
       });
       break;

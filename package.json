@@ -9,7 +9,8 @@
   "author": "Alexandre Mouton-Brady",
   "scripts": {
     "dev": "parcel src/index.html --no-cache",
-    "build": "rimraf dist && parcel build src/index.html && workbox generateSW workbox-config.js"
+    "build": "rimraf dist && parcel build src/index.html && workbox generateSW workbox-config.js",
+    "format": "prettier -w \"src/**/*.{js,json,ts,tsx,html,css}\""
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

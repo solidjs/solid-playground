@@ -1,21 +1,21 @@
 @font-face {
-  font-family: "Gordita";
-  src: url("./fonts/Gordita/Gordita-Regular.woff") format("woff");
+  font-family: 'Gordita';
+  src: url('./fonts/Gordita/Gordita-Regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
-  font-family: "Gordita";
-  src: url("./fonts/Gordita/Gordita-Bold.woff") format("woff");
+  font-family: 'Gordita';
+  src: url('./fonts/Gordita/Gordita-Bold.woff') format('woff');
   font-weight: bold;
   font-style: normal;
 }
 
 @font-face {
-  font-family: "Fira Code";
-  src: url("./fonts/FiraCode/fira_code.woff2") format("woff2-variations"),
-    url("./fonts/FiraCode/fira_code.woff") format("woff-variations");
+  font-family: 'Fira Code';
+  src: url('./fonts/FiraCode/fira_code.woff2') format('woff2-variations'),
+    url('./fonts/FiraCode/fira_code.woff') format('woff-variations');
   font-weight: 300 700;
   font-style: normal;
 }
@@ -24,7 +24,7 @@
 @tailwind components;
 @tailwind utilities;
 
-div[contenteditable="true"]:focus,
+div[contenteditable='true']:focus,
 .ͼ1.cm-wrap.cm-focused {
   outline: none !important;
 }
@@ -48,7 +48,7 @@ div[contenteditable="true"]:focus,
 }
 
 .tabs::after {
-  content: "";
+  content: '';
   height: 2px;
   @apply absolute w-full left-0 bottom-0 bg-blueGray-200 z-0;
 }
