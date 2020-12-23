@@ -57,6 +57,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.486"],
             ["postcss", "npm:8.2.1"],
+            ["prettier", "npm:2.2.1"],
             ["register-service-worker", "npm:1.7.2"],
             ["rimraf", "npm:3.0.2"],
             ["rollup", "npm:2.35.1"],
@@ -10689,6 +10690,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["prettier", [
+        ["npm:2.2.1", {
+          "packageLocation": "./.yarn/cache/prettier-npm-2.2.1-e0670992f8-92c6c9f4b8.zip/node_modules/prettier/",
+          "packageDependencies": [
+            ["prettier", "npm:2.2.1"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["pretty-bytes", [
         ["npm:5.4.1", {
           "packageLocation": "./.yarn/cache/pretty-bytes-npm-5.4.1-c867dc5fbd-da79e856b6.zip/node_modules/pretty-bytes/",
@@ -11731,6 +11741,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["mitt", "npm:2.1.0"],
             ["parcel", "npm:2.0.0-nightly.486"],
             ["postcss", "npm:8.2.1"],
+            ["prettier", "npm:2.2.1"],
             ["register-service-worker", "npm:1.7.2"],
             ["rimraf", "npm:3.0.2"],
             ["rollup", "npm:2.35.1"],
