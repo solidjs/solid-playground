@@ -85,7 +85,7 @@ export const App: Component = () => {
       tabs,
       compileOpts,
     });
-  }, 100);
+  }, 250);
 
   /**
    * The heart of the playground. This recompile on
@@ -100,7 +100,7 @@ export const App: Component = () => {
    * This syncs the URL hash with the state of the current tab.
    * This is an optimized encoding for limiting URL size...
    *
-   * TODO: Find a way to URL shoten this
+   * TODO: Find a way to URL shorten this
    */
   createEffect(() => {
     location.hash = encode(JSON.stringify(store.tabs));
@@ -119,8 +119,6 @@ export const App: Component = () => {
   formatter.addEventListener('message', ({ data }) => {
     const { event, code } = data;
 
-    console.log({ data });
-
     switch (event) {
       case 'RESULT':
         actions.setCurrentSource(code);
@@ -130,10 +128,7 @@ export const App: Component = () => {
   });
 
   const formatCode = (code: string) => {
-    formatter.postMessage({
-      event: 'FORMAT',
-      code,
-    });
+    formatter.postMessage({ event: 'FORMAT', code });
   };
 
   /**
@@ -310,7 +305,7 @@ export const App: Component = () => {
         <Show when={!showPreview()}>
           <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
             <Editor
-              value={store.compiled.replace('https://cdn.skypack.dev/', '')}
+              value={store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, '')}
               class="h-full overflow-auto focus:outline-none flex-1"
               styles={{ backgroundColor: '#fff' }}
               disabled
