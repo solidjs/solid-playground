@@ -9,22 +9,22 @@
   "author": "Alexandre Mouton-Brady",
   "scripts": {
     "dev": "parcel src/index.html --no-cache",
-    "build": "rimraf dist && parcel build src/index.html && workbox generateSW workbox-config.js",
+    "build": "rimraf dist && tsc && parcel build src/index.html && workbox generateSW workbox-config.js",
     "format": "prettier -w \"src/**/*.{js,json,ts,tsx,html,css}\""
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
-    "@babel/types": "^7.12.11",
-    "@parcel/config-default": "^2.0.0-nightly.488",
-    "@parcel/core": "^2.0.0-nightly.486",
+    "@babel/types": "^7.12.12",
+    "@parcel/config-default": "^2.0.0-nightly.491",
+    "@parcel/core": "^2.0.0-nightly.489",
     "@tailwindcss/forms": "^0.2.1",
     "@types/babel__standalone": "^7.1.3",
     "@types/codemirror": "^0.0.102",
     "@types/lz-string": "^1.3.34",
-    "@types/node": "^14.14.14",
+    "@types/node": "^14.14.16",
     "@types/workbox-sw": "^4.3.1",
     "autoprefixer": "^10.1.0",
-    "parcel": "^2.0.0-nightly.486",
+    "parcel": "^2.0.0-nightly.489",
     "postcss": "^8.2.1",
     "rimraf": "^3.0.2",
     "tailwindcss": "^2.0.2",
@@ -34,15 +34,15 @@
   "dependencies": {
     "@amoutonbrady/solid-heroicons": "^0.5.1",
     "@babel/preset-typescript": "^7.12.7",
-    "@babel/standalone": "^7.12.11",
+    "@babel/standalone": "^7.12.12",
     "@codemirror/next": "^0.15.0",
-    "babel-preset-solid": "^0.23.4",
+    "babel-preset-solid": "^0.23.5",
     "lz-string": "^1.4.4",
     "mitt": "^2.1.0",
     "prettier": "^2.2.1",
     "register-service-worker": "^1.7.2",
     "rollup": "^2.35.1",
-    "solid-js": "^0.23.4",
-    "solid-utils": "^0.0.3"
+    "solid-js": "^0.23.5",
+    "solid-utils": "^0.0.5"
   }
 }
