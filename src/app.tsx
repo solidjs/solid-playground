@@ -312,7 +312,7 @@ export const App: Component = () => {
               canCopy
             />
 
-            <div class="bg-white p-5">
+            <div class="bg-white p-5 hidden md:block">
               <label class="font-semibold text-sm uppercase">Compile mode</label>
 
               <div class="flex flex-col mt-1 space-y-1 text-sm">
