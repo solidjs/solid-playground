@@ -362,7 +362,7 @@ export const App: Component = () => {
         <Show when={showPreview()}>
           <Preview
             code={store.compiled}
-            class="h-full max-h-screen overflow-auto flex-1 p-2 w-full bg-white row-start-5 md:row-start-3"
+            class="h-full w-full bg-white row-start-5 md:row-start-3"
             classList={{ 'pointer-events-none': isDragging() }}
           />
         </Show>

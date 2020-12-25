@@ -1,10 +1,21 @@
-import { Component, createEffect, createSignal, onMount, splitProps, JSX } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onMount,
+  splitProps,
+  JSX,
+  For,
+  Show,
+} from 'solid-js';
 
 export const Preview: Component<Props> = (props) => {
-  const [internal, external] = splitProps(props, ['code']);
+  const [internal, external] = splitProps(props, ['code', 'class']);
 
   let iframe!: HTMLIFrameElement;
   const [isIframeReady, setIframeReady] = createSignal(false);
+  const [logs, setLogs] = createSignal<LogPayload[]>([]);
+  const [showLogs, setShowLogs] = createSignal(false);
 
   createEffect(() => {
     // HACK: This helps prevent unnecessary updates
@@ -24,6 +35,10 @@ export const Preview: Component<Props> = (props) => {
       switch (data.event) {
         case 'DOM_READY':
           return setIframeReady(true);
+        case 'LOG':
+          const { level, args } = data;
+          setLogs([...logs(), { level, args }]);
+          break;
       }
     });
   });
@@ -84,6 +99,27 @@ export const Preview: Component<Props> = (props) => {
           }
 		    </style>
 
+        <script>
+          const fakeConsole = {};
+
+          function formatArgs(args) {
+            return args
+              .map((arg) =>
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg),
+              )
+              .join(', ')
+          }
+
+          for (const level of ['log', 'error', 'warn']) {
+            fakeConsole[level] = console[level];
+
+            console[level] = (...args) => {
+              fakeConsole[level].call(...args);
+              window.postMessage({ event: 'LOG', level, args: formatArgs(args) }, '*');
+            }
+          }
+        </script>
+
         <script type="module">
           window.addEventListener('message', ({ data }) => {
             try {
@@ -123,16 +159,70 @@ export const Preview: Component<Props> = (props) => {
         </style>
       </head>
       <body class="prose">
-        <div id="load" style="display: flex; height: 100vh; align-items: center; justify-content: center;">
+        <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>
       </body>
     </html>
   `;
 
-  return <iframe ref={iframe} {...external} srcdoc={html}></iframe>;
+  return (
+    <div
+      class={`grid relative ${internal.class}`}
+      {...external}
+      style="grid-template-rows: 1fr auto"
+    >
+      <iframe class="overflow-auto p-2 w-full h-full" ref={iframe} srcdoc={html}></iframe>
+
+      <div
+        class="grid border-t-2 border-blueGray-200 border-solid"
+        style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
+      >
+        <div class="flex justify-between items-start w-full">
+          <button
+            type="button"
+            class="flex-1 text-left font-semibold uppercase text-sm px-2 py-3 focus:outline-none -mb-0.5 leading-tight"
+            onClick={() => setShowLogs(!showLogs())}
+          >
+            Console ({logs().length})
+          </button>
+          <button
+            type="button"
+            class="uppercase text-sm text-blueGray-600 px-2 py-3 focus:outline-none -mb-0.5 leading-tight hover:text-blueGray-800"
+            onClick={[setLogs, []]}
+          >
+            Clear
+          </button>
+        </div>
+
+        <Show when={showLogs()}>
+          <ul class="overflow-auto px-2 divide-y flex flex-col">
+            <For each={logs()}>
+              {(log) => (
+                <li
+                  class="py-1"
+                  classList={{
+                    'text-blue-700': log.level === 'log',
+                    'text-yello-700': log.level === 'warn',
+                    'text-red-700': log.level === 'error',
+                  }}
+                >
+                  <code class="whitespace-pre-wrap">{log.args}</code>
+                </li>
+              )}
+            </For>
+          </ul>
+        </Show>
+      </div>
+    </div>
+  );
 };
 
 interface Props extends JSX.HTMLAttributes<HTMLIFrameElement> {
   code: string;
+}
+
+interface LogPayload {
+  level: 'log' | 'warn' | 'error';
+  args: string;
 }
