@@ -34,7 +34,7 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
         position: 'relative',
         zIndex: 0,
         fontFamily: "'Fira Code', monospace",
-        fontSize: '14px',
+        fontSize: 'inherit',
       },
 
       $content: {

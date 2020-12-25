@@ -84,10 +84,11 @@ const Editor: Component<Props> = (props) => {
   return (
     <div
       {...external}
-      class={`flex flex-col ${internal.class || ''}`}
+      class={`grid ${internal.class || ''}`}
       classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
+      style="grid-template-rows: 1fr auto"
     >
-      <div class="flex-1 p-2" ref={parent}></div>
+      <div class="p-2 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"
