@@ -5,7 +5,7 @@ import parserBabel from 'prettier/esm/parser-babel.mjs';
 
 function format(code: string) {
   return prettier.format(code, {
-    parser: 'babel',
+    parser: 'babel-ts',
     plugins: [parserBabel],
   });
 }
