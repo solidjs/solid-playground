@@ -9,7 +9,7 @@ import { bracketMatching } from '@codemirror/next/matchbrackets';
 import { closeBrackets } from '@codemirror/next/closebrackets';
 import { autocompletion } from '@codemirror/next/autocomplete';
 import { rectangularSelection } from '@codemirror/next/rectangular-selection';
-import { highlightSelectionMatches } from '@codemirror/next/highlight-selection';
+import { highlightSelectionMatches } from '@codemirror/next/search';
 import { defaultHighlightStyle } from '@codemirror/next/highlight';
 import { javascript } from '@codemirror/next/lang-javascript';
 import { getTheme } from './theme';
@@ -29,7 +29,7 @@ export const basicSetup: (opts: Record<string, any>) => Extension = (opts) => [
   rectangularSelection(),
   highlightSelectionMatches(),
   EditorView.lineWrapping,
-  keymap([
+  keymap.of([
     ...defaultKeymap,
     ...historyKeymap,
     {
