@@ -1,5 +1,5 @@
 import { EditorView } from './basicSetup';
-import { highlightStyle, tags } from '@codemirror/next/highlight';
+import { HighlightStyle, tags } from '@codemirror/next/highlight';
 
 export function getTheme({ backgroundColor = '#F8FAFC' }) {
   return [
@@ -163,7 +163,7 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
       },
     }),
 
-    highlightStyle(
+    HighlightStyle.define(
       { tag: tags.link, textDecoration: 'underline' },
       { tag: tags.heading, textDecoration: 'underline', fontWeight: 'bold' },
       { tag: tags.emphasis, fontStyle: 'italic' },
