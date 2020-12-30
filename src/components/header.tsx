@@ -1,16 +1,18 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, createSignal, JSX } from 'solid-js';
 import { Icon } from '@amoutonbrady/solid-heroicons';
-import { share, link } from '@amoutonbrady/solid-heroicons/outline';
+import { share, link, upload } from '@amoutonbrady/solid-heroicons/outline';
 
 import pkg from '../../package.json';
 import logo from 'url:../assets/images/logo.svg';
-import { Tab, useStore } from '../store';
+import { useStore } from '../store';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
+import { ChangeEvent } from 'rollup';
+import { processImport } from '../utils/processImport';
 
 export const Header: Component = () => {
   const [copy, setCopy] = createSignal(false);
-  const [store] = useStore();
+  const [store, { set }] = useStore();
 
   function shareLink() {
     const url = location.href;
@@ -29,6 +31,13 @@ export const Header: Component = () => {
       .catch(console.error);
   }
 
+  const uploadFile: JSX.EventHandler<HTMLInputElement, Event> = async (event) => {
+    const [file] = event.target.files;
+
+    const tabs = processImport(JSON.parse(await file.text()));
+    set({ tabs, current: tabs[0].id, currentCode: tabs[0].source });
+  };
+
   return (
     <header class="md:col-span-3 p-2 flex text-sm justify-between items-center bg-brand-default text-white">
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
@@ -39,6 +48,15 @@ export const Header: Component = () => {
       </h1>
 
       <div class="flex items-center space-x-2">
+        <label
+          class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 cursor-pointer"
+          title="Export to JSON"
+        >
+          <input type="file" class="sr-only" onChange={uploadFile} accept=".json" />
+          <span class="sr-only">Import from JSON</span>
+          <Icon path={upload} class="h-6" />
+        </label>
+
         <button
           type="button"
           onClick={() => exportToJSON(store.tabs)}
