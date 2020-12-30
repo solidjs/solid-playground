@@ -50,7 +50,7 @@ export const Header: Component = () => {
       <div class="flex items-center space-x-2">
         <label
           class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 cursor-pointer"
-          title="Export to JSON"
+          title="Import from JSON"
         >
           <input type="file" class="sr-only" onChange={uploadFile} accept=".json" />
           <span class="sr-only">Import from JSON</span>
