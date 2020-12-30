@@ -1,5 +1,7 @@
 import { createStore } from 'solid-utils';
 import { uid, parseHash } from './utils';
+import { isValidUrl } from './utils/isValidUrl';
+import { processImport } from './utils/processImport';
 
 const defaultTabs: Tab[] = [
   {
@@ -33,14 +35,22 @@ export const compileMode = {
 
 type ValueOf<T> = T[keyof T];
 
-const [Store, useStore] = createStore(
-  () => {
+const [Store, useStore] = createStore({
+  state: async () => {
     const url = new URL(location.href);
     const initialTabs = url.hash && parseHash(url.hash.slice(1), defaultTabs);
     const params = Object.fromEntries(url.searchParams.entries());
-    const tabs: Tab[] = initialTabs || defaultTabs;
+
+    let tabs: Tab[] = initialTabs || defaultTabs;
 
     const [noHeader, noInteractive] = ['noHeader', 'noInteractive'].map((key) => key in params);
+
+    if (params.data && isValidUrl(params.data)) {
+      try {
+        const data = await fetch(params.data).then((r) => r.json());
+        tabs = processImport(data);
+      } catch {}
+    }
 
     return {
       current: tabs[0].id,
@@ -58,7 +68,7 @@ const [Store, useStore] = createStore(
     };
   },
 
-  (set, store) => ({
+  actions: (set, store) => ({
     resetError: () => set('error', ''),
     setCurrentTab: (current: string) => {
       set({ current });
@@ -127,7 +137,7 @@ const [Store, useStore] = createStore(
       });
     },
   }),
-);
+});
 
 export { Store, useStore };
 
