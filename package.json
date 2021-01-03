@@ -35,15 +35,15 @@
     "@babel/preset-typescript": "^7.12.7",
     "@babel/standalone": "^7.12.12",
     "@codemirror/next": "^0.16.0",
-    "babel-preset-solid": "^0.23.5",
+    "babel-preset-solid": "^0.23.7",
     "codesandbox": "^2.2.1",
     "lz-string": "^1.4.4",
     "mitt": "^2.1.0",
     "prettier": "^2.2.1",
     "register-service-worker": "^1.7.2",
     "rollup": "^2.35.1",
-    "solid-js": "^0.23.6",
-    "solid-utils": "^0.1.0"
+    "solid-js": "^0.23.7",
+    "solid-utils": "^0.1.5"
   },
   "dependenciesMeta": {
     "solid-utils@0.0.6": {

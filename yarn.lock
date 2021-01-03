@@ -3208,23 +3208,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-plugin-jsx-dom-expressions@npm:~0.24.3":
-  version: 0.24.3
-  resolution: "babel-plugin-jsx-dom-expressions@npm:0.24.3"
+"babel-plugin-jsx-dom-expressions@npm:~0.24.6":
+  version: 0.24.6
+  resolution: "babel-plugin-jsx-dom-expressions@npm:0.24.6"
   dependencies:
     "@babel/helper-module-imports": ^7.10.4
     "@babel/plugin-syntax-jsx": ^7.10.4
     "@babel/types": ^7.11.5
-  checksum: 4fd47776963fce9950ff498911e4fe4c7eb3b001592c6e77f54974e5d7cceb97443abf02e81106383b394a9559993dda265e2ab37cffa6bb9cc29682c79640ff
+  checksum: 6ac1b8c388823192598ea43b7ec12ad8131cc009f83ecb70376bcb69a84daf15fe4471955935989a257866f1c496080ac6b3d55d9e0d39db2c8acfa6b187b8f2
   languageName: node
   linkType: hard
 
-"babel-preset-solid@npm:^0.23.5":
-  version: 0.23.5
-  resolution: "babel-preset-solid@npm:0.23.5"
+"babel-preset-solid@npm:^0.23.7":
+  version: 0.23.7
+  resolution: "babel-preset-solid@npm:0.23.7"
   dependencies:
-    babel-plugin-jsx-dom-expressions: ~0.24.3
-  checksum: 6e527b18c48f15b9ae8bcb93dfd6d2d585353885721aa44c47b1564c44aa21cc6b8a7e80383195398c2e0a33c3e93e431c32e2cd19f5437747e420ff6413ac4d
+    babel-plugin-jsx-dom-expressions: ~0.24.6
+  checksum: 2c6e51fbf90941d26c42cb81b0ccf34d7cafc34f4155155ec58532e22b6499a2be44b77770b36f4f1f303069aaf4c227ec5b46debb23563bca6dbc2fa7cac541
   languageName: node
   linkType: hard
 
@@ -10882,10 +10882,10 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"solid-js@npm:^0.23.5, solid-js@npm:^0.23.6":
-  version: 0.23.6
-  resolution: "solid-js@npm:0.23.6"
-  checksum: 38dd7451e5529f2fb25abd357fd78d9984e92f33ba37b090ff777c760c58e26484f330ffa32e25b152c100f17d5047881fea6f54923c585d6aa1f44e20aebc75
+"solid-js@npm:^0.23.5, solid-js@npm:^0.23.7":
+  version: 0.23.7
+  resolution: "solid-js@npm:0.23.7"
+  checksum: 5fdaeaca83ae161b103ec47f44b281656d5a69d39b7a6ecbb27a50e5f8f2ae6315cc5797c410267ecb1180142c7620980dcdf21d450f25e38951eadd25c3bc0b
   languageName: node
   linkType: hard
 
@@ -10907,7 +10907,7 @@ fsevents@~2.1.2:
     "@types/node": ^14.14.19
     "@types/workbox-sw": ^4.3.1
     autoprefixer: ^10.1.0
-    babel-preset-solid: ^0.23.5
+    babel-preset-solid: ^0.23.7
     codesandbox: ^2.2.1
     lz-string: ^1.4.4
     mitt: ^2.1.0
@@ -10917,8 +10917,8 @@ fsevents@~2.1.2:
     register-service-worker: ^1.7.2
     rimraf: ^3.0.2
     rollup: ^2.35.1
-    solid-js: ^0.23.6
-    solid-utils: ^0.1.0
+    solid-js: ^0.23.7
+    solid-utils: ^0.1.5
     tailwindcss: ^2.0.2
     typescript: ^4.1.3
     workbox-cli: ^6.0.2
@@ -10928,14 +10928,14 @@ fsevents@~2.1.2:
   languageName: unknown
   linkType: soft
 
-"solid-utils@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "solid-utils@npm:0.1.0"
+"solid-utils@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "solid-utils@npm:0.1.5"
   dependencies:
     solid-js: ^0.23.5
   peerDependencies:
     solid-js: ^0.23
-  checksum: e1988aed3f2b21f52af63ceeae486e5f9470c94ec6cdbbcd9cbf963530905712ad2eaf74f2fdd9e9f6c59d04163fad4b04f6785408dbf6cb52b70c1dd873f616
+  checksum: eb503735ef120eed4a959271ddebd8ae9a438e5f97239121a65bbe37e48d75c9db109ceb757be236269c5555b4a8e22a8f6d42aae30fe30af29a2a83b7b9231b
   languageName: node
   linkType: hard
 
