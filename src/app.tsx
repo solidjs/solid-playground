@@ -43,6 +43,8 @@ export const App: Component = () => {
 
   const [store, actions] = useStore();
 
+  console.log(store, actions);
+
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
 
@@ -159,7 +161,7 @@ export const App: Component = () => {
 
   return (
     <div
-      class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 wrapper transition-all duration-100 font-display"
+      class="relative grid bg-blueGray-50 dark:bg-blueGray-900 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 wrapper font-display"
       style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
     >
       <Show
@@ -242,7 +244,7 @@ export const App: Component = () => {
             <svg
               viewBox="0 0 24 24"
               style="stroke: currentColor; fill: none;"
-              class="h-5 text-brand-default"
+              class="h-5 text-brand-default dark:text-blueGray-50"
             >
               <path
                 stroke-linecap="round"
@@ -286,12 +288,13 @@ export const App: Component = () => {
         <Editor
           value={store.currentCode}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 row-start-3"
-          styles={{ backgroundColor: '#F8FAFC' }}
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-700 row-start-3"
+          styles={{ backgroundColor: store.dark ? '#374151' : '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
           canFormat
           onFormat={formatCode}
+          isDark={store.dark}
         />
 
         <div
@@ -303,16 +306,17 @@ export const App: Component = () => {
         </div>
 
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen bg-white overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
+          <section class="h-full max-h-screen bg-white dark:bg-gray-700 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
             <Editor
               value={store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, '')}
               class="h-full overflow-auto focus:outline-none flex-1"
-              styles={{ backgroundColor: '#fff' }}
+              styles={{ backgroundColor: store.dark ? '#3f3f46' : '#fff' }}
               disabled
               canCopy
+              isDark={store.dark}
             />
 
-            <div class="bg-white p-5 hidden md:block">
+            <div class="bg-white dark:bg-gray-700 p-5 hidden md:block">
               <label class="font-semibold text-sm uppercase">Compile mode</label>
 
               <div class="flex flex-col mt-1 space-y-1 text-sm">

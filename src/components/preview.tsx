@@ -175,20 +175,20 @@ export const Preview: Component<Props> = (props) => {
       <iframe class="overflow-auto p-2 w-full h-full" ref={iframe} srcdoc={html}></iframe>
 
       <div
-        class="grid border-t-2 border-blueGray-200 border-solid"
+        class="grid border-t-2 border-blueGray-200 border-solid dark:bg-gray-700"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
         <div class="flex justify-between items-start w-full">
           <button
             type="button"
-            class="flex-1 text-left font-semibold uppercase text-sm px-2 py-3 focus:outline-none -mb-0.5 leading-tight"
+            class="flex-1 text-left font-semibold uppercase text-xs px-2 py-3 focus:outline-none -mb-1 leading-none"
             onClick={() => setShowLogs(!showLogs())}
           >
             Console ({logs().length})
           </button>
           <button
             type="button"
-            class="uppercase text-sm text-blueGray-600 px-2 py-3 focus:outline-none -mb-0.5 leading-tight hover:text-blueGray-800"
+            class="uppercase text-xs text-blueGray-600 dark:text-blueGray-300 px-2 py-3 focus:outline-none -mb-1 leading-none hover:text-blueGray-800"
             onClick={[setLogs, []]}
           >
             Clear

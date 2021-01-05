@@ -1,11 +1,18 @@
 import pkg from '../../package.json';
 import { Tab } from '../store';
-import { getParameters } from 'codesandbox/lib/api/define';
+import { compressToBase64 } from 'lz-string';
 
-type IFIles = Record<string, { content: string; isBinary: boolean }>;
+type IFiles = Record<string, { content: string | Record<string, any>; isBinary: boolean }>;
+
+function getParameters(parameters: { files: IFiles }) {
+  return compressToBase64(JSON.stringify(parameters))
+    .replace(/\+/g, '-') // Convert '+' to '-'
+    .replace(/\//g, '_') // Convert '/' to '_'
+    .replace(/=+$/, ''); // Remove ending '='
+}
 
 export function exportToCsb(tabs: Tab[]) {
-  const params = tabs.reduce<IFIles>((p, tab) => {
+  const params = tabs.reduce<IFiles>((p, tab) => {
     p[`src/${tab.name}.${tab.type}`] = { content: tab.source, isBinary: false };
     return p;
   }, {});
@@ -16,14 +23,12 @@ export function exportToCsb(tabs: Tab[]) {
     files: {
       ...params,
       '.babelrc': {
-        // @ts-ignore
         content: {
           presets: ['env', 'babel-preset-solid', '@babel/preset-typescript'],
         },
         isBinary: false,
       },
       'tsconfig.json': {
-        // @ts-ignore
         content: {
           compilerOptions: {
             strict: false,
