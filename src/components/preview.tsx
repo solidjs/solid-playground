@@ -181,14 +181,14 @@ export const Preview: Component<Props> = (props) => {
         <div class="flex justify-between items-start w-full">
           <button
             type="button"
-            class="flex-1 text-left font-semibold uppercase text-xs px-2 py-3 focus:outline-none -mb-1 leading-none"
+            class="flex-1 text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
             onClick={() => setShowLogs(!showLogs())}
           >
             Console ({logs().length})
           </button>
           <button
             type="button"
-            class="uppercase text-xs text-blueGray-600 dark:text-blueGray-300 px-2 py-3 focus:outline-none -mb-1 leading-none hover:text-blueGray-800"
+            class="uppercase text-xs md:text-sm text-blueGray-600 dark:text-blueGray-300 px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800"
             onClick={[setLogs, []]}
           >
             Clear
