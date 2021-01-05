@@ -3,8 +3,7 @@ import pkg from '../../package.json';
 
 import { transform } from '@babel/standalone';
 import solid from 'babel-preset-solid';
-import ts from '@babel/preset-typescript';
-import { rollup } from 'rollup/dist/rollup.browser.js';
+import { rollup } from 'rollup/dist/es/rollup.browser.js';
 
 const SOLID_VERSION = pkg.dependencies['solid-js'].slice(1);
 const CDN_URL = 'https://cdn.skypack.dev';
@@ -15,7 +14,7 @@ export function loadBabel() {
 
   globalThis.$babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
     transform(code, {
-      presets: [[solid, { ...opts.solid }], ts],
+      presets: [[solid, { ...opts.solid }], 'typescript'],
       ...opts.babel,
     });
 

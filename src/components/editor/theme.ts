@@ -1,19 +1,21 @@
 import { EditorView } from './basicSetup';
-import { HighlightStyle, tags } from '@codemirror/next/highlight';
+import { HighlightStyle, tags } from '@codemirror/highlight';
 
-export function getTheme({ backgroundColor = '#F8FAFC' }) {
+export function getTheme({ isDark = false, styles }) {
+  const { backgroundColor = isDark ? '#1E293B' : '#F8FAFC' } = styles;
+
   return [
     EditorView.theme({
       $: {
         backgroundColor, // bg-blueGray-50
-        color: '#0F172A', // bg-blueGray-900
+        color: isDark ? '#F8FAFC' : '#0F172A', // bg-blueGray-900
         position: 'relative !important',
         boxSizing: 'border-box',
         '&$focused': {
           // FIXME it would be great if we could directly use the browser's
           // default focus outline, but it appears we can't, so this tries to
           // approximate that
-          outline_fallback: '1px dotted #212121',
+          outline_fallback: isDark ? '1px dotted #DEDEDE' : '1px dotted #212121',
           outline: '5px auto -webkit-focus-ring-color',
         },
         display: 'flex !important',
@@ -47,10 +49,8 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
 
         padding: '4px 0',
         outline: 'none',
+        caretColor: isDark ? 'white' : 'black',
       },
-
-      '$$light $content': { caretColor: 'black' },
-      '$$dark $content': { caretColor: 'white' },
 
       $line: {
         display: 'block',
@@ -64,18 +64,10 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
 
       $selectionBackground: {
         position: 'absolute',
+        background: isDark ? '#222' : '#d9d9d9',
       },
-      '$$light $selectionBackground': {
-        background: '#d9d9d9',
-      },
-      '$$dark $selectionBackground': {
-        background: '#222',
-      },
-      '$$focused$light $selectionBackground': {
-        background: '#d7d4f0',
-      },
-      '$$focused$dark $selectionBackground': {
-        background: '#233',
+      '$$focused $selectionBackground': {
+        background: isDark ? '#233' : '#d7d4f0',
       },
 
       $cursorLayer: {
@@ -107,9 +99,7 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
         marginLeft: '-0.6px',
         pointerEvents: 'none',
         display: 'none',
-      },
-      '$$dark $cursor': {
-        borderLeftColor: '#444',
+        borderLeftColor: isDark ? '#444' : 'currentColor',
       },
 
       '$$focused $cursor': {
@@ -127,21 +117,14 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
         fontSize: '70%',
         padding: '.2em 1em',
         borderRadius: '3px',
-      },
-
-      '$$light $button': {
-        backgroundImage: 'linear-gradient(#eff1f5, #d9d9df)',
+        backgroundImage: isDark
+          ? 'linear-gradient(#555, #111)'
+          : 'linear-gradient(#eff1f5, #d9d9df)',
         border: '1px solid #888',
         '&:active': {
-          backgroundImage: 'linear-gradient(#b4b4b4, #d0d3d6)',
-        },
-      },
-
-      '$$dark $button': {
-        backgroundImage: 'linear-gradient(#555, #111)',
-        border: '1px solid #888',
-        '&:active': {
-          backgroundImage: 'linear-gradient(#111, #333)',
+          backgroundImage: isDark
+            ? 'linear-gradient(#111, #333)'
+            : 'linear-gradient(#b4b4b4, #d0d3d6)',
         },
       },
 
@@ -149,17 +132,10 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
         verticalAlign: 'middle',
         color: 'inherit',
         fontSize: '70%',
-        border: '1px solid silver',
         padding: '.2em .5em',
-      },
 
-      '$$light $textfield': {
-        backgroundColor: 'white',
-      },
-
-      '$$dark $textfield': {
-        border: '1px solid #555',
-        backgroundColor: 'inherit',
+        border: isDark ? '1px solid #555' : '1px solid silver',
+        backgroundColor: isDark ? 'inherit' : 'white',
       },
     }),
 
@@ -168,7 +144,7 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
       { tag: tags.heading, textDecoration: 'underline', fontWeight: 'bold' },
       { tag: tags.emphasis, fontStyle: 'italic' },
       { tag: tags.strong, fontWeight: 'bold' },
-      { tag: tags.keyword, color: '#d73a49' },
+      { tag: tags.keyword, color: isDark ? '#f97583' : '#d73a49' },
       {
         tag: [tags.atom, tags.bool, tags.url, tags.labelName],
         color: '#219',
@@ -182,17 +158,17 @@ export function getTheme({ backgroundColor = '#F8FAFC' }) {
       { tag: tags.variableName, color: '#24292e' },
       {
         tag: [tags.definition(tags.variableName), tags.function(tags.variableName)],
-        color: '#6f42c1',
+        color: isDark ? '#b392f0' : '#6f42c1',
       },
       // { tag: tags.local(tags.variableName), color: "#30a" },
       { tag: [tags.typeName, tags.namespace], color: '#085' },
-      { tag: tags.className, color: '#167' },
+      { tag: tags.className, color: isDark ? '#b392f0' : '#167' },
       {
         tag: [tags.special(tags.variableName), tags.macroName, tags.local(tags.variableName)],
         color: '#256',
       },
-      { tag: tags.definition(tags.propertyName), color: '#00c' },
-      { tag: tags.comment, color: '#6a737d', fontStyle: 'italic' },
+      { tag: tags.definition(tags.propertyName), color: isDark ? '#79b8ff' : '#00c' },
+      { tag: tags.comment, color: isDark ? '#6a737d' : '#6a737d', fontStyle: 'italic' },
       { tag: tags.meta, color: '#7a757a' },
       { tag: tags.invalid, color: '#f00' },
     ),

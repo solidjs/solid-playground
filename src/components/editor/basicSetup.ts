@@ -1,17 +1,17 @@
-import { keymap, highlightSpecialChars, drawSelection, EditorView } from '@codemirror/next/view';
-import { Extension, EditorState } from '@codemirror/next/state';
-import { history, historyKeymap } from '@codemirror/next/history';
-import { foldGutter } from '@codemirror/next/fold';
-import { indentOnInput } from '@codemirror/next/language';
-import { lineNumbers } from '@codemirror/next/gutter';
-import { defaultKeymap, indentLess, indentMore } from '@codemirror/next/commands';
-import { bracketMatching } from '@codemirror/next/matchbrackets';
-import { closeBrackets } from '@codemirror/next/closebrackets';
-import { autocompletion } from '@codemirror/next/autocomplete';
-import { rectangularSelection } from '@codemirror/next/rectangular-selection';
-import { highlightSelectionMatches } from '@codemirror/next/search';
-import { defaultHighlightStyle } from '@codemirror/next/highlight';
-import { javascript } from '@codemirror/next/lang-javascript';
+import { keymap, highlightSpecialChars, drawSelection, EditorView } from '@codemirror/view';
+import { Extension, EditorState } from '@codemirror/state';
+import { history, historyKeymap } from '@codemirror/history';
+import { foldGutter } from '@codemirror/fold';
+import { indentOnInput } from '@codemirror/language';
+import { lineNumbers } from '@codemirror/gutter';
+import { defaultKeymap, indentLess, indentMore } from '@codemirror/commands';
+import { bracketMatching } from '@codemirror/matchbrackets';
+import { closeBrackets } from '@codemirror/closebrackets';
+import { autocompletion } from '@codemirror/autocomplete';
+import { rectangularSelection } from '@codemirror/rectangular-selection';
+import { highlightSelectionMatches } from '@codemirror/search';
+import { defaultHighlightStyle } from '@codemirror/highlight';
+import { javascript } from '@codemirror/lang-javascript';
 import { getTheme } from './theme';
 
 export const basicSetup: (opts: Record<string, any>) => Extension = (opts) => [
@@ -44,7 +44,7 @@ export const basicSetup: (opts: Record<string, any>) => Extension = (opts) => [
     },
   ]),
   javascript({ jsx: true, typescript: true }),
-  getTheme(opts),
+  getTheme(opts as any),
 ];
 
 export { EditorView };

@@ -39,7 +39,7 @@ module.exports = {
       },
     },
   },
-  dark: false,
+  darkMode: 'class',
   purge: {
     enabled: isProd,
     mode: 'layers',

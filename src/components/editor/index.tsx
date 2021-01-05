@@ -22,6 +22,7 @@ const Editor: Component<Props> = (props) => {
     'canFormat',
     'onFormat',
     'class',
+    'isDark',
   ]);
 
   let parent!: HTMLDivElement;
@@ -39,7 +40,7 @@ const Editor: Component<Props> = (props) => {
     return EditorState.create({
       doc,
       extensions: [
-        basicSetup(internal.styles),
+        basicSetup(internal),
         EditorView.updateListener.of((update) => {
           // This trigger the onDocChange event and save the cursor
           // for the next state.
@@ -140,5 +141,6 @@ interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   styles?: Record<string, any>;
   canCopy?: boolean;
   canFormat?: boolean;
+  isDark?: boolean;
   onFormat?: (code: string) => unknown;
 }
