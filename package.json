@@ -9,7 +9,7 @@
   "author": "Alexandre Mouton-Brady",
   "scripts": {
     "dev": "parcel src/index.html --no-cache",
-    "build": "rimraf dist && tsc && parcel build src/index.html && workbox generateSW workbox-config.js",
+    "build": "del dist && tsc && parcel build src/index.html && workbox generateSW workbox-config.js",
     "format": "prettier -w \"src/**/*.{js,json,ts,tsx,html,css}\""
   },
   "devDependencies": {
@@ -21,6 +21,7 @@
     "@types/node": "^14.14.20",
     "@types/workbox-sw": "^4.3.1",
     "autoprefixer": "^10.1.0",
+    "del-cli": "^3.0.1",
     "parcel": "2.0.0-nightly.500",
     "postcss": "^8.2.2",
     "tailwindcss": "^2.0.2",
