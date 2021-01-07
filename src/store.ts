@@ -52,10 +52,10 @@ const [Store, useStore] = createStore({
       } catch {}
     }
 
-    const dark = localStorage.getItem('dark');
+    // const dark = localStorage.getItem('dark');
 
     return {
-      dark: !!dark,
+      dark: false,
       current: tabs[0].id,
       currentCode: '',
       tabs,

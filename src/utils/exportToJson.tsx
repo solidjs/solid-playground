@@ -22,8 +22,6 @@ export function exportToJSON(tabs: Tab[]) {
   const blob = new Blob([JSON.stringify({ files }, null, 4)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
-  console.log(url);
-
   const anchor = (<a href={url} target="_blank" rel="noopener" download />) as HTMLElement;
   document.body.prepend(anchor);
   anchor.click();

@@ -43,8 +43,6 @@ export const App: Component = () => {
 
   const [store, actions] = useStore();
 
-  console.log(store, actions);
-
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
 
