@@ -4,16 +4,19 @@ export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ['code', 'class']);
 
   let iframe!: HTMLIFrameElement;
-  const [isIframeReady, setIframeReady] = createSignal(false);
-  const [logs, setLogs] = createSignal<LogPayload[]>([]);
+
   const [showLogs, setShowLogs] = createSignal(false);
+  const [logs, setLogs] = createSignal<LogPayload[]>([]);
+  const [isIframeReady, setIframeReady] = createSignal(false);
 
   createEffect(() => {
     // HACK: This helps prevent unnecessary updates
     const isNotDom =
       internal.code.includes('getNextElement') || internal.code.includes('getHydrationKey');
 
-    if (isNotDom || !isIframeReady()) return;
+    const isEmpty = !internal.code;
+
+    if (isNotDom || isEmpty || !isIframeReady()) return;
 
     const code = internal.code.replace('render(', 'window.dispose = render(');
     const event = 'CODE_UPDATE';
@@ -22,10 +25,10 @@ export const Preview: Component<Props> = (props) => {
   });
 
   function attachToIframe() {
+    setIframeReady(true);
+
     iframe.contentWindow!.addEventListener('message', ({ data }) => {
       switch (data.event) {
-        case 'DOM_READY':
-          return setIframeReady(true);
         case 'LOG':
           const { level, args } = data;
           setLogs([...logs(), { level, args }]);
@@ -106,7 +109,7 @@ export const Preview: Component<Props> = (props) => {
             fakeConsole[level] = console[level];
 
             console[level] = (...args) => {
-              fakeConsole[level].call(...args);
+              fakeConsole[level](...args);
               window.postMessage({ event: 'LOG', level, args: formatArgs(args) }, '*');
             }
           }
@@ -114,7 +117,7 @@ export const Preview: Component<Props> = (props) => {
           window.addEventListener('message', ({ data }) => {
             try {
               const { event, code } = data;
-              if (event === 'DOM_READY' || !code) return;
+              if (event !== 'CODE_UPDATE') return;
   
               const oldScript = document.getElementById('script');
               if (oldScript) oldScript.remove();
@@ -140,8 +143,6 @@ export const Preview: Component<Props> = (props) => {
               console.error(e)
             }
           })
-
-          window.postMessage({ event: 'DOM_READY' }, '*');
         </script>
 
         <style>
