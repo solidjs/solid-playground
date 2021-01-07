@@ -1,13 +1,4 @@
-import {
-  Component,
-  createEffect,
-  createSignal,
-  onMount,
-  splitProps,
-  JSX,
-  For,
-  Show,
-} from 'solid-js';
+import { Component, createEffect, createSignal, splitProps, JSX, For, Show } from 'solid-js';
 
 export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ['code', 'class']);
@@ -30,7 +21,7 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event, code }, '*');
   });
 
-  onMount(() => {
+  function attachToIframe() {
     iframe.contentWindow!.addEventListener('message', ({ data }) => {
       switch (data.event) {
         case 'DOM_READY':
@@ -41,7 +32,7 @@ export const Preview: Component<Props> = (props) => {
           break;
       }
     });
-  });
+  }
 
   const html = `
     <!doctype html>
@@ -99,7 +90,7 @@ export const Preview: Component<Props> = (props) => {
           }
 		    </style>
 
-        <script>
+        <script type="module">
           const fakeConsole = {};
 
           function formatArgs(args) {
@@ -110,6 +101,7 @@ export const Preview: Component<Props> = (props) => {
               .join(', ')
           }
 
+          
           for (const level of ['log', 'error', 'warn']) {
             fakeConsole[level] = console[level];
 
@@ -118,9 +110,7 @@ export const Preview: Component<Props> = (props) => {
               window.postMessage({ event: 'LOG', level, args: formatArgs(args) }, '*');
             }
           }
-        </script>
 
-        <script type="module">
           window.addEventListener('message', ({ data }) => {
             try {
               const { event, code } = data;
@@ -146,7 +136,9 @@ export const Preview: Component<Props> = (props) => {
   
               const load = document.getElementById('load');
               if (code && load) load.remove();
-            } catch {}
+            } catch (e) {
+              console.error(e)
+            }
           })
 
           window.postMessage({ event: 'DOM_READY' }, '*');
@@ -172,7 +164,14 @@ export const Preview: Component<Props> = (props) => {
       {...external}
       style="grid-template-rows: 1fr auto"
     >
-      <iframe class="overflow-auto p-2 w-full h-full" ref={iframe} srcdoc={html}></iframe>
+      <iframe
+        class="overflow-auto p-2 w-full h-full"
+        ref={iframe}
+        srcdoc={html}
+        onLoad={attachToIframe}
+        // @ts-ignore
+        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+      ></iframe>
 
       <div
         class="grid border-t-2 border-blueGray-200 border-solid dark:bg-gray-700"
