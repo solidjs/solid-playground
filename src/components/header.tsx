@@ -7,7 +7,6 @@ import logo from 'url:../assets/images/logo.svg';
 import { useStore } from '../store';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
-import { ChangeEvent } from 'rollup';
 import { processImport } from '../utils/processImport';
 
 export const Header: Component = () => {
