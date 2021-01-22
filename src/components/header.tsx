@@ -47,14 +47,14 @@ export const Header: Component = () => {
       </h1>
 
       <div class="flex items-center space-x-2">
-        {/* <button
+        <button
           type="button"
           onClick={() => set('dark', !store.dark)}
           class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
           title="Toggle dark mode"
         >
           <span>{store.dark ? 'Light' : 'Dark'} mode</span>
-        </button> */}
+        </button>
 
         <label
           class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 cursor-pointer"

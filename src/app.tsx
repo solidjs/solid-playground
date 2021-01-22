@@ -157,9 +157,18 @@ export const App: Component = () => {
     }
   });
 
+  const dark = localStorage.getItem('dark');
+  actions.set('dark', dark === 'true');
+
+  createEffect(() => {
+    const action = store.dark ? 'add' : 'remove';
+    document.body.classList[action]('dark');
+    localStorage.setItem('dark', String(store.dark));
+  });
+
   return (
     <div
-      class="relative grid bg-blueGray-50 dark:bg-blueGray-900 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 wrapper font-display"
+      class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 wrapper font-display"
       style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
     >
       <Show
@@ -287,12 +296,11 @@ export const App: Component = () => {
           value={store.currentCode}
           onDocChange={handleDocChange}
           class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-700 row-start-3"
-          styles={{ backgroundColor: store.dark ? '#374151' : '#F8FAFC' }}
+          styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
           canFormat
           onFormat={formatCode}
-          isDark={store.dark}
         />
 
         <div
@@ -308,10 +316,9 @@ export const App: Component = () => {
             <Editor
               value={store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, '')}
               class="h-full overflow-auto focus:outline-none flex-1"
-              styles={{ backgroundColor: store.dark ? '#3f3f46' : '#fff' }}
+              styles={{ backgroundColor: '#fff' }}
               disabled
               canCopy
-              isDark={store.dark}
             />
 
             <div class="bg-white dark:bg-gray-700 p-5 hidden md:block">
