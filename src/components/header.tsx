@@ -103,7 +103,7 @@ export const Header: Component = () => {
           <Icon class="h-6" path={copy() ? link : share} />
         </button>
 
-        <span class="-mb-1 leading-none text-white">v{pkg.dependencies['solid-js'].slice(1)}</span>
+        <span class="-mb-1 leading-none text-white">v{pkg.dependencies['solid-js']}</span>
       </div>
     </header>
   );

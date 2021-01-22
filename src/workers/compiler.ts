@@ -5,7 +5,7 @@ import { transform } from '@babel/standalone';
 import solid from 'babel-preset-solid';
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 
-const SOLID_VERSION = pkg.dependencies['solid-js'].slice(1);
+const SOLID_VERSION = pkg.dependencies['solid-js'];
 const CDN_URL = 'https://cdn.skypack.dev';
 const tabsLookup: Map<string, Tab> = new Map();
 
