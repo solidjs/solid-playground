@@ -52,10 +52,8 @@ const [Store, useStore] = createStore({
       } catch {}
     }
 
-    // const dark = localStorage.getItem('dark');
-
     return {
-      dark: false,
+      dark: undefined as Boolean,
       current: tabs[0].id,
       currentCode: '',
       tabs,
@@ -140,14 +138,6 @@ const [Store, useStore] = createStore({
       });
     },
   }),
-
-  // effects: (set, get) => [
-  //   () => {
-  //     const action = get.dark ? 'add' : 'remove';
-  //     document.body.classList[action]('dark');
-  //     localStorage.setItem('dark', String(get.dark));
-  //   }
-  // ]
 });
 
 export { Store, useStore };

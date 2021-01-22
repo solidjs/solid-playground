@@ -1,14 +1,15 @@
 import { EditorView } from './basicSetup';
 import { HighlightStyle, tags } from '@codemirror/highlight';
 
-export function getTheme({ isDark = false, styles }) {
-  const { backgroundColor = isDark ? '#1E293B' : '#F8FAFC' } = styles;
+export function getTheme({ styles }) {
+  const isDark = false;
+  const { backgroundColor = isDark ? '#181a1b' : '#F8FAFC' } = styles;
 
   return [
     EditorView.theme({
       $: {
         backgroundColor, // bg-blueGray-50
-        color: isDark ? '#F8FAFC' : '#0F172A', // bg-blueGray-900
+        color: isDark ? '#e8e6e3' : '#0F172A', // bg-blueGray-900
         position: 'relative !important',
         boxSizing: 'border-box',
         '&$focused': {
@@ -158,11 +159,11 @@ export function getTheme({ isDark = false, styles }) {
       { tag: tags.variableName, color: '#24292e' },
       {
         tag: [tags.definition(tags.variableName), tags.function(tags.variableName)],
-        color: isDark ? '#b392f0' : '#6f42c1',
+        color: isDark ? 'rgb(237, 109, 255)' : '#6f42c1',
       },
       // { tag: tags.local(tags.variableName), color: "#30a" },
       { tag: [tags.typeName, tags.namespace], color: '#085' },
-      { tag: tags.className, color: isDark ? '#b392f0' : '#167' },
+      { tag: tags.className, color: isDark ? 'rgb(237, 109, 255)' : '#167' },
       {
         tag: [tags.special(tags.variableName), tags.macroName, tags.local(tags.variableName)],
         color: '#256',
