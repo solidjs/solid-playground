@@ -1,6 +1,6 @@
 import pkg from '../../package.json';
 import { Tab } from '../store';
-import { compressToBase64 } from 'lz-string';
+import { compressToBase64 } from '@amoutonbrady/lz-string';
 
 type IFiles = Record<string, { content: string | Record<string, any>; isBinary: boolean }>;
 

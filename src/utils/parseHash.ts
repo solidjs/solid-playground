@@ -1,8 +1,8 @@
-import { decompressFromEncodedURIComponent } from 'lz-string';
+import { decompressFromURL as decompress } from '@amoutonbrady/lz-string';
 
 export function parseHash<T>(hash: string, fallback: T) {
   try {
-    return JSON.parse(decompressFromEncodedURIComponent(hash)!);
+    return JSON.parse(decompress(hash)!);
   } catch {
     return fallback;
   }
