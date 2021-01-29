@@ -1,4 +1,4 @@
-import { compressToEncodedURIComponent as encode } from 'lz-string';
+import { compressToURL as encode } from '@amoutonbrady/lz-string';
 
 import {
   For,
