@@ -361,7 +361,7 @@ export const App: Component = () => {
                     name="dom"
                     id="dom"
                   />
-                  <span>Client side rendering with hydratation</span>
+                  <span>Client side rendering with hydration</span>
                 </label>
               </div>
             </div>
