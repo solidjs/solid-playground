@@ -4,13 +4,18 @@
   "name": "Solid REPL",
   "short_name": "Solid REPL",
   "scope": "/",
-  "display": "browser",
-  "start_url": "https://playground.solidjs.com/",
+  "display": "standalone",
+  "start_url": "/",
   "background_color": "transparent",
   "theme_color": "transparent",
   "description": "Solid REPL",
   "orientation": "any",
   "prefer_related_applications": false,
-  "icons": [],
-  "url": "https://playground.solidjs.com"
+  "icons": [
+    {
+      "src": "./images/square_logo.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ]
 }

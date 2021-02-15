@@ -1,9 +1,12 @@
 name = "solid-playground"
 type = "webpack"
-account_id = ""
-workers_dev = false
+account_id = "fa2a5e3787deead800c822a0e1171763"
+workers_dev = true
 route = "playground.solidjs.com/*"
-zone_id = ""
+zone_id = "9258b29d3b22bdba0666469e82d18225"
+kv_namespaces = [ 
+    { binding = "URLS", id = "b50be4b9d9f74e94ba6ec5a4d5cbd141", preview_id = "dc700f9d1abb4399afc75f28ee34b653" }
+]
 
 [site]
 bucket = "./dist"
