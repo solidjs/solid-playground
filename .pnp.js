@@ -215,7 +215,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/core", null],
             ["@babel/helper-validator-option", "npm:7.12.16"],
             ["@types/babel__core", null],
-            ["browserslist", "npm:4.16.1"],
+            ["browserslist", "npm:4.16.3"],
             ["semver", "npm:5.7.1"]
           ],
           "packagePeers": [
@@ -232,7 +232,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/core", "npm:7.12.16"],
             ["@babel/helper-validator-option", "npm:7.12.16"],
             ["@types/babel__core", null],
-            ["browserslist", "npm:4.16.1"],
+            ["browserslist", "npm:4.16.3"],
             ["semver", "npm:5.7.1"]
           ],
           "packagePeers": [
@@ -3840,7 +3840,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@parcel/workers", "virtual:7d7a622c1c9d89d7df69b41471258a770ad5986bd9c1b1e90e30cea89a9ddf20a764daf217a2b3d9d7d92ef0a0aae8fed4b02bc4973450b886899740b31d1e7a#npm:2.0.0-nightly.598"],
             ["abortcontroller-polyfill", "npm:1.7.1"],
             ["base-x", "npm:3.0.8"],
-            ["browserslist", "npm:4.16.1"],
+            ["browserslist", "npm:4.16.3"],
             ["clone", "npm:2.1.2"],
             ["dotenv", "npm:7.0.0"],
             ["dotenv-expand", "npm:5.1.0"],
@@ -4316,7 +4316,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@parcel/plugin", "npm:2.0.0-nightly.598"],
             ["@parcel/utils", "npm:2.0.0-nightly.598"],
             ["@types/babel__core", null],
-            ["browserslist", "npm:4.16.1"],
+            ["browserslist", "npm:4.16.3"],
             ["core-js", "npm:3.8.2"],
             ["nullthrows", "npm:1.1.1"],
             ["semver", "npm:5.7.1"]
@@ -5479,8 +5479,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["autoprefixer", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:10.2.4"],
             ["@types/postcss", null],
-            ["browserslist", "npm:4.16.1"],
-            ["caniuse-lite", "npm:1.0.30001181"],
+            ["browserslist", "npm:4.16.3"],
+            ["caniuse-lite", "npm:1.0.30001187"],
             ["colorette", "npm:1.2.1"],
             ["fraction.js", "npm:4.0.13"],
             ["normalize-range", "npm:0.1.2"],
@@ -5833,23 +5833,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["browserslist", [
-        ["npm:4.16.1", {
-          "packageLocation": "./.yarn/cache/browserslist-npm-4.16.1-37866cfd90-56f51464c3.zip/node_modules/browserslist/",
-          "packageDependencies": [
-            ["browserslist", "npm:4.16.1"],
-            ["caniuse-lite", "npm:1.0.30001181"],
-            ["colorette", "npm:1.2.1"],
-            ["electron-to-chromium", "npm:1.3.642"],
-            ["escalade", "npm:3.1.1"],
-            ["node-releases", "npm:1.1.70"]
-          ],
-          "linkType": "HARD",
-        }],
         ["npm:4.16.3", {
           "packageLocation": "./.yarn/cache/browserslist-npm-4.16.3-e6f20ea590-dfab0d3c3d.zip/node_modules/browserslist/",
           "packageDependencies": [
             ["browserslist", "npm:4.16.3"],
-            ["caniuse-lite", "npm:1.0.30001181"],
+            ["caniuse-lite", "npm:1.0.30001187"],
             ["colorette", "npm:1.2.1"],
             ["electron-to-chromium", "npm:1.3.664"],
             ["escalade", "npm:3.1.1"],
@@ -6039,13 +6027,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["caniuse-lite", [
-        ["npm:1.0.30001181", {
-          "packageLocation": "./.yarn/cache/caniuse-lite-npm-1.0.30001181-b7902dd039-8428500f49.zip/node_modules/caniuse-lite/",
-          "packageDependencies": [
-            ["caniuse-lite", "npm:1.0.30001181"]
-          ],
-          "linkType": "HARD",
-        }],
         ["npm:1.0.30001187", {
           "packageLocation": "./.yarn/cache/caniuse-lite-npm-1.0.30001187-1dcc285f44-788d977269.zip/node_modules/caniuse-lite/",
           "packageDependencies": [
@@ -6544,7 +6525,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/core-js-compat-npm-3.8.2-2aa5780876-57b33f456d.zip/node_modules/core-js-compat/",
           "packageDependencies": [
             ["core-js-compat", "npm:3.8.2"],
-            ["browserslist", "npm:4.16.1"],
+            ["browserslist", "npm:4.16.3"],
             ["semver", "npm:7.0.0"]
           ],
           "linkType": "HARD",
@@ -7369,13 +7350,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["electron-to-chromium", [
-        ["npm:1.3.642", {
-          "packageLocation": "./.yarn/cache/electron-to-chromium-npm-1.3.642-c781d57200-099c14b929.zip/node_modules/electron-to-chromium/",
-          "packageDependencies": [
-            ["electron-to-chromium", "npm:1.3.642"]
-          ],
-          "linkType": "HARD",
-        }],
         ["npm:1.3.664", {
           "packageLocation": "./.yarn/cache/electron-to-chromium-npm-1.3.664-9eb58b125c-ae3705e898.zip/node_modules/electron-to-chromium/",
           "packageDependencies": [
