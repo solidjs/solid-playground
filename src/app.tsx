@@ -37,8 +37,9 @@ export const App: Component = () => {
   onCleanup(() => eventBus.all.clear());
 
   let now: number;
-  const compiler = new Worker('./workers/compiler.ts');
-  const formatter = new Worker('./workers/formatter.ts');
+
+  const compiler = new Worker(new URL('./workers/compiler.ts', import.meta.url));
+  const formatter = new Worker(new URL('./workers/formatter.ts', import.meta.url));
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
