@@ -19,6 +19,8 @@ import { TabItem, TabList, Preview, Header, Error, Update } from './components';
 
 import { debounce } from './utils/debounce';
 import { throttle } from './utils/throttle';
+import CompilerWorker from './workers/compiler?worker';
+import FormatterWorker from './workers/formatter?worker';
 
 const Editor = lazy(() => import('./components/editor'));
 
@@ -38,8 +40,8 @@ export const App: Component = () => {
 
   let now: number;
 
-  const compiler = new Worker(new URL('./workers/compiler.ts', import.meta.url));
-  const formatter = new Worker(new URL('./workers/formatter.ts', import.meta.url));
+  const compiler = new CompilerWorker();
+  const formatter = new FormatterWorker();
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
@@ -188,6 +190,7 @@ export const App: Component = () => {
                 onDblClick={() => {
                   if (index() <= 0 || !store.interactive) return;
                   setEdit(index());
+                  tabRefs.get(tab.id).focus();
                 }}
                 class="cursor-pointer focus:outline-none -mb-0.5"
               >

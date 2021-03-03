@@ -140,7 +140,7 @@ export function getTheme({ styles }) {
       },
     }),
 
-    HighlightStyle.define(
+    HighlightStyle.define([
       { tag: tags.link, textDecoration: 'underline' },
       { tag: tags.heading, textDecoration: 'underline', fontWeight: 'bold' },
       { tag: tags.emphasis, fontStyle: 'italic' },
@@ -172,6 +172,6 @@ export function getTheme({ styles }) {
       { tag: tags.comment, color: isDark ? '#6a737d' : '#6a737d', fontStyle: 'italic' },
       { tag: tags.meta, color: '#7a757a' },
       { tag: tags.invalid, color: '#f00' },
-    ),
+    ]),
   ];
 }

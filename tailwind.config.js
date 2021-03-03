@@ -14,7 +14,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        // This font doesn't render properly, it has a lien-height issue it seems
+        // This font doesn't render properly, it seems it has a line-height issue
         display: [
           'Gordita',
           ' ui-sans-serif',
@@ -44,7 +44,7 @@ module.exports = {
     enabled: isProd,
     mode: 'layers',
     layers: ['base', 'components', 'utilities'],
-    content: ['src/**/*.html', 'src/**/*.tsx'],
+    content: ['src/**/*.tsx', 'index.html'],
   },
   plugins: [require('@tailwindcss/forms')],
 };
