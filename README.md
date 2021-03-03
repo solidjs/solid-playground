@@ -1,6 +1,6 @@
 # Solid Template Explorer
 
-This is the source code of the [solid-template-explorer](https://solid-template-explorer.netlify.app) website.
+This is the source code of the [solid playground](https://playground.solidjs.com) website.
 Through it you can quickly discover what the solid compiler will generate from your JSX templates.
 
 There are 3 modes available:
