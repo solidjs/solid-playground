@@ -11,7 +11,8 @@
     "newLine": "lf",
     "sourceMap": true,
     "skipLibCheck": true,
-    "jsxImportSource": "solid-js"
+    "jsxImportSource": "solid-js",
+    "types": ["vite/client"]
   },
   "include": ["./src"],
   "exclude": ["node_modules/"]
