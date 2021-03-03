@@ -196,13 +196,13 @@ export const App: Component = () => {
                   contentEditable={store.current === tab.id && edit() >= 0}
                   onBlur={(e) => {
                     setEdit(-1);
-                    actions.setTabName(tab.id, e.target.textContent!);
+                    actions.setTabName(tab.id, e.currentTarget.textContent!);
                   }}
                   onKeyDown={(e) => {
                     if (e.code === 'Space') e.preventDefault();
                     if (e.code !== 'Enter') return;
                     setEdit(-1);
-                    actions.setTabName(tab.id, e.target.textContent!);
+                    actions.setTabName(tab.id, e.currentTarget.textContent!);
                   }}
                   class="outline-none"
                 >
@@ -331,7 +331,7 @@ export const App: Component = () => {
                     checked={store.mode === 'DOM'}
                     value="DOM"
                     class="text-brand-default"
-                    onChange={(e) => actions.set('mode', e.target.value as any)}
+                    onChange={(e) => actions.set('mode', e.currentTarget.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -344,7 +344,7 @@ export const App: Component = () => {
                     checked={store.mode === 'SSR'}
                     value="SSR"
                     class="text-brand-default"
-                    onChange={(e) => actions.set('mode', e.target.value as any)}
+                    onChange={(e) => actions.set('mode', e.currentTarget.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -357,7 +357,7 @@ export const App: Component = () => {
                     checked={store.mode === 'HYDRATABLE'}
                     value="HYDRATABLE"
                     class="text-brand-default"
-                    onChange={(e) => actions.set('mode', e.target.value as any)}
+                    onChange={(e) => actions.set('mode', e.currentTarget.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
