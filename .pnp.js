@@ -66,6 +66,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["autoprefixer", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:10.2.4"],
             ["babel-preset-solid", "npm:0.24.12"],
             ["mitt", "npm:2.1.0"],
+            ["monaco-editor", "npm:0.22.3"],
             ["postcss", "npm:8.2.7"],
             ["postcss-scss", "npm:3.0.5"],
             ["prettier", "npm:2.2.1"],
@@ -6106,6 +6107,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["monaco-editor", [
+        ["npm:0.22.3", {
+          "packageLocation": "./.yarn/cache/monaco-editor-npm-0.22.3-4be6bdf622-1f5a65aee9.zip/node_modules/monaco-editor/",
+          "packageDependencies": [
+            ["monaco-editor", "npm:0.22.3"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["ms", [
         ["npm:2.0.0", {
           "packageLocation": "./.yarn/cache/ms-npm-2.0.0-9e1101a471-1a230340cc.zip/node_modules/ms/",
@@ -7444,6 +7454,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["autoprefixer", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:10.2.4"],
             ["babel-preset-solid", "npm:0.24.12"],
             ["mitt", "npm:2.1.0"],
+            ["monaco-editor", "npm:0.22.3"],
             ["postcss", "npm:8.2.7"],
             ["postcss-scss", "npm:3.0.5"],
             ["prettier", "npm:2.2.1"],

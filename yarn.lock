@@ -4681,6 +4681,13 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"monaco-editor@npm:^0.22.3":
+  version: 0.22.3
+  resolution: "monaco-editor@npm:0.22.3"
+  checksum: 1f5a65aee9cb2edb3aa8b82448e36d78e26a9aff2b76561b34f2dcd5d0077ff719d187bc6f439557c4059df8631eb73b7ba33ed90f0d6e1e606bc7cd04023909
+  languageName: node
+  linkType: hard
+
 "ms@npm:2.0.0":
   version: 2.0.0
   resolution: "ms@npm:2.0.0"
@@ -5880,6 +5887,7 @@ fsevents@~2.3.1:
     autoprefixer: 10.2.4
     babel-preset-solid: 0.24.12
     mitt: 2.1.0
+    monaco-editor: ^0.22.3
     postcss: 8.2.7
     postcss-scss: ^3.0.5
     prettier: 2.2.1

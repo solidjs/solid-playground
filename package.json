@@ -52,6 +52,7 @@
     "@codemirror/view": "0.18.0",
     "babel-preset-solid": "0.24.12",
     "mitt": "2.1.0",
+    "monaco-editor": "^0.22.3",
     "prettier": "2.2.1",
     "register-service-worker": "1.7.2",
     "rollup": "2.40.0",

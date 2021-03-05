@@ -1,4 +1,5 @@
 import { Component, createEffect, onMount, splitProps, JSX, Show, createSignal } from 'solid-js';
+import * as monaco from 'monaco-editor';
 
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import {
@@ -8,7 +9,8 @@ import {
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
 
-import { basicSetup, EditorState, EditorView } from './basicSetup';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 
 const Editor: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, [
@@ -26,38 +28,11 @@ const Editor: Component<Props> = (props) => {
   ]);
 
   let parent!: HTMLDivElement;
-  let state: EditorState;
-  let view: EditorView;
-
-  /**
-   * This creates a new EditorState. This is helpful stay in control of the
-   * content from the outside of CodeMirror.
-   *
-   * @param doc {string} - The new document string
-   * @param disabled {boolean} - Whether the editor is readonly or not
-   */
-  function createEditorState(doc: string, disabled: boolean = false): EditorState {
-    return EditorState.create({
-      doc,
-      extensions: [
-        basicSetup(internal),
-        EditorView.updateListener.of((update) => {
-          // This trigger the onDocChange event and save the cursor
-          // for the next state.
-          if (update.docChanged && internal.onDocChange) {
-            if (internal.value === update.state.doc.toString()) return;
-
-            internal.onDocChange(update.state.doc.toString());
-          }
-        }),
-        ...(disabled ? [EditorView.editable.of(false)] : []),
-      ],
-    });
-  }
+  let editor: monaco.editor.IStandaloneCodeEditor;
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
-    internal.onFormat(view.state.doc.toString());
+    internal.onFormat(editor.getValue());
     setFormat(true);
     setTimeout(setFormat, 750, false);
   }
@@ -65,7 +40,7 @@ const Editor: Component<Props> = (props) => {
   const [clip, setClip] = createSignal(false);
 
   function copyToClipboard() {
-    navigator.clipboard.writeText(view.state.doc.toString()).then(() => {
+    navigator.clipboard.writeText(editor.getValue()).then(() => {
       setClip(true);
       setTimeout(setClip, 750, false);
     });
@@ -73,13 +48,38 @@ const Editor: Component<Props> = (props) => {
 
   // Initialize CodeMirror
   onMount(() => {
-    state = createEditorState(internal.defaultValue || internal.value || '', internal.disabled);
-    view = new EditorView({ state, parent });
+    self.MonacoEnvironment = {
+      getWorker: function(moduleId, label) {
+        if (label === 'typescript' || label === 'javascript') {
+          return new tsWorker();
+        }
+        return new editorWorker();
+      },
+    };
+    
+
+    editor = monaco.editor.create(parent, {
+      value: internal.defaultValue || internal.value || '',
+      language: 'javascript',
+    });
+
+  // monaco.languages.typescript.javascriptDefaults.addExtraLib(libsource, "/node_modules/@types/solid-js/index.d.ts");
+    // monaco.editor.createModel(libsource, "typescript", monaco.Uri.parse("ts:filename/solid-js.d.ts"));
+
+  monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+    lib: ['ESNext', 'ES2015'],
+    target: monaco.languages.typescript.ScriptTarget.ESNext,
+    allowNonTsExtensions: true,
+  });
+
+    editor.onDidChangeModelContent(()=>{
+      internal.onDocChange(editor.getValue());
+    })
   });
 
   createEffect(() => {
-    if (!view) return;
-    view.setState(createEditorState(internal.value, internal.disabled));
+    if (!editor) return;
+    editor.setValue(internal.value);
   });
 
   return (
@@ -89,7 +89,7 @@ const Editor: Component<Props> = (props) => {
       classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
       style="grid-template-rows: 1fr auto"
     >
-      <div class="p-2 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
+      <div class="p-0 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"
