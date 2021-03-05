@@ -7,7 +7,7 @@ export function getTheme({ styles }) {
 
   return [
     EditorView.theme({
-      $: {
+      '&': {
         backgroundColor, // bg-blueGray-50
         color: isDark ? '#e8e6e3' : '#0F172A', // bg-blueGray-900
         position: 'relative !important',
@@ -23,12 +23,12 @@ export function getTheme({ styles }) {
         flexDirection: 'column',
       },
 
-      '$$light $gutters': {
+      '.cm-gutters': {
         backgroundColor: 'transparent',
         borderRightWidth: 0,
       },
 
-      $scroller: {
+      '.cm-scroller': {
         display: 'flex !important',
         alignItems: 'flex-start !important',
         lineHeight: 1.4,
@@ -40,7 +40,7 @@ export function getTheme({ styles }) {
         fontSize: 'inherit',
       },
 
-      $content: {
+      '.cm-content': {
         margin: 0,
         flexGrow: 2,
         minHeight: '100%',
@@ -53,30 +53,30 @@ export function getTheme({ styles }) {
         caretColor: isDark ? 'white' : 'black',
       },
 
-      $line: {
+      '.cm-line': {
         display: 'block',
         padding: '0 2px 0 4px',
       },
 
-      $selectionLayer: {
+      '.cm-selectionLayer': {
         zIndex: -1,
         contain: 'size style',
       },
 
-      $selectionBackground: {
+      '.cm-selectionBackground': {
         position: 'absolute',
         background: isDark ? '#222' : '#d9d9d9',
       },
-      '$$focused $selectionBackground': {
+      '&:focused .cm-selectionBackground': {
         background: isDark ? '#233' : '#d7d4f0',
       },
 
-      $cursorLayer: {
+      '.cm-cursorLayer': {
         zIndex: 100,
         contain: 'size style',
         pointerEvents: 'none',
       },
-      '$$focused $cursorLayer': {
+      '&$focused .cm-cursorLayer': {
         animation: 'steps(1) cm-blink 1.2s infinite',
       },
 
@@ -88,13 +88,8 @@ export function getTheme({ styles }) {
         '50%': { visibility: 'hidden' },
         '100%': {},
       },
-      '@keyframes cm-blink2': {
-        '0%': {},
-        '50%': { visibility: 'hidden' },
-        '100%': {},
-      },
 
-      $cursor: {
+      '.cm-cursor': {
         position: 'absolute',
         borderLeft: '1.2px solid black',
         marginLeft: '-0.6px',
@@ -103,16 +98,16 @@ export function getTheme({ styles }) {
         borderLeftColor: isDark ? '#444' : 'currentColor',
       },
 
-      '$$focused $cursor': {
+      '&$focused .cm-cursor': {
         display: 'block',
       },
 
-      $placeholder: {
+      '.cm-placeholder': {
         color: '#888',
         display: 'inline-block',
       },
 
-      $button: {
+      '.cm-button': {
         verticalAlign: 'middle',
         color: 'inherit',
         fontSize: '70%',
@@ -129,7 +124,7 @@ export function getTheme({ styles }) {
         },
       },
 
-      $textfield: {
+      '.cm-textfield': {
         verticalAlign: 'middle',
         color: 'inherit',
         fontSize: '70%',
