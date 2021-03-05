@@ -13,7 +13,7 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "./images/square_logo.png",
+      "src": "/square_logo.png",
       "sizes": "144x144",
       "type": "image/png"
     }
