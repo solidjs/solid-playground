@@ -48,7 +48,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@codemirror/commands", "npm:0.18.0"],
             ["@codemirror/fold", "npm:0.18.0"],
             ["@codemirror/gutter", "npm:0.18.0"],
-            ["@codemirror/highlight", "npm:0.18.0"],
+            ["@codemirror/highlight", "npm:0.18.3"],
             ["@codemirror/history", "npm:0.18.0"],
             ["@codemirror/lang-javascript", "npm:0.18.0"],
             ["@codemirror/language", "npm:0.18.0"],
@@ -67,7 +67,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["babel-preset-solid", "npm:0.24.12"],
             ["mitt", "npm:2.1.0"],
             ["postcss", "npm:8.2.7"],
-            ["postcss-scss", "npm:3.0.4"],
+            ["postcss-scss", "npm:3.0.5"],
             ["prettier", "npm:2.2.1"],
             ["register-service-worker", "npm:1.7.2"],
             ["rollup", "npm:2.40.0"],
@@ -75,9 +75,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["solid-js", "npm:0.24.12"],
             ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.4.1"],
             ["tailwindcss", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:2.0.3"],
-            ["typescript", "patch:typescript@npm%3A4.2.2#builtin<compat/typescript>::version=4.2.2&hash=a45b0e"],
+            ["typescript", "patch:typescript@npm%3A4.2.3#builtin<compat/typescript>::version=4.2.3&hash=a45b0e"],
             ["vite", "npm:2.0.5"],
-            ["vite-plugin-solid", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.1"],
+            ["vite-plugin-solid", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.2"],
             ["workbox-cli", "npm:6.1.1"]
           ],
           "linkType": "SOFT",
@@ -2198,6 +2198,19 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@codemirror-highlight-npm-0.18.0-e49f199fb9-3532a84537.zip/node_modules/@codemirror/highlight/",
           "packageDependencies": [
             ["@codemirror/highlight", "npm:0.18.0"],
+            ["@codemirror/language", "npm:0.18.0"],
+            ["@codemirror/rangeset", "npm:0.18.0"],
+            ["@codemirror/state", "npm:0.18.0"],
+            ["@codemirror/view", "npm:0.18.0"],
+            ["lezer-tree", "npm:0.13.0"],
+            ["style-mod", "npm:4.0.0"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:0.18.3", {
+          "packageLocation": "./.yarn/cache/@codemirror-highlight-npm-0.18.3-e33f143fc0-6096d67af9.zip/node_modules/@codemirror/highlight/",
+          "packageDependencies": [
+            ["@codemirror/highlight", "npm:0.18.3"],
             ["@codemirror/language", "npm:0.18.0"],
             ["@codemirror/rangeset", "npm:0.18.0"],
             ["@codemirror/state", "npm:0.18.0"],
@@ -6651,11 +6664,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["postcss-scss", [
-        ["npm:3.0.4", {
-          "packageLocation": "./.yarn/cache/postcss-scss-npm-3.0.4-66b4ee2c2b-e89a53daf1.zip/node_modules/postcss-scss/",
+        ["npm:3.0.5", {
+          "packageLocation": "./.yarn/cache/postcss-scss-npm-3.0.5-7b9d4422be-40c651f0ad.zip/node_modules/postcss-scss/",
           "packageDependencies": [
-            ["postcss-scss", "npm:3.0.4"],
-            ["postcss", "npm:8.2.6"]
+            ["postcss-scss", "npm:3.0.5"],
+            ["postcss", "npm:8.2.7"]
           ],
           "linkType": "HARD",
         }]
@@ -7413,7 +7426,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@codemirror/commands", "npm:0.18.0"],
             ["@codemirror/fold", "npm:0.18.0"],
             ["@codemirror/gutter", "npm:0.18.0"],
-            ["@codemirror/highlight", "npm:0.18.0"],
+            ["@codemirror/highlight", "npm:0.18.3"],
             ["@codemirror/history", "npm:0.18.0"],
             ["@codemirror/lang-javascript", "npm:0.18.0"],
             ["@codemirror/language", "npm:0.18.0"],
@@ -7432,7 +7445,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["babel-preset-solid", "npm:0.24.12"],
             ["mitt", "npm:2.1.0"],
             ["postcss", "npm:8.2.7"],
-            ["postcss-scss", "npm:3.0.4"],
+            ["postcss-scss", "npm:3.0.5"],
             ["prettier", "npm:2.2.1"],
             ["register-service-worker", "npm:1.7.2"],
             ["rollup", "npm:2.40.0"],
@@ -7440,26 +7453,26 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["solid-js", "npm:0.24.12"],
             ["solid-utils", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:0.4.1"],
             ["tailwindcss", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:2.0.3"],
-            ["typescript", "patch:typescript@npm%3A4.2.2#builtin<compat/typescript>::version=4.2.2&hash=a45b0e"],
+            ["typescript", "patch:typescript@npm%3A4.2.3#builtin<compat/typescript>::version=4.2.3&hash=a45b0e"],
             ["vite", "npm:2.0.5"],
-            ["vite-plugin-solid", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.1"],
+            ["vite-plugin-solid", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.2"],
             ["workbox-cli", "npm:6.1.1"]
           ],
           "linkType": "SOFT",
         }]
       ]],
       ["solid-refresh", [
-        ["npm:0.0.4", {
-          "packageLocation": "./.yarn/cache/solid-refresh-npm-0.0.4-1a55ad4ff5-66683eac2e.zip/node_modules/solid-refresh/",
+        ["npm:0.0.5", {
+          "packageLocation": "./.yarn/cache/solid-refresh-npm-0.0.5-a1b47c8b44-deb147f92a.zip/node_modules/solid-refresh/",
           "packageDependencies": [
-            ["solid-refresh", "npm:0.0.4"]
+            ["solid-refresh", "npm:0.0.5"]
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:97790345d776ea39630ec4bf108620930b91cb0b2fb370265ed5631be339d1bfb167f19176f23134fe449021cdfea99d10c15dee73ca0687293d455ddffd362e#npm:0.0.4", {
-          "packageLocation": "./.yarn/$$virtual/solid-refresh-virtual-b2e4e080fb/0/cache/solid-refresh-npm-0.0.4-1a55ad4ff5-66683eac2e.zip/node_modules/solid-refresh/",
+        ["virtual:2be1ece1cd21f151e164d587cbd4b38f105040626c7a57dfe8e918045fb4cdef39a707aafb4afe7a7b429e4377b72e3140a045f047677565e588dbbda3f47280#npm:0.0.5", {
+          "packageLocation": "./.yarn/$$virtual/solid-refresh-virtual-3481187412/0/cache/solid-refresh-npm-0.0.5-a1b47c8b44-deb147f92a.zip/node_modules/solid-refresh/",
           "packageDependencies": [
-            ["solid-refresh", "virtual:97790345d776ea39630ec4bf108620930b91cb0b2fb370265ed5631be339d1bfb167f19176f23134fe449021cdfea99d10c15dee73ca0687293d455ddffd362e#npm:0.0.4"],
+            ["solid-refresh", "virtual:2be1ece1cd21f151e164d587cbd4b38f105040626c7a57dfe8e918045fb4cdef39a707aafb4afe7a7b429e4377b72e3140a045f047677565e588dbbda3f47280#npm:0.0.5"],
             ["@types/solid-js", null],
             ["solid-js", "npm:0.24.12"]
           ],
@@ -8125,10 +8138,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["typescript", [
-        ["patch:typescript@npm%3A4.2.2#builtin<compat/typescript>::version=4.2.2&hash=a45b0e", {
-          "packageLocation": "./.yarn/cache/typescript-patch-2b7a16a96b-ea1f1b6be2.zip/node_modules/typescript/",
+        ["patch:typescript@npm%3A4.2.3#builtin<compat/typescript>::version=4.2.3&hash=a45b0e", {
+          "packageLocation": "./.yarn/cache/typescript-patch-99fe32b02b-a8956044aa.zip/node_modules/typescript/",
           "packageDependencies": [
-            ["typescript", "patch:typescript@npm%3A4.2.2#builtin<compat/typescript>::version=4.2.2&hash=a45b0e"]
+            ["typescript", "patch:typescript@npm%3A4.2.3#builtin<compat/typescript>::version=4.2.3&hash=a45b0e"]
           ],
           "linkType": "HARD",
         }]
@@ -8363,17 +8376,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["vite-plugin-solid", [
-        ["npm:1.2.1", {
-          "packageLocation": "./.yarn/cache/vite-plugin-solid-npm-1.2.1-7cd5919185-b0a07fe0e6.zip/node_modules/vite-plugin-solid/",
+        ["npm:1.2.2", {
+          "packageLocation": "./.yarn/cache/vite-plugin-solid-npm-1.2.2-785ac33872-dd0f6d3e09.zip/node_modules/vite-plugin-solid/",
           "packageDependencies": [
-            ["vite-plugin-solid", "npm:1.2.1"]
+            ["vite-plugin-solid", "npm:1.2.2"]
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.1", {
-          "packageLocation": "./.yarn/$$virtual/vite-plugin-solid-virtual-97790345d7/0/cache/vite-plugin-solid-npm-1.2.1-7cd5919185-b0a07fe0e6.zip/node_modules/vite-plugin-solid/",
+        ["virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.2", {
+          "packageLocation": "./.yarn/$$virtual/vite-plugin-solid-virtual-2be1ece1cd/0/cache/vite-plugin-solid-npm-1.2.2-785ac33872-dd0f6d3e09.zip/node_modules/vite-plugin-solid/",
           "packageDependencies": [
-            ["vite-plugin-solid", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.1"],
+            ["vite-plugin-solid", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:1.2.2"],
             ["@babel/core", "npm:7.13.8"],
             ["@babel/preset-typescript", "virtual:4b36e81446bd11c4e325318e5e020459984cdb6c3d40358431895c9b066586f914305261f1223df7fc8bee116d6093267bfe5e62713469e99f633504cc29e02e#npm:7.13.0"],
             ["@types/babel-preset-solid", null],
@@ -8382,7 +8395,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["babel-preset-solid", "npm:0.24.12"],
             ["resolve.exports", "npm:1.0.2"],
             ["solid-js", "npm:0.24.12"],
-            ["solid-refresh", "virtual:97790345d776ea39630ec4bf108620930b91cb0b2fb370265ed5631be339d1bfb167f19176f23134fe449021cdfea99d10c15dee73ca0687293d455ddffd362e#npm:0.0.4"],
+            ["solid-refresh", "virtual:2be1ece1cd21f151e164d587cbd4b38f105040626c7a57dfe8e918045fb4cdef39a707aafb4afe7a7b429e4377b72e3140a045f047677565e588dbbda3f47280#npm:0.0.5"],
             ["vite", "npm:2.0.5"]
           ],
           "packagePeers": [

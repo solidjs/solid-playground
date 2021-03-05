@@ -1268,7 +1268,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@codemirror/highlight@npm:0.18.0, @codemirror/highlight@npm:^0.18.0":
+"@codemirror/highlight@npm:0.18.3":
+  version: 0.18.3
+  resolution: "@codemirror/highlight@npm:0.18.3"
+  dependencies:
+    "@codemirror/language": ^0.18.0
+    "@codemirror/rangeset": ^0.18.0
+    "@codemirror/state": ^0.18.0
+    "@codemirror/view": ^0.18.0
+    lezer-tree: ^0.13.0
+    style-mod: ^4.0.0
+  checksum: 6096d67af9af3c98f7bdba91aa5ea5907698b351ee74b99d76212e1972a46aefa11f2af7e241af8b28b24aa7b069c3d9483b63656595f645ad2b8ade7bcdf8ba
+  languageName: node
+  linkType: hard
+
+"@codemirror/highlight@npm:^0.18.0":
   version: 0.18.0
   resolution: "@codemirror/highlight@npm:0.18.0"
   dependencies:
@@ -2117,7 +2131,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-preset-solid@npm:0.24.12, babel-preset-solid@npm:^0.24.9":
+"babel-preset-solid@npm:0.24.12, babel-preset-solid@npm:^0.24.12":
   version: 0.24.12
   resolution: "babel-preset-solid@npm:0.24.12"
   dependencies:
@@ -5117,12 +5131,12 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"postcss-scss@npm:^3.0.4":
-  version: 3.0.4
-  resolution: "postcss-scss@npm:3.0.4"
+"postcss-scss@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "postcss-scss@npm:3.0.5"
   dependencies:
-    postcss: ^8.1.6
-  checksum: e89a53daf1205854e4b31d950e0eb1fb8b16d6eb2dd64617f405a212c96d30418c2332bacd154a841aa2a97f2e27f23172f5e2ce0e5d580ac154cb70725c6017
+    postcss: ^8.2.7
+  checksum: 40c651f0adeca1a282082bdd0994a325b9959fe702739a9a6e3008ef1043d09907e490da7aa66d59f553d324df0ef2ccba9e97b257861cfb0d8dcd1aac087496
   languageName: node
   linkType: hard
 
@@ -5152,7 +5166,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"postcss@npm:8.2.7":
+"postcss@npm:8.2.7, postcss@npm:^8.2.7":
   version: 8.2.7
   resolution: "postcss@npm:8.2.7"
   dependencies:
@@ -5826,7 +5840,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"solid-js@npm:0.24.12, solid-js@npm:^0.24.10, solid-js@npm:^0.24.3":
+"solid-js@npm:0.24.12, solid-js@npm:^0.24.12, solid-js@npm:^0.24.3":
   version: 0.24.12
   resolution: "solid-js@npm:0.24.12"
   checksum: c0a2a08620339dc4907c7ecc889d543134204a73898eee78f404d2aee3f4a943bf7e9b506206143adfde20015c10199b5d7ab67be8a89060401966d5edbebe72
@@ -5848,7 +5862,7 @@ fsevents@~2.3.1:
     "@codemirror/commands": 0.18.0
     "@codemirror/fold": 0.18.0
     "@codemirror/gutter": 0.18.0
-    "@codemirror/highlight": 0.18.0
+    "@codemirror/highlight": 0.18.3
     "@codemirror/history": 0.18.0
     "@codemirror/lang-javascript": 0.18.0
     "@codemirror/language": 0.18.0
@@ -5867,7 +5881,7 @@ fsevents@~2.3.1:
     babel-preset-solid: 0.24.12
     mitt: 2.1.0
     postcss: 8.2.7
-    postcss-scss: ^3.0.4
+    postcss-scss: ^3.0.5
     prettier: 2.2.1
     register-service-worker: 1.7.2
     rollup: 2.40.0
@@ -5875,19 +5889,19 @@ fsevents@~2.3.1:
     solid-js: 0.24.12
     solid-utils: 0.4.1
     tailwindcss: 2.0.3
-    typescript: 4.2.2
+    typescript: 4.2.3
     vite: ^2.0.5
-    vite-plugin-solid: ^1.2.1
+    vite-plugin-solid: ^1.2.2
     workbox-cli: 6.1.1
   languageName: unknown
   linkType: soft
 
-"solid-refresh@npm:^0.0.4":
-  version: 0.0.4
-  resolution: "solid-refresh@npm:0.0.4"
+"solid-refresh@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "solid-refresh@npm:0.0.5"
   peerDependencies:
     solid-js: ^0.24.0
-  checksum: 66683eac2e551f70b85df4a3c06bf4cabfd69744ed3488ceca4035bc287a5588b10411164e9beb536bd9b47844f15a9e58a6c9a6880061ab263979c8265a10b0
+  checksum: deb147f92a03b14a881fabbc01c534d23e1d4f4bdb670011eb0335210a48c6c601e8e490525cc42f2ee115a9a5b64e2db2dbf7093d3474f2f97fadfdcb780fda
   languageName: node
   linkType: hard
 
@@ -6476,23 +6490,23 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-typescript@4.2.2:
-  version: 4.2.2
-  resolution: "typescript@npm:4.2.2"
+typescript@4.2.3:
+  version: 4.2.3
+  resolution: "typescript@npm:4.2.3"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: b2e3d5551a12c51b6b7a14f0e78d2664c136fab4dfb3eecaaf7a6e8e7e608f2cf43c6ebe81387d194db2588793b769720d2df523d445a1664b7585c5b9a85984
+  checksum: 06e8470f317db6f5e2fce809b20eb84a67a7d8179057abff36e5427bd1b891bd08e54581ff81f0fa36aef9b6d1eb0f54eaf6e2643c6dbd4e37a0adcc41eed256
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@4.2.2#builtin<compat/typescript>":
-  version: 4.2.2
-  resolution: "typescript@patch:typescript@npm%3A4.2.2#builtin<compat/typescript>::version=4.2.2&hash=a45b0e"
+"typescript@patch:typescript@4.2.3#builtin<compat/typescript>":
+  version: 4.2.3
+  resolution: "typescript@patch:typescript@npm%3A4.2.3#builtin<compat/typescript>::version=4.2.3&hash=a45b0e"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: ea1f1b6be22c9e3348f61692719d3169dd4abaad34b2132edff44a8d5a748bde8f3116fa2fae41d61c92b3a7cf1c35d0c7276058b2f35196ff3cde3b7d57c84b
+  checksum: a8956044aabf730699bcc3c2475efdd3f35e509329325cf60b4989761d4c2188e2c474183e2cf92b8c201fcf976814a5a16f144508b2a832643c4f972d0ab803
   languageName: node
   linkType: hard
 
@@ -6683,26 +6697,26 @@ typescript@4.2.2:
   languageName: node
   linkType: hard
 
-"vite-plugin-solid@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "vite-plugin-solid@npm:1.2.1"
+"vite-plugin-solid@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "vite-plugin-solid@npm:1.2.2"
   dependencies:
     "@babel/core": ^7.13.8
     "@babel/preset-typescript": ^7.13.0
-    babel-preset-solid: ^0.24.9
+    babel-preset-solid: ^0.24.12
     resolve.exports: ^1.0.2
-    solid-js: ^0.24.10
-    solid-refresh: ^0.0.4
-    vite: ^2.0.4
+    solid-js: ^0.24.12
+    solid-refresh: ^0.0.5
+    vite: ^2.0.5
   peerDependencies:
     babel-preset-solid: ^0.24
     solid-js: ^0.24
     vite: ^2
-  checksum: b0a07fe0e679d44fd1b7a7154510692ca783a95f28c81eeebda830b4151a1d0fc16c647445a543aae311a8a166cb502a89847f423241f6b09522444c9a28ce8e
+  checksum: dd0f6d3e09db72fb576a95c2aab5a72319c694374f26104f2d0ad8135ed9af46120d444d03ecb237ad0b9491bec4363e4b6becee96c85d9004e70a070f5ef392
   languageName: node
   linkType: hard
 
-"vite@npm:^2.0.4, vite@npm:^2.0.5":
+"vite@npm:^2.0.5":
   version: 2.0.5
   resolution: "vite@npm:2.0.5"
   dependencies:
