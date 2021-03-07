@@ -39,7 +39,7 @@ div[contenteditable='true']:focus,
     --right: 1fr;
 
     grid-template-rows: auto auto 1fr;
-    grid-template-columns: var(--left) 4px var(--right);
+    grid-template-columns: var(--left) 2px var(--right);
   }
 }
 
@@ -50,5 +50,5 @@ div[contenteditable='true']:focus,
 .tabs::after {
   content: '';
   height: 2px;
-  @apply absolute w-full left-0 bottom-0 bg-blueGray-200 z-0;
+  @apply absolute w-full left-0 bottom-0 bg-blueGray-200 dark:bg-blueGray-700 z-0;
 }

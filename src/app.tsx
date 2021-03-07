@@ -12,7 +12,8 @@ import {
   onMount,
   unwrap,
 } from 'solid-js';
-
+import * as monaco from 'monaco-editor';
+import { Uri } from 'monaco-editor';
 import { eventBus, formatMs } from './utils';
 import { compileMode, Tab, useStore } from './store';
 import { TabItem, TabList, Preview, Header, Error, Update } from './components';
@@ -21,7 +22,7 @@ import { debounce } from './utils/debounce';
 import { throttle } from './utils/throttle';
 import CompilerWorker from './workers/compiler?worker';
 import FormatterWorker from './workers/formatter?worker';
-
+const setupEditor = import('./components/editor/setupSolid');
 const Editor = lazy(() => import('./components/editor'));
 
 let swUpdatedBeforeRender = false;
@@ -49,8 +50,16 @@ export const App: Component = () => {
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
 
-  onMount(() => actions.set('currentCode', actions.getCurrentSource()));
-
+  onMount(() => {
+    setupEditor.then(() => {
+      let fileUri = Uri.parse(`file:///output_dont_import.tsx`);
+      monaco.editor.createModel('', 'typescript', fileUri);
+      for (const tab of store.tabs) {
+        let fileUri = Uri.parse(`file:///${tab.name}.${tab.type}`);
+        monaco.editor.createModel(tab.source, 'typescript', fileUri);
+      }
+    });
+  });
   /**
    * If we show the preview of the code, we want it to be DOM
    * to be able to render into the iframe.
@@ -125,7 +134,6 @@ export const App: Component = () => {
     switch (event) {
       case 'RESULT':
         actions.setCurrentSource(code);
-        actions.set({ currentCode: code });
         break;
     }
   });
@@ -297,14 +305,15 @@ export const App: Component = () => {
         }
       >
         <Editor
-          value={store.currentCode}
+          value={store.currentTab}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-700 row-start-3"
+          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-800 row-start-3"
           styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
           canFormat
           onFormat={formatCode}
+          isDark={store.dark}
         />
 
         <div
@@ -312,20 +321,26 @@ export const App: Component = () => {
           style="cursor: col-resize"
           onMouseDown={[setIsDragging, true]}
         >
-          <div class="h-full border-blueGray-200 border-l border-r rounded-lg mx-auto w-0"></div>
+          <div class="h-full border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg mx-auto w-0"></div>
         </div>
 
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen bg-white dark:bg-gray-700 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
+          <section class="h-full max-h-screen bg-white dark:bg-blueGray-800 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500">
             <Editor
-              value={store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, '')}
+              value={{
+                source: store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, ''),
+                id: '',
+                name: 'output_dont_import',
+                type: 'tsx',
+              }}
               class="h-full overflow-auto focus:outline-none flex-1"
               styles={{ backgroundColor: '#fff' }}
+              isDark={store.dark}
               disabled
               canCopy
             />
 
-            <div class="bg-white dark:bg-gray-700 p-5 hidden md:block">
+            <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
               <label class="font-semibold text-sm uppercase">Compile mode</label>
 
               <div class="flex flex-col mt-1 space-y-1 text-sm">

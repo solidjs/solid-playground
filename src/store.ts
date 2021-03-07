@@ -53,9 +53,11 @@ const [Store, useStore] = createStore({
     }
 
     return {
-      dark: undefined as Boolean,
+      dark: undefined as boolean,
       current: tabs[0].id,
-      currentCode: '',
+      get currentTab(): Tab {
+        return this.tabs.find((tab) => tab.id === this.current);
+      },
       tabs,
       error: '',
       compiled: '',
@@ -72,12 +74,9 @@ const [Store, useStore] = createStore({
   actions: (set, store) => ({
     resetError: () => set('error', ''),
     setCurrentTab: (current: string) => {
-      set({ current });
-
       const idx = store.tabs.findIndex((tab) => tab.id === current);
       if (idx < 0) return;
-
-      set({ currentCode: store.tabs[idx].source });
+      set({ current: current });
     },
     setTabName(id: string, name: string) {
       // FIXME: Use the below function, at the moment TS is not content
@@ -102,7 +101,6 @@ const [Store, useStore] = createStore({
       if (store.current === id) {
         set({
           current: store.tabs[idx - 1].id,
-          currentCode: store.tabs[idx - 1].source,
         });
       }
 
@@ -134,7 +132,6 @@ const [Store, useStore] = createStore({
           },
         ],
         current: nextId,
-        currentCode: '',
       });
     },
   }),

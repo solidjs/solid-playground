@@ -1,5 +1,5 @@
 const colors = require('tailwindcss/colors');
-const isProd = process.env['npm_lifecycle_event'] === 'build';
+const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
   theme: {
@@ -12,6 +12,7 @@ module.exports = {
           medium: '#446b9e',
           light: '#4f88c6',
         },
+        other: '#1e1e1e'
       },
       fontFamily: {
         // This font doesn't render properly, it seems it has a line-height issue
@@ -39,7 +40,7 @@ module.exports = {
       },
     },
   },
-  darkMode: false,
+  darkMode: 'class',
   purge: {
     enabled: isProd,
     mode: 'layers',
