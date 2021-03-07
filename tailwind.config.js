@@ -1,5 +1,4 @@
-const colors = require('tailwindcss/colors');
-const isProd = process.env.NODE_ENV === 'production';
+const colors = require('windicss/colors');
 
 module.exports = {
   theme: {
@@ -41,11 +40,5 @@ module.exports = {
     },
   },
   darkMode: 'class',
-  purge: {
-    enabled: isProd,
-    mode: 'layers',
-    layers: ['base', 'components', 'utilities'],
-    content: ['src/**/*.tsx', 'index.html'],
-  },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('windicss/plugin/forms')],
 };

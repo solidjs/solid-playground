@@ -25,7 +25,7 @@ import sServerMock from '/node_modules/solid-js/web/types/server-mock.d.ts?raw';
 import sJsxRuntime from '/node_modules/solid-js/jsx-runtime.d.ts?raw';
 
 // Tell monaco about the file from solid-js
-function cm(a:string, b:string) {
+function cm(a: string, b: string) {
   monaco.editor.createModel(a, 'typescript', Uri.parse(`file:///node_modules/solid-js/${b}`));
 }
 
