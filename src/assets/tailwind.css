@@ -20,12 +20,7 @@
   font-style: normal;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-div[contenteditable='true']:focus,
-.ͼ1.cm-wrap.cm-focused {
+div[contenteditable='true']:focus {
   outline: none !important;
 }
 

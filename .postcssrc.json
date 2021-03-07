@@ -1,7 +1,0 @@
-{
-  "syntax": "postcss-scss",
-  "plugins": {
-    "tailwindcss": {},
-    "autoprefixer": {}
-  }
-}
