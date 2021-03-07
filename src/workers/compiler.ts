@@ -44,7 +44,7 @@ function virtual({ SOLID_VERSION, solidOptions = {} }) {
 
     async resolveId(importee: string) {
       // This is a tab being imported
-      if (importee.startsWith('.')) return importee;
+      if (importee.startsWith('.')) return importee + '.tsx';
 
       // This is an external module
       return {
@@ -75,7 +75,7 @@ async function compile(tabs: Tab[], solidOptions = {}) {
     }
 
     const compiler = await rollup({
-      input: `./${tabs[0].name}.${tabs[0].type}`,
+      input: `./${tabs[0].name}`,
       plugins: [virtual({ SOLID_VERSION, solidOptions })],
     });
 
