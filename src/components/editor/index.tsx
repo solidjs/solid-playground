@@ -1,4 +1,13 @@
-import { Component, createEffect, onMount, splitProps, JSX, Show, createSignal } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  onMount,
+  JSX,
+  Show,
+  createSignal,
+  createMemo,
+  onCleanup,
+} from 'solid-js';
 import * as monaco from 'monaco-editor';
 import { Uri } from 'monaco-editor';
 import { Icon } from '@amoutonbrady/solid-heroicons';
@@ -12,24 +21,15 @@ import { Tab } from '../../store';
 import './setupSolid';
 
 const Editor: Component<Props> = (props) => {
-  const [internal, external] = splitProps(props, [
-    'onDocChange',
-    'value',
-    'disabled',
-    'styles',
-    'canCopy',
-    'classList',
-    'canFormat',
-    'onFormat',
-    'class',
-    'isDark',
-  ]);
   let parent!: HTMLDivElement;
   let editor: monaco.editor.IStandaloneCodeEditor;
+  let model = createMemo(() =>
+    monaco.editor.getModel(Uri.parse(`file:///${props.value.name}.${props.value.type}`)),
+  );
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
-    internal.onFormat(editor.getValue());
+    props.onFormat(editor.getValue());
     setFormat(true);
     setTimeout(setFormat, 750, false);
   }
@@ -45,45 +45,41 @@ const Editor: Component<Props> = (props) => {
 
   // Initialize CodeMirror
   onMount(() => {
-    let fileUri = Uri.parse(`file:///${internal.value.name}.${internal.value.type}`);
-    let model = monaco.editor.getModel(fileUri);
     editor = monaco.editor.create(parent, {
-      model,
+      model: null,
       automaticLayout: true,
-      readOnly: internal.disabled,
+      readOnly: props.disabled,
     });
 
     editor.onDidChangeModelContent(() => {
-      if (internal.onDocChange) internal.onDocChange(editor.getValue());
-    });
-
-    createEffect(() => {
-      model.setValue(internal.value.source || '');
-    });
-    createEffect(() => {
-      monaco.editor.setTheme(internal.isDark ? 'vs-dark' : 'vs');
+      if (props.onDocChange) props.onDocChange(editor.getValue());
     });
   });
+  onCleanup(() => editor.dispose());
 
   createEffect(() => {
-    if (!editor) return;
-    editor.setValue(internal.value?.source);
+    editor.setModel(model());
+  });
+  createEffect(() => {
+    model().setValue(props.value.source || '');
+  });
+  createEffect(() => {
+    monaco.editor.setTheme(props.isDark ? 'vs-dark' : 'vs');
   });
 
   return (
     <div
-      {...external}
-      class={`grid ${internal.class || ''}`}
-      classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
+      class={`grid ${props.class || ''}`}
+      classList={{ ...(props.classList || {}), relative: props.canCopy }}
       style="grid-template-rows: 1fr auto"
     >
       <div class="p-0 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"
-        classList={{ hidden: !internal.canFormat && !internal.canCopy }}
+        classList={{ hidden: !props.canFormat && !props.canCopy }}
       >
-        <Show when={internal.canFormat}>
+        <Show when={props.canFormat}>
           <button
             type="button"
             onClick={formatCode}
@@ -99,7 +95,7 @@ const Editor: Component<Props> = (props) => {
           </button>
         </Show>
 
-        <Show when={internal.canCopy}>
+        <Show when={props.canCopy}>
           <button
             type="button"
             onClick={copyToClipboard}
