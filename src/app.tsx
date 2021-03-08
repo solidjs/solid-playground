@@ -9,11 +9,8 @@ import {
   Component,
   createEffect,
   createSignal,
-  onMount,
   unwrap,
 } from 'solid-js';
-import * as monaco from 'monaco-editor';
-import { Uri } from 'monaco-editor';
 import { eventBus, formatMs } from './utils';
 import { compileMode, Tab, useStore } from './store';
 import { TabItem, TabList, Preview, Header, Error, Update } from './components';
@@ -22,7 +19,6 @@ import { debounce } from './utils/debounce';
 import { throttle } from './utils/throttle';
 import CompilerWorker from './workers/compiler?worker';
 import FormatterWorker from './workers/formatter?worker';
-const setupEditor = import('./components/editor/setupSolid');
 const Editor = lazy(() => import('./components/editor'));
 
 let swUpdatedBeforeRender = false;
@@ -50,16 +46,6 @@ export const App: Component = () => {
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
 
-  onMount(() => {
-    setupEditor.then(() => {
-      let fileUri = Uri.parse(`file:///output_dont_import.tsx`);
-      monaco.editor.createModel('', 'typescript', fileUri);
-      for (const tab of store.tabs) {
-        let fileUri = Uri.parse(`file:///${tab.name}.${tab.type}`);
-        monaco.editor.createModel(tab.source, 'typescript', fileUri);
-      }
-    });
-  });
   /**
    * If we show the preview of the code, we want it to be DOM
    * to be able to render into the iframe.
