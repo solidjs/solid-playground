@@ -8,8 +8,7 @@ import {
   createMemo,
   onCleanup,
 } from 'solid-js';
-import * as monaco from 'monaco-editor';
-import { Uri } from 'monaco-editor';
+import { Uri, editor as mEditor } from 'monaco-editor';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import {
   clipboard,
@@ -22,9 +21,9 @@ import './setupSolid';
 
 const Editor: Component<Props> = (props) => {
   let parent!: HTMLDivElement;
-  let editor: monaco.editor.IStandaloneCodeEditor;
+  let editor: mEditor.IStandaloneCodeEditor;
   let model = createMemo(() =>
-    monaco.editor.getModel(Uri.parse(`file:///${props.value.name}.${props.value.type}`)),
+    mEditor.getModel(Uri.parse(`file:///${props.value.name}.${props.value.type}`)),
   );
 
   const [format, setFormat] = createSignal(false);
@@ -45,7 +44,7 @@ const Editor: Component<Props> = (props) => {
 
   // Initialize CodeMirror
   onMount(() => {
-    editor = monaco.editor.create(parent, {
+    editor = mEditor.create(parent, {
       model: null,
       automaticLayout: true,
       readOnly: props.disabled,
@@ -64,7 +63,7 @@ const Editor: Component<Props> = (props) => {
     model().setValue(props.value.source || '');
   });
   createEffect(() => {
-    monaco.editor.setTheme(props.isDark ? 'vs-dark' : 'vs');
+    mEditor.setTheme(props.isDark ? 'vs-dark' : 'vs');
   });
 
   return (

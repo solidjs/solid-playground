@@ -10,8 +10,8 @@ export default defineConfig((env) => ({
     ...(env.command == 'build' ? {} : { global: 'globalThis' }),
   },
   build: {
-    target: 'esnext',
-    polyfillDynamicImport: false,
+    target: 'es2019',
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {},

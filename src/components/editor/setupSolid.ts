@@ -1,7 +1,6 @@
-import * as monaco from 'monaco-editor';
-import { Uri } from 'monaco-editor';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { Uri, languages, editor } from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker&inline';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker&inline';
 import sPackageJson from '/node_modules/solid-js/package.json';
 import sWebPackageJson from '/node_modules/solid-js/web/package.json';
 import sIndex from '/node_modules/solid-js/types/index.d.ts?raw';
@@ -26,7 +25,7 @@ import sJsxRuntime from '/node_modules/solid-js/jsx-runtime.d.ts?raw';
 
 // Tell monaco about the file from solid-js
 function cm(a: string, b: string) {
-  monaco.editor.createModel(a, 'typescript', Uri.parse(`file:///node_modules/solid-js/${b}`));
+  editor.createModel(a, 'typescript', Uri.parse(`file:///node_modules/solid-js/${b}`));
 }
 
 cm(JSON.stringify(sPackageJson), 'package.json');
@@ -58,11 +57,11 @@ cm(sJsxRuntime, 'jsx-runtime.d.ts');
   },
 };
 
-monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+languages.typescript.typescriptDefaults.setCompilerOptions({
   lib: ['es6', 'DOM', 'dom.iterable'],
-  target: monaco.languages.typescript.ScriptTarget.ESNext,
-  moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-  jsx: monaco.languages.typescript.JsxEmit.Preserve,
+  target: languages.typescript.ScriptTarget.ESNext,
+  moduleResolution: languages.typescript.ModuleResolutionKind.NodeJs,
+  jsx: languages.typescript.JsxEmit.Preserve,
   jsxImportSource: 'solid-js',
   allowNonTsExtensions: true,
 });
