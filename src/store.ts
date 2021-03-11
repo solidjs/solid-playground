@@ -2,8 +2,7 @@ import { createStore } from 'solid-utils';
 import { uid, parseHash } from './utils';
 import { isValidUrl } from './utils/isValidUrl';
 import { processImport } from './utils/processImport';
-import * as monaco from 'monaco-editor';
-import { Uri } from 'monaco-editor';
+import { Uri, editor } from 'monaco-editor';
 const setupEditor = import('./components/editor/setupSolid');
 
 const defaultTabs: Tab[] = [
@@ -55,12 +54,12 @@ const [Store, useStore] = createStore({
       } catch {}
     }
 
-    setupEditor.then(() => {
+    await setupEditor.then(() => {
       let fileUri = Uri.parse(`file:///output_dont_import.tsx`);
-      monaco.editor.createModel('', 'typescript', fileUri);
+      editor.createModel('', 'typescript', fileUri);
       for (const tab of tabs) {
         let fileUri = Uri.parse(`file:///${tab.name}.${tab.type}`);
-        monaco.editor.createModel(tab.source, 'typescript', fileUri);
+        editor.createModel(tab.source, 'typescript', fileUri);
       }
     });
 
@@ -99,8 +98,8 @@ const [Store, useStore] = createStore({
       if (idx < 0) return;
 
       let tab = store.tabs[idx];
-      monaco.editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
-      monaco.editor.createModel(tab.source, 'typescript', Uri.parse(`file:///${name}.${tab.type}`));
+      editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
+      editor.createModel(tab.source, 'typescript', Uri.parse(`file:///${name}.${tab.type}`));
 
       set('tabs', idx, 'name', name);
     },
@@ -113,7 +112,7 @@ const [Store, useStore] = createStore({
       const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}.${tab.type}?`);
       if (!confirmDeletion) return;
 
-      monaco.editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
+      editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
 
       // We want to redirect to another tab if we are deleting the current one
       if (store.current === id) {
@@ -139,7 +138,7 @@ const [Store, useStore] = createStore({
     addTab() {
       const nextId = uid();
 
-      monaco.editor.createModel('', 'typescript', Uri.parse(`file:///tab${store.tabs.length}.tsx`));
+      editor.createModel('', 'typescript', Uri.parse(`file:///tab${store.tabs.length}.tsx`));
 
       set({
         tabs: [
