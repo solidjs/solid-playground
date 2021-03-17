@@ -1,8 +1,8 @@
 import { Uri, languages, editor } from 'monaco-editor';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker&inline';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker&inline';
-import sPackageJson from '/node_modules/solid-js/package.json';
-import sWebPackageJson from '/node_modules/solid-js/web/package.json';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import sPackageJson from '/node_modules/solid-js/package.json?raw';
+import sWebPackageJson from '/node_modules/solid-js/web/package.json?raw';
 import sIndex from '/node_modules/solid-js/types/index.d.ts?raw';
 import sJsx from '/node_modules/solid-js/types/jsx.d.ts?raw';
 import sArray from '/node_modules/solid-js/types/reactive/array.d.ts?raw';
@@ -28,8 +28,8 @@ function cm(a: string, b: string) {
   editor.createModel(a, 'typescript', Uri.parse(`file:///node_modules/solid-js/${b}`));
 }
 
-cm(JSON.stringify(sPackageJson), 'package.json');
-cm(JSON.stringify(sWebPackageJson), 'web/package.json');
+cm(sPackageJson, 'package.json');
+cm(sWebPackageJson, 'web/package.json');
 cm(sIndex, 'types/index.d.ts');
 cm(sJsx, 'types/jsx.d.ts');
 cm(sArray, 'types/reactive/array.d.ts');

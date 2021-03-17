@@ -9,7 +9,7 @@ const SOLID_VERSION = pkg.dependencies['solid-js'];
 const CDN_URL = 'https://cdn.skypack.dev';
 const tabsLookup: Map<string, Tab> = new Map();
 
-export function loadBabel() {
+function loadBabel() {
   if (globalThis.$babel) return globalThis.$babel;
 
   globalThis.$babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
