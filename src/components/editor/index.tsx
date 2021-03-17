@@ -1,5 +1,14 @@
-import { Component, createEffect, onMount, splitProps, JSX, Show, createSignal } from 'solid-js';
-
+import {
+  Component,
+  createEffect,
+  onMount,
+  JSX,
+  Show,
+  createSignal,
+  createMemo,
+  onCleanup,
+} from 'solid-js';
+import { Uri, editor as mEditor } from 'monaco-editor';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import {
   clipboard,
@@ -7,57 +16,19 @@ import {
   checkCircle,
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
-
-import { basicSetup, EditorState, EditorView } from './basicSetup';
+import { Tab } from '../../store';
+import './setupSolid';
 
 const Editor: Component<Props> = (props) => {
-  const [internal, external] = splitProps(props, [
-    'onDocChange',
-    'value',
-    'disabled',
-    'defaultValue',
-    'styles',
-    'canCopy',
-    'classList',
-    'canFormat',
-    'onFormat',
-    'class',
-    'isDark',
-  ]);
-
   let parent!: HTMLDivElement;
-  let state: EditorState;
-  let view: EditorView;
-
-  /**
-   * This creates a new EditorState. This is helpful stay in control of the
-   * content from the outside of CodeMirror.
-   *
-   * @param doc {string} - The new document string
-   * @param disabled {boolean} - Whether the editor is readonly or not
-   */
-  function createEditorState(doc: string, disabled: boolean = false): EditorState {
-    return EditorState.create({
-      doc,
-      extensions: [
-        basicSetup(internal),
-        EditorView.updateListener.of((update) => {
-          // This trigger the onDocChange event and save the cursor
-          // for the next state.
-          if (update.docChanged && internal.onDocChange) {
-            if (internal.value === update.state.doc.toString()) return;
-
-            internal.onDocChange(update.state.doc.toString());
-          }
-        }),
-        ...(disabled ? [EditorView.editable.of(false)] : []),
-      ],
-    });
-  }
+  let editor: mEditor.IStandaloneCodeEditor;
+  let model = createMemo(() =>
+    mEditor.getModel(Uri.parse(`file:///${props.value.name}.${props.value.type}`)),
+  );
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
-    internal.onFormat(view.state.doc.toString());
+    props.onFormat(editor.getValue());
     setFormat(true);
     setTimeout(setFormat, 750, false);
   }
@@ -65,7 +36,7 @@ const Editor: Component<Props> = (props) => {
   const [clip, setClip] = createSignal(false);
 
   function copyToClipboard() {
-    navigator.clipboard.writeText(view.state.doc.toString()).then(() => {
+    navigator.clipboard.writeText(editor.getValue()).then(() => {
       setClip(true);
       setTimeout(setClip, 750, false);
     });
@@ -73,29 +44,41 @@ const Editor: Component<Props> = (props) => {
 
   // Initialize CodeMirror
   onMount(() => {
-    state = createEditorState(internal.defaultValue || internal.value || '', internal.disabled);
-    view = new EditorView({ state, parent });
+    editor = mEditor.create(parent, {
+      model: null,
+      automaticLayout: true,
+      readOnly: props.disabled,
+    });
+
+    editor.onDidChangeModelContent(() => {
+      if (props.onDocChange) props.onDocChange(editor.getValue());
+    });
   });
+  onCleanup(() => editor.dispose());
 
   createEffect(() => {
-    if (!view) return;
-    view.setState(createEditorState(internal.value, internal.disabled));
+    editor.setModel(model());
+  });
+  createEffect(() => {
+    model().setValue(props.value.source || '');
+  });
+  createEffect(() => {
+    mEditor.setTheme(props.isDark ? 'vs-dark' : 'vs');
   });
 
   return (
     <div
-      {...external}
-      class={`grid ${internal.class || ''}`}
-      classList={{ ...(internal.classList || {}), relative: internal.canCopy }}
+      class={`grid ${props.class || ''}`}
+      classList={{ ...(props.classList || {}), relative: props.canCopy }}
       style="grid-template-rows: 1fr auto"
     >
-      <div class="p-2 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
+      <div class="p-0 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"
-        classList={{ hidden: !internal.canFormat && !internal.canCopy }}
+        classList={{ hidden: !props.canFormat && !props.canCopy }}
       >
-        <Show when={internal.canFormat}>
+        <Show when={props.canFormat}>
           <button
             type="button"
             onClick={formatCode}
@@ -111,7 +94,7 @@ const Editor: Component<Props> = (props) => {
           </button>
         </Show>
 
-        <Show when={internal.canCopy}>
+        <Show when={props.canCopy}>
           <button
             type="button"
             onClick={copyToClipboard}
@@ -134,13 +117,12 @@ const Editor: Component<Props> = (props) => {
 export default Editor;
 
 interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
-  onDocChange?: (code: string) => unknown;
-  value?: string;
-  defaultValue?: string;
-  disabled?: boolean;
-  styles?: Record<string, any>;
+  value: Tab;
+  disabled: boolean;
+  styles: Record<string, string>;
   canCopy?: boolean;
   canFormat?: boolean;
   isDark?: boolean;
   onFormat?: (code: string) => unknown;
+  onDocChange?: (code: string) => unknown;
 }

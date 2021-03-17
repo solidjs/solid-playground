@@ -11,31 +11,31 @@ There are 3 modes available:
 
 ## Getting up and running
 
-This project is built using the [yarn 2](https://yarnpkg.com/) package manager.
+This project is built using the [pnpm](https://pnpm.js.org/) package manager.
 
 Once you got it up and running you can follow these steps the have a fully working environement:
 
 ```bash
 # Clone the project
-$ git clone git@github.com:amoutonbrady/solid-repl-poc.git
+$ git clone https://github.com/ryansolid/solid-playground
 
 # cd into the project and install the dependencies
-$ cd solid-repl-poc && yarn
+$ cd solid-playground && pnpm i
 
-# Start the dev server, the address is available at http://localhost:1234
-$ yarn dev
+# Start the dev server, the address is available at http://localhost:3000
+$ pnpm run dev
 
 # Build the project
-$ yarn build
+$ pnpm run build
 ```
 
 ## Credits / Technologies used
 
 - [solid-js](https://github.com/ryansolid/solid/): The view library
 - [@babel/standalone](https://babeljs.io/docs/en/babel-standalone): The in-browser compiler. Solid compiler relies on babel
-- [codemirror 6](https://codemirror.net/6/): The in-browser code editor. This is the next version of codemirror rewritten in TS
+- [monaco](https://microsoft.github.io/monaco-editor/): The in-browser code editor. This is the code editor that powers VS Code
 - [tailwindcss](https://tailwindcss.com/): The CSS framework
-- [parcel 2](https://v2.parceljs.org/): The module bundler
+- [vite](https://vitejs.dev/): The module bundler
 - [workbox](https://developers.google.com/web/tools/workbox): The service worker generator
-- [yarn 2](https://yarnpkg.com/): The package manager
+- [pnpm](https://pnpm.js.org/)
 - [lz-string](https://github.com/pieroxy/lz-string): The string compression algorith used to share REPL

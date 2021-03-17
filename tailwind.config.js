@@ -1,5 +1,4 @@
-const colors = require('tailwindcss/colors');
-const isProd = process.env['npm_lifecycle_event'] === 'build';
+const colors = require('windicss/colors');
 
 module.exports = {
   theme: {
@@ -12,9 +11,10 @@ module.exports = {
           medium: '#446b9e',
           light: '#4f88c6',
         },
+        other: '#1e1e1e'
       },
       fontFamily: {
-        // This font doesn't render properly, it has a lien-height issue it seems
+        // This font doesn't render properly, it seems it has a line-height issue
         display: [
           'Gordita',
           ' ui-sans-serif',
@@ -39,12 +39,6 @@ module.exports = {
       },
     },
   },
-  darkMode: false,
-  purge: {
-    enabled: isProd,
-    mode: 'layers',
-    layers: ['base', 'components', 'utilities'],
-    content: ['src/**/*.html', 'src/**/*.tsx'],
-  },
-  plugins: [require('@tailwindcss/forms')],
+  darkMode: 'class',
+  plugins: [require('windicss/plugin/forms')],
 };
