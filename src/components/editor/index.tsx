@@ -72,7 +72,7 @@ const Editor: Component<Props> = (props) => {
       classList={{ ...(props.classList || {}), relative: props.canCopy }}
       style="grid-template-rows: 1fr auto"
     >
-      <div class="p-0 text-0.5sm md:text-sm overflow-auto" ref={parent}></div>
+      <div class="p-0 text-0.5sm md:text-sm overflow-hidden" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"
