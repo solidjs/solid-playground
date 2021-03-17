@@ -48,6 +48,9 @@ const Editor: Component<Props> = (props) => {
       model: null,
       automaticLayout: true,
       readOnly: props.disabled,
+      minimap: {
+        enabled: props.withMinimap,
+      },
     });
 
     editor.onDidChangeModelContent(() => {
@@ -123,6 +126,7 @@ interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   canCopy?: boolean;
   canFormat?: boolean;
   isDark?: boolean;
+  withMinimap?: boolean;
   onFormat?: (code: string) => unknown;
   onDocChange?: (code: string) => unknown;
 }

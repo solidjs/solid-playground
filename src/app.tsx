@@ -300,6 +300,7 @@ export const App: Component = () => {
           canFormat
           onFormat={formatCode}
           isDark={store.dark}
+          withMinimap={false}
         />
 
         <div
@@ -324,6 +325,7 @@ export const App: Component = () => {
               isDark={store.dark}
               disabled
               canCopy
+              withMinimap={false}
             />
 
             <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
