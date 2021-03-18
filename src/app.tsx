@@ -114,20 +114,6 @@ export const App: Component = () => {
     actions.set({ error: '' });
   };
 
-  formatter.addEventListener('message', ({ data }) => {
-    const { event, code } = data;
-
-    switch (event) {
-      case 'RESULT':
-        actions.setCurrentSource(code);
-        break;
-    }
-  });
-
-  const formatCode = (code: string) => {
-    formatter.postMessage({ event: 'FORMAT', code });
-  };
-
   /**
    * This whole block before the slice of view
    * is an experimental resizer, need to tidy this up
@@ -298,7 +284,7 @@ export const App: Component = () => {
           disabled={!store.interactive}
           canCopy
           canFormat
-          onFormat={formatCode}
+          formatter={formatter}
           isDark={store.dark}
           withMinimap={false}
         />
