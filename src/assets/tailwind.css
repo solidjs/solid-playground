@@ -47,3 +47,7 @@ div[contenteditable='true']:focus {
   height: 2px;
   @apply absolute w-full left-0 bottom-0 bg-blueGray-200 dark:bg-blueGray-700 z-0;
 }
+
+textarea.monaco-mouse-cursor-text:focus {
+  box-shadow: unset;
+}
