@@ -42,36 +42,37 @@ const Editor: Component<Props> = (props) => {
     });
   }
 
-  languages.registerDocumentFormattingEditProvider('typescript', {
-    provideDocumentFormattingEdits: async (model) => {
-      props.formatter.postMessage({
-        event: 'FORMAT',
-        code: model.getValue(),
-        pos: editor.getPosition(),
-      });
-      return new Promise((resolve, reject) => {
-        props.formatter.addEventListener(
-          'message',
-          ({ data }) => {
-            const { event, code } = data;
-            switch (event) {
-              case 'RESULT':
-                resolve([
-                  {
-                    range: model.getFullModelRange(),
-                    text: code,
-                  },
-                ]);
-                break;
-              default:
-                reject();
-            }
-          },
-          { once: true },
-        );
-      });
-    },
-  });
+  if (props.formatter) {
+    languages.registerDocumentFormattingEditProvider('typescript', {
+      provideDocumentFormattingEdits: async (model) => {
+        props.formatter.postMessage({
+          event: 'FORMAT',
+          code: model.getValue(),
+          pos: editor.getPosition(),
+        });
+        return new Promise((resolve, reject) => {
+          props.formatter.addEventListener(
+            'message',
+            ({ data: { event, code } }) => {
+              switch (event) {
+                case 'RESULT':
+                  resolve([
+                    {
+                      range: model.getFullModelRange(),
+                      text: code,
+                    },
+                  ]);
+                  break;
+                default:
+                  reject();
+              }
+            },
+            { once: true },
+          );
+        });
+      },
+    });
+  }
 
   // Initialize CodeMirror
   onMount(() => {
