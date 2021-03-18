@@ -16,15 +16,12 @@ import {
   checkCircle,
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
-import { Tab } from '../../store';
 import './setupSolid';
 
 const Editor: Component<Props> = (props) => {
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
-  let model = createMemo(() =>
-    mEditor.getModel(Uri.parse(`file:///${props.value.name}.${props.value.type}`)),
-  );
+  let model = createMemo(() => mEditor.getModel(Uri.parse(props.url)));
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
@@ -152,7 +149,7 @@ const Editor: Component<Props> = (props) => {
 export default Editor;
 
 interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
-  value: Tab;
+  url: string;
   disabled: boolean;
   styles: Record<string, string>;
   canCopy?: boolean;

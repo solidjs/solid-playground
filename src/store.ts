@@ -89,6 +89,12 @@ const [Store, useStore] = createStore({
       if (idx < 0) return;
       set({ current: current });
     },
+    setCompiled(compiled: string) {
+      editor
+        .getModel(Uri.parse(`file:///output_dont_import.tsx`))
+        .setValue(compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, ''));
+      set({ compiled, isCompiling: false });
+    },
     setTabName(id: string, name: string) {
       // FIXME: Use the below function, at the moment TS is not content
       // ref: https://github.com/ryansolid/solid/blob/master/documentation/store.md#setpath-changes
