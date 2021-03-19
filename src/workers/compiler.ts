@@ -44,7 +44,7 @@ function virtual({ SOLID_VERSION, solidOptions = {} }) {
 
     async resolveId(importee: string) {
       // This is a tab being imported
-      if (importee.startsWith('.')) return importee + '.tsx';
+      if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
 
       // This is an external module
       return {
