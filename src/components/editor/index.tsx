@@ -8,7 +8,7 @@ import {
   createMemo,
   onCleanup,
 } from 'solid-js';
-import { Uri, editor as mEditor } from 'monaco-editor';
+import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import {
   clipboard,
@@ -16,19 +16,19 @@ import {
   checkCircle,
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
-import { Tab } from '../../store';
 import './setupSolid';
 
 const Editor: Component<Props> = (props) => {
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
-  let model = createMemo(() =>
-    mEditor.getModel(Uri.parse(`file:///${props.value.name}.${props.value.type}`)),
-  );
+  let model = createMemo(() => mEditor.getModel(Uri.parse(props.url)));
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
-    props.onFormat(editor.getValue());
+    if (!format()) {
+      editor.getAction('editor.action.formatDocument').run();
+      editor.focus();
+    }
     setFormat(true);
     setTimeout(setFormat, 750, false);
   }
@@ -39,6 +39,38 @@ const Editor: Component<Props> = (props) => {
     navigator.clipboard.writeText(editor.getValue()).then(() => {
       setClip(true);
       setTimeout(setClip, 750, false);
+    });
+  }
+
+  if (props.formatter) {
+    languages.registerDocumentFormattingEditProvider('typescript', {
+      provideDocumentFormattingEdits: async (model) => {
+        props.formatter.postMessage({
+          event: 'FORMAT',
+          code: model.getValue(),
+          pos: editor.getPosition(),
+        });
+        return new Promise((resolve, reject) => {
+          props.formatter.addEventListener(
+            'message',
+            ({ data: { event, code } }) => {
+              switch (event) {
+                case 'RESULT':
+                  resolve([
+                    {
+                      range: model.getFullModelRange(),
+                      text: code,
+                    },
+                  ]);
+                  break;
+                default:
+                  reject();
+              }
+            },
+            { once: true },
+          );
+        });
+      },
     });
   }
 
@@ -62,9 +94,7 @@ const Editor: Component<Props> = (props) => {
   createEffect(() => {
     editor.setModel(model());
   });
-  createEffect(() => {
-    model().setValue(props.value.source || '');
-  });
+
   createEffect(() => {
     mEditor.setTheme(props.isDark ? 'vs-dark' : 'vs');
   });
@@ -120,13 +150,13 @@ const Editor: Component<Props> = (props) => {
 export default Editor;
 
 interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
-  value: Tab;
+  url: string;
   disabled: boolean;
   styles: Record<string, string>;
   canCopy?: boolean;
   canFormat?: boolean;
   isDark?: boolean;
   withMinimap?: boolean;
-  onFormat?: (code: string) => unknown;
+  formatter?: Worker;
   onDocChange?: (code: string) => unknown;
 }

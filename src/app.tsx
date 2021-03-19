@@ -62,7 +62,7 @@ export const App: Component = () => {
         if (error) return actions.set({ error });
         if (!compiled) return;
 
-        actions.set({ compiled, isCompiling: false });
+        actions.setCompiled(compiled);
 
         console.log('Compilation took:', formatMs(performance.now() - now));
         break;
@@ -112,20 +112,6 @@ export const App: Component = () => {
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
     actions.set({ error: '' });
-  };
-
-  formatter.addEventListener('message', ({ data }) => {
-    const { event, code } = data;
-
-    switch (event) {
-      case 'RESULT':
-        actions.setCurrentSource(code);
-        break;
-    }
-  });
-
-  const formatCode = (code: string) => {
-    formatter.postMessage({ event: 'FORMAT', code });
   };
 
   /**
@@ -291,14 +277,14 @@ export const App: Component = () => {
         }
       >
         <Editor
-          value={store.currentTab}
+          url={`file:///${store.currentTab.name}.${store.currentTab.type}`}
           onDocChange={handleDocChange}
           class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-800 row-start-3"
           styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
           canFormat
-          onFormat={formatCode}
+          formatter={formatter}
           isDark={store.dark}
           withMinimap={false}
         />
@@ -314,12 +300,7 @@ export const App: Component = () => {
         <Show when={!showPreview()}>
           <section class="h-full max-h-screen bg-white dark:bg-blueGray-800 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500">
             <Editor
-              value={{
-                source: store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, ''),
-                id: '',
-                name: 'output_dont_import',
-                type: 'tsx',
-              }}
+              url="file:///output_dont_import.tsx"
               class="h-full overflow-auto focus:outline-none flex-1"
               styles={{ backgroundColor: '#fff' }}
               isDark={store.dark}
