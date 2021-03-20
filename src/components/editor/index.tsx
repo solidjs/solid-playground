@@ -101,11 +101,11 @@ const Editor: Component<Props> = (props) => {
 
   return (
     <div
-      class={`grid ${props.class || ''}`}
+      class={`grid grid-cols-1 ${props.class || ''}`}
       classList={{ ...(props.classList || {}), relative: props.canCopy }}
-      style="grid-template-rows: 1fr auto"
+      style="grid-template-rows: minmax(0, 1fr) auto"
     >
-      <div class="p-0 text-0.5sm md:text-sm overflow-hidden" ref={parent}></div>
+      <div class="p-0 text-0.5sm md:text-sm" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"

@@ -25,16 +25,16 @@ div[contenteditable='true']:focus {
 }
 
 .wrapper {
-  grid-template-rows: auto auto 1fr auto 1fr;
+  grid-template-rows: auto auto minmax(0, 1fr) auto minmax(0, 1fr);
 }
 
 @screen md {
   .wrapper {
-    --left: 1fr;
-    --right: 1fr;
+    --left: minmax(0, 1fr);
+    --right: minmax(0, 1fr);
 
-    grid-template-rows: auto auto 1fr;
-    grid-template-columns: var(--left) 2px var(--right);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, var(--left)) 2px minmax(0, var(--right));
   }
 }
 
