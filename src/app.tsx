@@ -279,7 +279,7 @@ export const App: Component = () => {
         <Editor
           url={`file:///${store.currentTab.name}.${store.currentTab.type}`}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-800 row-start-3"
+          class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-3"
           styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
@@ -298,10 +298,13 @@ export const App: Component = () => {
         </div>
 
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen bg-white dark:bg-blueGray-800 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500">
+          <section
+            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            style="grid-template-rows: minmax(0, 1fr) auto"
+          >
             <Editor
               url="file:///output_dont_import.tsx"
-              class="h-full overflow-auto focus:outline-none flex-1"
+              class="h-full focus:outline-none"
               styles={{ backgroundColor: '#fff' }}
               isDark={store.dark}
               disabled
@@ -312,8 +315,8 @@ export const App: Component = () => {
             <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
               <label class="font-semibold text-sm uppercase">Compile mode</label>
 
-              <div class="flex flex-col mt-1 space-y-1 text-sm">
-                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+              <div class="mt-1 space-y-1 text-sm">
+                <label class="block mr-auto cursor-pointer space-x-2">
                   <input
                     checked={store.mode === 'DOM'}
                     value="DOM"
@@ -326,7 +329,7 @@ export const App: Component = () => {
                   <span>Client side rendering</span>
                 </label>
 
-                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                <label class="block mr-auto cursor-pointer space-x-2">
                   <input
                     checked={store.mode === 'SSR'}
                     value="SSR"
@@ -339,7 +342,7 @@ export const App: Component = () => {
                   <span>Server side rendering</span>
                 </label>
 
-                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                <label class="block mr-auto cursor-pointer space-x-2">
                   <input
                     checked={store.mode === 'HYDRATABLE'}
                     value="HYDRATABLE"
