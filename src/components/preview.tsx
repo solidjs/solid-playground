@@ -166,7 +166,7 @@ export const Preview: Component<Props> = (props) => {
       style="grid-template-rows: 1fr auto"
     >
       <iframe
-        class="overflow-auto p-2 w-full h-full"
+        class="overflow-auto p-2 w-full h-full dark:bg-other"
         ref={iframe}
         srcdoc={html}
         onLoad={attachToIframe}
@@ -175,20 +175,20 @@ export const Preview: Component<Props> = (props) => {
       ></iframe>
 
       <div
-        class="grid border-t-2 border-blueGray-200 border-solid dark:bg-gray-700"
+        class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-blueGray-800 text-blueGray-600 dark:text-gray-300"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
         <div class="flex justify-between items-start w-full">
           <button
             type="button"
-            class="flex-1 text-left font-semibold uppercase text-xs text-blueGray-600 md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
+            class="text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
             onClick={() => setShowLogs(!showLogs())}
           >
             Console ({logs().length})
           </button>
           <button
             type="button"
-            class="uppercase text-xs md:text-sm text-blueGray-600 dark:text-blueGray-300 px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800"
+            class="uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800"
             onClick={[setLogs, []]}
           >
             Clear
@@ -196,7 +196,7 @@ export const Preview: Component<Props> = (props) => {
         </div>
 
         <Show when={showLogs()}>
-          <ul class="overflow-auto px-2 divide-y flex flex-col">
+          <ul class="overflow-auto px-2 divide-y">
             <For each={logs()}>
               {(log) => (
                 <li

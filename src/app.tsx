@@ -9,17 +9,16 @@ import {
   Component,
   createEffect,
   createSignal,
-  onMount,
   unwrap,
 } from 'solid-js';
-
 import { eventBus, formatMs } from './utils';
 import { compileMode, Tab, useStore } from './store';
 import { TabItem, TabList, Preview, Header, Error, Update } from './components';
 
 import { debounce } from './utils/debounce';
 import { throttle } from './utils/throttle';
-
+import CompilerWorker from './workers/compiler?worker';
+import FormatterWorker from './workers/formatter?worker';
 const Editor = lazy(() => import('./components/editor'));
 
 let swUpdatedBeforeRender = false;
@@ -38,16 +37,14 @@ export const App: Component = () => {
 
   let now: number;
 
-  const compiler = new Worker(new URL('./workers/compiler.ts', import.meta.url));
-  const formatter = new Worker(new URL('./workers/formatter.ts', import.meta.url));
+  const compiler = new CompilerWorker();
+  const formatter = new FormatterWorker();
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
 
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
-
-  onMount(() => actions.set('currentCode', actions.getCurrentSource()));
 
   /**
    * If we show the preview of the code, we want it to be DOM
@@ -65,7 +62,7 @@ export const App: Component = () => {
         if (error) return actions.set({ error });
         if (!compiled) return;
 
-        actions.set({ compiled, isCompiling: false });
+        actions.setCompiled(compiled);
 
         console.log('Compilation took:', formatMs(performance.now() - now));
         break;
@@ -115,21 +112,6 @@ export const App: Component = () => {
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
     actions.set({ error: '' });
-  };
-
-  formatter.addEventListener('message', ({ data }) => {
-    const { event, code } = data;
-
-    switch (event) {
-      case 'RESULT':
-        actions.setCurrentSource(code);
-        actions.set({ currentCode: code });
-        break;
-    }
-  });
-
-  const formatCode = (code: string) => {
-    formatter.postMessage({ event: 'FORMAT', code });
   };
 
   /**
@@ -188,6 +170,7 @@ export const App: Component = () => {
                 onDblClick={() => {
                   if (index() <= 0 || !store.interactive) return;
                   setEdit(index());
+                  tabRefs.get(tab.id).focus();
                 }}
                 class="cursor-pointer focus:outline-none -mb-0.5"
               >
@@ -294,39 +277,46 @@ export const App: Component = () => {
         }
       >
         <Editor
-          value={store.currentCode}
+          url={`file:///${store.currentTab.name}.${store.currentTab.type}`}
           onDocChange={handleDocChange}
-          class="h-full max-h-screen overflow-auto flex-1 focus:outline-none whitespace-pre-line bg-blueGray-50 dark:bg-blueGray-700 row-start-3"
+          class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-3"
           styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
           canFormat
-          onFormat={formatCode}
+          formatter={formatter}
+          isDark={store.dark}
+          withMinimap={false}
         />
 
         <div
-          class="h-full w-full row-start-2 row-span-2 col-start-2 hidden md:block"
+          class="h-full w-full row-start-2 row-end-4 col-start-2 hidden md:block"
           style="cursor: col-resize"
           onMouseDown={[setIsDragging, true]}
         >
-          <div class="h-full border-blueGray-200 border-l border-r rounded-lg mx-auto w-0"></div>
+          <div class="h-full border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg mx-auto w-0"></div>
         </div>
 
         <Show when={!showPreview()}>
-          <section class="h-full max-h-screen bg-white dark:bg-gray-700 overflow-hidden flex flex-col flex-1 focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200">
+          <section
+            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            style="grid-template-rows: minmax(0, 1fr) auto"
+          >
             <Editor
-              value={store.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, '')}
-              class="h-full overflow-auto focus:outline-none flex-1"
+              url="file:///output_dont_import.tsx"
+              class="h-full focus:outline-none"
               styles={{ backgroundColor: '#fff' }}
+              isDark={store.dark}
               disabled
               canCopy
+              withMinimap={false}
             />
 
-            <div class="bg-white dark:bg-gray-700 p-5 hidden md:block">
+            <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
               <label class="font-semibold text-sm uppercase">Compile mode</label>
 
-              <div class="flex flex-col mt-1 space-y-1 text-sm">
-                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+              <div class="mt-1 space-y-1 text-sm">
+                <label class="block mr-auto cursor-pointer space-x-2">
                   <input
                     checked={store.mode === 'DOM'}
                     value="DOM"
@@ -339,7 +329,7 @@ export const App: Component = () => {
                   <span>Client side rendering</span>
                 </label>
 
-                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                <label class="block mr-auto cursor-pointer space-x-2">
                   <input
                     checked={store.mode === 'SSR'}
                     value="SSR"
@@ -352,7 +342,7 @@ export const App: Component = () => {
                   <span>Server side rendering</span>
                 </label>
 
-                <label class="inline-flex mr-auto cursor-pointer items-center space-x-2">
+                <label class="block mr-auto cursor-pointer space-x-2">
                   <input
                     checked={store.mode === 'HYDRATABLE'}
                     value="HYDRATABLE"

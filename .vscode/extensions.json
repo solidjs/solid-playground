@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "arcanis.vscode-zipfs",
     "esbenp.prettier-vscode"
   ]
 }

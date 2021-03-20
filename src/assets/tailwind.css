@@ -20,26 +20,21 @@
   font-style: normal;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-div[contenteditable='true']:focus,
-.ͼ1.cm-wrap.cm-focused {
+div[contenteditable='true']:focus {
   outline: none !important;
 }
 
 .wrapper {
-  grid-template-rows: auto auto 1fr auto 1fr;
+  grid-template-rows: auto auto minmax(0, 1fr) auto minmax(0, 1fr);
 }
 
 @screen md {
   .wrapper {
-    --left: 1fr;
-    --right: 1fr;
+    --left: minmax(0, 1fr);
+    --right: minmax(0, 1fr);
 
-    grid-template-rows: auto auto 1fr;
-    grid-template-columns: var(--left) 4px var(--right);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, var(--left)) 2px minmax(0, var(--right));
   }
 }
 
@@ -50,5 +45,9 @@ div[contenteditable='true']:focus,
 .tabs::after {
   content: '';
   height: 2px;
-  @apply absolute w-full left-0 bottom-0 bg-blueGray-200 z-0;
+  @apply absolute w-full left-0 bottom-0 bg-blueGray-200 dark:bg-blueGray-700 z-0;
+}
+
+textarea.monaco-mouse-cursor-text:focus {
+  box-shadow: unset;
 }
