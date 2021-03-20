@@ -1,6 +1,14 @@
 import { Uri, languages, editor } from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import vsDark from './vs_dark_good.json';
+import vsLight from './vs_light_good.json';
+import { loadWASM } from 'onigasm';
+import { Registry } from 'monaco-textmate';
+import { wireTmGrammars } from 'monaco-editor-textmate';
+import onigasm from 'onigasm/lib/onigasm.wasm?url';
+import typescriptReactTM from './TypeScriptReact.tmLanguage.json';
+
 import sPackageJson from '/node_modules/solid-js/package.json?raw';
 import sWebPackageJson from '/node_modules/solid-js/web/package.json?raw';
 import sIndex from '/node_modules/solid-js/types/index.d.ts?raw';
@@ -51,7 +59,7 @@ cm(sServerMock, 'web/types/server-mock.d.ts');
 cm(sJsxRuntime, 'jsx-runtime.d.ts');
 
 (window as any).MonacoEnvironment = {
-  getWorker: function (moduleId, label) {
+  getWorker: function (moduleId, label: string) {
     if (label === 'typescript' || label === 'javascript') return new tsWorker();
     return new editorWorker();
   },
@@ -65,3 +73,29 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
   jsxImportSource: 'solid-js',
   allowNonTsExtensions: true,
 });
+
+const loadingWasm = loadWASM(onigasm);
+
+const registry = new Registry({
+  getGrammarDefinition: (scopeName) => {
+    return {
+      format: 'json',
+      content: typescriptReactTM,
+    };
+  },
+});
+
+const grammars = new Map();
+grammars.set('typescript', 'source.tsx');
+
+// monaco's built-in themes aren't powereful enough to handle TM tokens
+// https://github.com/Nishkalkashyap/monaco-vscode-textmate-theme-converter#monaco-vscode-textmate-theme-converter
+editor.defineTheme('vs-dark-plus', vsDark as any);
+editor.defineTheme('vs-light-plus', vsLight as any);
+
+export async function liftOff(editor: editor.ICodeEditor) {
+  await loadingWasm;
+  // wireTmGrammars only cares about the language part, but asks for all of monaco
+  // we fool it by just passing in an object with languages
+  await wireTmGrammars({ languages } as any, registry, grammars, editor);
+}
