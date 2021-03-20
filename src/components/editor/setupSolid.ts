@@ -74,7 +74,7 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
   allowNonTsExtensions: true,
 });
 
-loadWASM(onigasm);
+const loadingWasm = loadWASM(onigasm);
 
 const registry = new Registry({
   getGrammarDefinition: (scopeName) => {
@@ -94,6 +94,7 @@ editor.defineTheme('vs-dark-plus', vsDark as any);
 editor.defineTheme('vs-light-plus', vsLight as any);
 
 export async function liftOff(editor: editor.ICodeEditor) {
+  await loadingWasm;
   // wireTmGrammars only cares about the language part, but asks for all of monaco
   // we fool it by just passing in an object with languages
   await wireTmGrammars({ languages } as any, registry, grammars, editor);
