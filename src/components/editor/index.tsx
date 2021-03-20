@@ -16,7 +16,7 @@ import {
   checkCircle,
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
-import './setupSolid';
+import { liftOff } from './setupSolid';
 
 const Editor: Component<Props> = (props) => {
   let parent!: HTMLDivElement;
@@ -80,10 +80,13 @@ const Editor: Component<Props> = (props) => {
       model: null,
       automaticLayout: true,
       readOnly: props.disabled,
+      language: 'typescript',
       minimap: {
         enabled: props.withMinimap,
       },
     });
+
+    liftOff(editor);
 
     editor.onDidChangeModelContent(() => {
       if (props.onDocChange) props.onDocChange(editor.getValue());
@@ -96,7 +99,7 @@ const Editor: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    mEditor.setTheme(props.isDark ? 'vs-dark' : 'vs');
+    mEditor.setTheme(props.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });
 
   return (

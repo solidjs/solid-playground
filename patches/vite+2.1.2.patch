@@ -1,8 +1,8 @@
-diff --git a/node_modules/vite/dist/node/chunks/dep-4560a795.js b/node_modules/vite/dist/node/chunks/dep-4560a795.js
-index 61e88fd..71f4336 100644
---- a/node_modules/vite/dist/node/chunks/dep-4560a795.js
-+++ b/node_modules/vite/dist/node/chunks/dep-4560a795.js
-@@ -45417,32 +45417,33 @@ function webWorkerPlugin(config) {
+diff --git a/node_modules/vite/dist/node/chunks/dep-efe32886.js b/node_modules/vite/dist/node/chunks/dep-efe32886.js
+index 0179208..681df82 100644
+--- a/node_modules/vite/dist/node/chunks/dep-efe32886.js
++++ b/node_modules/vite/dist/node/chunks/dep-efe32886.js
+@@ -45428,31 +45428,32 @@ function webWorkerPlugin(config) {
                  url = injectQuery(url, WorkerFileId);
              }
              else {
@@ -13,7 +13,7 @@ index 61e88fd..71f4336 100644
 -                    const bundle = await rollup.rollup({
 -                        input: cleanUrl(id),
 -                        plugins: config.plugins
-+                // bundle the file as entry to support imports
++                 // bundle the file as entry to support imports
 +                const rollup = require('rollup');
 +                const bundle = await rollup.rollup({
 +                    input: cleanUrl(id),
@@ -50,10 +50,8 @@ index 61e88fd..71f4336 100644
 -                        type: 'chunk',
 -                        id: cleanUrl(id)
 -                    })}__`;
--                }
 +                finally {
 +                    bundle.close();
-+				}
+                 }
              }
              return `export default function WorkerWrapper() {
-         return new Worker(${JSON.stringify(url)}, { type: 'module' })
