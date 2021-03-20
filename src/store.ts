@@ -2,6 +2,8 @@ import { createStore } from 'solid-utils';
 import { uid, parseHash } from './utils';
 import { isValidUrl } from './utils/isValidUrl';
 import { processImport } from './utils/processImport';
+import { Uri, editor } from 'monaco-editor';
+const setupEditor = import('./components/editor/setupSolid');
 
 const defaultTabs: Tab[] = [
   {
@@ -52,10 +54,21 @@ const [Store, useStore] = createStore({
       } catch {}
     }
 
+    await setupEditor.then(() => {
+      let fileUri = Uri.parse(`file:///output_dont_import.tsx`);
+      editor.createModel('', 'typescript', fileUri);
+      for (const tab of tabs) {
+        let fileUri = Uri.parse(`file:///${tab.name}.${tab.type}`);
+        editor.createModel(tab.source, 'typescript', fileUri);
+      }
+    });
+
     return {
-      dark: undefined as Boolean,
+      dark: undefined as boolean,
       current: tabs[0].id,
-      currentCode: '',
+      get currentTab(): Tab {
+        return this.tabs.find((tab) => tab.id === this.current);
+      },
       tabs,
       error: '',
       compiled: '',
@@ -72,12 +85,15 @@ const [Store, useStore] = createStore({
   actions: (set, store) => ({
     resetError: () => set('error', ''),
     setCurrentTab: (current: string) => {
-      set({ current });
-
       const idx = store.tabs.findIndex((tab) => tab.id === current);
       if (idx < 0) return;
-
-      set({ currentCode: store.tabs[idx].source });
+      set({ current: current });
+    },
+    setCompiled(compiled: string) {
+      editor
+        .getModel(Uri.parse(`file:///output_dont_import.tsx`))
+        .setValue(compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, ''));
+      set({ compiled, isCompiling: false });
     },
     setTabName(id: string, name: string) {
       // FIXME: Use the below function, at the moment TS is not content
@@ -86,6 +102,10 @@ const [Store, useStore] = createStore({
 
       const idx = store.tabs.findIndex((tab) => tab.id === id);
       if (idx < 0) return;
+
+      let tab = store.tabs[idx];
+      editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
+      editor.createModel(tab.source, 'typescript', Uri.parse(`file:///${name}.${tab.type}`));
 
       set('tabs', idx, 'name', name);
     },
@@ -98,11 +118,12 @@ const [Store, useStore] = createStore({
       const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}.${tab.type}?`);
       if (!confirmDeletion) return;
 
+      editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
+
       // We want to redirect to another tab if we are deleting the current one
       if (store.current === id) {
         set({
           current: store.tabs[idx - 1].id,
-          currentCode: store.tabs[idx - 1].source,
         });
       }
 
@@ -123,6 +144,8 @@ const [Store, useStore] = createStore({
     addTab() {
       const nextId = uid();
 
+      editor.createModel('', 'typescript', Uri.parse(`file:///tab${store.tabs.length}.tsx`));
+
       set({
         tabs: [
           ...store.tabs,
@@ -134,7 +157,6 @@ const [Store, useStore] = createStore({
           },
         ],
         current: nextId,
-        currentCode: '',
       });
     },
   }),

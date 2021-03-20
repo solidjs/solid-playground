@@ -1,0 +1,57 @@
+diff --git a/node_modules/vite/dist/node/chunks/dep-efe32886.js b/node_modules/vite/dist/node/chunks/dep-efe32886.js
+index 0179208..681df82 100644
+--- a/node_modules/vite/dist/node/chunks/dep-efe32886.js
++++ b/node_modules/vite/dist/node/chunks/dep-efe32886.js
+@@ -45428,31 +45428,32 @@ function webWorkerPlugin(config) {
+                 url = injectQuery(url, WorkerFileId);
+             }
+             else {
+-                if (query.inline != null) {
+-                    // bundle the file as entry to support imports and inline as base64
+-                    // data url
+-                    const rollup = require('rollup');
+-                    const bundle = await rollup.rollup({
+-                        input: cleanUrl(id),
+-                        plugins: config.plugins
++                 // bundle the file as entry to support imports
++                const rollup = require('rollup');
++                const bundle = await rollup.rollup({
++                    input: cleanUrl(id),
++                    plugins: config.plugins
++                });
++                try {
++                    const { output } = await bundle.generate({
++                        format: 'iife',
++                        sourcemap: config.build.sourcemap
+                     });
+-                    try {
+-                        const { output } = await bundle.generate({
+-                            format: 'es',
+-                            sourcemap: config.build.sourcemap
+-                        });
++                    if (query.inline != null) {
++                        // inline as base64 data url
+                         url = `data:application/javascript;base64,${Buffer.from(output[0].code).toString('base64')}`;
+                     }
+-                    finally {
+-                        bundle.close();
++                    else {
++                        const fileName = path__default.parse(cleanUrl(id)).name;
++                        url = `__VITE_ASSET__${this.emitFile({
++                            type: 'asset',
++                            name: `${fileName}.js`,
++                            source: output[0].code
++                        })}__`;
+                     }
+                 }
+-                else {
+-                    // emit as separate chunk
+-                    url = `__VITE_ASSET__${this.emitFile({
+-                        type: 'chunk',
+-                        id: cleanUrl(id)
+-                    })}__`;
++                finally {
++                    bundle.close();
+                 }
+             }
+             return `export default function WorkerWrapper() {
