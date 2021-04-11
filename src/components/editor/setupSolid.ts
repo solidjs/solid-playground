@@ -85,8 +85,7 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
 const loadingWasm = loadWASM(onigasm);
 
 const registry = new Registry({
-  // @ts-ignore
-  getGrammarDefinition: (scopeName) => {
+  async getGrammarDefinition(scopeName) {
     return {
       format: 'json',
       content: typescriptReactTM,
@@ -99,8 +98,8 @@ grammars.set('typescript', 'source.tsx');
 
 // monaco's built-in themes aren't powereful enough to handle TM tokens
 // https://github.com/Nishkalkashyap/monaco-vscode-textmate-theme-converter#monaco-vscode-textmate-theme-converter
-editor.defineTheme('vs-dark-plus', vsDark as any);
-editor.defineTheme('vs-light-plus', vsLight as any);
+editor.defineTheme('vs-dark-plus', vsDark as editor.IStandaloneThemeData);
+editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
 
 export async function liftOff(editor: editor.ICodeEditor) {
   await loadingWasm;
