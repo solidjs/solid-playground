@@ -1,6 +1,7 @@
 import { Uri, languages, editor } from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import vsDark from './vs_dark_good.json';
 import vsLight from './vs_light_good.json';
 import { loadWASM } from 'onigasm';
@@ -60,8 +61,15 @@ cm(sJsxRuntime, 'jsx-runtime.d.ts');
 
 (window as any).MonacoEnvironment = {
   getWorker: function (moduleId, label: string) {
-    if (label === 'typescript' || label === 'javascript') return new tsWorker();
-    return new editorWorker();
+    switch (label) {
+      case 'css':
+        return new cssWorker();
+      case 'typescript':
+      case 'javascript':
+        return new tsWorker();
+      default:
+        return new editorWorker();
+    }
   },
 };
 
@@ -77,6 +85,7 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
 const loadingWasm = loadWASM(onigasm);
 
 const registry = new Registry({
+  // @ts-ignore
   getGrammarDefinition: (scopeName) => {
     return {
       format: 'json',
@@ -97,5 +106,5 @@ export async function liftOff(editor: editor.ICodeEditor) {
   await loadingWasm;
   // wireTmGrammars only cares about the language part, but asks for all of monaco
   // we fool it by just passing in an object with languages
-  await wireTmGrammars({ languages } as any, registry, grammars, editor);
+  wireTmGrammars({ languages } as any, registry, grammars, editor);
 }

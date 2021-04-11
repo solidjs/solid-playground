@@ -96,6 +96,7 @@ const Editor: Component<Props> = (props) => {
 
   createEffect(() => {
     editor.setModel(model());
+    liftOff(editor);
   });
 
   createEffect(() => {
@@ -108,7 +109,7 @@ const Editor: Component<Props> = (props) => {
       classList={{ ...(props.classList || {}), relative: props.canCopy }}
       style="grid-template-rows: minmax(0, 1fr) auto"
     >
-      <div class="p-0 text-0.5sm md:text-sm" ref={parent}></div>
+      <div class="p-0 text-0.5sm md:text-sm dark:text-white" ref={parent}></div>
 
       <div
         class="flex justify-end space-x-2 p-2"
