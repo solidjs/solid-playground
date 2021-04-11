@@ -177,10 +177,10 @@ export const App: Component = () => {
                 <span
                   ref={(el) => tabRefs.set(tab.id, el)}
                   contentEditable={store.current === tab.id && edit() >= 0}
-                  onBlur={(e) => {
-                    setEdit(-1);
-                    actions.setTabName(tab.id, e.currentTarget.textContent!);
-                  }}
+                  // onBlur={(e) => {
+                  //   setEdit(-1);
+                  //   actions.setTabName(tab.id, e.currentTarget.textContent!);
+                  // }}
                   onKeyDown={(e) => {
                     if (e.code === 'Space') e.preventDefault();
                     if (e.code !== 'Enter') return;
@@ -191,7 +191,22 @@ export const App: Component = () => {
                 >
                   {tab.name}
                 </span>
-                <span>.{tab.type}</span>
+                <Show
+                  when={store.current === tab.id && edit() >= 0}
+                  fallback={<span>.{tab.type}</span>}
+                >
+                  <select
+                    class="bg-none p-0"
+                    value={tab.type}
+                    onChange={(e) => {
+                      setEdit(-1);
+                      actions.setTabType(tab.id, e.currentTarget.value);
+                    }}
+                  >
+                    <option value="tsx">.tsx</option>
+                    <option value="css">.css</option>
+                  </select>
+                </Show>
               </button>
 
               <Show when={index() > 0}>

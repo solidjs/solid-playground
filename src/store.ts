@@ -55,11 +55,12 @@ const [Store, useStore] = createStore({
     }
 
     await setupEditor.then(() => {
-      let fileUri = Uri.parse(`file:///output_dont_import.tsx`);
+      const fileUri = Uri.parse(`file:///output_dont_import.tsx`);
       editor.createModel('', 'typescript', fileUri);
+
       for (const tab of tabs) {
-        let fileUri = Uri.parse(`file:///${tab.name}.${tab.type}`);
-        editor.createModel(tab.source, 'typescript', fileUri);
+        const fileUri = Uri.parse(`file:///${tab.name}.${tab.type}`);
+        editor.createModel(tab.source, tab.type === 'tsx' ? 'typescript' : 'css', fileUri);
       }
     });
 
@@ -105,9 +106,27 @@ const [Store, useStore] = createStore({
 
       let tab = store.tabs[idx];
       editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
-      editor.createModel(tab.source, 'typescript', Uri.parse(`file:///${name}.${tab.type}`));
+      editor.createModel(
+        tab.source,
+        tab.type === 'tsx' ? 'typescript' : 'css',
+        Uri.parse(`file:///${name}.${tab.type}`),
+      );
 
       set('tabs', idx, 'name', name);
+    },
+    setTabType(id: string, type: string) {
+      const idx = store.tabs.findIndex((tab) => tab.id === id);
+      if (idx < 0) return;
+
+      let tab = store.tabs[idx];
+      editor.getModel(Uri.parse(`file:///${tab.name}.${tab.type}`)).dispose();
+      editor.createModel(
+        tab.source,
+        type === 'tsx' ? 'typescript' : 'css',
+        Uri.parse(`file:///${tab.name}.${type}`),
+      );
+
+      set('tabs', idx, 'type', type);
     },
     removeTab(id: string) {
       const idx = store.tabs.findIndex((tab) => tab.id === id);

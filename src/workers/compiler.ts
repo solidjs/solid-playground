@@ -9,6 +9,12 @@ const SOLID_VERSION = pkg.dependencies['solid-js'];
 const CDN_URL = 'https://cdn.skypack.dev';
 const tabsLookup: Map<string, Tab> = new Map();
 
+function uid(str: string) {
+  return Array.from(str)
+    .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
+    .toString();
+}
+
 function loadBabel() {
   if (globalThis.$babel) return globalThis.$babel;
 
@@ -28,7 +34,7 @@ function loadBabel() {
  * @param tab {Tab} - A tab
  */
 function generateCodeString(tab: Tab) {
-  return `// source: ${tab.name}.${tab.type}\n${tab.source}`;
+  return `/* source: ${tab.name}.${tab.type} */\n${tab.source}`;
 }
 
 /**
@@ -43,6 +49,7 @@ function virtual({ SOLID_VERSION, solidOptions = {} }) {
     name: 'repl-plugin',
 
     async resolveId(importee: string) {
+      if (importee.startsWith('.') && importee.endsWith('.css')) return importee;
       // This is a tab being imported
       if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
 
@@ -59,6 +66,26 @@ function virtual({ SOLID_VERSION, solidOptions = {} }) {
     },
 
     async transform(code: string, filename: string) {
+      if (/\.css$/.test(filename)) {
+        const id = uid(filename);
+
+        return {
+          code: `
+            (() => {
+              let stylesheet = document.getElementById('${id}');
+              if (!stylesheet) {
+                stylesheet = document.createElement('style')
+                stylesheet.setAttribute('id', ${id})
+                document.head.appendChild(stylesheet)
+              }
+              const styles = document.createTextNode(\`${code}\`)
+              stylesheet.innerHTML = ''
+              stylesheet.appendChild(styles)
+            })()
+          `,
+        };
+      }
+
       // Compile solid code
       if (/\.(j|t)sx$/.test(filename)) {
         const babel = loadBabel();
