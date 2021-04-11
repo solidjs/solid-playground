@@ -80,7 +80,7 @@ const Editor: Component<Props> = (props) => {
       model: null,
       automaticLayout: true,
       readOnly: props.disabled,
-      language: 'typescript',
+      language: model().getModeId(),
       minimap: {
         enabled: props.withMinimap,
       },
