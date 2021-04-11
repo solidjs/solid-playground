@@ -96,7 +96,6 @@ const Editor: Component<Props> = (props) => {
 
   createEffect(() => {
     editor.setModel(model());
-    liftOff(editor);
   });
 
   createEffect(() => {
