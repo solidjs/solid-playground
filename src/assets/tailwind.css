@@ -29,17 +29,12 @@ div[contenteditable='true']:focus {
 }
 
 .column-resizer {
-  position: relative;
-  z-index: 100;
+  @apply relative z-50;
 }
 
 .column-resizer:hover::after {
-  position: absolute;
   content: '';
-  top: 0;
-  left: -6px;
-  right: -6px;
-  height: 100%;
+  @apply absolute top-0 -left-6px -right-6px bg-brand-default h-full;
 }
 
 @screen md {
