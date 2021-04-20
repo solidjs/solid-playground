@@ -37,8 +37,8 @@ div[contenteditable='true']:focus {
   position: absolute;
   content: '';
   top: 0;
-  left: -8px;
-  right: -8px;
+  left: -6px;
+  right: -6px;
   height: 100%;
 }
 
