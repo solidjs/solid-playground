@@ -28,6 +28,20 @@ div[contenteditable='true']:focus {
   grid-template-rows: auto auto minmax(0, 1fr) auto minmax(0, 1fr);
 }
 
+.column-resizer {
+  position: relative;
+  z-index: 100;
+}
+
+.column-resizer:hover::after {
+  position: absolute;
+  content: '';
+  top: 0;
+  left: -8px;
+  right: -8px;
+  height: 100%;
+}
+
 @screen md {
   .wrapper {
     --left: minmax(0, 1fr);
