@@ -305,7 +305,7 @@ export const App: Component = () => {
         />
 
         <div
-          class="h-full w-full row-start-2 row-end-4 col-start-2 hidden md:block"
+          class="column-resizer h-full w-full row-start-2 row-end-4 col-start-2 hidden md:block"
           style="cursor: col-resize"
           onMouseDown={[setIsDragging, true]}
         >
