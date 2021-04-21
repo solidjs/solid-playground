@@ -22,8 +22,8 @@
     "assert": "2.0.0",
     "patch-package": "^6.4.7",
     "typescript": "4.2.4",
-    "vite": "2.1.2",
-    "vite-plugin-solid": "^1.5.1",
+    "vite": "2.2.1",
+    "vite-plugin-solid": "^1.6.0",
     "vite-plugin-windicss": "^0.14.6",
     "workbox-cli": "6.1.5"
   },
