@@ -8,11 +8,11 @@ specifiers:
   '@babel/standalone': 7.13.17
   '@babel/types': 7.13.17
   '@types/babel__standalone': 7.1.3
-  '@types/node': 14.14.41
+  '@types/node': 15.0.1
   '@types/workbox-sw': 4.3.1
   assert: 2.0.0
   babel-plugin-jsx-dom-expressions: ^0.26.3
-  babel-preset-solid: 0.26.0
+  babel-preset-solid: 0.26.4
   mitt: 2.1.0
   monaco-editor: ^0.23.0
   monaco-editor-textmate: ^2.2.2
@@ -22,10 +22,10 @@ specifiers:
   prettier: 2.2.1
   register-service-worker: 1.7.2
   rollup: 2.45.2
-  solid-js: 0.26.2
+  solid-js: 0.26.4
   solid-utils: 0.7.0
   typescript: 4.2.4
-  vite: 2.2.1
+  vite: 2.2.3
   vite-plugin-solid: ^1.6.1
   vite-plugin-windicss: ^0.14.6
   workbox-cli: 6.1.5
@@ -36,7 +36,7 @@ dependencies:
   '@babel/preset-typescript': 7.13.0_@babel+core@7.13.16
   '@babel/standalone': 7.13.17
   babel-plugin-jsx-dom-expressions: 0.26.3_@babel+core@7.13.16
-  babel-preset-solid: 0.26.0_@babel+core@7.13.16
+  babel-preset-solid: 0.26.4_@babel+core@7.13.16
   mitt: 2.1.0
   monaco-editor: 0.23.0
   monaco-editor-textmate: 2.2.2_e108c9d624f70f82cd2ec5a61d8e72c2
@@ -45,21 +45,21 @@ dependencies:
   prettier: 2.2.1
   register-service-worker: 1.7.2
   rollup: 2.45.2
-  solid-js: 0.26.2
-  solid-utils: 0.7.0_solid-js@0.26.2
+  solid-js: 0.26.4
+  solid-utils: 0.7.0_solid-js@0.26.4
 
 devDependencies:
   '@babel/core': 7.13.16
   '@babel/types': 7.13.17
   '@types/babel__standalone': 7.1.3
-  '@types/node': 14.14.41
+  '@types/node': 15.0.1
   '@types/workbox-sw': 4.3.1
   assert: 2.0.0
   patch-package: 6.4.7
   typescript: 4.2.4
-  vite: 2.2.1
+  vite: 2.2.3
   vite-plugin-solid: 1.6.1
-  vite-plugin-windicss: 0.14.6_vite@2.2.1
+  vite-plugin-windicss: 0.14.6_vite@2.2.3
   workbox-cli: 6.1.5
 
 packages:
@@ -1384,6 +1384,10 @@ packages:
     resolution: {integrity: sha512-dueRKfaJL4RTtSa7bWeTK1M+VH+Gns73oCgzvYfHZywRCoPSd8EkXBL0mZ9unPTveBn+D9phZBaxuzpwjWkW0g==}
     dev: true
 
+  /@types/node/15.0.1:
+    resolution: {integrity: sha512-TMkXt0Ck1y0KKsGr9gJtWGjttxlZnnvDtphxUOSd0bfaR6Q1jle+sPvrzNR1urqYTWMinoKvjKfXUGsumaO1PA==}
+    dev: true
+
   /@types/normalize-package-data/2.4.0:
     resolution: {integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==}
     dev: true
@@ -1683,6 +1687,15 @@ packages:
       babel-plugin-jsx-dom-expressions: 0.26.3_@babel+core@7.13.16
     transitivePeerDependencies:
       - '@babel/core'
+    dev: true
+
+  /babel-preset-solid/0.26.4_@babel+core@7.13.16:
+    resolution: {integrity: sha512-qatfjrYh7R8vopQyXt6HQ3MsMOynoi83+RJt12r79YgGvjEBdXFbeVntC0qAt7WXS7YO+nFTFFvhM1EwUZSY+A==}
+    dependencies:
+      babel-plugin-jsx-dom-expressions: 0.26.3_@babel+core@7.13.16
+    transitivePeerDependencies:
+      - '@babel/core'
+    dev: false
 
   /balanced-match/1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -2766,8 +2779,8 @@ packages:
       ci-info: 2.0.0
     dev: true
 
-  /is-core-module/2.2.0:
-    resolution: {integrity: sha512-XRAfAdyyY5F5cOXn7hYQDqh2Xmii+DEfIcQGxK/uNwMHhIkPWO0g8msXcbzLe+MpGoR951MlqM/2iIlU4vKDdQ==}
+  /is-core-module/2.3.0:
+    resolution: {integrity: sha512-xSphU2KG9867tsYdLD4RWQ1VqdFl4HTO9Thf3I/3dLEfr0dbPTWKsuCKrgqMljg4nPE+Gq0VCnzT3gr0CyBmsw==}
     dependencies:
       has: 1.0.3
     dev: true
@@ -3664,8 +3677,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /postcss/8.2.10:
-    resolution: {integrity: sha512-b/h7CPV7QEdrqIxtAf2j31U5ef05uBDuvoXv6L51Q4rcS1jdlXAVKJv+atCFdUXYl9dyTHGyoMzIepwowRJjFw==}
+  /postcss/8.2.13:
+    resolution: {integrity: sha512-FCE5xLH+hjbzRdpbRb1IMCvPv9yZx2QnDarBEYSN0N0HYk+TcXsEhwdFcFb+SRWOKzKGErhIEbBK2ogyLdTtfQ==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       colorette: 1.2.2
@@ -3886,7 +3899,7 @@ packages:
   /resolve/1.20.0:
     resolution: {integrity: sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==}
     dependencies:
-      is-core-module: 2.2.0
+      is-core-module: 2.3.0
       path-parse: 1.0.6
     dev: true
 
@@ -4071,6 +4084,11 @@ packages:
 
   /solid-js/0.26.2:
     resolution: {integrity: sha512-2x3//t2UUuoJEehcYBEs5c3aOZ+wLXtpVF4tV5GiFcJpWsYrpmZsQ4NY0X8NXYA8zy2s30iGUQfZ+zrBFAJaBQ==}
+    dev: true
+
+  /solid-js/0.26.4:
+    resolution: {integrity: sha512-jW3Xz/nvBsdkiGE9O/w3IDsJCEwzzCDzsBOUJHmt2goFhNKHeGmay0z010oA5sUHlNRB8C8Z7ggid2bDEM9SvA==}
+    dev: false
 
   /solid-refresh/0.1.1_solid-js@0.26.2:
     resolution: {integrity: sha512-PF1Qguwqr3OHVSQ+GLopm5CIZybJVJr1IHRKYDJkfqfIahkOfJDHtSpDNAENWbCbAjdrhZmiNqSxlrDWGTAjng==}
@@ -4080,12 +4098,12 @@ packages:
       solid-js: 0.26.2
     dev: true
 
-  /solid-utils/0.7.0_solid-js@0.26.2:
+  /solid-utils/0.7.0_solid-js@0.26.4:
     resolution: {integrity: sha512-ApczlZ97BhfR+PKYph2bXJT+DhnjGoZlx3hCO8rDPz8sglQfAFfh9Du/APzcZljIEyYylC774R+TvpQNkBJUyA==}
     peerDependencies:
       solid-js: '>= 0.26'
     dependencies:
-      solid-js: 0.26.2
+      solid-js: 0.26.4
     dev: false
 
   /source-map-resolve/0.5.3:
@@ -4584,7 +4602,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-windicss/0.14.6_vite@2.2.1:
+  /vite-plugin-windicss/0.14.6_vite@2.2.3:
     resolution: {integrity: sha512-bFyKfvnsa3nAab9LgrFInzdQhsIJyeNdCczgjrYMxjO8WlgiQuIFyJ1RTYQnYmQRlbvU9jpOL5XDxsFUMKRLUg==}
     peerDependencies:
       vite: ^2.0.1
@@ -4592,7 +4610,7 @@ packages:
       '@windicss/plugin-utils': 0.14.6
       chalk: 4.1.1
       debug: 4.3.2
-      vite: 2.2.1
+      vite: 2.2.3
       windicss: 2.5.14
     transitivePeerDependencies:
       - supports-color
@@ -4604,7 +4622,20 @@ packages:
     hasBin: true
     dependencies:
       esbuild: 0.9.7
-      postcss: 8.2.10
+      postcss: 8.2.13
+      resolve: 1.20.0
+      rollup: 2.45.2
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /vite/2.2.3:
+    resolution: {integrity: sha512-PtjyBL4GtACM+uT5q5hi2+AlMBbb6YI2b2bam6QI8ZdZt4FezseF0yZHQx0G+b3po9jIJ/GS5N9gc5Yq9Rue7g==}
+    engines: {node: '>=12.0.0'}
+    hasBin: true
+    dependencies:
+      esbuild: 0.9.7
+      postcss: 8.2.13
       resolve: 1.20.0
       rollup: 2.45.2
     optionalDependencies:
