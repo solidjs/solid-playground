@@ -17,7 +17,7 @@ Once you got it up and running you can follow these steps the have a fully worki
 
 ```bash
 # Clone the project
-$ git clone https://github.com/ryansolid/solid-playground
+$ git clone https://github.com/solidui/solid-playground
 
 # cd into the project and install the dependencies
 $ cd solid-playground && pnpm i
@@ -31,7 +31,7 @@ $ pnpm run build
 
 ## Credits / Technologies used
 
-- [solid-js](https://github.com/ryansolid/solid/): The view library
+- [solid-js](https://github.com/solidui/solid/): The view library
 - [@babel/standalone](https://babeljs.io/docs/en/babel-standalone): The in-browser compiler. Solid compiler relies on babel
 - [monaco](https://microsoft.github.io/monaco-editor/): The in-browser code editor. This is the code editor that powers VS Code
 - [tailwindcss](https://tailwindcss.com/): The CSS framework
