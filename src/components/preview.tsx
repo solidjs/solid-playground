@@ -183,8 +183,7 @@ export const Preview: Component<Props> = (props) => {
         <div class="flex justify-between items-start w-full">
           <button
             type="button"
-            class="text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
-            style={{ position: 'relative' }}
+            class="relative text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
             onClick={() => setShowLogs(!showLogs())}
           >
             <Icon
