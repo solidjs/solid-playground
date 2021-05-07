@@ -188,12 +188,7 @@ export const Preview: Component<Props> = (props) => {
             onClick={() => setShowLogs(!showLogs())}
           >
             <Icon
-              style={{
-                height: '28px',
-                position: 'absolute',
-                top: '7px',
-                left: '2px',
-              }}
+              class="h-[28px] absolute top-[7px] left-[2px]"
               path={showLogs() ? chevronDown : chevronRight}
             />
             <span class="ml-4">Console ({logs().length})</span>
