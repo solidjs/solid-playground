@@ -1,4 +1,6 @@
 import { Component, createEffect, createSignal, splitProps, JSX, For, Show } from 'solid-js';
+import { Icon } from '@amoutonbrady/solid-heroicons';
+import { chevronDown, chevronRight } from '@amoutonbrady/solid-heroicons/solid';
 
 export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ['code', 'class']);
@@ -181,10 +183,14 @@ export const Preview: Component<Props> = (props) => {
         <div class="flex justify-between items-start w-full">
           <button
             type="button"
-            class="text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
+            class="relative text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
             onClick={() => setShowLogs(!showLogs())}
           >
-            Console ({logs().length})
+            <Icon
+              class="h-[28px] absolute top-[7px] left-[2px]"
+              path={showLogs() ? chevronDown : chevronRight}
+            />
+            <span class="ml-4">Console ({logs().length})</span>
           </button>
           <button
             type="button"
@@ -196,7 +202,7 @@ export const Preview: Component<Props> = (props) => {
         </div>
 
         <Show when={showLogs()}>
-          <ul class="overflow-auto px-2 divide-y">
+          <ul class="text-xs overflow-auto px-2 divide-y">
             <For each={logs()}>
               {(log) => (
                 <li
