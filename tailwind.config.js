@@ -1,6 +1,11 @@
-const colors = require('windicss/colors');
+const colors = require('tailwindcss/colors');
 
 module.exports = {
+  mode: 'jit',
+  purge: [
+    "./src/**/*.{tsx,ts,css}",
+    "./index.html"
+  ],
   theme: {
     extend: {
       colors: {
@@ -40,5 +45,5 @@ module.exports = {
     },
   },
   darkMode: 'class',
-  plugins: [require('windicss/plugin/forms')],
+  plugins: [require('@tailwindcss/forms')],
 };
