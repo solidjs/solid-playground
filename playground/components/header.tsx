@@ -3,11 +3,10 @@ import { Icon } from '@amoutonbrady/solid-heroicons';
 import { share, link, upload } from '@amoutonbrady/solid-heroicons/outline';
 
 import pkg from '../../package.json';
-import logo from '../assets/images/logo.svg?url';
-import { useStore } from '../store';
+import logo from '../assets/logo.svg?url';
+import { useStore, processImport } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
-import { processImport } from '../utils/processImport';
 
 export const Header: Component = () => {
   const [copy, setCopy] = createSignal(false);

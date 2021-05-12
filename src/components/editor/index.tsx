@@ -17,7 +17,7 @@ import {
   checkCircle,
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
-import { liftOff } from './setupSolid';
+const setupSolid = import('./setupSolid');
 
 const Editor: Component<Props> = (props) => {
   const finalProps = mergeProps({ showActionBar: true }, props);
@@ -93,11 +93,11 @@ const Editor: Component<Props> = (props) => {
       },
     });
 
-    liftOff(editor);
-
     editor.onDidChangeModelContent(() => {
       if (finalProps.onDocChange) props.onDocChange(editor.getValue());
     });
+
+    setupSolid.then(({ liftOff }) => liftOff(editor));
   });
   onCleanup(() => editor.dispose());
 

@@ -1,7 +1,4 @@
 import { Uri, languages, editor } from 'monaco-editor';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import vsDark from './vs_dark_good.json';
 import vsLight from './vs_light_good.json';
 import { loadWASM } from 'onigasm';
@@ -58,20 +55,6 @@ cm(sWebIndex, 'web/types/index.d.ts');
 cm(sWebJsx, 'web/types/jsx.d.ts');
 cm(sServerMock, 'web/types/server-mock.d.ts');
 cm(sJsxRuntime, 'jsx-runtime.d.ts');
-
-(window as any).MonacoEnvironment = {
-  getWorker: function (moduleId, label: string) {
-    switch (label) {
-      case 'css':
-        return new cssWorker();
-      case 'typescript':
-      case 'javascript':
-        return new tsWorker();
-      default:
-        return new editorWorker();
-    }
-  },
-};
 
 languages.typescript.typescriptDefaults.setCompilerOptions({
   lib: ['es6', 'DOM', 'dom.iterable'],

@@ -8,11 +8,13 @@
     "moduleResolution": "node",
     "jsx": "preserve",
     "resolveJsonModule": true,
-    "noEmit": true,
     "skipLibCheck": true,
     "jsxImportSource": "solid-js",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "outDir": "lib"
   },
-  "include": ["./src/**/*", "./playground/**/*"],
+  "include": ["./src/**/*"],
   "exclude": ["node_modules/"]
 }

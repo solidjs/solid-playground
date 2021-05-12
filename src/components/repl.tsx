@@ -1,44 +1,25 @@
-import { compressToURL as encode } from '@amoutonbrady/lz-string';
+import '../assets/tailwind.css';
 
-import {
-  For,
-  lazy,
-  Show,
-  Suspense,
-  onCleanup,
-  Component,
-  createEffect,
-  createSignal,
-  unwrap,
-} from 'solid-js';
-import { eventBus, formatMs } from './utils';
-import { compileMode, Tab, useStore } from './store';
-import { TabItem, TabList, Preview, Header, Error, Update } from './components';
+import { Component, Show, For, Suspense, createSignal, createEffect, unwrap, lazy } from 'solid-js';
 
-import { debounce } from './utils/debounce';
-import { throttle } from './utils/throttle';
-import CompilerWorker from './workers/compiler?worker';
-import FormatterWorker from './workers/formatter?worker';
-const Editor = lazy(() => import('./components/editor'));
+import { Preview } from './preview';
+import { TabItem } from './tab/item';
+import { TabList } from './tab/list';
+import { Error } from './error';
 
-let swUpdatedBeforeRender = false;
-eventBus.on('sw-update', () => (swUpdatedBeforeRender = true));
+import { Tab, useStore, compileMode } from '../store';
+import { debounce } from '../utils/debounce';
+import { throttle } from '../utils/throttle';
+import { formatMs } from '../utils/formatTime';
+import type Editor from './editor';
 
-export const App: Component = () => {
-  /**
-   * Those next three lines are useful to display a popup
-   * if the client code has been updated. This trigger a signal
-   * via an EventBus initiated in the service worker and
-   * the couple line above.
-   */
-  const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
-  eventBus.on('sw-update', () => setNewUpdate(true));
-  onCleanup(() => eventBus.all.clear());
+export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: typeof Editor }> = (
+  props,
+) => {
+  const { compiler, formatter, editor: Editor } = props; // this is bad style don't do this
 
   let now: number;
 
-  const compiler = new CompilerWorker();
-  const formatter = new FormatterWorker();
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, actions] = useStore();
@@ -95,16 +76,6 @@ export const App: Component = () => {
   });
 
   /**
-   * This syncs the URL hash with the state of the current tab.
-   * This is an optimized encoding for limiting URL size...
-   *
-   * TODO: Find a way to URL shorten this
-   */
-  createEffect(() => {
-    location.hash = encode(JSON.stringify(store.tabs));
-  });
-
-  /**
    * This sync the editor state with the current selected tab.
    *
    * @param source {string} - The source code from the editor
@@ -151,20 +122,14 @@ export const App: Component = () => {
 
   return (
     <div
-      class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display"
+      class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display"
       classList={{
         'wrapper--forced': store.isHorizontal,
         wrapper: !store.isHorizontal,
       }}
       style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
     >
-      <Show
-        when={store.header}
-        children={<Header />}
-        fallback={<div classList={{ 'md:col-span-2': !store.isHorizontal }}></div>}
-      />
-
-      <TabList class="row-start-2 space-x-2">
+      <TabList class="row-start-1 space-x-2">
         <For each={store.tabs}>
           {(tab, index) => (
             <TabItem active={store.current === tab.id}>
@@ -270,8 +235,8 @@ export const App: Component = () => {
       </TabList>
 
       <TabList
-        class={`row-start-4 border-t-2 border-blueGray-200 ${
-          store.isHorizontal ? '' : 'md:row-start-2 md:col-start-3 md:border-t-0'
+        class={`row-start-3 border-t-2 border-blueGray-200 ${
+          store.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
         }`}
       >
         <TabItem class="flex-1" active={showPreview()}>
@@ -296,7 +261,7 @@ export const App: Component = () => {
 
       <Suspense
         fallback={
-          <div class="row-start-3 col-span-3 flex items-center justify-center">
+          <div class="row-start-2 col-span-3 flex items-center justify-center">
             <p class="animate-pulse text-xl font-display">Loading the playground...</p>
           </div>
         }
@@ -304,7 +269,7 @@ export const App: Component = () => {
         <Editor
           url={`file:///${store.currentTab.name}.${store.currentTab.type}`}
           onDocChange={handleDocChange}
-          class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-3"
+          class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
           styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!store.interactive}
           canCopy
@@ -316,7 +281,7 @@ export const App: Component = () => {
         />
 
         <div
-          class="column-resizer h-full w-full row-start-2 row-end-4 col-start-2 hidden"
+          class="column-resizer h-full w-full row-start-1 row-end-3 col-start-2 hidden"
           style="cursor: col-resize"
           classList={{ 'md:block': !store.isHorizontal }}
           onMouseDown={[setIsDragging, true]}
@@ -326,8 +291,8 @@ export const App: Component = () => {
 
         <Show when={!showPreview()}>
           <section
-            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
-            classList={{ 'md:row-start-3': !store.isHorizontal }}
+            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-4 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            classList={{ 'md:row-start-2': !store.isHorizontal }}
             style="grid-template-rows: minmax(0, 1fr) auto"
           >
             <Editor
@@ -391,8 +356,8 @@ export const App: Component = () => {
         <Show when={showPreview()}>
           <Preview
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${
-              store.isHorizontal ? '' : 'md:row-start-3'
+            class={`h-full w-full bg-white row-start-4 ${
+              store.isHorizontal ? '' : 'md:row-start-2'
             }`}
             classList={{
               'pointer-events-none': isDragging(),
@@ -405,8 +370,6 @@ export const App: Component = () => {
         when={store.error}
         children={<Error onDismiss={actions.resetError} message={store.error} />}
       />
-
-      <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
     </div>
   );
 };

@@ -1,10 +1,6 @@
 import './assets/tailwind.css';
-import { createApp } from 'solid-utils';
 
-import { App } from './app';
-import { Store } from './store';
-import { registerServiceWorker } from './utils';
-
-createApp(App).use(Store).mount('#app');
-
-registerServiceWorker();
+export { Repl } from './components/repl';
+export { processImport } from './utils/processImport';
+export { Store, useStore } from './store';
+export type { Tab } from './store';

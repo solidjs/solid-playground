@@ -1,5 +1,6 @@
 import { createStore } from 'solid-utils';
-import { uid, parseHash } from './utils';
+import { uid } from './utils/uid';
+import { parseHash } from './utils/parseHash';
 import { isValidUrl } from './utils/isValidUrl';
 import { processImport } from './utils/processImport';
 import { Uri, editor } from 'monaco-editor';

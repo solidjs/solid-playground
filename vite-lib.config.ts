@@ -6,14 +6,25 @@ export default defineConfig((env) => ({
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',
-    ...(env.command == 'build' ? {} : { global: 'globalThis' }),
+    global: 'globalThis',
   },
   build: {
+    lib: {
+      entry: '', // we override this with input below
+      formats: ['es'],
+    },
+    cssCodeSplit: false,
+    outDir: 'lib',
     target: 'esnext',
     minify: 'esbuild',
     rollupOptions: {
+      external: ['solid-js', 'solid-js/web', 'monaco-editor'],
+      input: ['src/index.ts', 'src/workers/formatter.ts', 'src/workers/compiler.ts'],
       output: {
+        dir: 'lib',
+        format: 'es',
         manualChunks: {},
+        entryFileNames: undefined,
       },
     },
   },
