@@ -1,4 +1,3 @@
-import 'windi.css';
 import './assets/tailwind.css';
 import { createApp } from 'solid-utils';
 

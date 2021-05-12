@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: 'Gordita';
   src: url('./fonts/Gordita/Gordita-Regular.woff') format('woff');
@@ -34,7 +38,7 @@ div[contenteditable='true']:focus {
 
 .column-resizer:hover::after {
   content: '';
-  @apply absolute top-0 -left-6px -right-6px bg-brand-default h-full;
+  @apply absolute top-0 left-[-6px] right-[-6px] bg-brand-default h-full;
 }
 
 @screen md {
