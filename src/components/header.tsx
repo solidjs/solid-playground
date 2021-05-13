@@ -38,7 +38,10 @@ export const Header: Component = () => {
   };
 
   return (
-    <header class="md:col-span-3 p-2 flex text-sm justify-between items-center bg-brand-default text-white">
+    <header
+      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
+      classList={{ 'md:col-span-3': !store.isHorizontal }}
+    >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
         <a href="https://github.com/ryansolid/solid">
           <img src={logo} alt="solid-js logo" class="w-8" />

@@ -28,7 +28,8 @@ div[contenteditable='true']:focus {
   outline: none !important;
 }
 
-.wrapper {
+.wrapper,
+.wrapper--forced {
   grid-template-rows: auto auto minmax(0, 1fr) auto minmax(0, 1fr);
 }
 

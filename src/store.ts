@@ -45,7 +45,13 @@ const [Store, useStore] = createStore({
 
     let tabs: Tab[] = initialTabs || defaultTabs;
 
-    const [noHeader, noInteractive] = ['noHeader', 'noInteractive'].map((key) => key in params);
+    const [noHeader, noInteractive, isHorizontal, noActionBar, noEditableTabs] = [
+      'noHeader',
+      'noInteractive',
+      'isHorizontal',
+      'noActionBar',
+      'noEditableTabs',
+    ].map((key) => key in params);
 
     if (params.data && isValidUrl(params.data)) {
       try {
@@ -76,6 +82,9 @@ const [Store, useStore] = createStore({
       mode: 'DOM' as keyof typeof compileMode,
       header: !noHeader,
       interactive: !noInteractive,
+			isHorizontal: !!isHorizontal, 
+			noActionBar: !noActionBar, 
+			noEditableTabs: !!noEditableTabs,
       isCompiling: false,
       get compileMode(): ValueOf<typeof compileMode> {
         return compileMode[this.mode];

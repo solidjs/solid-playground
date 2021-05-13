@@ -151,13 +151,17 @@ export const App: Component = () => {
 
   return (
     <div
-      class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 wrapper font-display"
+      class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display"
+      classList={{
+        'wrapper--forced': store.isHorizontal,
+        wrapper: !store.isHorizontal,
+      }}
       style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
     >
       <Show
         when={store.header}
         children={<Header />}
-        fallback={<div class="md:col-span-2"></div>}
+        fallback={<div classList={{ 'md:col-span-2': !store.isHorizontal }}></div>}
       />
 
       <TabList class="row-start-2 space-x-2">
@@ -238,32 +242,38 @@ export const App: Component = () => {
           )}
         </For>
 
-        <li class="inline-flex items-center m-0 border-b-2 border-transparent">
-          <button
-            type="button"
-            class="focus:outline-none"
-            onClick={store.interactive && actions.addTab}
-            disabled={!store.interactive}
-            title="Add a new tab"
-          >
-            <span class="sr-only">Add a new tab</span>
-            <svg
-              viewBox="0 0 24 24"
-              style="stroke: currentColor; fill: none;"
-              class="h-5 text-brand-default dark:text-blueGray-50"
+        <Show when={!store.noEditableTabs}>
+          <li class="inline-flex items-center m-0 border-b-2 border-transparent">
+            <button
+              type="button"
+              class="focus:outline-none"
+              onClick={store.interactive && actions.addTab}
+              disabled={!store.interactive}
+              title="Add a new tab"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-          </button>
-        </li>
+              <span class="sr-only">Add a new tab</span>
+              <svg
+                viewBox="0 0 24 24"
+                style="stroke: currentColor; fill: none;"
+                class="h-5 text-brand-default dark:text-blueGray-50"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+            </button>
+          </li>
+        </Show>
       </TabList>
 
-      <TabList class="row-start-4 md:row-start-2 md:col-start-3">
+      <TabList
+        class={`row-start-4 border-t-2 border-blueGray-200 ${
+          store.isHorizontal ? '' : 'md:row-start-2 md:col-start-3 md:border-t-0'
+        }`}
+      >
         <TabItem class="flex-1" active={showPreview()}>
           <button
             type="button"
@@ -302,11 +312,13 @@ export const App: Component = () => {
           formatter={formatter}
           isDark={store.dark}
           withMinimap={false}
+          showActionBar={store.noActionBar}
         />
 
         <div
-          class="column-resizer h-full w-full row-start-2 row-end-4 col-start-2 hidden md:block"
+          class="column-resizer h-full w-full row-start-2 row-end-4 col-start-2 hidden"
           style="cursor: col-resize"
+          classList={{ 'md:block': !store.isHorizontal }}
           onMouseDown={[setIsDragging, true]}
         >
           <div class="h-full border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg mx-auto w-0"></div>
@@ -314,7 +326,8 @@ export const App: Component = () => {
 
         <Show when={!showPreview()}>
           <section
-            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 md:row-start-3 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            classList={{ 'md:row-start-3': !store.isHorizontal }}
             style="grid-template-rows: minmax(0, 1fr) auto"
           >
             <Editor
@@ -325,6 +338,7 @@ export const App: Component = () => {
               disabled
               canCopy
               withMinimap={false}
+              showActionBar={store.noActionBar}
             />
 
             <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
@@ -377,8 +391,12 @@ export const App: Component = () => {
         <Show when={showPreview()}>
           <Preview
             code={store.compiled}
-            class="h-full w-full bg-white row-start-5 md:row-start-3"
-            classList={{ 'pointer-events-none': isDragging() }}
+            class={`h-full w-full bg-white row-start-5 ${
+              store.isHorizontal ? '' : 'md:row-start-3'
+            }`}
+            classList={{
+              'pointer-events-none': isDragging(),
+            }}
           />
         </Show>
       </Suspense>

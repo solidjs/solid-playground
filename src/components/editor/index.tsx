@@ -7,6 +7,7 @@ import {
   createSignal,
   createMemo,
   onCleanup,
+  mergeProps,
 } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { Icon } from '@amoutonbrady/solid-heroicons';
@@ -19,9 +20,11 @@ import {
 import { liftOff } from './setupSolid';
 
 const Editor: Component<Props> = (props) => {
+  const finalProps = mergeProps({ showActionBar: true }, props);
+
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
-  let model = createMemo(() => mEditor.getModel(Uri.parse(props.url)));
+  let model = createMemo(() => mEditor.getModel(Uri.parse(finalProps.url)));
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
@@ -42,16 +45,16 @@ const Editor: Component<Props> = (props) => {
     });
   }
 
-  if (props.formatter) {
+  if (finalProps.formatter) {
     languages.registerDocumentFormattingEditProvider('typescript', {
       provideDocumentFormattingEdits: async (model) => {
-        props.formatter.postMessage({
+        finalProps.formatter.postMessage({
           event: 'FORMAT',
           code: model.getValue(),
           pos: editor.getPosition(),
         });
         return new Promise((resolve, reject) => {
-          props.formatter.addEventListener(
+          finalProps.formatter.addEventListener(
             'message',
             ({ data: { event, code } }) => {
               switch (event) {
@@ -79,17 +82,18 @@ const Editor: Component<Props> = (props) => {
     editor = mEditor.create(parent, {
       model: null,
       automaticLayout: true,
-      readOnly: props.disabled,
+      readOnly: finalProps.disabled,
       language: model().getModeId(),
+      fontSize: 15,
       minimap: {
-        enabled: props.withMinimap,
+        enabled: finalProps.withMinimap,
       },
     });
 
     liftOff(editor);
 
     editor.onDidChangeModelContent(() => {
-      if (props.onDocChange) props.onDocChange(editor.getValue());
+      if (finalProps.onDocChange) props.onDocChange(editor.getValue());
     });
   });
   onCleanup(() => editor.dispose());
@@ -99,22 +103,24 @@ const Editor: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    mEditor.setTheme(props.isDark ? 'vs-dark-plus' : 'vs-light-plus');
+    mEditor.setTheme(finalProps.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });
+
+  const showActionBar = () => {
+    const hasActions = finalProps.canFormat || props.canCopy;
+    return finalProps.showActionBar && hasActions;
+  };
 
   return (
     <div
-      class={`grid grid-cols-1 ${props.class || ''}`}
-      classList={{ ...(props.classList || {}), relative: props.canCopy }}
+      class={`grid grid-cols-1 ${finalProps.class || ''}`}
+      classList={{ ...(finalProps.classList || {}), relative: props.canCopy }}
       style="grid-template-rows: minmax(0, 1fr) auto"
     >
-      <div class="p-0 text-0.5sm md:text-sm dark:text-white" ref={parent}></div>
+      <div class="p-0 dark:text-white" ref={parent}></div>
 
-      <div
-        class="flex justify-end space-x-2 p-2"
-        classList={{ hidden: !props.canFormat && !props.canCopy }}
-      >
-        <Show when={props.canFormat}>
+      <div class="flex justify-end space-x-2 p-2" classList={{ hidden: !showActionBar() }}>
+        <Show when={finalProps.canFormat}>
           <button
             type="button"
             onClick={formatCode}
@@ -130,7 +136,7 @@ const Editor: Component<Props> = (props) => {
           </button>
         </Show>
 
-        <Show when={props.canCopy}>
+        <Show when={finalProps.canCopy}>
           <button
             type="button"
             onClick={copyToClipboard}
@@ -162,4 +168,5 @@ interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   withMinimap?: boolean;
   formatter?: Worker;
   onDocChange?: (code: string) => unknown;
+  showActionBar?: boolean;
 }
