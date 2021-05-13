@@ -85,6 +85,9 @@ const Editor: Component<Props> = (props) => {
       readOnly: finalProps.disabled,
       language: model().getModeId(),
       fontSize: 15,
+      lineDecorationsWidth: 5,
+      lineNumbersMinChars: 3,
+      padding: { top: 15 },
       minimap: {
         enabled: finalProps.withMinimap,
       },
