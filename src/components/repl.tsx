@@ -261,7 +261,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
 
       <Suspense
         fallback={
-          <div class="row-start-2 col-span-3 flex items-center justify-center">
+          <div class="row-start-2 col-span-3 flex items-center justify-center h-full">
             <p class="animate-pulse text-xl font-display">Loading the playground...</p>
           </div>
         }
