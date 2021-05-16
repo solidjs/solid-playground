@@ -1,11 +1,12 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
 
-import { Show, onCleanup, Component, createEffect, createSignal } from 'solid-js';
+import { Show, onCleanup, Component, createEffect, createSignal, onMount } from 'solid-js';
 import { eventBus } from './utils/eventBus';
-import { defaultTabs, Repl } from '../src';
+import { defaultTabs, processImport, Repl } from '../src';
 import { Update } from './components/update';
 import { Header } from './components/header';
 import { parseHash } from './utils/parseHash';
+import { isValidUrl } from './utils/isValidUrl';
 
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
@@ -61,12 +62,14 @@ export const App: Component = () => {
 
   const params = Object.fromEntries(url.searchParams.entries());
 
-  /*  if (params.data && isValidUrl(params.data)) {
-    try {
-      const data = await fetch(params.data).then((r) => r.json());
-      tabs = processImport(data);
-    } catch {}
-  }*/
+  onMount(async () => {
+    if (params.data && isValidUrl(params.data)) {
+      try {
+        const data = await fetch(params.data).then((r) => r.json());
+        setTabs(processImport(data));
+      } catch {}
+    }
+  });
 
   const [noHeader, noInteractive, isHorizontal, noActionBar, noEditableTabs] = [
     'noHeader',
@@ -90,7 +93,7 @@ export const App: Component = () => {
   const editableTabs = !noEditableTabs;
 
   return (
-    <div class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display grid-cols-1">
+    <div class="relative flex bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display flex-col">
       <Show
         when={header}
         children={

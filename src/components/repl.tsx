@@ -26,7 +26,7 @@ import { uid } from '../utils/uid';
 const MonacoTabs = lazy(() => import('./monacoTabs'));
 const Editor = lazy(() => MonacoTabs.preload().then(() => import('./editor')));
 
-export const compileMode = {
+const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },
   HYDRATABLE: { generate: 'dom', hydratable: true },
