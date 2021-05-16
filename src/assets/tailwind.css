@@ -31,6 +31,7 @@ div[contenteditable='true']:focus {
 .wrapper,
 .wrapper--forced {
   grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: 1fr;
 }
 
 .column-resizer {
