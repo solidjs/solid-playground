@@ -120,8 +120,9 @@ export const Repl: Component<{
       const idx = props.tabs.findIndex((tab) => tab.id === store.current);
       if (idx < 0) return;
 
-      props.tabs[idx].source = source;
-      // setStore('tabs', idx, 'source', source);
+      let tabs = props.tabs;
+      tabs[idx].source = source;
+      props.setTabs(tabs);
     },
     addTab() {
       const nextId = uid();

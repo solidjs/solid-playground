@@ -24,4 +24,4 @@ self.addEventListener('message', async ({ data }) => {
   }
 });
 
-export {}
+export {};
