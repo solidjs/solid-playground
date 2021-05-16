@@ -37,7 +37,7 @@ const id = (t: Tab) => `${t.name}.${t.type}`;
 
 export const Repl: Component<{
   compiler: Worker;
-  formatter: Worker;
+  formatter?: Worker;
   isHorizontal: boolean;
   interactive: boolean;
   actionBar: boolean;
@@ -402,7 +402,7 @@ export const Repl: Component<{
               disabled
               canCopy
               withMinimap={false}
-              showActionBar={!props.actionBar}
+              showActionBar={props.actionBar}
             />
 
             <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">

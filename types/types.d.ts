@@ -2,7 +2,7 @@ import { Component } from 'solid-js';
 
 export declare const Repl: Component<{
   compiler: Worker;
-  formatter: Worker;
+  formatter?: Worker;
   isHorizontal: boolean;
   interactive: boolean;
   actionBar: boolean;
