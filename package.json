@@ -5,12 +5,15 @@
     "type": "git",
     "url": "https://github.com/ryansolid/solid-playground.git"
   },
+  "version": "0.0.1",
   "homepage": "http://playground.solid.dev",
   "author": "Alexandre Mouton-Brady",
+  "module": "lib/index.js",
+  "types": "lib/types.d.ts",
   "scripts": {
     "dev": "vite",
     "build": "vite build && workbox generateSW workbox-config.js",
-    "build-lib": "vite build -c vite-lib.config.ts && tsc --project tsconfig-lib.json",
+    "build-lib": "vite build -c vite-lib.config.ts",
     "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\"",
     "postinstall": "patch-package"
   },

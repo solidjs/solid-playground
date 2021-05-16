@@ -5,6 +5,7 @@ import { eventBus } from './utils/eventBus';
 import { defaultTabs, Repl } from '../src';
 import { Update } from './components/update';
 import { Header } from './components/header';
+import { parseHash } from './utils/parseHash';
 
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
@@ -12,7 +13,6 @@ import FormatterWorker from '../src/workers/formatter?worker';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import { parseHash } from './utils/parseHash';
 
 (window as any).MonacoEnvironment = {
   getWorker: function (_moduleId, label: string) {

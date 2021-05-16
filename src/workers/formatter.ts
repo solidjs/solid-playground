@@ -23,3 +23,5 @@ self.addEventListener('message', async ({ data }) => {
       break;
   }
 });
+
+export {}

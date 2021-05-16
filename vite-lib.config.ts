@@ -8,6 +8,7 @@ export default defineConfig((env) => ({
     'process.env.NODE_DEBUG': 'false',
     global: 'globalThis',
   },
+  publicDir: "types",
   build: {
     lib: {
       entry: '', // we override this with input below
