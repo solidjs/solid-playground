@@ -5,7 +5,6 @@ import {
   JSX,
   Show,
   createSignal,
-  createMemo,
   onCleanup,
   mergeProps,
 } from 'solid-js';
@@ -17,14 +16,28 @@ import {
   checkCircle,
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
-const setupSolid = import('./setupSolid');
+import { liftOff } from './setupSolid';
 
+const createUpdater: () => [<T>(a: T) => T, () => void] = () => {
+  const [x, setX] = createSignal(0, () => false);
+  return [
+    (a) => {
+      x();
+      return a;
+    },
+    () => {
+      setX(x() + 1);
+    },
+  ];
+};
 const Editor: Component<Props> = (props) => {
   const finalProps = mergeProps({ showActionBar: true }, props);
 
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
-  let model = createMemo(() => mEditor.getModel(Uri.parse(finalProps.url)));
+
+  let [updater, updateModel] = createUpdater();
+  let model = () => updater(mEditor.getModel(Uri.parse(finalProps.url)));
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
@@ -77,13 +90,11 @@ const Editor: Component<Props> = (props) => {
     });
   }
 
-  // Initialize CodeMirror
-  onMount(() => {
+  const setupEditor = () => {
     editor = mEditor.create(parent, {
       model: null,
       automaticLayout: true,
       readOnly: finalProps.disabled,
-      language: model().getModeId(),
       fontSize: 15,
       lineDecorationsWidth: 5,
       lineNumbersMinChars: 3,
@@ -92,19 +103,33 @@ const Editor: Component<Props> = (props) => {
         enabled: finalProps.withMinimap,
       },
     });
-
     editor.onDidChangeModelContent(() => {
-      if (finalProps.onDocChange) props.onDocChange(editor.getValue());
+      if (finalProps.onDocChange) finalProps.onDocChange(editor.getValue());
     });
-
-    setupSolid.then(({ liftOff }) => liftOff(editor));
+  };
+  // Initialize CodeMirror
+  onMount(() => {
+    if (model() == undefined) {
+      let x = mEditor.onDidCreateModel((m) => {
+        if (m.uri.toString() === finalProps.url) {
+          setupEditor();
+          updateModel();
+          x.dispose();
+        }
+      });
+    } else {
+      setupEditor();
+    }
   });
   onCleanup(() => editor.dispose());
 
   createEffect(() => {
-    editor.setModel(model());
+    console.log('Updating model', model());
+    if (editor != undefined && model() != undefined) {
+      editor.setModel(model());
+      liftOff(editor);
+    }
   });
-
   createEffect(() => {
     mEditor.setTheme(finalProps.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });

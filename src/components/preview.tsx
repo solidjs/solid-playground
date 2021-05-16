@@ -224,7 +224,7 @@ export const Preview: Component<Props> = (props) => {
   );
 };
 
-interface Props extends JSX.HTMLAttributes<HTMLIFrameElement> {
+interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   code: string;
 }
 

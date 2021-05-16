@@ -1,4 +1,4 @@
-import { Tab } from '../store';
+import { Tab } from '../';
 import { uid } from './uid';
 
 interface PlaygroundFile {
@@ -16,7 +16,7 @@ interface PlaygroundFile {
  * @param config {PlaygroundFile} - The playground config file as JSON
  */
 export function processImport({ files }: PlaygroundFile): Tab[] {
-  return files.reduce((tabs, file) => {
+  return files.reduce<Tab[]>((tabs, file) => {
     return [
       ...tabs,
       {

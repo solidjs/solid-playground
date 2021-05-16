@@ -4,13 +4,18 @@ import { share, link, upload } from '@amoutonbrady/solid-heroicons/outline';
 
 import pkg from '../../package.json';
 import logo from '../assets/logo.svg?url';
-import { useStore, processImport } from '../../src';
+import { processImport, Tab } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
 
-export const Header: Component = () => {
+export const Header: Component<{
+  dark: boolean;
+  toggleDark: () => void;
+  isHorizontal: boolean;
+  tabs: Tab[];
+  setTabs: (a: Tab[]) => void;
+}> = (props) => {
   const [copy, setCopy] = createSignal(false);
-  const [store, { set }] = useStore();
 
   function shareLink() {
     const url = location.href;
@@ -33,13 +38,14 @@ export const Header: Component = () => {
     const [file] = event.currentTarget.files;
 
     const tabs = processImport(JSON.parse(await file.text()));
-    set({ tabs, current: tabs[0].id, currentCode: tabs[0].source });
+    props.setTabs(tabs);
+    // props.setStore({ tabs, current: tabs[0].id });
   };
 
   return (
     <header
       class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
-      classList={{ 'md:col-span-3': !store.isHorizontal }}
+      classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
         <a href="https://github.com/ryansolid/solid">
@@ -51,14 +57,14 @@ export const Header: Component = () => {
       <div class="flex items-center space-x-2">
         <button
           type="button"
-          onClick={() => set('dark', !store.dark)}
+          onClick={props.toggleDark}
           class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
           title="Toggle dark mode"
         >
-          <span class="sr-only">{store.dark ? 'Light' : 'Dark'} mode</span>
+          <span class="sr-only">{props.dark ? 'Light' : 'Dark'} mode</span>
 
           <Show
-            when={store.dark}
+            when={props.dark}
             fallback={
               <svg class="h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -92,7 +98,7 @@ export const Header: Component = () => {
 
         <button
           type="button"
-          onClick={() => exportToJSON(store.tabs)}
+          onClick={() => exportToJSON(props.tabs)}
           class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
           title="Export to JSON"
         >
@@ -104,7 +110,7 @@ export const Header: Component = () => {
 
         <button
           type="button"
-          onClick={() => exportToCsb(store.tabs)}
+          onClick={() => exportToCsb(props.tabs)}
           class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
           title="Export to CodeSandbox"
         >

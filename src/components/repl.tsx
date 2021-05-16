@@ -1,28 +1,144 @@
 import '../assets/tailwind.css';
 
-import { Component, Show, For, Suspense, createSignal, createEffect, unwrap, lazy } from 'solid-js';
+import {
+  Component,
+  Show,
+  For,
+  Suspense,
+  createSignal,
+  createEffect,
+  unwrap,
+  lazy,
+  createState,
+} from 'solid-js';
 
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
 import { Error } from './error';
 
-import { Tab, useStore, compileMode } from '../store';
+import { Tab } from '../';
 import { debounce } from '../utils/debounce';
 import { throttle } from '../utils/throttle';
 import { formatMs } from '../utils/formatTime';
-import type Editor from './editor';
+import { uid } from '../utils/uid';
 
-export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: typeof Editor }> = (
-  props,
-) => {
-  const { compiler, formatter, editor: Editor } = props; // this is bad style don't do this
+const MonacoTabs = lazy(() => import('./monacoTabs'));
+const Editor = lazy(() => MonacoTabs.preload().then(() => import('./editor')));
+
+export const compileMode = {
+  SSR: { generate: 'ssr', hydratable: true },
+  DOM: { generate: 'dom', hydratable: false },
+  HYDRATABLE: { generate: 'dom', hydratable: true },
+} as const;
+
+type ValueOf<T> = T[keyof T];
+
+export const Repl: Component<{
+  compiler: Worker;
+  formatter: Worker;
+  isHorizontal: boolean;
+  interactive: boolean;
+  actionBar: boolean;
+  editableTabs: boolean;
+  dark: boolean;
+  tabs: Tab[];
+  setTabs: (x: Tab[]) => void;
+}> = (props) => {
+  const { compiler, formatter } = props; // this is bad style don't do this
 
   let now: number;
 
   const tabRefs = new Map<string, HTMLSpanElement>();
 
-  const [store, actions] = useStore();
+  const [store, setStore] = createState({
+    current: props.tabs[0].id,
+    get currentTab(): Tab {
+      return props.tabs.find((tab) => tab.id === this.current);
+    },
+    error: '',
+    compiled: '',
+    mode: 'DOM' as keyof typeof compileMode,
+    isCompiling: false,
+    get compileMode(): ValueOf<typeof compileMode> {
+      return compileMode[this.mode];
+    },
+  });
+
+  const actions = {
+    resetError: () => setStore('error', ''),
+    setCurrentTab: (current: string) => {
+      const idx = props.tabs.findIndex((tab) => tab.id === current);
+      if (idx < 0) return;
+      setStore({ current: current });
+    },
+    setCompiled(compiled: string) {
+      setStore({ compiled, isCompiling: false });
+    },
+    setTabName(id: string, name: string) {
+      const idx = props.tabs.findIndex((tab) => tab.id === id);
+      if (idx < 0) return;
+
+      let tabs = props.tabs;
+      tabs[idx] = { ...tabs[idx], name };
+      props.setTabs(tabs);
+    },
+    setTabType(id: string, type: string) {
+      const idx = props.tabs.findIndex((tab) => tab.id === id);
+      if (idx < 0) return;
+
+      let tabs = props.tabs;
+      tabs[idx] = { ...tabs[idx], type };
+      props.setTabs(tabs);
+    },
+    removeTab(id: string) {
+      const idx = props.tabs.findIndex((tab) => tab.id === id);
+      const tab = props.tabs[idx];
+
+      if (!tab) return;
+
+      const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}.${tab.type}?`);
+      if (!confirmDeletion) return;
+
+      // We want to redirect to another tab if we are deleting the current one
+      if (store.current === id) {
+        setStore({
+          current: props.tabs[idx - 1].id,
+        });
+      }
+
+      let tabs = props.tabs;
+      props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
+    },
+    getCurrentSource() {
+      const idx = props.tabs.findIndex((tab) => tab.id === store.current);
+      if (idx < 0) return;
+
+      return props.tabs[idx].source;
+    },
+    setCurrentSource(source: string) {
+      const idx = props.tabs.findIndex((tab) => tab.id === store.current);
+      if (idx < 0) return;
+
+      props.tabs[idx].source = source;
+      // setStore('tabs', idx, 'source', source);
+    },
+    addTab() {
+      const nextId = uid();
+
+      props.setTabs(
+        props.tabs.concat({
+          id: nextId,
+          name: `tab${props.tabs.length}`,
+          type: 'tsx',
+          source: '',
+        }),
+      );
+      setStore({
+        current: nextId,
+      });
+    },
+  };
 
   const [edit, setEdit] = createSignal(-1);
   const [showPreview, setShowPreview] = createSignal(true);
@@ -31,7 +147,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
    * If we show the preview of the code, we want it to be DOM
    * to be able to render into the iframe.
    */
-  createEffect(() => showPreview() && actions.set('mode', 'DOM'));
+  createEffect(() => showPreview() && setStore('mode', 'DOM'));
 
   compiler.addEventListener('message', ({ data }) => {
     const { event, result } = data;
@@ -40,7 +156,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
       case 'RESULT':
         const [error, compiled] = result;
 
-        if (error) return actions.set({ error });
+        if (error) return setStore({ error });
         if (!compiled) return;
 
         actions.setCompiled(compiled);
@@ -56,7 +172,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
    * Also, real time feedback can be stressful
    */
   const applyCompilation = debounce((tabs: Tab[], compileOpts: Record<string, any>) => {
-    actions.set('isCompiling', true);
+    setStore('isCompiling', true);
     now = performance.now();
 
     compiler.postMessage({
@@ -71,8 +187,8 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
    * every tab source changes.
    */
   createEffect(() => {
-    for (const tab of store.tabs) tab.source;
-    applyCompilation(unwrap(store.tabs), unwrap(compileMode[store.mode]));
+    for (const tab of props.tabs) tab.source;
+    applyCompilation(unwrap(props.tabs), unwrap(compileMode[store.mode]));
   });
 
   /**
@@ -82,7 +198,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
    */
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
-    actions.set({ error: '' });
+    setStore({ error: '' });
   };
 
   /**
@@ -111,33 +227,24 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
     }
   });
 
-  const dark = localStorage.getItem('dark');
-  actions.set('dark', dark === 'true');
-
-  createEffect(() => {
-    const action = store.dark ? 'add' : 'remove';
-    document.body.classList[action]('dark');
-    localStorage.setItem('dark', String(store.dark));
-  });
-
   return (
     <div
       class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display"
       classList={{
-        'wrapper--forced': store.isHorizontal,
-        wrapper: !store.isHorizontal,
+        'wrapper--forced': props.isHorizontal,
+        wrapper: !props.isHorizontal,
       }}
       style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
     >
       <TabList class="row-start-1 space-x-2">
-        <For each={store.tabs}>
+        <For each={props.tabs}>
           {(tab, index) => (
             <TabItem active={store.current === tab.id}>
               <button
                 type="button"
                 onClick={() => actions.setCurrentTab(tab.id)}
                 onDblClick={() => {
-                  if (index() <= 0 || !store.interactive) return;
+                  if (index() <= 0 || !props.interactive) return;
                   setEdit(index());
                   tabRefs.get(tab.id).focus();
                 }}
@@ -182,9 +289,9 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
                 <button
                   type="button"
                   class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
-                  disabled={!store.interactive}
+                  disabled={!props.interactive}
                   onClick={() => {
-                    if (!store.interactive) return;
+                    if (!props.interactive) return;
                     actions.removeTab(tab.id);
                   }}
                 >
@@ -207,13 +314,13 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
           )}
         </For>
 
-        <Show when={!store.noEditableTabs}>
+        <Show when={props.editableTabs}>
           <li class="inline-flex items-center m-0 border-b-2 border-transparent">
             <button
               type="button"
               class="focus:outline-none"
-              onClick={store.interactive && actions.addTab}
-              disabled={!store.interactive}
+              onClick={props.interactive ? actions.addTab : undefined}
+              disabled={!props.interactive}
               title="Add a new tab"
             >
               <span class="sr-only">Add a new tab</span>
@@ -236,7 +343,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
 
       <TabList
         class={`row-start-3 border-t-2 border-blueGray-200 ${
-          store.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
+          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
         }`}
       >
         <TabItem class="flex-1" active={showPreview()}>
@@ -266,24 +373,25 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
           </div>
         }
       >
+        <MonacoTabs tabs={props.tabs} compiled={store.compiled} />
         <Editor
           url={`file:///${store.currentTab.name}.${store.currentTab.type}`}
           onDocChange={handleDocChange}
           class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
           styles={{ backgroundColor: '#F8FAFC' }}
-          disabled={!store.interactive}
+          disabled={!props.interactive}
           canCopy
           canFormat
           formatter={formatter}
-          isDark={store.dark}
+          isDark={props.dark}
           withMinimap={false}
-          showActionBar={store.noActionBar}
+          showActionBar={props.actionBar}
         />
 
         <div
           class="column-resizer h-full w-full row-start-1 row-end-3 col-start-2 hidden"
           style="cursor: col-resize"
-          classList={{ 'md:block': !store.isHorizontal }}
+          classList={{ 'md:block': !props.isHorizontal }}
           onMouseDown={[setIsDragging, true]}
         >
           <div class="h-full border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg mx-auto w-0"></div>
@@ -292,18 +400,18 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
         <Show when={!showPreview()}>
           <section
             class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-4 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
-            classList={{ 'md:row-start-2': !store.isHorizontal }}
+            classList={{ 'md:row-start-2': !props.isHorizontal }}
             style="grid-template-rows: minmax(0, 1fr) auto"
           >
             <Editor
               url="file:///output_dont_import.tsx"
               class="h-full focus:outline-none"
               styles={{ backgroundColor: '#fff' }}
-              isDark={store.dark}
+              isDark={props.dark}
               disabled
               canCopy
               withMinimap={false}
-              showActionBar={store.noActionBar}
+              showActionBar={!props.actionBar}
             />
 
             <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
@@ -315,7 +423,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
                     checked={store.mode === 'DOM'}
                     value="DOM"
                     class="text-brand-default"
-                    onChange={(e) => actions.set('mode', e.currentTarget.value as any)}
+                    onChange={(e) => setStore('mode', e.currentTarget.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -328,7 +436,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
                     checked={store.mode === 'SSR'}
                     value="SSR"
                     class="text-brand-default"
-                    onChange={(e) => actions.set('mode', e.currentTarget.value as any)}
+                    onChange={(e) => setStore('mode', e.currentTarget.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -341,7 +449,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
                     checked={store.mode === 'HYDRATABLE'}
                     value="HYDRATABLE"
                     class="text-brand-default"
-                    onChange={(e) => actions.set('mode', e.currentTarget.value as any)}
+                    onChange={(e) => setStore('mode', e.currentTarget.value as any)}
                     type="radio"
                     name="dom"
                     id="dom"
@@ -357,7 +465,7 @@ export const Repl: Component<{ compiler: Worker; formatter: Worker; editor: type
           <Preview
             code={store.compiled}
             class={`h-full w-full bg-white row-start-4 ${
-              store.isHorizontal ? '' : 'md:row-start-2'
+              props.isHorizontal ? '' : 'md:row-start-2'
             }`}
             classList={{
               'pointer-events-none': isDragging(),

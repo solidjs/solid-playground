@@ -1,21 +1,21 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
 
-import { lazy, Show, onCleanup, Component, createEffect, createSignal } from 'solid-js';
+import { Show, onCleanup, Component, createEffect, createSignal } from 'solid-js';
 import { eventBus } from './utils/eventBus';
-import { useStore } from '../src';
-import { Repl } from '../src';
+import { defaultTabs, Repl } from '../src';
 import { Update } from './components/update';
 import { Header } from './components/header';
 
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
-const Editor = lazy(() => import('../src/components/editor'));
 
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import { parseHash } from './utils/parseHash';
+
 (window as any).MonacoEnvironment = {
-  getWorker: function (moduleId, label: string) {
+  getWorker: function (_moduleId, label: string) {
     switch (label) {
       case 'css':
         return new cssWorker();
@@ -45,7 +45,9 @@ export const App: Component = () => {
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
 
-  const [store, actions] = useStore();
+  const url = new URL(location.href);
+  const initialTabs = parseHash(url.hash && url.hash.slice(1), defaultTabs) || defaultTabs;
+  const [tabs, setTabs] = createSignal(initialTabs, false);
 
   /**
    * This syncs the URL hash with the state of the current tab.
@@ -54,27 +56,66 @@ export const App: Component = () => {
    * TODO: Find a way to URL shorten this
    */
   createEffect(() => {
-    location.hash = encode(JSON.stringify(store.tabs));
+    location.hash = encode(JSON.stringify(tabs()));
   });
 
-  const dark = localStorage.getItem('dark');
-  actions.set('dark', dark === 'true');
+  const params = Object.fromEntries(url.searchParams.entries());
+
+  /*  if (params.data && isValidUrl(params.data)) {
+    try {
+      const data = await fetch(params.data).then((r) => r.json());
+      tabs = processImport(data);
+    } catch {}
+  }*/
+
+  const [noHeader, noInteractive, isHorizontal, noActionBar, noEditableTabs] = [
+    'noHeader',
+    'noInteractive',
+    'isHorizontal',
+    'noActionBar',
+    'noEditableTabs',
+  ].map((key) => key in params);
+
+  const [dark, setDark] = createSignal(localStorage.getItem('dark') === 'true');
 
   createEffect(() => {
-    const action = store.dark ? 'add' : 'remove';
+    const action = dark() ? 'add' : 'remove';
     document.body.classList[action]('dark');
-    localStorage.setItem('dark', String(store.dark));
+    localStorage.setItem('dark', String(dark()));
   });
+
+  const header = !noHeader;
+  const interactive = !noInteractive;
+  const actionBar = !noActionBar;
+  const editableTabs = !noEditableTabs;
 
   return (
     <div class="relative grid bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display grid-cols-1">
       <Show
-        when={store.header}
-        children={<Header />}
-        fallback={<div classList={{ 'md:col-span-2': !store.isHorizontal }}></div>}
+        when={header}
+        children={
+          <Header
+            dark={dark()}
+            toggleDark={() => setDark(!dark())}
+            isHorizontal={isHorizontal}
+            tabs={tabs()}
+            setTabs={setTabs}
+          />
+        }
+        fallback={<div classList={{ 'md:col-span-2': !isHorizontal }}></div>}
       />
 
-      <Repl compiler={compiler} formatter={formatter} editor={Editor} />
+      <Repl
+        compiler={compiler}
+        formatter={formatter}
+        isHorizontal={isHorizontal}
+        interactive={interactive}
+        actionBar={actionBar}
+        editableTabs={editableTabs}
+        dark={dark()}
+        tabs={tabs()}
+        setTabs={setTabs}
+      />
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
     </div>

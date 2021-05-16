@@ -9,7 +9,7 @@ import { Tab } from '../../src';
  * @param tabs {Tab[]} - The tabs to export
  */
 export function exportToJSON(tabs: Tab[]) {
-  const files = tabs.reduce((json, tab) => {
+  const files = tabs.reduce<{ name: String; content: string }[]>((json, tab) => {
     return [
       ...json,
       {
