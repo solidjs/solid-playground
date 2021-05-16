@@ -1,8 +1,8 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
 
-import { Show, onCleanup, Component, createEffect, createSignal, onMount } from 'solid-js';
+import { Show, onCleanup, Component, createEffect, createSignal, onMount, batch } from 'solid-js';
 import { eventBus } from './utils/eventBus';
-import { defaultTabs, processImport, Repl } from '../src';
+import { createTabList, defaultTabs, processImport, Repl, Tab } from '../src';
 import { Update } from './components/update';
 import { Header } from './components/header';
 import { parseHash } from './utils/parseHash';
@@ -48,7 +48,8 @@ export const App: Component = () => {
 
   const url = new URL(location.href);
   const initialTabs = parseHash(url.hash && url.hash.slice(1), defaultTabs) || defaultTabs;
-  const [tabs, setTabs] = createSignal(initialTabs, false);
+  const [tabs, setTabs] = createTabList(initialTabs);
+  const [current, setCurrent] = createSignal('main.tsx');
 
   /**
    * This syncs the URL hash with the state of the current tab.
@@ -103,6 +104,7 @@ export const App: Component = () => {
             isHorizontal={isHorizontal}
             tabs={tabs()}
             setTabs={setTabs}
+            setCurrent={setCurrent}
           />
         }
         fallback={<div classList={{ 'md:col-span-2': !isHorizontal }}></div>}
@@ -118,6 +120,8 @@ export const App: Component = () => {
         dark={dark()}
         tabs={tabs()}
         setTabs={setTabs}
+        current={current()}
+        setCurrent={setCurrent}
       />
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />

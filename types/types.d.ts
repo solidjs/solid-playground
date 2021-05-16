@@ -10,11 +10,26 @@ export declare const Repl: Component<{
   dark: boolean;
   tabs: Tab[];
   setTabs: (x: Tab[]) => void;
+  current: string;
+  setCurrent: (x: string) => void;
 }>;
+
 export interface Tab {
-  id: string;
   name: string;
   type: string;
   source: string;
 }
+
+interface PlaygroundFile {
+  name?: string;
+  description?: string;
+  files: {
+    name: string;
+    content: string | string[];
+  }[];
+}
+
+export function processImport({ files }: PlaygroundFile): Tab[];
+export function createTabList(initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void];
+
 export declare const defaultTabs: Tab[];

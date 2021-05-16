@@ -67,7 +67,8 @@ const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
 
       let first = true;
       createEffect(() => {
-        if (!first) model.setValue(tab().source);
+        let source = tab().source;
+        if (!first) model.setValue(source);
         else first = false;
       });
       onCleanup(() => model.dispose());

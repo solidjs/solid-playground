@@ -21,7 +21,6 @@ import { Tab } from '../';
 import { debounce } from '../utils/debounce';
 import { throttle } from '../utils/throttle';
 import { formatMs } from '../utils/formatTime';
-import { uid } from '../utils/uid';
 
 const MonacoTabs = lazy(() => import('./monacoTabs'));
 const Editor = lazy(() => MonacoTabs.preload().then(() => import('./editor')));
@@ -34,6 +33,8 @@ const compileMode = {
 
 type ValueOf<T> = T[keyof T];
 
+const id = (t: Tab) => `${t.name}.${t.type}`;
+
 export const Repl: Component<{
   compiler: Worker;
   formatter: Worker;
@@ -44,6 +45,8 @@ export const Repl: Component<{
   dark: boolean;
   tabs: Tab[];
   setTabs: (x: Tab[]) => void;
+  current: string;
+  setCurrent: (x: string) => void;
 }> = (props) => {
   const { compiler, formatter } = props; // this is bad style don't do this
 
@@ -52,10 +55,6 @@ export const Repl: Component<{
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [store, setStore] = createState({
-    current: props.tabs[0].id,
-    get currentTab(): Tab {
-      return props.tabs.find((tab) => tab.id === this.current);
-    },
     error: '',
     compiled: '',
     mode: 'DOM' as keyof typeof compileMode,
@@ -68,31 +67,31 @@ export const Repl: Component<{
   const actions = {
     resetError: () => setStore('error', ''),
     setCurrentTab: (current: string) => {
-      const idx = props.tabs.findIndex((tab) => tab.id === current);
+      const idx = props.tabs.findIndex((tab) => id(tab) === current);
       if (idx < 0) return;
-      setStore({ current: current });
+      props.setCurrent(current);
     },
     setCompiled(compiled: string) {
       setStore({ compiled, isCompiling: false });
     },
-    setTabName(id: string, name: string) {
-      const idx = props.tabs.findIndex((tab) => tab.id === id);
+    setTabName(id1: string, name: string) {
+      const idx = props.tabs.findIndex((tab) => id(tab) === id1);
       if (idx < 0) return;
 
       let tabs = props.tabs;
       tabs[idx] = { ...tabs[idx], name };
       props.setTabs(tabs);
     },
-    setTabType(id: string, type: string) {
-      const idx = props.tabs.findIndex((tab) => tab.id === id);
+    setTabType(id1: string, type: string) {
+      const idx = props.tabs.findIndex((tab) => id(tab) === id1);
       if (idx < 0) return;
 
       let tabs = props.tabs;
       tabs[idx] = { ...tabs[idx], type };
       props.setTabs(tabs);
     },
-    removeTab(id: string) {
-      const idx = props.tabs.findIndex((tab) => tab.id === id);
+    removeTab(id1: string) {
+      const idx = props.tabs.findIndex((tab) => id(tab) === id1);
       const tab = props.tabs[idx];
 
       if (!tab) return;
@@ -101,43 +100,34 @@ export const Repl: Component<{
       if (!confirmDeletion) return;
 
       // We want to redirect to another tab if we are deleting the current one
-      if (store.current === id) {
-        setStore({
-          current: props.tabs[idx - 1].id,
-        });
+      if (props.current === id1) {
+        props.setCurrent(id(props.tabs[idx - 1]));
       }
 
       let tabs = props.tabs;
       props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
     },
     getCurrentSource() {
-      const idx = props.tabs.findIndex((tab) => tab.id === store.current);
+      const idx = props.tabs.findIndex((tab) => id(tab) === props.current);
       if (idx < 0) return;
 
       return props.tabs[idx].source;
     },
     setCurrentSource(source: string) {
-      const idx = props.tabs.findIndex((tab) => tab.id === store.current);
+      const idx = props.tabs.findIndex((tab) => id(tab) === props.current);
       if (idx < 0) return;
 
       let tabs = props.tabs;
       tabs[idx].source = source;
-      props.setTabs(tabs);
     },
     addTab() {
-      const nextId = uid();
-
-      props.setTabs(
-        props.tabs.concat({
-          id: nextId,
-          name: `tab${props.tabs.length}`,
-          type: 'tsx',
-          source: '',
-        }),
-      );
-      setStore({
-        current: nextId,
-      });
+      const newTab = {
+        name: `tab${props.tabs.length}`,
+        type: 'tsx',
+        source: '',
+      };
+      props.setTabs(props.tabs.concat(newTab));
+      props.setCurrent(id(newTab));
     },
   };
 
@@ -240,20 +230,20 @@ export const Repl: Component<{
       <TabList class="row-start-1 space-x-2">
         <For each={props.tabs}>
           {(tab, index) => (
-            <TabItem active={store.current === tab.id}>
+            <TabItem active={props.current === id(tab)}>
               <button
                 type="button"
-                onClick={() => actions.setCurrentTab(tab.id)}
+                onClick={() => actions.setCurrentTab(id(tab))}
                 onDblClick={() => {
                   if (index() <= 0 || !props.interactive) return;
                   setEdit(index());
-                  tabRefs.get(tab.id).focus();
+                  tabRefs.get(id(tab)).focus();
                 }}
                 class="cursor-pointer focus:outline-none -mb-0.5"
               >
                 <span
-                  ref={(el) => tabRefs.set(tab.id, el)}
-                  contentEditable={store.current === tab.id && edit() >= 0}
+                  ref={(el) => tabRefs.set(id(tab), el)}
+                  contentEditable={props.current === id(tab) && edit() >= 0}
                   // onBlur={(e) => {
                   //   setEdit(-1);
                   //   actions.setTabName(tab.id, e.currentTarget.textContent!);
@@ -262,14 +252,14 @@ export const Repl: Component<{
                     if (e.code === 'Space') e.preventDefault();
                     if (e.code !== 'Enter') return;
                     setEdit(-1);
-                    actions.setTabName(tab.id, e.currentTarget.textContent!);
+                    actions.setTabName(id(tab), e.currentTarget.textContent!);
                   }}
                   class="outline-none"
                 >
                   {tab.name}
                 </span>
                 <Show
-                  when={store.current === tab.id && edit() >= 0}
+                  when={props.current === id(tab) && edit() >= 0}
                   fallback={<span>.{tab.type}</span>}
                 >
                   <select
@@ -277,7 +267,7 @@ export const Repl: Component<{
                     value={tab.type}
                     onChange={(e) => {
                       setEdit(-1);
-                      actions.setTabType(tab.id, e.currentTarget.value);
+                      actions.setTabType(id(tab), e.currentTarget.value);
                     }}
                   >
                     <option value="tsx">.tsx</option>
@@ -293,7 +283,7 @@ export const Repl: Component<{
                   disabled={!props.interactive}
                   onClick={() => {
                     if (!props.interactive) return;
-                    actions.removeTab(tab.id);
+                    actions.removeTab(id(tab));
                   }}
                 >
                   <span class="sr-only">Delete this tab</span>
@@ -376,7 +366,7 @@ export const Repl: Component<{
       >
         <MonacoTabs tabs={props.tabs} compiled={store.compiled} />
         <Editor
-          url={`file:///${store.currentTab.name}.${store.currentTab.type}`}
+          url={`file:///${props.current}`}
           onDocChange={handleDocChange}
           class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
           styles={{ backgroundColor: '#F8FAFC' }}

@@ -14,6 +14,7 @@ export const Header: Component<{
   isHorizontal: boolean;
   tabs: Tab[];
   setTabs: (a: Tab[]) => void;
+  setCurrent: (x: string) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
 
@@ -39,7 +40,7 @@ export const Header: Component<{
 
     const tabs = processImport(JSON.parse(await file.text()));
     props.setTabs(tabs);
-    // props.setStore({ tabs, current: tabs[0].id });
+    props.setCurrent('main.tsx');
   };
 
   return (

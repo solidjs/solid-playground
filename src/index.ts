@@ -1,11 +1,10 @@
 import './assets/tailwind.css';
-import { uid } from './utils/uid';
 
 export { Repl } from './components/repl';
 export { processImport } from './utils/processImport';
+export { createTabList } from './utils/createTabList';
 
 export interface Tab {
-  id: string;
   name: string;
   type: string;
   source: string;
@@ -13,7 +12,6 @@ export interface Tab {
 
 export const defaultTabs: Tab[] = [
   {
-    id: uid(),
     name: 'main',
     type: 'tsx',
     source:
