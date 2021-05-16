@@ -51,6 +51,7 @@ const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
   createEffect(() => {
     model.setValue(props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, ''));
   });
+  onCleanup(() => model.dispose());
 
   keyedMap<Tab>({
     by: (tab) => `${tab.name}.${tab.type}`,
