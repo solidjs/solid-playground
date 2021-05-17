@@ -1,8 +1,8 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
 
-import { Show, onCleanup, Component, createEffect, createSignal, onMount, batch } from 'solid-js';
+import { Show, onCleanup, Component, createEffect, createSignal, onMount } from 'solid-js';
 import { eventBus } from './utils/eventBus';
-import { createTabList, defaultTabs, processImport, Repl, Tab } from '../src';
+import { createTabList, defaultTabs, processImport, Repl } from '../src';
 import { Update } from './components/update';
 import { Header } from './components/header';
 import { parseHash } from './utils/parseHash';
