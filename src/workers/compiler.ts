@@ -118,7 +118,7 @@ async function compile(tabs: Tab[], solidOptions = {}): Promise<[string, null] |
 
     const {
       output: [{ code }],
-    } = await compiler.generate({ format: 'esm' });
+    } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
     return [null, code as string];
   } catch (e) {

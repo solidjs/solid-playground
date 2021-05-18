@@ -57,8 +57,9 @@ cm(sServerMock, 'web/types/server-mock.d.ts');
 cm(sJsxRuntime, 'jsx-runtime.d.ts');
 
 languages.typescript.typescriptDefaults.setCompilerOptions({
-  lib: ['es6', 'DOM', 'dom.iterable'],
+  lib: ['es6', 'DOM', 'DOM.Iterable'],
   target: languages.typescript.ScriptTarget.ESNext,
+  module: languages.typescript.ModuleKind.ESNext,
   moduleResolution: languages.typescript.ModuleResolutionKind.NodeJs,
   jsx: languages.typescript.JsxEmit.Preserve,
   jsxImportSource: 'solid-js',
