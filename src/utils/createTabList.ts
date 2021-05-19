@@ -2,7 +2,7 @@ import { batch, createSignal } from 'solid-js';
 import { Tab } from '..';
 
 export const createTabList = (initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void] => {
-  let sourceSignals: { [key: string]: [get: () => string, set: (v: string) => string] } = {};
+  let sourceSignals: Record<string, [get: () => string, set: (value: string) => string]> = {};
   const mapTabs = (t: Tab[]): Tab[] => {
     let oldSignals = sourceSignals;
     sourceSignals = {};
