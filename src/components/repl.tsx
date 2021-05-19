@@ -33,7 +33,7 @@ const compileMode = {
 
 type ValueOf<T> = T[keyof T];
 
-const id = (t: Tab) => `${t.name}.${t.type}`;
+const id = (tab: Tab) => `${tab.name}.${tab.type}`;
 
 export const Repl: Component<{
   compiler: Worker;

@@ -13,7 +13,7 @@ export const Header: Component<{
   toggleDark: () => void;
   isHorizontal: boolean;
   tabs: Tab[];
-  setTabs: (tab: Tab[]) => void;
+  setTabs: (tabs: Tab[]) => void;
   setCurrent: (tabId: string) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
