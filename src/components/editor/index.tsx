@@ -124,7 +124,6 @@ const Editor: Component<Props> = (props) => {
   onCleanup(() => editor.dispose());
 
   createEffect(() => {
-    console.log('Updating model', model());
     if (editor != undefined && model() != undefined) {
       editor.setModel(model());
       liftOff(editor);
