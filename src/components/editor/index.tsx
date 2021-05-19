@@ -107,7 +107,7 @@ const Editor: Component<Props> = (props) => {
       if (finalProps.onDocChange) finalProps.onDocChange(editor.getValue());
     });
   };
-  // Initialize CodeMirror
+  // Initialize Monaco
   onMount(() => {
     if (model() == undefined) {
       let x = mEditor.onDidCreateModel((m) => {
