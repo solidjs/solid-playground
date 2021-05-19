@@ -1,4 +1,7 @@
-export const throttle = <T extends any[]>(fn: (...params: T) => unknown, wait: number) => {
+export const throttle = <T extends any[]>(
+  fn: (...params: T) => unknown,
+  wait: number,
+): ((...args: T) => void) => {
   let previouslyRun: number;
   let queuedToRun: number | undefined;
 
@@ -9,10 +12,10 @@ export const throttle = <T extends any[]>(fn: (...params: T) => unknown, wait: n
     queuedToRun = undefined;
 
     if (!previouslyRun || now - previouslyRun >= wait) {
-      fn.apply(null, args);
+      fn(...args);
       previouslyRun = now;
     } else {
-      queuedToRun = window.setTimeout(invokeFn.bind(null, ...args), wait - (now - previouslyRun));
+      queuedToRun = window.setTimeout(() => invokeFn(...args), wait - (now - previouslyRun));
     }
   };
 };

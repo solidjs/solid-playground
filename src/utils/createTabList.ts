@@ -4,10 +4,10 @@ import { Tab } from '..';
 export const createTabList = (initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void] => {
   let sourceSignals: Record<string, [get: () => string, set: (value: string) => string]> = {};
   const mapTabs = (t: Tab[]): Tab[] => {
-    let oldSignals = sourceSignals;
+    const oldSignals = sourceSignals;
     sourceSignals = {};
     return t.map((x) => {
-      let id = `${x.name}.${x.type}`;
+      const id = `${x.name}.${x.type}`;
       sourceSignals[id] = oldSignals[id] || createSignal(x.source);
       if (oldSignals[id]) oldSignals[id][1](x.source);
       return {

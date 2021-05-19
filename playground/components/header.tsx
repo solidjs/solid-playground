@@ -36,7 +36,7 @@ export const Header: Component<{
   }
 
   const uploadFile: JSX.EventHandler<HTMLInputElement, Event> = async (event) => {
-    const [file] = event.currentTarget.files;
+    const [file] = event.currentTarget.files!;
 
     const tabs = processImport(JSON.parse(await file.text()));
     props.setTabs(tabs);

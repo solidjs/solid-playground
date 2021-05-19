@@ -30,11 +30,9 @@ export const Preview: Component<Props> = (props) => {
     setIframeReady(true);
 
     iframe.contentWindow!.addEventListener('message', ({ data }) => {
-      switch (data.event) {
-        case 'LOG':
-          const { level, args } = data;
-          setLogs([...logs(), { level, args }]);
-          break;
+      if (data.event === 'LOG') {
+        const { level, args } = data;
+        setLogs([...logs(), { level, args }]);
       }
     });
   }

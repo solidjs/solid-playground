@@ -1,7 +1,7 @@
 import { register } from 'register-service-worker';
 import { eventBus } from './eventBus';
 
-export function registerServiceWorker() {
+export function registerServiceWorker(): void {
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
       register('/sw.js', {

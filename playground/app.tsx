@@ -1,6 +1,6 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
 
-import { Show, onCleanup, Component, createEffect, createSignal, onMount } from 'solid-js';
+import { Show, onCleanup, Component, createEffect, createSignal, onMount, JSX } from 'solid-js';
 import { eventBus } from './utils/eventBus';
 import { createTabList, defaultTabs, processImport, Repl } from '../src';
 import { Update } from './components/update';
@@ -32,7 +32,7 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 let swUpdatedBeforeRender = false;
 eventBus.on('sw-update', () => (swUpdatedBeforeRender = true));
 
-export const App: Component = () => {
+export const App = (): JSX.Element => {
   /**
    * Those next three lines are useful to display a popup
    * if the client code has been updated. This trigger a signal
@@ -68,7 +68,9 @@ export const App: Component = () => {
       try {
         const data = await fetch(params.data).then((r) => r.json());
         setTabs(processImport(data));
-      } catch {}
+      } catch (e) {
+        console.error('Failed to import browser data', e);
+      }
     }
   });
 

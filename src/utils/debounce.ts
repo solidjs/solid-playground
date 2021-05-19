@@ -1,4 +1,7 @@
-export function debounce<Args extends any[]>(callback: (...params: Args) => unknown, wait: number) {
+export function debounce<Args extends any[]>(
+  callback: (...params: Args) => unknown,
+  wait: number,
+): (...args: Args) => void {
   let timeout: number;
 
   return (...args: Args) => {

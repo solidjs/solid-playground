@@ -11,7 +11,7 @@ function getParameters(parameters: { files: IFiles }) {
     .replace(/=+$/, ''); // Remove ending '='
 }
 
-export function exportToCsb(tabs: Tab[]) {
+export function exportToCsb(tabs: Tab[]): void {
   const params = tabs.reduce<IFiles>((p, tab) => {
     p[`src/${tab.name}.${tab.type}`] = { content: tab.source, isBinary: false };
     return p;

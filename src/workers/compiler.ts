@@ -2,7 +2,9 @@ import type { Tab } from '../';
 import pkg from '../../package.json';
 
 import { transform } from '@babel/standalone';
+// @ts-ignore
 import solid from 'babel-preset-solid';
+// @ts-ignore
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 
 const SOLID_VERSION = pkg.dependencies['solid-js'];

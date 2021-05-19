@@ -86,7 +86,7 @@ grammars.set('css', 'source.css');
 editor.defineTheme('vs-dark-plus', vsDark as editor.IStandaloneThemeData);
 editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
 
-export async function liftOff(editor: editor.ICodeEditor) {
+export async function liftOff(editor: editor.ICodeEditor): Promise<void> {
   await loadingWasm;
   // wireTmGrammars only cares about the language part, but asks for all of monaco
   // we fool it by just passing in an object with languages

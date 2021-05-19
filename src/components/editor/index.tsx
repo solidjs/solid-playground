@@ -18,26 +18,13 @@ import {
 } from '@amoutonbrady/solid-heroicons/outline';
 import { liftOff } from './setupSolid';
 
-const createUpdater: () => [<T>(a: T) => T, () => void] = () => {
-  const [x, setX] = createSignal(0, () => false);
-  return [
-    (a) => {
-      x();
-      return a;
-    },
-    () => {
-      setX(x() + 1);
-    },
-  ];
-};
 const Editor: Component<Props> = (props) => {
   const finalProps = mergeProps({ showActionBar: true }, props);
 
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
 
-  let [updater, updateModel] = createUpdater();
-  let model = () => updater(mEditor.getModel(Uri.parse(finalProps.url)));
+  const model = () => mEditor.getModel(Uri.parse(finalProps.url));
 
   const [format, setFormat] = createSignal(false);
   function formatCode() {
@@ -61,13 +48,13 @@ const Editor: Component<Props> = (props) => {
   if (finalProps.formatter) {
     languages.registerDocumentFormattingEditProvider('typescript', {
       provideDocumentFormattingEdits: async (model) => {
-        finalProps.formatter.postMessage({
+        finalProps.formatter!.postMessage({
           event: 'FORMAT',
           code: model.getValue(),
           pos: editor.getPosition(),
         });
         return new Promise((resolve, reject) => {
-          finalProps.formatter.addEventListener(
+          finalProps.formatter!.addEventListener(
             'message',
             ({ data: { event, code } }) => {
               switch (event) {
@@ -110,11 +97,11 @@ const Editor: Component<Props> = (props) => {
   // Initialize Monaco
   onMount(() => {
     if (model() == undefined) {
-      let x = mEditor.onDidCreateModel((m) => {
-        if (m.uri.toString() === finalProps.url) {
+      const modelListener = mEditor.onDidCreateModel((model) => {
+        if (model.uri.toString() === finalProps.url) {
           setupEditor();
           updateModel();
-          x.dispose();
+          modelListener.dispose();
         }
       });
     } else {
@@ -123,12 +110,13 @@ const Editor: Component<Props> = (props) => {
   });
   onCleanup(() => editor.dispose());
 
-  createEffect(() => {
+  const updateModel = () => {
     if (editor != undefined && model() != undefined) {
       editor.setModel(model());
       liftOff(editor);
     }
-  });
+  };
+  createEffect(updateModel);
   createEffect(() => {
     mEditor.setTheme(finalProps.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });

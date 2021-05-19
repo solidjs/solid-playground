@@ -78,7 +78,7 @@ export const Repl: Component<{
       const idx = props.tabs.findIndex((tab) => id(tab) === id1);
       if (idx < 0) return;
 
-      let tabs = props.tabs;
+      const tabs = props.tabs;
       tabs[idx] = { ...tabs[idx], name };
       props.setTabs(tabs);
     },
@@ -86,7 +86,7 @@ export const Repl: Component<{
       const idx = props.tabs.findIndex((tab) => id(tab) === id1);
       if (idx < 0) return;
 
-      let tabs = props.tabs;
+      const tabs = props.tabs;
       tabs[idx] = { ...tabs[idx], type };
       props.setTabs(tabs);
     },
@@ -104,7 +104,7 @@ export const Repl: Component<{
         props.setCurrent(id(props.tabs[idx - 1]));
       }
 
-      let tabs = props.tabs;
+      const tabs = props.tabs;
       props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
     },
     getCurrentSource() {
@@ -117,7 +117,7 @@ export const Repl: Component<{
       const idx = props.tabs.findIndex((tab) => id(tab) === props.current);
       if (idx < 0) return;
 
-      let tabs = props.tabs;
+      const tabs = props.tabs;
       tabs[idx].source = source;
     },
     addTab() {
@@ -143,17 +143,15 @@ export const Repl: Component<{
   compiler.addEventListener('message', ({ data }) => {
     const { event, result } = data;
 
-    switch (event) {
-      case 'RESULT':
-        const [error, compiled] = result;
+    if (event == 'RESULT') {
+      const [error, compiled] = result;
 
-        if (error) return setStore({ error });
-        if (!compiled) return;
+      if (error) return setStore({ error });
+      if (!compiled) return;
 
-        actions.setCompiled(compiled);
+      actions.setCompiled(compiled);
 
-        console.log('Compilation took:', formatMs(performance.now() - now));
-        break;
+      console.log('Compilation took:', formatMs(performance.now() - now));
     }
   });
 
@@ -237,7 +235,7 @@ export const Repl: Component<{
                 onDblClick={() => {
                   if (index() <= 0 || !props.interactive) return;
                   setEdit(index());
-                  tabRefs.get(id(tab)).focus();
+                  tabRefs.get(id(tab))?.focus();
                 }}
                 class="cursor-pointer focus:outline-none -mb-0.5"
               >

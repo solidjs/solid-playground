@@ -2,6 +2,10 @@ import { Component, createEffect, createRoot, createSignal, onCleanup, untrack }
 import { Tab } from '..';
 import { Uri, editor } from 'monaco-editor';
 
+// A modified version of Ryan's https://codesandbox.io/s/explicit-keys-4iyen?file=/Key.js
+// This version is designed to call a function on creation and onCleanup on removal
+// for a certain keying function (the by parameter)
+// this does not return any values, and is designed as more of a hook
 const keyedMap = <T,>(props: {
   by: (a: T) => string;
   children: (a: () => T) => void;
@@ -59,8 +63,8 @@ const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
       return props.tabs;
     },
     children: (tab) => {
-      let uri = Uri.parse(`file:///${tab().name}.${tab().type}`);
-      let model = editor.createModel(
+      const uri = Uri.parse(`file:///${tab().name}.${tab().type}`);
+      const model = editor.createModel(
         tab().source,
         tab().type === 'tsx' ? 'typescript' : 'css',
         uri,
@@ -68,7 +72,7 @@ const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
 
       let first = true;
       createEffect(() => {
-        let source = tab().source;
+        const source = tab().source;
         if (!first && model.getValue() != source) model.setValue(source);
         else first = false;
       });

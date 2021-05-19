@@ -12,7 +12,7 @@ export const Update: Component<Props> = (props) => {
   const mount = document.getElementById('update');
 
   return (
-    <Portal mount={mount}>
+    <Portal mount={mount!}>
       <div class="bg-blue-200 text-brand-default border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
         <button
           title="close"
