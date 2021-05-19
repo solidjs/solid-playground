@@ -14,7 +14,7 @@ export const Header: Component<{
   isHorizontal: boolean;
   tabs: Tab[];
   setTabs: (a: Tab[]) => void;
-  setCurrent: (x: string) => void;
+  setCurrent: (tabId: string) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
 
