@@ -96,7 +96,7 @@ const Editor: Component<Props> = (props) => {
   };
   // Initialize Monaco
   onMount(() => {
-    if (model() == undefined) {
+    if (model() === null) {
       const modelListener = mEditor.onDidCreateModel((model) => {
         if (model.uri.toString() === finalProps.url) {
           setupEditor();
@@ -111,7 +111,7 @@ const Editor: Component<Props> = (props) => {
   onCleanup(() => editor.dispose());
 
   const updateModel = () => {
-    if (editor != undefined && model() != undefined) {
+    if (editor !== undefined && model() !== undefined) {
       editor.setModel(model());
       liftOff(editor);
     }

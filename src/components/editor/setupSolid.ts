@@ -72,7 +72,7 @@ const registry = new Registry({
   async getGrammarDefinition(scopeName) {
     return {
       format: 'json',
-      content: scopeName == 'source.tsx' ? typescriptReactTM : cssTM,
+      content: scopeName === 'source.tsx' ? typescriptReactTM : cssTM,
     };
   },
 });

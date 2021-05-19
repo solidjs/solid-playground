@@ -1,6 +1,6 @@
 import { decompressFromURL as decompress } from '@amoutonbrady/lz-string';
 
-export function parseHash<T>(hash: string, fallback: T) {
+export function parseHash<T>(hash: string, fallback: T): T {
   try {
     return JSON.parse(decompress(hash)!);
   } catch {

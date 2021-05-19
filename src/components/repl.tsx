@@ -143,7 +143,7 @@ export const Repl: Component<{
   compiler.addEventListener('message', ({ data }) => {
     const { event, result } = data;
 
-    if (event == 'RESULT') {
+    if (event === 'RESULT') {
       const [error, compiled] = result;
 
       if (error) return setStore({ error });
