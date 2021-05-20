@@ -10,6 +10,7 @@ import {
   unwrap,
   lazy,
   createState,
+  batch,
 } from 'solid-js';
 
 import { Preview } from './preview';
@@ -80,7 +81,12 @@ export const Repl: Component<{
 
       const tabs = props.tabs;
       tabs[idx] = { ...tabs[idx], name };
-      props.setTabs(tabs);
+      batch(() => {
+        props.setTabs(tabs);
+        if (props.current === id1) {
+          props.setCurrent(id(tabs[idx]));
+        }
+      });
     },
     setTabType(id1: string, type: string) {
       const idx = props.tabs.findIndex((tab) => id(tab) === id1);
@@ -88,24 +94,30 @@ export const Repl: Component<{
 
       const tabs = props.tabs;
       tabs[idx] = { ...tabs[idx], type };
-      props.setTabs(tabs);
+      batch(() => {
+        props.setTabs(tabs);
+        if (props.current === id1) {
+          props.setCurrent(id(tabs[idx]));
+        }
+      });
     },
     removeTab(id1: string) {
-      const idx = props.tabs.findIndex((tab) => id(tab) === id1);
-      const tab = props.tabs[idx];
+      const tabs = props.tabs;
+      const idx = tabs.findIndex((tab) => id(tab) === id1);
+      const tab = tabs[idx];
 
       if (!tab) return;
 
       const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}.${tab.type}?`);
       if (!confirmDeletion) return;
 
-      // We want to redirect to another tab if we are deleting the current one
-      if (props.current === id1) {
-        props.setCurrent(id(props.tabs[idx - 1]));
-      }
-
-      const tabs = props.tabs;
-      props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
+      batch(() => {
+        props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
+        // We want to redirect to another tab if we are deleting the current one
+        if (props.current === id1) {
+          props.setCurrent(id(tabs[idx - 1]));
+        }
+      });
     },
     getCurrentSource() {
       const idx = props.tabs.findIndex((tab) => id(tab) === props.current);
@@ -126,8 +138,10 @@ export const Repl: Component<{
         type: 'tsx',
         source: '',
       };
-      props.setTabs(props.tabs.concat(newTab));
-      props.setCurrent(id(newTab));
+      batch(() => {
+        props.setTabs(props.tabs.concat(newTab));
+        props.setCurrent(id(newTab));
+      });
     },
   };
 
