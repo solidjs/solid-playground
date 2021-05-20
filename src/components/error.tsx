@@ -13,7 +13,7 @@ export const Error: Component<Props> = (props) => {
   const mount = document.getElementById('error');
 
   return (
-    <Portal mount={mount}>
+    <Portal mount={mount!}>
       <pre class="bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10 max-w-2xl whitespace-pre-line">
         <button
           title="close"

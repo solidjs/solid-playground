@@ -9,7 +9,7 @@ export default defineConfig((env) => ({
     ...(env.command == 'build' ? {} : { global: 'globalThis' }),
   },
   build: {
-    target: 'es2019',
+    target: 'esnext',
     minify: 'esbuild',
     rollupOptions: {
       output: {

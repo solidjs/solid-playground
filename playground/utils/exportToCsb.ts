@@ -1,5 +1,5 @@
 import pkg from '../../package.json';
-import { Tab } from '../store';
+import { Tab } from '../../src';
 import { compressToBase64 } from '@amoutonbrady/lz-string';
 
 type IFiles = Record<string, { content: string | Record<string, any>; isBinary: boolean }>;
@@ -11,7 +11,7 @@ function getParameters(parameters: { files: IFiles }) {
     .replace(/=+$/, ''); // Remove ending '='
 }
 
-export function exportToCsb(tabs: Tab[]) {
+export function exportToCsb(tabs: Tab[]): void {
   const params = tabs.reduce<IFiles>((p, tab) => {
     p[`src/${tab.name}.${tab.type}`] = { content: tab.source, isBinary: false };
     return p;

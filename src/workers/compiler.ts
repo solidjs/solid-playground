@@ -1,8 +1,10 @@
-import type { Tab } from '../store';
+import type { Tab } from '../';
 import pkg from '../../package.json';
 
 import { transform } from '@babel/standalone';
+// @ts-ignore
 import solid from 'babel-preset-solid';
+// @ts-ignore
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 
 const SOLID_VERSION = pkg.dependencies['solid-js'];
@@ -14,7 +16,11 @@ function uid(str: string) {
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
-
+declare global {
+  namespace globalThis {
+    var $babel: (code: string, opts: { babel: any; solid: any }) => any;
+  }
+}
 function loadBabel() {
   if (globalThis.$babel) return globalThis.$babel;
 
@@ -44,7 +50,13 @@ function generateCodeString(tab: Tab) {
  *
  * Note: Passing in the Solid Version for letter use
  */
-function virtual({ SOLID_VERSION, solidOptions = {} }) {
+function virtual({
+  SOLID_VERSION,
+  solidOptions = {},
+}: {
+  SOLID_VERSION: string;
+  solidOptions: unknown;
+}) {
   return {
     name: 'repl-plugin',
 
@@ -95,7 +107,7 @@ function virtual({ SOLID_VERSION, solidOptions = {} }) {
   };
 }
 
-async function compile(tabs: Tab[], solidOptions = {}) {
+async function compile(tabs: Tab[], solidOptions = {}): Promise<[string, null] | [null, string]> {
   try {
     for (const tab of tabs) {
       tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
@@ -108,11 +120,11 @@ async function compile(tabs: Tab[], solidOptions = {}) {
 
     const {
       output: [{ code }],
-    } = await compiler.generate({ format: 'esm' });
+    } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
-    return [null, code as string] as const;
+    return [null, code as string];
   } catch (e) {
-    return [e.message, null] as const;
+    return [e.message, null];
   }
 }
 
@@ -129,3 +141,5 @@ self.addEventListener('message', async ({ data }) => {
       break;
   }
 });
+
+export {};

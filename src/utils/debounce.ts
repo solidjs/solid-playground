@@ -1,9 +1,11 @@
-export function debounce(callback: (...params: unknown[]) => unknown, wait: number) {
-  let timeout: NodeJS.Timeout;
+export function debounce<Args extends any[]>(
+  callback: (...params: Args) => unknown,
+  wait: number,
+): (...args: Args) => void {
+  let timeout: number;
 
-  return (...args: unknown[]) => {
-    const context = this;
+  return (...args: Args) => {
     clearTimeout(timeout);
-    timeout = setTimeout(() => callback.apply(context, args), wait);
+    timeout = window.setTimeout(() => callback(...args), wait);
   };
 }

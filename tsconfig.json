@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "esModuleInterop": true,
@@ -9,12 +10,11 @@
     "jsx": "preserve",
     "resolveJsonModule": true,
     "noEmit": true,
-    "newLine": "lf",
-    "sourceMap": true,
+    "strict": true,
     "skipLibCheck": true,
     "jsxImportSource": "solid-js",
     "types": ["vite/client"]
   },
-  "include": ["./src"],
+  "include": ["./src/**/*", "./playground/**/*"],
   "exclude": ["node_modules/"]
 }
