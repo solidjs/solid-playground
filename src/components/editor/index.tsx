@@ -108,10 +108,10 @@ const Editor: Component<Props> = (props) => {
       setupEditor();
     }
   });
-  onCleanup(() => editor.dispose());
+  onCleanup(() => editor?.dispose());
 
   const updateModel = () => {
-    if (editor !== undefined && model() !== undefined) {
+    if (model() !== undefined && editor !== undefined) {
       editor.setModel(model());
       liftOff(editor);
     }
