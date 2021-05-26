@@ -5,6 +5,7 @@ interface PlaygroundFile {
   description?: string;
   files: {
     name: string;
+    type?: 'tsx' | 'css';
     content: string | string[];
   }[];
 }
@@ -17,7 +18,7 @@ interface PlaygroundFile {
 export function processImport({ files }: PlaygroundFile): Tab[] {
   return files.map<Tab>((file) => ({
     name: file.name,
-    type: 'tsx',
+    type: file?.type ?? 'tsx',
     source: Array.isArray(file.content) ? file.content.join('\n') : file.content,
   }));
 }
