@@ -28,12 +28,11 @@
     }
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && workbox generateSW workbox-config.js",
-    "build:lib": "vite build -c vite-lib.config.ts",
+    "dev": "patch-package && vite",
+    "build": "patch-package && vite build && workbox generateSW workbox-config.js",
+    "build:lib": "patch-package && vite build -c vite-lib.config.ts",
     "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\"",
-    "prepublishOnly": "pnpm build:lib",
-    "postinstall": "patch-package"
+    "prepublishOnly": "pnpm build:lib"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
