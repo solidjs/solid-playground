@@ -45,6 +45,7 @@ export const Repl: Component<{
   editableTabs: boolean;
   dark: boolean;
   tabs: Tab[];
+  version?: string;
   setTabs: (x: Tab[]) => void;
   current: string;
   setCurrent: (x: string) => void;
@@ -174,16 +175,20 @@ export const Repl: Component<{
    * it takes ~15ms to compile with the web worker...
    * Also, real time feedback can be stressful
    */
-  const applyCompilation = debounce((tabs: Tab[], compileOpts: Record<string, any>) => {
-    setStore('isCompiling', true);
-    now = performance.now();
+  const applyCompilation = debounce(
+    (tabs: Tab[], compileOpts: Record<string, any>, solidVersion?: string) => {
+      setStore('isCompiling', true);
+      now = performance.now();
 
-    compiler.postMessage({
-      event: 'COMPILE',
-      tabs,
-      compileOpts,
-    });
-  }, 250);
+      compiler.postMessage({
+        event: 'COMPILE',
+        tabs,
+        compileOpts,
+        solidVersion,
+      });
+    },
+    250,
+  );
 
   /**
    * The heart of the playground. This recompile on
@@ -191,7 +196,7 @@ export const Repl: Component<{
    */
   createEffect(() => {
     for (const tab of props.tabs) tab.source;
-    applyCompilation(unwrap(props.tabs), unwrap(compileMode[store.mode]));
+    applyCompilation(unwrap(props.tabs), unwrap(compileMode[store.mode]), props.version);
   });
 
   /**

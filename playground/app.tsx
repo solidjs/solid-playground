@@ -1,6 +1,11 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
-
 import { Show, onCleanup, createEffect, createSignal, onMount, JSX } from 'solid-js';
+
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+
+import pkg from '../package.json';
 import { eventBus } from './utils/eventBus';
 import { createTabList, defaultTabs, processImport, Repl } from '../src';
 import { Update } from './components/update';
@@ -10,10 +15,6 @@ import { isValidUrl } from './utils/isValidUrl';
 
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
-
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 
 (window as any).MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
@@ -51,6 +52,9 @@ export const App = (): JSX.Element => {
   const [tabs, setTabs] = createTabList(initialTabs);
   const [current, setCurrent] = createSignal('main.tsx');
 
+  const params = Object.fromEntries(url.searchParams.entries());
+  const [version, setVersion] = createSignal(params.version || pkg.dependencies['solid-js']);
+
   /**
    * This syncs the URL hash with the state of the current tab.
    * This is an optimized encoding for limiting URL size...
@@ -58,10 +62,11 @@ export const App = (): JSX.Element => {
    * TODO: Find a way to URL shorten this
    */
   createEffect(() => {
-    location.hash = encode(JSON.stringify(tabs()));
+    const url = new URL(location.href);
+    url.hash = encode(JSON.stringify(tabs()));
+    url.searchParams.set('version', version());
+    history.replaceState({}, '', url.toString());
   });
-
-  const params = Object.fromEntries(url.searchParams.entries());
 
   onMount(async () => {
     if (params.data && isValidUrl(params.data)) {
@@ -107,6 +112,8 @@ export const App = (): JSX.Element => {
             tabs={tabs()}
             setTabs={setTabs}
             setCurrent={setCurrent}
+            onVersionChange={setVersion}
+            version={version()}
           />
         }
         fallback={<div classList={{ 'md:col-span-2': !isHorizontal }}></div>}
@@ -124,6 +131,7 @@ export const App = (): JSX.Element => {
         setTabs={setTabs}
         current={current()}
         setCurrent={setCurrent}
+        version={version()}
       />
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />

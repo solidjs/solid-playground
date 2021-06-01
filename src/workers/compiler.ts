@@ -3,34 +3,45 @@ import pkg from '../../package.json';
 
 import { transform } from '@babel/standalone';
 // @ts-ignore
-import solid from 'babel-preset-solid';
+// import solid from 'babel-preset-solid';
 // @ts-ignore
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 
-const SOLID_VERSION = pkg.dependencies['solid-js'];
+type TransformFunction = (code: string, opts: { babel: any; solid: any }) => any;
+
+globalThis.window = globalThis as typeof window;
+
 const CDN_URL = 'https://cdn.skypack.dev';
-const tabsLookup: Map<string, Tab> = new Map();
+const SOLID_VERSION = pkg.dependencies['solid-js'];
+
+const tabsLookup = new Map<string, Tab>();
+const versionManager = new Map<string, TransformFunction>();
 
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
-declare global {
-  namespace globalThis {
-    var $babel: (code: string, opts: { babel: any; solid: any }) => any;
-  }
-}
-function loadBabel() {
-  if (globalThis.$babel) return globalThis.$babel;
 
-  globalThis.$babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
+async function loadBabel(solidVersion: string) {
+  if (versionManager.has(solidVersion)) {
+    return versionManager.get(solidVersion)!;
+  }
+
+  // @ts-ignore
+  const { default: solid } = await import(
+    /* @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`
+  );
+
+  const babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
     transform(code, {
       presets: [[solid, { ...opts.solid }], 'typescript'],
       ...opts.babel,
     });
 
-  return globalThis.$babel;
+  versionManager.set(solidVersion, babel);
+
+  return babel;
 }
 
 /**
@@ -51,10 +62,10 @@ function generateCodeString(tab: Tab) {
  * Note: Passing in the Solid Version for letter use
  */
 function virtual({
-  SOLID_VERSION,
+  solidVersion,
   solidOptions = {},
 }: {
-  SOLID_VERSION: string;
+  solidVersion: string;
   solidOptions: unknown;
 }) {
   return {
@@ -67,7 +78,7 @@ function virtual({
 
       // This is an external module
       return {
-        id: `${CDN_URL}/${importee.replace('solid-js', `solid-js@${SOLID_VERSION}`)}`,
+        id: `${CDN_URL}/${importee.replace('solid-js', `solid-js@${solidVersion}`)}`,
         external: true,
       };
     },
@@ -100,14 +111,18 @@ function virtual({
 
       // Compile solid code
       if (/\.(j|t)sx$/.test(filename)) {
-        const babel = loadBabel();
+        const babel = await loadBabel(solidVersion);
         return babel(code, { solid: solidOptions, babel: { filename } });
       }
     },
   };
 }
 
-async function compile(tabs: Tab[], solidOptions = {}): Promise<[string, null] | [null, string]> {
+async function compile(
+  tabs: Tab[],
+  solidOptions = {},
+  solidVersion: string,
+): Promise<[string, null] | [null, string]> {
   try {
     for (const tab of tabs) {
       tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
@@ -115,7 +130,7 @@ async function compile(tabs: Tab[], solidOptions = {}): Promise<[string, null] |
 
     const compiler = await rollup({
       input: `./${tabs[0].name}`,
-      plugins: [virtual({ SOLID_VERSION, solidOptions })],
+      plugins: [virtual({ solidVersion: solidVersion, solidOptions })],
     });
 
     const {
@@ -129,14 +144,14 @@ async function compile(tabs: Tab[], solidOptions = {}): Promise<[string, null] |
 }
 
 self.addEventListener('message', async ({ data }) => {
-  const { event, tabs, compileOpts } = data;
+  const { event, tabs, compileOpts, solidVersion = SOLID_VERSION } = data;
 
   switch (event) {
     case 'COMPILE':
       // @ts-ignore
       self.postMessage({
         event: 'RESULT',
-        result: await compile(tabs, compileOpts),
+        result: await compile(tabs, compileOpts, solidVersion),
       });
       break;
   }

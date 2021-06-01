@@ -2,7 +2,6 @@ import { Component, createSignal, JSX, Show } from 'solid-js';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { share, link, upload } from '@amoutonbrady/solid-heroicons/outline';
 
-import pkg from '../../package.json';
 import logo from '../assets/logo.svg?url';
 import { processImport, Tab } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
@@ -15,6 +14,8 @@ export const Header: Component<{
   tabs: Tab[];
   setTabs: (tabs: Tab[]) => void;
   setCurrent: (tabId: string) => void;
+  version: string;
+  onVersionChange: (version: string) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
 
@@ -26,6 +27,7 @@ export const Header: Component<{
       .then((hash) => {
         const tinyUrl = new URL(location.origin);
         tinyUrl.searchParams.set('hash', hash);
+        tinyUrl.searchParams.set('version', props.version);
 
         navigator.clipboard.writeText(tinyUrl.toString()).then(() => {
           setCopy(true);
@@ -49,7 +51,7 @@ export const Header: Component<{
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
-        <a href="https://github.com/ryansolid/solid">
+        <a href="https://github.com/solidjs/solid">
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
         <span class="inline-block -mb-1">Solid Playground</span>
@@ -135,7 +137,22 @@ export const Header: Component<{
           <Icon class="h-6" path={copy() ? link : share} />
         </button>
 
-        <span class="-mb-1 leading-none text-white">v{pkg.dependencies['solid-js']}</span>
+        <select
+          name="version"
+          id="version"
+          class="-mb-1 leading-snug text-white bg-transparent border-transparent hover:border-white cursor-pointer"
+          style={`background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`}
+          onChange={(e) => props.onVersionChange(e.currentTarget.value)}
+          value={props.version}
+        >
+          {/* TODO: Make those dynamic */}
+          <option class="text-black cursor-pointer" value="1.0.0-rc.2">
+            v1.0.0-rc.2
+          </option>
+          <option class="text-black cursor-pointer" value="0.26.5">
+            v0.26.5
+          </option>
+        </select>
       </div>
     </header>
   );
