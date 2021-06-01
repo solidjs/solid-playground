@@ -47,9 +47,8 @@ export const Preview: Component<Props> = (props) => {
         <!-- Ressource hints -->
         <link rel="dns-prefetch" href="//unpkg.com">
         <link href="https://unpkg.com" rel="preconnect" crossorigin>
-        <link rel="preload" href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" as="style">
-
-        <link href="https://unpkg.com/@tailwindcss/typography@0.3.1/dist/typography.min.css" rel="stylesheet">
+        <link rel="preload" href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" as="style">
+        <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
 
         <style>
           html, body {
