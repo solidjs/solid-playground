@@ -34,7 +34,7 @@ async function loadBabel(solidVersion: string) {
     const preset =
       solidVersion === SOLID_VERSION
         ? await Promise.resolve({ default: babelPresetSolid })
-        : await import(`https://esm.sh/babel-preset-solid@${solidVersion}`);
+        : await import(/** @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`);
 
     solid = preset.default;
   } catch {
