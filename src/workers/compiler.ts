@@ -3,7 +3,7 @@ import pkg from '../../package.json';
 
 import { transform } from '@babel/standalone';
 // @ts-ignore
-// import solid from 'babel-preset-solid';
+import babelPresetSolid from 'babel-preset-solid';
 // @ts-ignore
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 
@@ -28,10 +28,19 @@ async function loadBabel(solidVersion: string) {
     return versionManager.get(solidVersion)!;
   }
 
+  let solid: any;
+
   // @ts-ignore
-  const { default: solid } = await import(
-    /* @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`
-  );
+  try {
+    const preset =
+      solidVersion === SOLID_VERSION
+        ? await Promise.resolve({ default: babelPresetSolid })
+        : await import(/* @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`);
+
+    solid = preset.default;
+  } catch {
+    solid = babelPresetSolid;
+  }
 
   const babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
     transform(code, {

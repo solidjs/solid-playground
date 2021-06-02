@@ -12,7 +12,6 @@ specifiers:
   '@types/workbox-sw': ^4.3.1
   assert: ^2.0.0
   autoprefixer: ^10.2.6
-  babel-plugin-jsx-dom-expressions: ^0.27.7
   babel-preset-solid: 1.0.0-rc.2
   mitt: ^2.1.0
   monaco-editor: ^0.24.0
@@ -38,7 +37,6 @@ dependencies:
   '@babel/preset-typescript': 7.13.0_@babel+core@7.14.3
   '@babel/standalone': 7.14.4
   '@tailwindcss/forms': 0.3.2_tailwindcss@2.1.4
-  babel-plugin-jsx-dom-expressions: 0.27.7_@babel+core@7.14.3
   mitt: 2.1.0
   monaco-editor: 0.24.0
   monaco-editor-textmate: 2.2.2_f4e02165c849aeb4d7307ba002ca95c3
@@ -280,6 +278,7 @@ packages:
     resolution: {integrity: sha512-4cVvR2/1B693IuOvSI20xqqa/+bl7lqAMR59R4iu39R9aOX8/JoYY1sFaNvUMyMBGnHdwvJgUrzNLoUZxXypxA==}
     dependencies:
       '@babel/types': 7.14.4
+    dev: true
 
   /@babel/helper-module-transforms/7.14.2:
     resolution: {integrity: sha512-OznJUda/soKXv0XhpvzGWDnml4Qnwp16GN+D/kZIdLsWoHj05kyu8Rm5kXmMef+rVJZ0+4pSGLkeixdqNUATDA==}
@@ -644,6 +643,7 @@ packages:
     dependencies:
       '@babel/core': 7.14.3
       '@babel/helper-plugin-utils': 7.13.0
+    dev: true
 
   /@babel/plugin-syntax-logical-assignment-operators/7.10.4_@babel+core@7.14.2:
     resolution: {integrity: sha512-d8waShlpFDinQ5MtvGU9xDAOzKH47+FFoney2baFIoMr952hKOLp1HR7VszoZvOsV/4+RRszNY7D17ba0te0ig==}
@@ -1251,6 +1251,7 @@ packages:
     dependencies:
       '@babel/helper-validator-identifier': 7.14.0
       to-fast-properties: 2.0.0
+    dev: true
 
   /@fullhuman/postcss-purgecss/3.1.3:
     resolution: {integrity: sha512-kwOXw8fZ0Lt1QmeOOrd+o4Ibvp4UTEBFQbzvWldjlKv5n+G9sXfIPn1hh63IQIL8K8vbvv1oYMJiIUbuy9bGaA==}
@@ -1710,6 +1711,7 @@ packages:
       '@babel/types': 7.14.4
     transitivePeerDependencies:
       - '@babel/core'
+    dev: true
 
   /babel-plugin-polyfill-corejs2/0.2.0_@babel+core@7.14.2:
     resolution: {integrity: sha512-9bNwiR0dS881c5SHnzCmmGlMkJLl0OUZvxrxHo9w/iNoRuqaPjqlvBf4HrovXtQs/au5yKkpcdgfT1cC5PAZwg==}
