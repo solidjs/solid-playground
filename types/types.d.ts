@@ -12,6 +12,7 @@ export declare const Repl: Component<{
   setTabs: (x: Tab[]) => void;
   current: string;
   setCurrent: (x: string) => void;
+	version?: string;
 }>;
 
 export interface Tab {
