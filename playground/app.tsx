@@ -1,5 +1,13 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
-import { Show, onCleanup, createEffect, createSignal, onMount, JSX } from 'solid-js';
+import {
+  Show,
+  onCleanup,
+  createEffect,
+  createSignal,
+  createComputed,
+  untrack,
+  JSX,
+} from 'solid-js';
 
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
@@ -58,8 +66,6 @@ export const App = (): JSX.Element => {
   /**
    * This syncs the URL hash with the state of the current tab.
    * This is an optimized encoding for limiting URL size...
-   *
-   * TODO: Find a way to URL shorten this
    */
   createEffect(() => {
     const url = new URL(location.href);
@@ -68,16 +74,14 @@ export const App = (): JSX.Element => {
     history.replaceState({}, '', url.toString());
   });
 
-  onMount(async () => {
-    if (params.data && isValidUrl(params.data)) {
-      try {
-        const data = await fetch(params.data).then((r) => r.json());
+  if (params.data && isValidUrl(params.data)) {
+    fetch(params.data)
+      .then((r) => r.json())
+      .then((data) => {
         setTabs(processImport(data));
-      } catch (e) {
-        console.error('Failed to import browser data', e);
-      }
-    }
-  });
+      })
+      .catch((e) => console.error('Failed to import browser data', e));
+  }
 
   const [noHeader, noInteractive, isHorizontal, noActionBar, noEditableTabs] = [
     'noHeader',

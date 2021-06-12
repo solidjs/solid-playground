@@ -3,13 +3,16 @@ import { Tab } from '..';
 
 export const createTabList = (initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void] => {
   let sourceSignals: Record<string, [get: () => string, set: (value: string) => string]> = {};
+
   const mapTabs = (tabs: Tab[]): Tab[] => {
     const oldSignals = sourceSignals;
     sourceSignals = {};
+
     return tabs.map((tab) => {
       const id = `${tab.name}.${tab.type}`;
       sourceSignals[id] = oldSignals[id] || createSignal(tab.source);
       if (oldSignals[id]) oldSignals[id][1](tab.source);
+
       return {
         name: tab.name,
         type: tab.type,
@@ -22,6 +25,7 @@ export const createTabList = (initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => v
       };
     });
   };
-  const [tabs, trueSetTabs] = createSignal(mapTabs(initialTabs), false);
+
+  const [tabs, trueSetTabs] = createSignal(mapTabs(initialTabs), { equals: false });
   return [tabs, (tabs: Tab[]) => batch(() => trueSetTabs(mapTabs(tabs)))];
 };
