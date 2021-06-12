@@ -93,7 +93,15 @@ export const Preview: Component<Props> = (props) => {
           }
 		    </style>
 
-        <script type="module">
+      </head>
+      
+      <body>
+        <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
+          <p style="font-size: 1.5rem">Loading the playground...</p>
+        </div>
+        <div id="app"></div>
+
+        <script id="setup">
           const fakeConsole = {};
 
           function formatArgs(args) {
@@ -119,28 +127,21 @@ export const Preview: Component<Props> = (props) => {
               const { event, code } = data;
               if (event !== 'CODE_UPDATE') return;
               let app = document.getElementById('app');
+
+              if (window.dispose && typeof window.dispose === 'function') {
+                window.dispose();
+              }
   
               const oldScript = document.getElementById('script');
               if (oldScript) oldScript.remove();
-  
-              window.dispose && typeof window.dispose === 'function' && window.dispose()
-  
-              if (!app) {
-                app = document.createElement('div');
-                app.id = 'app';
-                document.body.appendChild(app);
-              }
-
-              if (app.innerHTML.length > 0) {
-                app.innerHTML = '';
-              }
   
               const script = document.createElement('script');
               script.innerHTML = code;
               script.type = 'module';
               script.id = 'script';
   
-              document.body.appendChild(script);
+              const setupScript = document.getElementById('setup');
+              setupScript.insertAdjacentElement('afterend', script);
   
               const load = document.getElementById('load');
               if (code && load) load.remove();
@@ -149,12 +150,6 @@ export const Preview: Component<Props> = (props) => {
             }
           })
         </script>
-      </head>
-      
-      <body>
-        <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
-          <p style="font-size: 1.5rem">Loading the playground...</p>
-        </div>
       </body>
     </html>
   `;
