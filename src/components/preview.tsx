@@ -63,6 +63,7 @@ export const Preview: Component<Props> = (props) => {
             padding: 8px;
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            max-width: 100%;
           }
 
           input, button, select, textarea {
@@ -117,16 +118,21 @@ export const Preview: Component<Props> = (props) => {
             try {
               const { event, code } = data;
               if (event !== 'CODE_UPDATE') return;
+              let app = document.getElementById('app');
   
               const oldScript = document.getElementById('script');
               if (oldScript) oldScript.remove();
   
               window.dispose && typeof window.dispose === 'function' && window.dispose()
   
-              if (!document.getElementById('app')) {
-                const app = document.createElement('div');
+              if (!app) {
+                app = document.createElement('div');
                 app.id = 'app';
                 document.body.appendChild(app);
+              }
+
+              if (app.innerHTML.length > 0) {
+                app.innerHTML = '';
               }
   
               const script = document.createElement('script');
@@ -143,14 +149,9 @@ export const Preview: Component<Props> = (props) => {
             }
           })
         </script>
-
-        <style>
-          body {
-            max-width: 100%;
-          }
-        </style>
       </head>
-      <body class="prose">
+      
+      <body>
         <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>
