@@ -59,6 +59,7 @@ export const App = (): JSX.Element => {
   const initialTabs = parseHash(url.hash && url.hash.slice(1), defaultTabs) || defaultTabs;
   const [tabs, setTabs] = createTabList(initialTabs);
   const [current, setCurrent] = createSignal('main.tsx');
+  const [isReady, setIsReady] = createSignal(false);
 
   const params = Object.fromEntries(url.searchParams.entries());
   const [version, setVersion] = createSignal(params.version || pkg.dependencies['solid-js']);
@@ -80,7 +81,10 @@ export const App = (): JSX.Element => {
       .then((data) => {
         setTabs(processImport(data));
       })
+      .then(() => setIsReady(true))
       .catch((e) => console.error('Failed to import browser data', e));
+  } else {
+    setIsReady(true);
   }
 
   const [noHeader, noInteractive, isHorizontal, noActionBar, noEditableTabs] = [
@@ -123,20 +127,22 @@ export const App = (): JSX.Element => {
         fallback={<div classList={{ 'md:col-span-2': !isHorizontal }}></div>}
       />
 
-      <Repl
-        compiler={compiler}
-        formatter={formatter}
-        isHorizontal={isHorizontal}
-        interactive={interactive}
-        actionBar={actionBar}
-        editableTabs={editableTabs}
-        dark={dark()}
-        tabs={tabs()}
-        setTabs={setTabs}
-        current={current()}
-        setCurrent={setCurrent}
-        version={version()}
-      />
+      <Show when={isReady()}>
+        <Repl
+          compiler={compiler}
+          formatter={formatter}
+          isHorizontal={isHorizontal}
+          interactive={interactive}
+          actionBar={actionBar}
+          editableTabs={editableTabs}
+          dark={dark()}
+          tabs={tabs()}
+          setTabs={setTabs}
+          current={current()}
+          setCurrent={setCurrent}
+          version={version()}
+        />
+      </Show>
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
     </div>
