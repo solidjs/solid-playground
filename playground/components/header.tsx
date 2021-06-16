@@ -146,8 +146,8 @@ export const Header: Component<{
           value={props.version}
         >
           {/* TODO: Make those dynamic */}
-          <option class="text-black cursor-pointer" value="1.0.0-rc.2">
-            v1.0.0-rc.2
+          <option class="text-black cursor-pointer" value="1.0.0-rc.5">
+            v1.0.0-rc.5
           </option>
           <option class="text-black cursor-pointer" value="0.26.5">
             v0.26.5
