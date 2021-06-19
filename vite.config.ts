@@ -10,7 +10,6 @@ export default defineConfig((env) => ({
   },
   build: {
     target: 'esnext',
-    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {},

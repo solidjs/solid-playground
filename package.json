@@ -14,9 +14,10 @@
   "module": "lib/index.js",
   "types": "lib/types.d.ts",
   "scripts": {
-    "dev": "patch-package && vite",
-    "build": "patch-package && vite build && workbox generateSW workbox-config.js",
-    "build:lib": "patch-package && vite build -c vite-lib.config.ts",
+    "prepare": "patch-package",
+    "dev": "vite",
+    "build": "vite build && workbox generateSW workbox-config.js",
+    "build:lib": "vite build -c vite-lib.config.ts",
     "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\"",
     "prepublishOnly": "pnpm build:lib"
   },
@@ -28,11 +29,11 @@
     "assert": "^2.0.0",
     "autoprefixer": "^10.2.6",
     "patch-package": "^6.4.7",
-    "postcss": "^8.3.4",
-    "tailwindcss": "^2.1.4",
-    "typescript": "^4.3.2",
-    "vite": "2.3.2",
-    "vite-plugin-solid": "^2.0.0-rc.1",
+    "postcss": "^8.3.5",
+    "tailwindcss": "^2.2.2",
+    "typescript": "^4.3.4",
+    "vite": "2.3.7",
+    "vite-plugin-solid": "^2.0.0-rc.2",
     "workbox-cli": "^6.1.5"
   },
   "dependencies": {
@@ -43,13 +44,13 @@
     "@tailwindcss/forms": "^0.3.3",
     "babel-preset-solid": "1.0.0-rc.5",
     "mitt": "^2.1.0",
-    "monaco-editor": "^0.24.0",
+    "monaco-editor": "^0.25.2",
     "monaco-editor-textmate": "^2.2.2",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
-    "prettier": "^2.3.0",
+    "prettier": "=2.3.0",
     "register-service-worker": "^1.7.2",
-    "rollup": "^2.52.0",
+    "rollup": "^2.52.1",
     "solid-js": "1.0.0-rc.5",
     "solid-utils": "^0.7.0"
   }
