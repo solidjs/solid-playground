@@ -43,7 +43,10 @@ async function loadBabel(solidVersion: string) {
 
   const babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
     transform(code, {
-      presets: [[solid, { ...opts.solid }], 'typescript'],
+      presets: [
+        [solid, { ...opts.solid }],
+        ['typescript', { onlyRemoveTypeImports: true }],
+      ],
       ...opts.babel,
     });
 
