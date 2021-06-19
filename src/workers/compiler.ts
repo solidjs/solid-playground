@@ -6,6 +6,7 @@ import { transform } from '@babel/standalone';
 import babelPresetSolid from 'babel-preset-solid';
 // @ts-ignore
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
+import dd from 'dedent';
 
 type TransformFunction = (code: string, opts: { babel: any; solid: any }) => any;
 
@@ -34,7 +35,7 @@ async function loadBabel(solidVersion: string) {
     const preset =
       solidVersion === SOLID_VERSION
         ? await Promise.resolve({ default: babelPresetSolid })
-        : await import(/** @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`);
+        : await import(/* @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`);
 
     solid = preset.default;
   } catch {
@@ -101,7 +102,7 @@ function virtual({
         const id = uid(filename);
 
         return {
-          code: `
+          code: dd`
             (() => {
               let stylesheet = document.getElementById('${id}');
               if (!stylesheet) {
@@ -120,7 +121,23 @@ function virtual({
       // Compile solid code
       if (/\.(j|t)sx$/.test(filename)) {
         const babel = await loadBabel(solidVersion);
-        return babel(code, { solid: solidOptions, babel: { filename } });
+
+        // This regex will extract whatever variable is imported from a relative file
+        // and output it to a random variable so that it's not treeshaken out by babel
+        // eg: import accordion from './accordion' will output `var _qwkdop12 = accordion
+        const importSpecifiersRegex =
+          /^import(?:\s+)((?:\w|{|}|:|,|\s)+)(?:\s+from\s+)(?:'|")(?:\.\/)\w+(?:'|")/gm;
+        const importSpecifiers = Array.from(code.matchAll(importSpecifiersRegex));
+        const patchedCode = importSpecifiers.reduce((hackedCode, match) => {
+          // If we don't have a specifier, skip that match
+          if (!match[1]) return hackedCode;
+
+          // Generate a random string
+          const random = '_' + Math.random().toString(36).substring(7);
+          return hackedCode + `\nvar ${random} = ${match[1]};\n`;
+        }, code);
+
+        return babel(patchedCode, { solid: solidOptions, babel: { filename } });
       }
     },
   };
