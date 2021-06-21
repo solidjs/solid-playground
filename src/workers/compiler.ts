@@ -125,22 +125,7 @@ function virtual({
       if (/\.(j|t)sx$/.test(filename)) {
         const babel = await loadBabel(solidVersion);
 
-        // This regex will extract whatever variable is imported from a relative file
-        // and output it to a random variable so that it's not treeshaken out by babel
-        // eg: import accordion from './accordion' will output `var _qwkdop12 = accordion
-        const importSpecifiersRegex =
-          /^import(?:\s+)((?:\w|{|}|:|,|\s)+)(?:\s+from\s+)(?:'|")(?:\.\/)\w+(?:'|")/gm;
-        const importSpecifiers = Array.from(code.matchAll(importSpecifiersRegex));
-        const patchedCode = importSpecifiers.reduce((hackedCode, match) => {
-          // If we don't have a specifier, skip that match
-          if (!match[1]) return hackedCode;
-
-          // Generate a random string
-          const random = '_' + Math.random().toString(36).substring(7);
-          return hackedCode + `\nvar ${random} = ${match[1]};\n`;
-        }, code);
-
-        return babel(patchedCode, { solid: solidOptions, babel: { filename } });
+        return babel(code, { solid: solidOptions, babel: { filename } });
       }
     },
   };
