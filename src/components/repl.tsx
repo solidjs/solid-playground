@@ -1,5 +1,3 @@
-import '../assets/tailwind.css';
-
 import {
   Component,
   Show,

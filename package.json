@@ -14,9 +14,10 @@
   "module": "lib/index.js",
   "types": "lib/types.d.ts",
   "scripts": {
-    "dev": "patch-package && vite",
-    "build": "patch-package && vite build && workbox generateSW workbox-config.js",
-    "build:lib": "patch-package && vite build -c vite-lib.config.ts",
+    "prepare": "patch-package",
+    "dev": "vite",
+    "build": "vite build && workbox generateSW workbox-config.js",
+    "build:lib": "vite build -c vite-lib.config.ts",
     "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\"",
     "prepublishOnly": "pnpm build:lib"
   },
@@ -32,8 +33,8 @@
     "postcss": "^8.3.5",
     "tailwindcss": "^2.2.2",
     "typescript": "^4.3.4",
-    "vite": "2.3.2",
-    "vite-plugin-solid": "^2.0.0-rc.1",
+    "vite": "2.3.7",
+    "vite-plugin-solid": "^2.0.0-rc.2",
     "workbox-cli": "^6.1.5"
   },
   "dependencies": {
@@ -49,7 +50,7 @@
     "monaco-editor-textmate": "^3.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
-    "prettier": "^2.3.0",
+    "prettier": "=2.3.0",
     "register-service-worker": "^1.7.2",
     "rollup": "^2.52.1",
     "solid-js": "1.0.0-rc.6",
