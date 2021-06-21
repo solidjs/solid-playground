@@ -52,7 +52,7 @@
     "onigasm": "^2.2.5",
     "prettier": "=2.3.0",
     "register-service-worker": "^1.7.2",
-    "rollup": "^2.52.1",
+    "rollup": "^2.52.2",
     "solid-js": "1.0.0-rc.6",
     "solid-utils": "^0.7.0"
   }

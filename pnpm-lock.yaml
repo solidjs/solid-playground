@@ -22,9 +22,9 @@ specifiers:
   onigasm: ^2.2.5
   patch-package: ^6.4.7
   postcss: ^8.3.5
-  prettier: ^2.3.0
+  prettier: '=2.3.0'
   register-service-worker: ^1.7.2
-  rollup: ^2.52.1
+  rollup: ^2.52.2
   solid-js: 1.0.0-rc.6
   solid-utils: ^0.7.0
   tailwindcss: ^2.2.2
@@ -48,7 +48,7 @@ dependencies:
   onigasm: 2.2.5
   prettier: 2.3.0
   register-service-worker: 1.7.2
-  rollup: 2.52.1
+  rollup: 2.52.2
   solid-js: 1.0.0-rc.6
   solid-utils: 0.7.0_solid-js@1.0.0-rc.6
 
@@ -3818,11 +3818,6 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /picomatch/2.2.3:
-    resolution: {integrity: sha512-KpELjfwcCDUb9PeigTs2mBJzXUPzAuP2oPcA989He8Rte0+YUAjw1JVedDhuTKPkHjSYzMN3npC9luThGYEKdg==}
-    engines: {node: '>=8.6'}
-    dev: true
-
   /picomatch/2.3.0:
     resolution: {integrity: sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==}
     engines: {node: '>=8.6'}
@@ -3879,24 +3874,6 @@ packages:
 
   /postcss-value-parser/4.1.0:
     resolution: {integrity: sha512-97DXOFbQJhk71ne5/Mt6cOu6yxsSfM0QGQyl0L25Gca4yGWEGJaig7l7gbCX623VqTBNGLRLaVUCnNkcedlRSQ==}
-    dev: true
-
-  /postcss/8.2.15:
-    resolution: {integrity: sha512-2zO3b26eJD/8rb106Qu2o7Qgg52ND5HPjcyQiK2B98O388h43A448LCslC0dI2P97wCAQRJsFvwTRcXxTKds+Q==}
-    engines: {node: ^10 || ^12 || >=14}
-    dependencies:
-      colorette: 1.2.2
-      nanoid: 3.1.23
-      source-map: 0.6.1
-    dev: true
-
-  /postcss/8.3.0:
-    resolution: {integrity: sha512-+ogXpdAjWGa+fdYY5BQ96V/6tAo+TdSSIMP5huJBIygdWwKtVoB5JWZ7yUd4xZ8r+8Kvvx4nyg/PQ071H4UtcQ==}
-    engines: {node: ^10 || ^12 || >=14}
-    dependencies:
-      colorette: 1.2.2
-      nanoid: 3.1.23
-      source-map-js: 0.6.2
     dev: true
 
   /postcss/8.3.5:
@@ -4207,7 +4184,6 @@ packages:
       glob: 7.1.7
     dev: true
 
-
   /rollup-plugin-terser/7.0.2_rollup@2.52.1:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
     peerDependencies:
@@ -4220,28 +4196,21 @@ packages:
       terser: 5.7.0
     dev: true
 
-  /rollup/2.47.0:
-    resolution: {integrity: sha512-rqBjgq9hQfW0vRmz+0S062ORRNJXvwRpzxhFXORvar/maZqY6za3rgQ/p1Glg+j1hnc1GtYyQCPiAei95uTElg==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
-  /rollup/2.50.5:
-    resolution: {integrity: sha512-Ztz4NurU2LbS3Jn5rlhnYv35z6pkjBUmYKr94fOBIKINKRO6kug9NTFHArT7jqwMP2kqEZ39jJuEtkk91NBltQ==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
- 
   /rollup/2.52.1:
     resolution: {integrity: sha512-/SPqz8UGnp4P1hq6wc9gdTqA2bXQXGx13TtoL03GBm6qGRI6Hm3p4Io7GeiHNLl0BsQAne1JNYY+q/apcY933w==}
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
+    dev: true
+
+  /rollup/2.52.2:
+    resolution: {integrity: sha512-4RlFC3k2BIHlUsJ9mGd8OO+9Lm2eDF5P7+6DNQOp5sx+7N/1tFM01kELfbxlMX3MxT6owvLB1ln4S3QvvQlbUA==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: false
 
   /run-async/2.4.1:
     resolution: {integrity: sha512-tvVnVv01b8c1RrA6Ep7JkStj85Guv/YrMcwqYQnwjsAS2cTmmPGBBjAjpCW7RrSodNSoE2/qg9O4bceNvUuDgQ==}
@@ -4378,20 +4347,15 @@ packages:
     resolution: {integrity: sha512-cMjxcVoyRBgnfSpwYxXPM5WF800guR+x/01RDBFQjAAkqU7X28GbRkTNKcyQ1KHcFOnzEsG18J+JJ9/PvqyNmw==}
     dev: false
 
-  /solid-js/1.0.0-rc.2:
-    resolution: {integrity: sha512-RsZnESPbvEPC8txya63kKrxnbR+sfj2P0+sKdA8llq5GCyIzc5jASWyGDeXe8j45UQaKjd9Trx/AmSS/uT+ujw==}
-    dev: true
-
   /solid-js/1.0.0-rc.6:
     resolution: {integrity: sha512-Fh32VXg+exSG2dvVPLLZ6aAMczfAqC7XTI9J+0nO+3DhnmVuC6Mn6qU30DLcQBdNr3Y/UglUmjoEJHKygb5+zA==}
-    dev: false
 
-  /solid-refresh/0.1.2_solid-js@1.0.0-rc.5:
+  /solid-refresh/0.1.2_solid-js@1.0.0-rc.6:
     resolution: {integrity: sha512-irpGTZcn9xtzTQZhHslIEB4D1zYpWizT6GZ15GXyQE/gFBn6bKo53umQGmhq3NqRFqPXXavFDhiEQnyC08gzNg==}
     peerDependencies:
       solid-js: '*'
     dependencies:
-      solid-js: 1.0.0-rc.5
+      solid-js: 1.0.0-rc.6
     dev: true
 
   /solid-utils/0.7.0_solid-js@1.0.0-rc.6:
@@ -4918,8 +4882,8 @@ packages:
       '@babel/preset-typescript': 7.14.5_@babel+core@7.14.6
       babel-preset-solid: 1.0.0-rc.5_@babel+core@7.14.6
       merge-anything: 4.0.1
-      solid-js: 1.0.0-rc.5
-      solid-refresh: 0.1.2_solid-js@1.0.0-rc.5
+      solid-js: 1.0.0-rc.6
+      solid-refresh: 0.1.2_solid-js@1.0.0-rc.6
       vite: 2.3.7
     transitivePeerDependencies:
       - supports-color
