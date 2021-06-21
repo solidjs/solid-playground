@@ -9,13 +9,15 @@ specifiers:
   '@babel/types': ^7.14.5
   '@tailwindcss/forms': ^0.3.3
   '@types/babel__standalone': ^7.1.3
+  '@types/dedent': ^0.7.0
   '@types/workbox-sw': ^4.3.1
   assert: ^2.0.0
   autoprefixer: ^10.2.6
   babel-preset-solid: 1.0.0-rc.5
+  dedent: ^0.7.0
   mitt: ^2.1.0
   monaco-editor: ^0.25.2
-  monaco-editor-textmate: ^2.2.2
+  monaco-editor-textmate: ^3.0.0
   monaco-textmate: ^3.0.1
   onigasm: ^2.2.5
   patch-package: ^6.4.7
@@ -23,7 +25,7 @@ specifiers:
   prettier: ^2.3.0
   register-service-worker: ^1.7.2
   rollup: ^2.52.1
-  solid-js: 1.0.0-rc.5
+  solid-js: 1.0.0-rc.6
   solid-utils: ^0.7.0
   tailwindcss: ^2.2.2
   typescript: ^4.3.4
@@ -38,21 +40,23 @@ dependencies:
   '@babel/standalone': 7.14.6
   '@tailwindcss/forms': 0.3.3_tailwindcss@2.2.2
   babel-preset-solid: 1.0.0-rc.5_@babel+core@7.14.6
+  dedent: 0.7.0
   mitt: 2.1.0
   monaco-editor: 0.25.2
-  monaco-editor-textmate: 2.2.2_7433eca6fca91ee8e682154bf8474308
+  monaco-editor-textmate: 3.0.0_7433eca6fca91ee8e682154bf8474308
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
   prettier: 2.3.0
   register-service-worker: 1.7.2
   rollup: 2.52.1
-  solid-js: 1.0.0-rc.5
-  solid-utils: 0.7.0_solid-js@1.0.0-rc.5
+  solid-js: 1.0.0-rc.6
+  solid-utils: 0.7.0_solid-js@1.0.0-rc.6
 
 devDependencies:
   '@babel/core': 7.14.6
   '@babel/types': 7.14.5
   '@types/babel__standalone': 7.1.3
+  '@types/dedent': 0.7.0
   '@types/workbox-sw': 4.3.1
   assert: 2.0.0
   autoprefixer: 10.2.6_postcss@8.3.5
@@ -1365,6 +1369,10 @@ packages:
       - supports-color
     dev: true
 
+  /@types/dedent/0.7.0:
+    resolution: {integrity: sha512-EGlKlgMhnLt/cM4DbUSafFdrkeJoC9Mvnj0PUCU7tFmTjMjNRT957kXCx0wYm3JuEq4o4ZsS5vG+NlkM2DMd2A==}
+    dev: true
+
   /@types/estree/0.0.39:
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
     dev: true
@@ -2178,6 +2186,10 @@ packages:
     dependencies:
       mimic-response: 1.0.1
     dev: true
+
+  /dedent/0.7.0:
+    resolution: {integrity: sha1-JJXduvbrh0q7Dhvp3yLS5aVEMmw=}
+    dev: false
 
   /deep-extend/0.6.0:
     resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
@@ -3483,8 +3495,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /monaco-editor-textmate/2.2.2_7433eca6fca91ee8e682154bf8474308:
-    resolution: {integrity: sha512-xcZRi2QkH8u2a4OFkdRReW2ulmRNpxMYPhypnl9WZI2ylXEfZ8wxCBJdLJN95wofUGs7RWilHT37FfoGudexLw==}
+  /monaco-editor-textmate/3.0.0_7433eca6fca91ee8e682154bf8474308:
+    resolution: {integrity: sha512-4BK3ual4WllRpiQBDcBO8NKdbk4ukdBtnl23cRYvu1eNWOWKYOBM0rYac50HvFClSbtd5GMezLPjkaim0iM7sw==}
     peerDependencies:
       monaco-editor: 0.x.x
       monaco-textmate: ^3.0.0
@@ -3806,6 +3818,11 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  /picomatch/2.2.3:
+    resolution: {integrity: sha512-KpELjfwcCDUb9PeigTs2mBJzXUPzAuP2oPcA989He8Rte0+YUAjw1JVedDhuTKPkHjSYzMN3npC9luThGYEKdg==}
+    engines: {node: '>=8.6'}
+    dev: true
+
   /picomatch/2.3.0:
     resolution: {integrity: sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==}
     engines: {node: '>=8.6'}
@@ -3862,6 +3879,24 @@ packages:
 
   /postcss-value-parser/4.1.0:
     resolution: {integrity: sha512-97DXOFbQJhk71ne5/Mt6cOu6yxsSfM0QGQyl0L25Gca4yGWEGJaig7l7gbCX623VqTBNGLRLaVUCnNkcedlRSQ==}
+    dev: true
+
+  /postcss/8.2.15:
+    resolution: {integrity: sha512-2zO3b26eJD/8rb106Qu2o7Qgg52ND5HPjcyQiK2B98O388h43A448LCslC0dI2P97wCAQRJsFvwTRcXxTKds+Q==}
+    engines: {node: ^10 || ^12 || >=14}
+    dependencies:
+      colorette: 1.2.2
+      nanoid: 3.1.23
+      source-map: 0.6.1
+    dev: true
+
+  /postcss/8.3.0:
+    resolution: {integrity: sha512-+ogXpdAjWGa+fdYY5BQ96V/6tAo+TdSSIMP5huJBIygdWwKtVoB5JWZ7yUd4xZ8r+8Kvvx4nyg/PQ071H4UtcQ==}
+    engines: {node: ^10 || ^12 || >=14}
+    dependencies:
+      colorette: 1.2.2
+      nanoid: 3.1.23
+      source-map-js: 0.6.2
     dev: true
 
   /postcss/8.3.5:
@@ -4172,6 +4207,7 @@ packages:
       glob: 7.1.7
     dev: true
 
+
   /rollup-plugin-terser/7.0.2_rollup@2.52.1:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
     peerDependencies:
@@ -4184,6 +4220,22 @@ packages:
       terser: 5.7.0
     dev: true
 
+  /rollup/2.47.0:
+    resolution: {integrity: sha512-rqBjgq9hQfW0vRmz+0S062ORRNJXvwRpzxhFXORvar/maZqY6za3rgQ/p1Glg+j1hnc1GtYyQCPiAei95uTElg==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /rollup/2.50.5:
+    resolution: {integrity: sha512-Ztz4NurU2LbS3Jn5rlhnYv35z6pkjBUmYKr94fOBIKINKRO6kug9NTFHArT7jqwMP2kqEZ39jJuEtkk91NBltQ==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+ 
   /rollup/2.52.1:
     resolution: {integrity: sha512-/SPqz8UGnp4P1hq6wc9gdTqA2bXQXGx13TtoL03GBm6qGRI6Hm3p4Io7GeiHNLl0BsQAne1JNYY+q/apcY933w==}
     engines: {node: '>=10.0.0'}
@@ -4326,8 +4378,13 @@ packages:
     resolution: {integrity: sha512-cMjxcVoyRBgnfSpwYxXPM5WF800guR+x/01RDBFQjAAkqU7X28GbRkTNKcyQ1KHcFOnzEsG18J+JJ9/PvqyNmw==}
     dev: false
 
-  /solid-js/1.0.0-rc.5:
-    resolution: {integrity: sha512-0jGV4DucYQPGMsXPoYzg0l5JucrMjE9VqH5Pfbi9WivJU7v3YS0hl2zWis89GFML5cYuCRErZ+qcquwzMrRgaA==}
+  /solid-js/1.0.0-rc.2:
+    resolution: {integrity: sha512-RsZnESPbvEPC8txya63kKrxnbR+sfj2P0+sKdA8llq5GCyIzc5jASWyGDeXe8j45UQaKjd9Trx/AmSS/uT+ujw==}
+    dev: true
+
+  /solid-js/1.0.0-rc.6:
+    resolution: {integrity: sha512-Fh32VXg+exSG2dvVPLLZ6aAMczfAqC7XTI9J+0nO+3DhnmVuC6Mn6qU30DLcQBdNr3Y/UglUmjoEJHKygb5+zA==}
+    dev: false
 
   /solid-refresh/0.1.2_solid-js@1.0.0-rc.5:
     resolution: {integrity: sha512-irpGTZcn9xtzTQZhHslIEB4D1zYpWizT6GZ15GXyQE/gFBn6bKo53umQGmhq3NqRFqPXXavFDhiEQnyC08gzNg==}
@@ -4337,12 +4394,12 @@ packages:
       solid-js: 1.0.0-rc.5
     dev: true
 
-  /solid-utils/0.7.0_solid-js@1.0.0-rc.5:
+  /solid-utils/0.7.0_solid-js@1.0.0-rc.6:
     resolution: {integrity: sha512-ApczlZ97BhfR+PKYph2bXJT+DhnjGoZlx3hCO8rDPz8sglQfAFfh9Du/APzcZljIEyYylC774R+TvpQNkBJUyA==}
     peerDependencies:
       solid-js: '>= 0.26'
     dependencies:
-      solid-js: 1.0.0-rc.5
+      solid-js: 1.0.0-rc.6
     dev: false
 
   /source-map-js/0.6.2:
