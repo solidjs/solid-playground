@@ -8,6 +8,7 @@ export default defineConfig({
     'process.env.NODE_DEBUG': 'false',
   },
   publicDir: 'types',
+  base: "./",
   build: {
     lib: {
       entry: '', // we override this with input below
@@ -23,7 +24,6 @@ export default defineConfig({
       output: {
         dir: 'lib',
         format: 'es',
-        manualChunks: {},
         entryFileNames: undefined,
       },
     },

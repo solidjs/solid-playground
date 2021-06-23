@@ -1,4 +1,4 @@
-import { Tab } from '../';
+import type { Tab } from '../';
 
 interface PlaygroundFile {
   name?: string;

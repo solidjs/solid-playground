@@ -1,5 +1,5 @@
 import { Component, createEffect, onCleanup } from 'solid-js';
-import { Tab } from '..';
+import type { Tab } from '..';
 import { Uri, editor } from 'monaco-editor';
 import { keyedMap } from '../utils/keyedMap';
 

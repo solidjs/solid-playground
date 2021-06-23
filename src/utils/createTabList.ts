@@ -1,5 +1,5 @@
 import { batch, createSignal } from 'solid-js';
-import { Tab } from '..';
+import type { Tab } from '..';
 
 export const createTabList = (initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void] => {
   let sourceSignals: Record<string, [get: () => string, set: (value: string) => string]> = {};

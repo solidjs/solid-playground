@@ -1,4 +1,5 @@
 const colors = require('tailwindcss/colors');
+const theme = require('tailwindcss/defaultTheme');
 
 module.exports = {
   mode: 'jit',
@@ -21,24 +22,7 @@ module.exports = {
       },
       fontFamily: {
         // This font doesn't render properly, it seems it has a line-height issue
-        display: [
-          'Gordita',
-          ' ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'Noto Sans',
-          'sans-serif',
-          'Apple Color Emoji',
-          'Segoe UI Emoji',
-          'Segoe UI Symbol',
-          'Noto Color Emoji',
-        ],
-        mono: ['Fira Code', 'monospace'],
+        sans: ['Gordita', ...theme.fontFamily.sans],
       },
       fontSize: {
         '0.5sm': ['0.84375rem', '1.25rem'],

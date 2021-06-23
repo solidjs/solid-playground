@@ -16,14 +16,6 @@
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'Fira Code';
-  src: url('./fonts/FiraCode/fira_code.woff2') format('woff2-variations'),
-    url('./fonts/FiraCode/fira_code.woff') format('woff-variations');
-  font-weight: 300 700;
-  font-style: normal;
-}
-
 div[contenteditable='true']:focus {
   outline: none !important;
 }

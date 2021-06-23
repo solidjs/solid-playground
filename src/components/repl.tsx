@@ -16,7 +16,7 @@ import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
 import { Error } from './error';
 
-import { Tab } from '../';
+import type { Tab } from '../';
 import { debounce } from '../utils/debounce';
 import { throttle } from '../utils/throttle';
 import { formatMs } from '../utils/formatTime';
@@ -235,7 +235,7 @@ export const Repl: Component<{
 
   return (
     <div
-      class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-display"
+      class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
@@ -375,7 +375,7 @@ export const Repl: Component<{
       <Suspense
         fallback={
           <div class="row-start-2 col-span-3 flex items-center justify-center h-full">
-            <p class="animate-pulse text-xl font-display">Loading the playground...</p>
+            <p class="animate-pulse text-xl font-sans">Loading the playground...</p>
           </div>
         }
       >
