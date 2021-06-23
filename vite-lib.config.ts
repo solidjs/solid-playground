@@ -6,7 +6,6 @@ export default defineConfig({
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',
-    global: 'globalThis',
   },
   publicDir: 'types',
   build: {

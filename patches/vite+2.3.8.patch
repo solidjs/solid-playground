@@ -1,8 +1,26 @@
-diff --git a/node_modules/vite/dist/node/chunks/dep-bc228bbb.js b/node_modules/vite/dist/node/chunks/dep-bc228bbb.js
-index 091815b..27321fa 100644
---- a/node_modules/vite/dist/node/chunks/dep-bc228bbb.js
-+++ b/node_modules/vite/dist/node/chunks/dep-bc228bbb.js
-@@ -69929,20 +69929,27 @@ function webWorkerPlugin(config) {
+diff --git a/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js b/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js
+index d376d1e..6f9caca 100644
+--- a/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js
++++ b/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js
+@@ -6016,7 +6016,7 @@ async function fileToBuiltUrl(id, config, pluginContext, skipPublicCheck = false
+     const postfix = (search || '') + (hash || '');
+     const content = await fs$t.promises.readFile(file);
+     let url;
+-    if (config.build.lib ||
++    if ((config.build.lib && !file.endsWith('.woff') && !file.endsWith('.woff2')) ||
+         (!file.endsWith('.svg') &&
+             content.length < Number(config.build.assetsInlineLimit))) {
+         // base64 inlined as a string
+@@ -24095,7 +24095,7 @@ function buildImportAnalysisPlugin(config) {
+             }
+         },
+         async transform(source, importer) {
+-            if (importer.includes('node_modules') &&
++            if (config.build.lib || importer.includes('node_modules') &&
+                 !source.includes('import.meta.glob')) {
+                 return;
+             }
+@@ -71218,20 +71218,27 @@ function webWorkerPlugin(config) {
              }
              let url;
              if (isBuild) {
@@ -43,7 +61,7 @@ index 091815b..27321fa 100644
              export default function WorkerWrapper() {
                const objURL = (window.URL || window.webkitURL).createObjectURL(blob);
                try {
-@@ -69951,16 +69958,14 @@ function webWorkerPlugin(config) {
+@@ -71240,16 +71247,14 @@ function webWorkerPlugin(config) {
                  (window.URL || window.webkitURL).revokeObjectURL(objURL);
                }
              }`;
