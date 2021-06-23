@@ -1,5 +1,5 @@
 diff --git a/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js b/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js
-index d376d1e..6f9caca 100644
+index d376d1e..7b19702 100644
 --- a/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js
 +++ b/node_modules/vite/dist/node/chunks/dep-0ed4fbc0.js
 @@ -6016,7 +6016,7 @@ async function fileToBuiltUrl(id, config, pluginContext, skipPublicCheck = false
@@ -7,10 +7,19 @@ index d376d1e..6f9caca 100644
      const content = await fs$t.promises.readFile(file);
      let url;
 -    if (config.build.lib ||
-+    if ((config.build.lib && !file.endsWith('.woff') && !file.endsWith('.woff2')) ||
++    if ((config.build.lib && !file.endsWith('.woff')) ||
          (!file.endsWith('.svg') &&
              content.length < Number(config.build.assetsInlineLimit))) {
          // base64 inlined as a string
+@@ -23207,7 +23207,7 @@ function cssPostPlugin(config) {
+                 css = css.replace(assetUrlRE, (_, fileHash, postfix = '') => {
+                     const filename = getAssetFilename(fileHash, config) + postfix;
+                     registerAssetToChunk(chunk, filename);
+-                    if (!isRelativeBase || inlined) {
++                    if (!isRelativeBase || inlined || config.build.lib) {
+                         // absolute base or relative base but inlined (injected as style tag into
+                         // index.html) use the base as-is
+                         return config.base + filename;
 @@ -24095,7 +24095,7 @@ function buildImportAnalysisPlugin(config) {
              }
          },
