@@ -1,16 +1,5 @@
-import {
-  Component,
-  Show,
-  For,
-  Suspense,
-  createSignal,
-  createEffect,
-  unwrap,
-  lazy,
-  createState,
-  batch,
-} from 'solid-js';
-
+import { Component, Show, For, Suspense, createSignal, createEffect, lazy, batch } from 'solid-js';
+import { unwrap, createStore } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
@@ -54,7 +43,7 @@ export const Repl: Component<{
 
   const tabRefs = new Map<string, HTMLSpanElement>();
 
-  const [store, setStore] = createState({
+  const [store, setStore] = createStore({
     error: '',
     compiled: '',
     mode: 'DOM' as keyof typeof compileMode,

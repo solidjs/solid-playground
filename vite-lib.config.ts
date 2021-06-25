@@ -19,7 +19,7 @@ export default defineConfig({
     target: 'esnext',
     minify: false,
     rollupOptions: {
-      external: ['solid-js', 'solid-js/web', 'monaco-editor'],
+      external: ['solid-js', 'solid-js/web', 'solid-js/store', 'monaco-editor'],
       input: ['src/index.ts', 'src/workers/formatter.ts', 'src/workers/compiler.ts'],
       output: {
         dir: 'lib',
