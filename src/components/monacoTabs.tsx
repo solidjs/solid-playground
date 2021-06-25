@@ -7,7 +7,7 @@ const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
   const fileUri = Uri.parse(`file:///output_dont_import.tsx`);
   const model = editor.createModel('', 'typescript', fileUri);
   createEffect(() => {
-    model.setValue(props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9.]+)/g, ''));
+    model.setValue(props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9][0-9.\-a-z]+)/g, ''));
   });
   onCleanup(() => model.dispose());
 

@@ -28,7 +28,7 @@ export const keyedMap = <T>(props: {
         if (!lookup) {
           createRoot((dispose) => {
             disposers.set(keyValue, dispose);
-            const item = createSignal(listItem, true);
+            const item = createSignal(listItem);
             const result = mapFn(item[0]);
             newNodes.set(keyValue, { item, result });
             return result;
