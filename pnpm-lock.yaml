@@ -13,7 +13,7 @@ specifiers:
   '@types/workbox-sw': ^4.3.1
   assert: ^2.0.0
   autoprefixer: ^10.2.6
-  babel-preset-solid: 1.0.0-rc.9
+  babel-preset-solid: 1.0.0
   dedent: ^0.7.0
   mitt: ^3.0.0
   monaco-editor: ^0.25.2
@@ -25,11 +25,11 @@ specifiers:
   prettier: '=2.3.0'
   register-service-worker: ^1.7.2
   rollup: ^2.52.3
-  solid-js: 1.0.0-rc.9
+  solid-js: 1.0.0
   tailwindcss: ^2.2.4
   typescript: ^4.3.4
   vite: 2.3.8
-  vite-plugin-solid: ^2.0.0-rc.4
+  vite-plugin-solid: ^2.0.0
   workbox-cli: ^6.1.5
 
 dependencies:
@@ -38,7 +38,7 @@ dependencies:
   '@babel/preset-typescript': 7.14.5_@babel+core@7.14.6
   '@babel/standalone': 7.14.7
   '@tailwindcss/forms': 0.3.3_tailwindcss@2.2.4
-  babel-preset-solid: 1.0.0-rc.9_@babel+core@7.14.6
+  babel-preset-solid: 1.0.0_@babel+core@7.14.6
   dedent: 0.7.0
   mitt: 3.0.0
   monaco-editor: 0.25.2
@@ -48,7 +48,7 @@ dependencies:
   prettier: 2.3.0
   register-service-worker: 1.7.2
   rollup: 2.52.3
-  solid-js: 1.0.0-rc.9
+  solid-js: 1.0.0
 
 devDependencies:
   '@babel/core': 7.14.6
@@ -63,7 +63,7 @@ devDependencies:
   tailwindcss: 2.2.4_72be89de93206f86f2d67dd5290ec14d
   typescript: 4.3.4
   vite: 2.3.8
-  vite-plugin-solid: 2.0.0-rc.4
+  vite-plugin-solid: 2.0.0
   workbox-cli: 6.1.5
 
 packages:
@@ -1658,8 +1658,8 @@ packages:
       object.assign: 4.1.2
     dev: true
 
-  /babel-plugin-jsx-dom-expressions/0.28.9_@babel+core@7.14.6:
-    resolution: {integrity: sha512-WnHiSirT1boeD3OuYR+v/iFiFcnTisoPsdIwZnSe53+q/nxJfDg5KQkI0/mHJrAQHYeB0eI6aS/TCdIylDmxvg==}
+  /babel-plugin-jsx-dom-expressions/0.29.0_@babel+core@7.14.6:
+    resolution: {integrity: sha512-p0uI9OpgRAGvym3LLzIMMaH+ZpW0khi0JwbnZ7cARE9nOBw1dVjrtGNGt8KyYzfIg0o9nkaYZ+Jaja8SgMy3/A==}
     dependencies:
       '@babel/helper-module-imports': 7.14.5
       '@babel/plugin-syntax-jsx': 7.14.5_@babel+core@7.14.6
@@ -1703,10 +1703,10 @@ packages:
       - supports-color
     dev: true
 
-  /babel-preset-solid/1.0.0-rc.9_@babel+core@7.14.6:
-    resolution: {integrity: sha512-S3C5TdcDxH+QjaJPcBCrA1ttJrLgYdTDdDmQLyFv+gGQX4OBSyRb8MjTAQAJ8S1lFQ75ZSnyHkTzD4LzkPQKwA==}
+  /babel-preset-solid/1.0.0_@babel+core@7.14.6:
+    resolution: {integrity: sha512-fXWDS+5Mh2PgjFvIEpfztMHORd1MutUsnpLYEl40HvwbdiM8zYaLxkHlSdAoRJ8B8HuWvEjBt8y9jzChq+SRAg==}
     dependencies:
-      babel-plugin-jsx-dom-expressions: 0.28.9_@babel+core@7.14.6
+      babel-plugin-jsx-dom-expressions: 0.29.0_@babel+core@7.14.6
     transitivePeerDependencies:
       - '@babel/core'
 
@@ -4332,15 +4332,19 @@ packages:
       use: 3.1.1
     dev: true
 
+  /solid-js/1.0.0:
+    resolution: {integrity: sha512-5huTDVyMqZSjg5Sa4mwl15feK4il1cE68n4weL5NYGC8lX2wiDlcHhBdSB8trKgaJ50Q9/pwtLrQngFaDC+5Tw==}
+
   /solid-js/1.0.0-rc.9:
     resolution: {integrity: sha512-bhSihGFDn0Bh06shr+Qy6pb5Mrx571BnTGn0TNcYG34CU5lwFwe3czpHvmZzMXcnBv8dF+BkM+xWDyKtRq9z8Q==}
+    dev: false
 
-  /solid-refresh/0.2.0-rc.0_solid-js@1.0.0-rc.9:
-    resolution: {integrity: sha512-GbhouwMFCQ0HZAcM65q9vnRrNBlOlhDilPsNwC8lN8DcYOpCx54LZZWG23O3pttSGISl62Xm/qC4X0dJcpUr/Q==}
+  /solid-refresh/0.2.1_solid-js@1.0.0:
+    resolution: {integrity: sha512-8iqVw+FxDUj5CQnadAD+D5bLlzA/yBhMx2rHECGN2e3IQGtBArNdBUHduPBPpqfnufvnP2IwszLhgcg/IdABQQ==}
     peerDependencies:
-      solid-js: '*'
+      solid-js: ^1.0.0
     dependencies:
-      solid-js: 1.0.0-rc.9
+      solid-js: 1.0.0
     dev: true
 
   /source-map-js/0.6.2:
@@ -4852,15 +4856,15 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-plugin-solid/2.0.0-rc.4:
-    resolution: {integrity: sha512-QJaQgcnxcQDz93DD2Nmc9tZ9V2h3bHKOhMYQA71phYo8+GASAGYKWkGEmyZU1yIJWlWGek1e7idGDW9F4EG2vg==}
+  /vite-plugin-solid/2.0.0:
+    resolution: {integrity: sha512-qH3+UpEYfqjIOcG85Sh+UGhzNSnMO4NLHfrHAf4h5Ilt2M4f9Pf4AYXThHT/zleyLPJKQGXs7OVRqh5AMPgCoQ==}
     dependencies:
       '@babel/core': 7.14.6
       '@babel/preset-typescript': 7.14.5_@babel+core@7.14.6
-      babel-preset-solid: 1.0.0-rc.9_@babel+core@7.14.6
+      babel-preset-solid: 1.0.0_@babel+core@7.14.6
       merge-anything: 4.0.1
-      solid-js: 1.0.0-rc.9
-      solid-refresh: 0.2.0-rc.0_solid-js@1.0.0-rc.9
+      solid-js: 1.0.0
+      solid-refresh: 0.2.1_solid-js@1.0.0
       vite: 2.3.8
     transitivePeerDependencies:
       - supports-color

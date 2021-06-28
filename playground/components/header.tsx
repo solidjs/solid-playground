@@ -1,4 +1,4 @@
-import { Component, createSignal, JSX, Show } from 'solid-js';
+import { Component, createSignal, JSX, Show, createMemo, For } from 'solid-js';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { share, link, upload } from '@amoutonbrady/solid-heroicons/outline';
 
@@ -44,6 +44,12 @@ export const Header: Component<{
     props.setTabs(tabs);
     props.setCurrent('main.tsx');
   };
+
+  const versions = createMemo(() => {
+    const hardCoded = ['0.26.5', '1.0.0'];
+
+    return hardCoded.includes(props.version) ? hardCoded : [props.version, ...hardCoded];
+  });
 
   return (
     <header
@@ -145,31 +151,13 @@ export const Header: Component<{
           onChange={(e) => props.onVersionChange(e.currentTarget.value)}
           value={props.version}
         >
-          {/* TODO: Make those dynamic */}
-          <option class="text-black cursor-pointer" value="1.0.0-rc.9">
-            v1.0.0-rc.9
-          </option>
-          <option class="text-black cursor-pointer" value="1.0.0-rc.7">
-            v1.0.0-rc.7
-          </option>
-          <option class="text-black cursor-pointer" value="1.0.0-rc.6">
-            v1.0.0-rc.6
-          </option>
-          <option class="text-black cursor-pointer" value="1.0.0-rc.5">
-            v1.0.0-rc.5
-          </option>
-          <option class="text-black cursor-pointer" value="1.0.0-rc.4">
-            v1.0.0-rc.4
-          </option>
-          <option class="text-black cursor-pointer" value="1.0.0-rc.3">
-            v1.0.0-rc.3
-          </option>
-          <option class="text-black cursor-pointer" value="1.0.0-rc.2">
-            v1.0.0-rc.2
-          </option>
-          <option class="text-black cursor-pointer" value="0.26.5">
-            v0.26.5
-          </option>
+          <For each={versions()}>
+            {(version) => (
+              <option class="text-black cursor-pointer" value={version}>
+                v{version}
+              </option>
+            )}
+          </For>
         </select>
       </div>
     </header>
