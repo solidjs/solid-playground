@@ -235,15 +235,14 @@ export const Repl: Component<{
         <For each={props.tabs}>
           {(tab, index) => (
             <TabItem active={props.current === id(tab)}>
-              <button
-                type="button"
+              <div
                 onClick={() => actions.setCurrentTab(id(tab))}
                 onDblClick={() => {
                   if (index() <= 0 || !props.interactive) return;
                   setEdit(index());
                   tabRefs.get(id(tab))?.focus();
                 }}
-                class="cursor-pointer focus:outline-none -mb-0.5"
+                class="cursor-pointer focus:outline-none -mb-0.5 py-2 px-3"
               >
                 <span
                   ref={(el) => tabRefs.set(id(tab), el)}
@@ -278,33 +277,33 @@ export const Repl: Component<{
                     <option value="css">.css</option>
                   </select>
                 </Show>
-              </button>
 
-              <Show when={index() > 0}>
-                <button
-                  type="button"
-                  class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
-                  disabled={!props.interactive}
-                  onClick={() => {
-                    if (!props.interactive) return;
-                    actions.removeTab(id(tab));
-                  }}
-                >
-                  <span class="sr-only">Delete this tab</span>
-                  <svg
-                    style="stroke: currentColor; fill: none;"
-                    class="h-4 opacity-60"
-                    viewBox="0 0 24 24"
+                <Show when={index() > 0}>
+                  <button
+                    type="button"
+                    class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
+                    disabled={!props.interactive}
+                    onClick={() => {
+                      if (!props.interactive) return;
+                      actions.removeTab(id(tab));
+                    }}
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </Show>
+                    <span class="sr-only">Delete this tab</span>
+                    <svg
+                      style="stroke: currentColor; fill: none;"
+                      class="h-4 opacity-60"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </Show>
+              </div>
             </TabItem>
           )}
         </For>
@@ -344,7 +343,7 @@ export const Repl: Component<{
         <TabItem class="flex-1" active={showPreview()}>
           <button
             type="button"
-            class="w-full focus:outline-none -mb-0.5"
+            class="w-full focus:outline-none -mb-0.5 py-2 px-3"
             onClick={[setShowPreview, true]}
           >
             Result
@@ -353,7 +352,7 @@ export const Repl: Component<{
         <TabItem class="flex-1" active={!showPreview()}>
           <button
             type="button"
-            class="w-full focus:outline-none -mb-0.5"
+            class="w-full focus:outline-none -mb-0.5 py-2 px-3"
             onClick={[setShowPreview, false]}
           >
             Output
