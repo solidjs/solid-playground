@@ -1,4 +1,4 @@
-import { Component, createSignal, JSX, Show, createMemo, For } from 'solid-js';
+import { Component, onCleanup, createSignal, JSX, Show, createMemo, For } from 'solid-js';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { share, link, upload } from '@amoutonbrady/solid-heroicons/outline';
 
@@ -19,6 +19,15 @@ export const Header: Component<{
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const [showMenu, setShowMenu] = createSignal(false);
+
+  window.addEventListener('resize', windowSizeHandler);
+  onCleanup(() =>
+    window.removeEventListener('resize', windowSizeHandler)
+  );
+
+  function windowSizeHandler() {
+    setShowMenu(false);
+  }
 
   function shareLink() {
     const url = location.href;
@@ -156,6 +165,7 @@ export const Header: Component<{
         </div>
         <button
           type="button"
+          id="menu-btn"
           class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible md:hidden"
           title="Mobile Menu Button"
           onClick={() => setShowMenu(!showMenu())}
