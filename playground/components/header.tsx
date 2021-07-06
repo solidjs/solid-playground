@@ -71,18 +71,18 @@ export const Header: Component<{
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
         <span class="inline-block -mb-1">Solid Playground</span>
-      </h1>
+      </h1> 
       <div class="flex items-center space-x-2">
         <div
           class={`z-10`}
           style={(showMenu()) ? {
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            top: "48px", //Set based on header size+margin*1
+            //left: "50%",
+            //transform: "translate(-50%, -50%)",
             width: "fit-content"
           } : {}}>
-          <div class={`${showMenu() ? "flex justify-center bg-brand-default" : "hidden"} md:items-center md:space-x-2 md:flex`}>
+          <div class={`${showMenu() ? "flex flex-col md:flex-row justify-center bg-red-500" : "hidden"} md:items-center md:space-x-2 md:flex`}>
             <button
               type="button"
               onClick={props.toggleDark}
@@ -166,7 +166,7 @@ export const Header: Component<{
         <button
           type="button"
           id="menu-btn"
-          class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible md:hidden"
+          class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden"
           title="Mobile Menu Button"
           onClick={() => setShowMenu(!showMenu())}
         >
