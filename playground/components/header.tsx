@@ -140,7 +140,7 @@ export const Header: Component<{
               class="flex flex-row space-x-1 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
               title="Export to CodeSandbox"
             >
-              <svg class="fill-current h-6" style={{ padding: "0px 1.63px 0px 1.63px" }} preserveAspectRatio="xMidYMid" viewBox="0 0 256 296">
+              <svg class="fill-current h-6 px-[1.63px] py-0" preserveAspectRatio="xMidYMid" viewBox="0 0 256 296">
                 <path d="M115 261V154l-91-52v61l42 24v46l49 28zm24 1l51-29v-47l42-25v-60l-93 54v107zm81-181l-49-28-43 24-43-24-49 28 92 53 92-53zM0 222V74L128 0l128 74v148l-128 74L0 222z" />
               </svg>
               <span class="text-xs md:sr-only">Export to CodeSandbox</span>
