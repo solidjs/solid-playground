@@ -118,7 +118,7 @@ export const Header: Component<{
               title="Import from JSON"
             >
               <input type="file" class="sr-only" onChange={uploadFile} accept=".json" />
-              <Icon path={upload} class="h-6" style={{margin: "0px 0px 0px 0px"}}/>
+              <Icon path={upload} class="h-6 m-0" />
               <span class="text-xs md:sr-only">Import from JSON</span>
             </label>
 
