@@ -75,11 +75,7 @@ export const Header: Component<{
       <div class="flex items-center space-x-2">
         <div
           class={`z-10`}
-          style={(showMenu()) ? {
-            position: "absolute",
-            top: "56px", //Set based on header size+margin*2
-            width: "fit-content"
-          } : {}}>
+         classList={{ 'absolute top-[56px] w-[fit-content]':  showMenu() }}
           <div class={`${showMenu() ? "flex flex-col md:flex-row justify-center bg-red-500" : "hidden"} md:items-center md:space-x-2 md:flex`}>
             <button
               type="button"
