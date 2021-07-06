@@ -164,8 +164,7 @@ export const Header: Component<{
         <button
           type="button"
           id="menu-btn"
-          class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden"
-          style={{margin:"0 10px 0 0"}} //adjust button to the right to better algin menu
+          class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
           title="Mobile Menu Button"
           onClick={() => setShowMenu(!showMenu())}
         >
