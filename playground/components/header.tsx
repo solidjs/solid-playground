@@ -87,7 +87,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={props.toggleDark}
-              class="text-black md:text-white flex flex-row space-x-2 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
               title="Toggle dark mode"
             >
               <Show
@@ -116,7 +116,7 @@ export const Header: Component<{
             </button>
 
             <label
-              class="text-black md:text-white flex flex-row space-x-2 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 cursor-pointer"
+              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 cursor-pointer"
               title="Import from JSON"
             >
               <input type="file" class="sr-only" onChange={uploadFile} accept=".json" />
@@ -127,7 +127,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={() => exportToJSON(props.tabs)}
-              class="text-black md:text-white flex flex-row space-x-2 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
               title="Export to JSON"
             >
               <svg class="fill-current h-6" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={() => exportToCsb(props.tabs)}
-              class="text-black md:text-white flex flex-row space-x-2 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
               title="Export to CodeSandbox"
             >
               <svg
@@ -155,7 +155,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={shareLink}
-              class="text-black md:text-white flex flex-row space-x-2 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded"
+              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded"
               classList={{
                 'opacity-80 hover:opacity-100': !copy(),
                 'text-green-100': copy() && !showMenu(),
