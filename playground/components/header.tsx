@@ -158,7 +158,7 @@ export const Header: Component<{
               class="text-black md:text-white flex flex-row space-x-2 items-center px-3 py-2 focus:outline-none focus:ring-1 rounded"
               classList={{
                 'opacity-80 hover:opacity-100': !copy(),
-                'text-green-100': copy(),
+                'text-green-100': copy() && !showMenu(),
               }}
               title="Share with a minified link"
             >
