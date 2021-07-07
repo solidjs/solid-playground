@@ -20,10 +20,12 @@ export const Header: Component<{
   const [copy, setCopy] = createSignal(false);
   const [showMenu, setShowMenu] = createSignal(false);
 
-  window.addEventListener('resize', windowSizeHandler);
-  onCleanup(() => window.removeEventListener('resize', windowSizeHandler));
+  window.addEventListener('resize', closeMobileMenu);
+  onCleanup(() => {
+    window.removeEventListener('resize', closeMobileMenu);
+  });
 
-  function windowSizeHandler() {
+  function closeMobileMenu(event: any) {
     setShowMenu(false);
   }
 
@@ -71,9 +73,12 @@ export const Header: Component<{
         <span class="inline-block -mb-1">Solid Playground</span>
       </h1>
       <div class="flex items-center space-x-2">
-        <div classList={{ 'absolute top-[56px] w-[fit-content]': showMenu() }} class="z-10">
+        <div
+          classList={{ 'absolute top-[53px] right-[10px] w-[fit-content]': showMenu() }}
+          class="z-10"
+        >
           <div
-            class="md:items-center md:space-x-2 md:flex"
+            class="shadow-md md:items-center md:space-x-2 md:flex"
             classList={{
               'flex flex-col md:flex-row justify-center bg-white': showMenu(),
               hidden: !showMenu(),
@@ -166,6 +171,7 @@ export const Header: Component<{
           type="button"
           id="menu-btn"
           class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
+          classList={{ 'border-white border': showMenu() }}
           title="Mobile Menu Button"
           onClick={() => setShowMenu(!showMenu())}
         >
@@ -177,7 +183,6 @@ export const Header: Component<{
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              {' '}
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -188,12 +193,11 @@ export const Header: Component<{
           ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              class="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              {' '}
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
