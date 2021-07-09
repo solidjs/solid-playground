@@ -86,9 +86,9 @@ export const Header: Component<{
           class="z-10"
         >
           <div
-            class="shadow-md md:items-center md:space-x-2 md:flex"
+            class="md:items-center md:space-x-2 md:flex md:flex-row"
             classList={{
-              'flex flex-col md:flex-row justify-center bg-white': showMenu(),
+              'shadow-md flex flex-col justify-center bg-white': showMenu(),
               hidden: !showMenu(),
             }}
           >
