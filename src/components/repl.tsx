@@ -1,5 +1,6 @@
 import { Component, Show, For, Suspense, createSignal, createEffect, lazy, batch } from 'solid-js';
 import { unwrap, createStore } from 'solid-js/store';
+import { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
@@ -23,7 +24,7 @@ type ValueOf<T> = T[keyof T];
 
 const id = (tab: Tab) => `${tab.name}.${tab.type}`;
 
-export const Repl: Component<{
+export interface ReplProps {
   compiler: Worker;
   formatter?: Worker;
   isHorizontal: boolean;
@@ -33,12 +34,15 @@ export const Repl: Component<{
   dark: boolean;
   tabs: Tab[];
   version?: string;
-  setTabs: (x: Tab[]) => void;
+  setTabs: (tab: Tab[]) => void;
   current: string;
-  setCurrent: (x: string) => void;
-}> = (props) => {
-  const { compiler, formatter } = props; // this is bad style don't do this
+  setCurrent: (tabId: string) => void;
+  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
+}
 
+export const Repl: Component<ReplProps> = (props) => {
+  // this is bad style don't do this
+  const { compiler, formatter } = props;
   let now: number;
 
   const tabRefs = new Map<string, HTMLSpanElement>();
@@ -381,6 +385,7 @@ export const Repl: Component<{
           isDark={props.dark}
           withMinimap={false}
           showActionBar={props.actionBar}
+	  ref={props.onEditorReady}
         />
 
         <div

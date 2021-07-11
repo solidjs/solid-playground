@@ -12,7 +12,8 @@ export declare const Repl: Component<{
   setTabs: (x: Tab[]) => void;
   current: string;
   setCurrent: (x: string) => void;
-	version?: string;
+  version?: string;
+  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
 }>;
 
 export interface Tab {

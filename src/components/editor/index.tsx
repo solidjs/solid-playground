@@ -93,6 +93,10 @@ const Editor: Component<Props> = (props) => {
     editor.onDidChangeModelContent(() => {
       if (finalProps.onDocChange) finalProps.onDocChange(editor.getValue());
     });
+
+    if (props.ref) {
+      props.ref(editor);
+    }
   };
   // Initialize Monaco
   onMount(() => {
@@ -184,4 +188,5 @@ interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   formatter?: Worker;
   onDocChange?: (code: string) => unknown;
   showActionBar?: boolean;
+  ref?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
 }
