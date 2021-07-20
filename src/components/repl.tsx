@@ -11,8 +11,8 @@ import { debounce } from '../utils/debounce';
 import { throttle } from '../utils/throttle';
 import { formatMs } from '../utils/formatTime';
 
-const MonacoTabs = lazy(() => import('./monacoTabs'));
-const Editor = lazy(() => MonacoTabs.preload().then(() => import('./editor')));
+import MonacoTabs from './monacoTabs';
+const Editor = lazy(() => import('./editor'));
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -385,7 +385,7 @@ export const Repl: Component<ReplProps> = (props) => {
           isDark={props.dark}
           withMinimap={false}
           showActionBar={props.actionBar}
-	  ref={props.onEditorReady}
+          ref={props.onEditorReady}
         />
 
         <div
