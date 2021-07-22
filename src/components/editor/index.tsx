@@ -1,6 +1,7 @@
 import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { liftOff } from './setupSolid';
+import { AutoTypings, LocalStorageCache } from 'monaco-editor-auto-typings';
 import { useZoom } from '../../hooks/useZoom';
 
 const Editor: Component<{
@@ -64,23 +65,28 @@ const Editor: Component<{
       props.onDocChange?.(editor.getValue());
     });
   };
+  const autoTyper = async () => {
+    const autoTypings = await AutoTypings.create(editor, {
+      sourceCache: new LocalStorageCache(),
+      fileRootPath: 'file:///',
+      monaco: { languages, Uri, editor: mEditor } as any,
+    });
+    editor.onDidDispose(() => autoTypings.dispose());
+  };
 
   // Initialize Monaco
   onMount(() => setupEditor());
   onCleanup(() => editor?.dispose());
-
   createEffect(() => {
     editor.setModel(model());
     liftOff();
   });
-
+  onMount(() => autoTyper());
   createEffect(() => {
     mEditor.setTheme(props.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });
-
   createEffect(() => {
-    const fontSize = zoomState.fontSize;
-    editor.updateOptions({ fontSize });
+    editor.updateOptions({ fontSize: zoomState.fontSize });
   });
 
   createEffect(() => {
