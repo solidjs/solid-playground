@@ -201,41 +201,94 @@ export const Repl: Component<ReplProps> = (props) => {
   };
 
   /**
-   * This whole block before the slice of view
+   * This whole block before the next comment section
    * is an experimental resizer, need to tidy this up
    */
   const [left, setLeft] = createSignal(1.25);
-  const [isDragging, setIsDragging] = createSignal(false);
+  const [isDraggingColumn, setIsDraggingColumn] = createSignal(false);
 
-  const onMouseMove = throttle((e: MouseEvent) => {
+  const onMouseMoveColumn = throttle((e: MouseEvent) => {
     const percentage = e.clientX / (document.body.offsetWidth / 2);
     if (percentage < 0.5 || percentage > 1.5) return;
 
     setLeft(percentage);
   }, 10);
 
-  const onMouseUp = () => setIsDragging(false);
+  const onMouseUpColumn = () => setIsDraggingColumn(false);
 
   createEffect(() => {
-    if (isDragging()) {
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
+    if (isDraggingColumn()) {
+      window.addEventListener('mousemove', onMouseMoveColumn);
+      window.addEventListener('mouseup', onMouseUpColumn);
     } else {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('mousemove', onMouseMoveColumn);
+      window.removeEventListener('mouseup', onMouseUpColumn);
     }
+  });
+
+  /**
+   * This whole block before the slice of view
+   * is an experimental resizer
+   */
+  const [grid, setGrid] = createSignal<HTMLElement>();
+  const [fileTabs, setFileTabs] = createSignal<HTMLElement>();
+  const [resultTabs, setResultTabs] = createSignal<HTMLElement>();
+  const [resizer, setResizer] = createSignal<HTMLElement>();
+  const [top, setTop] = createSignal(1);
+  const [isDraggingRow, setIsDraggingRow] = createSignal(false);
+
+  const changeTop = (clientY: number) => {
+    // Adjust the reading according to the height of the resizable panes
+    const headerSize = document.body.offsetHeight - grid()!.clientHeight;
+    const clientYAdjusted = clientY - headerSize - fileTabs()!.clientHeight - (resizer()!.clientHeight / 2);
+    const heightAdjusted = document.body.offsetHeight - headerSize - fileTabs()!.clientHeight - resizer()!.clientHeight - resultTabs()!.clientHeight;
+
+    const percentage = clientYAdjusted / (heightAdjusted / 2);
+    if (percentage < 0.5 || percentage > 1.5) return;
+
+    setTop(percentage);
+  };
+
+  const onMouseMoveRow = throttle((e: MouseEvent) => {
+    changeTop(e.clientY);
+  }, 10);
+
+  const onMouseUpRow = () => setIsDraggingRow(false);
+
+  const onTouchMoveRow = throttle((e: TouchEvent) => {
+    changeTop(e.touches[0].clientY);
+  }, 10);
+
+  const onTouchEndRow = () => setIsDraggingRow(false);
+
+  createEffect(() => {
+  if (isDraggingRow()) {
+    window.addEventListener('mousemove', onMouseMoveRow);
+    window.addEventListener('mouseup', onMouseUpRow);
+    window.addEventListener('touchmove', onTouchMoveRow);
+    window.addEventListener('touchend', onTouchEndRow);
+  } else {
+    window.removeEventListener('mousemove', onMouseMoveRow);
+    window.removeEventListener('mouseup', onMouseUpRow);
+    window.removeEventListener('touchmove', onTouchMoveRow);
+    window.removeEventListener('touchend', onTouchEndRow);
+  }
   });
 
   return (
     <div
+      ref={(el) => setGrid(el)}
       class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
       }}
-      style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
+      style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr`, '--top': `${top()}fr`, '--bottom': `${2 - top()}fr` }}
     >
-      <TabList class="row-start-1 space-x-2">
+      <TabList
+        ref={(el) => setFileTabs(el)}
+        class="row-start-1 space-x-2"
+      >
         <For each={props.tabs}>
           {(tab, index) => (
             <TabItem active={props.current === id(tab)}>
@@ -341,7 +394,8 @@ export const Repl: Component<ReplProps> = (props) => {
       </TabList>
 
       <TabList
-        class={`row-start-3 border-t-2 border-blueGray-200 ${
+        ref={(el) => setResultTabs(el)}
+        class={`row-start-4 border-t-2 border-blueGray-200 ${
           props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
         }`}
       >
@@ -389,17 +443,23 @@ export const Repl: Component<ReplProps> = (props) => {
         />
 
         <div
-          class="column-resizer h-full w-full row-start-1 row-end-3 col-start-2 hidden"
-          style="cursor: col-resize"
-          classList={{ 'md:block': !props.isHorizontal }}
-          onMouseDown={[setIsDragging, true]}
+          ref={(el) => setResizer(el)}
+          class={'grid-resizer h-full w-full row-start-3 cursor-row-resize md:hidden'}
+          onMouseDown={[setIsDraggingRow, true]} onTouchStart={[setIsDraggingRow, true]}
         >
-          <div class="h-full border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg mx-auto w-0"></div>
+          <div class="border-blueGray-200 dark:border-blueGray-700 border-t border-b rounded-lg w-full my-auto h-0"></div>
+        </div>
+
+        <div
+          class={'grid-resizer h-full w-full cursor-col-resize row-start-1 row-end-3 col-start-2 xs:hidden md:block'}
+          onMouseDown={[setIsDraggingColumn, true]}
+        >
+          <div class="border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg h-full mx-auto w-0"></div>
         </div>
 
         <Show when={!showPreview()}>
           <section
-            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-4 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
             classList={{ 'md:row-start-2': !props.isHorizontal }}
             style="grid-template-rows: minmax(0, 1fr) auto"
           >
@@ -464,11 +524,11 @@ export const Repl: Component<ReplProps> = (props) => {
         <Show when={showPreview()}>
           <Preview
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-4 ${
+            class={`h-full w-full bg-white row-start-5 ${
               props.isHorizontal ? '' : 'md:row-start-2'
             }`}
             classList={{
-              'pointer-events-none': isDragging(),
+              'pointer-events-none': isDraggingColumn() || isDraggingRow(),
             }}
           />
         </Show>
