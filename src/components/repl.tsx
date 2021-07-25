@@ -444,7 +444,7 @@ export const Repl: Component<ReplProps> = (props) => {
 
         <div
           ref={(el) => setResizer(el)}
-          class={'grid-resizer h-full w-full row-start-3 cursor-row-resize md:hidden'}
+          class={'grid-resizer row-start-3 cursor-row-resize md:hidden'}
           onMouseDown={[setIsDraggingRow, true]} onTouchStart={[setIsDraggingRow, true]}
         >
           <div class="border-blueGray-200 dark:border-blueGray-700 border-t border-b rounded-lg w-full my-auto h-0"></div>
