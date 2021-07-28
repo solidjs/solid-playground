@@ -1,10 +1,9 @@
-import { batch } from 'solid-js';
 import { createStore } from 'solid-js/store';
 
 type TZoomState = {
   zoom: number;
   scaleIframe: boolean;
-  native: boolean;
+  overrideNative: boolean;
   fontSize: number;
   scale: number;
 };
@@ -20,17 +19,16 @@ const initFontSize = 15;
 const initScale = 100;
 
 const [zoomState, setZoomState] = createStore<TZoomState>({
-  native: ls ? ls.native : false,
+  overrideNative: ls ? ls.overrideNative : true,
   fontSize: ls ? ls.fontSize : initFontSize,
   scale: ls ? ls.scale : initScale,
   zoom: ls ? ls.zoom : 100,
   scaleIframe: ls ? ls.scaleIframe : true,
 });
-console.log(JSON.parse(JSON.stringify(zoomState)));
 
 const useZoom = () => {
-  const updateZoom = (input: 'increase' | 'decrease' | 'reset') => {
-    let { zoom, fontSize, scale, native, scaleIframe } = zoomState;
+  const updateZoomScale = (input: 'increase' | 'decrease' | 'reset') => {
+    let { zoom, fontSize, scale } = zoomState;
     const max = 200;
     const min = 40;
 
@@ -51,14 +49,34 @@ const useZoom = () => {
     fontSize = (initFontSize * zoom) / 100;
     scale = (initScale / zoom) * 100;
 
-    localStorage.setItem(
-      'zoomState',
-      JSON.stringify({ zoom, fontSize, scale, native, scaleIframe }),
-    );
+    localStorage.setItem('zoomState', JSON.stringify({ ...zoomState, zoom, fontSize, scale }));
 
     setZoomState({ ...zoomState, fontSize, zoom, scale });
   };
 
-  return { zoomState, updateZoom };
+  const updateZoomSettings = (
+    input: keyof Pick<TZoomState, 'overrideNative' | 'scaleIframe'>,
+    value: boolean,
+  ) => {
+    let { overrideNative, scaleIframe } = zoomState;
+
+    switch (input) {
+      case 'overrideNative':
+        overrideNative = value;
+        break;
+      case 'scaleIframe':
+        scaleIframe = value;
+        break;
+    }
+
+    localStorage.setItem(
+      'zoomState',
+      JSON.stringify({ ...zoomState, overrideNative, scaleIframe }),
+    );
+
+    setZoomState({ ...zoomState, overrideNative, scaleIframe });
+  };
+
+  return { zoomState, updateZoomScale, updateZoomSettings };
 };
 export default useZoom;

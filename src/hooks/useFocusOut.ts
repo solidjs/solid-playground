@@ -29,6 +29,11 @@ const useFocusOut = (
     }
     if (!toggleVal && debug) return;
 
+    if (toggleVal) {
+      document.addEventListener('keydown', onKeyDown);
+    } else {
+      document.removeEventListener('keydown', onKeyDown);
+    }
     onToggle && onToggle(toggleVal);
   });
 
@@ -38,12 +43,6 @@ const useFocusOut = (
 
     const toggleVal = toggle();
     setToggle(!toggleVal);
-
-    if (!toggleVal) {
-      document.addEventListener('keydown', onKeyDown);
-    } else {
-      document.removeEventListener('keydown', onKeyDown);
-    }
   };
 
   const onFOBlur = () => {

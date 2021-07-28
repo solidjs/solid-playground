@@ -24,7 +24,8 @@ const Editor: Component<Props> = (props) => {
 
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
-  const { zoomState: appState, updateZoom: updateAppState } = useZoom();
+
+  const { zoomState } = useZoom();
 
   const model = () => mEditor.getModel(Uri.parse(finalProps.url));
 
@@ -84,7 +85,7 @@ const Editor: Component<Props> = (props) => {
       model: null,
       automaticLayout: true,
       readOnly: finalProps.disabled,
-      fontSize: appState.fontSize,
+      fontSize: zoomState.fontSize,
       lineDecorationsWidth: 5,
       lineNumbersMinChars: 3,
       padding: { top: 15 },
@@ -113,23 +114,8 @@ const Editor: Component<Props> = (props) => {
     } else {
       setupEditor();
     }
-
-    document.addEventListener('keydown', (e) => {
-      const key = e.key;
-
-      if (!((e.ctrlKey || e.metaKey) && (key === '=' || key === '-'))) {
-        return;
-      }
-
-      e.preventDefault();
-
-      if (key === '=') {
-        updateAppState('increase');
-      } else {
-        updateAppState('decrease');
-      }
-    });
   });
+
   onCleanup(() => editor?.dispose());
 
   const updateModel = () => {
@@ -143,7 +129,7 @@ const Editor: Component<Props> = (props) => {
     mEditor.setTheme(finalProps.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });
   createEffect(() => {
-    const fontSize = appState.fontSize;
+    const fontSize = zoomState.fontSize;
 
     if (!editor) return;
 
