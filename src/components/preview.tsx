@@ -161,6 +161,7 @@ export const Preview: Component<Props> = (props) => {
       style="grid-template-rows: 1fr auto"
     >
       <iframe
+	title="Solid REPL"
         class="overflow-auto p-2 w-full h-full dark:bg-other"
         ref={iframe}
         srcdoc={html}
