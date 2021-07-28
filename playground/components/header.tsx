@@ -14,6 +14,7 @@ import logo from '../assets/logo.svg?url';
 import { processImport, Tab } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
+import { ZoomDropdown } from './zoomDropdown';
 
 export const Header: Component<{
   dark: boolean;
@@ -71,7 +72,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
+      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white z-20"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
@@ -172,6 +173,7 @@ export const Header: Component<{
               <Icon class="h-6" path={copy() ? link : share} />
               <span class="text-xs md:sr-only">{copy() ? 'Copied to clipboard' : 'Share'}</span>
             </button>
+            <ZoomDropdown showMenu={showMenu()} />
           </div>
         </div>
         <button

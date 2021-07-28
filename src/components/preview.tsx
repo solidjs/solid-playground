@@ -1,9 +1,11 @@
 import { Component, createEffect, createSignal, splitProps, JSX, For, Show } from 'solid-js';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { chevronDown, chevronRight } from '@amoutonbrady/solid-heroicons/solid';
+import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const [internal, external] = splitProps(props, ['code', 'class']);
+  const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
 
@@ -154,11 +156,19 @@ export const Preview: Component<Props> = (props) => {
     </html>
   `;
 
+  const styleScale = () => {
+    if (zoomState.scale === 100) return '';
+
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+      zoomState.zoom / 100
+    }); transform-origin: 0 0;`;
+  };
+
   return (
     <div
       class={`grid relative ${internal.class}`}
       {...external}
-      style="grid-template-rows: 1fr auto"
+      style={`grid-template-rows: 1fr auto; ${styleScale()}`}
     >
       <iframe
         class="overflow-auto p-2 w-full h-full dark:bg-other"

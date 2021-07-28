@@ -17,12 +17,14 @@ import {
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
 import { liftOff } from './setupSolid';
+import useZoom from '../../hooks/useZoom';
 
 const Editor: Component<Props> = (props) => {
   const finalProps = mergeProps({ showActionBar: true }, props);
 
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
+  const { zoomState: appState, updateZoom: updateAppState } = useZoom();
 
   const model = () => mEditor.getModel(Uri.parse(finalProps.url));
 
@@ -82,7 +84,7 @@ const Editor: Component<Props> = (props) => {
       model: null,
       automaticLayout: true,
       readOnly: finalProps.disabled,
-      fontSize: 15,
+      fontSize: appState.fontSize,
       lineDecorationsWidth: 5,
       lineNumbersMinChars: 3,
       padding: { top: 15 },
@@ -111,6 +113,22 @@ const Editor: Component<Props> = (props) => {
     } else {
       setupEditor();
     }
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key;
+
+      if (!((e.ctrlKey || e.metaKey) && (key === '=' || key === '-'))) {
+        return;
+      }
+
+      e.preventDefault();
+
+      if (key === '=') {
+        updateAppState('increase');
+      } else {
+        updateAppState('decrease');
+      }
+    });
   });
   onCleanup(() => editor?.dispose());
 
@@ -123,6 +141,13 @@ const Editor: Component<Props> = (props) => {
   createEffect(updateModel);
   createEffect(() => {
     mEditor.setTheme(finalProps.isDark ? 'vs-dark-plus' : 'vs-light-plus');
+  });
+  createEffect(() => {
+    const fontSize = appState.fontSize;
+
+    if (!editor) return;
+
+    editor.updateOptions({ fontSize });
   });
 
   const showActionBar = () => {
