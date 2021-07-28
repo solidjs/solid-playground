@@ -143,7 +143,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
                 checked={zoomState.overrideNative}
                 onChange={(e) => updateZoomSettings('overrideNative', e.currentTarget.checked)}
               />
-              Override native zoom keyboard shortcut
+              Override browser zoom keyboard shortcut
             </label>
             <label class="block my-3 cursor-pointer">
               <input
