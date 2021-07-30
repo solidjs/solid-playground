@@ -43,7 +43,7 @@
     "@babel/preset-typescript": "^7.14.5",
     "@babel/standalone": "^7.14.8",
     "@tailwindcss/forms": "^0.3.3",
-    "babel-preset-solid": "1.0.4",
+    "babel-preset-solid": "1.0.6",
     "dedent": "^0.7.0",
     "mitt": "^3.0.0",
     "monaco-editor": "^0.25.2",
@@ -52,7 +52,7 @@
     "onigasm": "^2.2.5",
     "prettier": "=2.3.0",
     "register-service-worker": "^1.7.2",
-    "rollup": "^2.54.0",
-    "solid-js": "1.0.5"
+    "rollup": "^2.55.1",
+    "solid-js": "1.0.7"
   }
 }
