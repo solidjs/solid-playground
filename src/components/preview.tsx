@@ -108,10 +108,16 @@ export const Preview: Component<Props> = (props) => {
 
           function formatArgs(args) {
             return args
-              .map((arg) =>
-                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg),
-              )
-              .join(', ')
+              .map((arg) => {
+                if (arg instanceof Element) {
+                  return arg.outerHTML;
+                }
+
+                return typeof arg === 'object' 
+                  ? JSON.stringify(arg, null, 2)
+                  : '"' + String(arg) + '"';
+              })
+              .join(' ')
           }
 
           
