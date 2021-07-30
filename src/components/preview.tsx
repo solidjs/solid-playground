@@ -19,6 +19,8 @@ export const Preview: Component<Props> = (props) => {
     const isEmpty = !internal.code;
 
     if (isNotDom || isEmpty || !isIframeReady()) return;
+    // Clear logs on every playground changes
+    setLogs([]);
 
     const code = internal.code.replace('render(', 'window.dispose = render(');
     const event = 'CODE_UPDATE';
@@ -161,7 +163,7 @@ export const Preview: Component<Props> = (props) => {
       style="grid-template-rows: 1fr auto"
     >
       <iframe
-	title="Solid REPL"
+        title="Solid REPL"
         class="overflow-auto p-2 w-full h-full dark:bg-other"
         ref={iframe}
         srcdoc={html}
