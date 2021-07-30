@@ -3,13 +3,16 @@ import { Icon } from '@amoutonbrady/solid-heroicons';
 import { chevronDown, chevronRight } from '@amoutonbrady/solid-heroicons/solid';
 
 export const Preview: Component<Props> = (props) => {
-  const [internal, external] = splitProps(props, ['code', 'class']);
+  const [internal, external] = splitProps(props, ['code', 'class', 'reloadSignal']);
 
   let iframe!: HTMLIFrameElement;
 
   const [showLogs, setShowLogs] = createSignal(false);
   const [logs, setLogs] = createSignal<LogPayload[]>([]);
   const [isIframeReady, setIframeReady] = createSignal(false);
+
+  let latestCode: string;
+  const CODE_UPDATE = 'CODE_UPDATE';
 
   createEffect(() => {
     // HACK: This helps prevent unnecessary updates
@@ -22,10 +25,16 @@ export const Preview: Component<Props> = (props) => {
     // Clear logs on every playground changes
     setLogs([]);
 
-    const code = internal.code.replace('render(', 'window.dispose = render(');
-    const event = 'CODE_UPDATE';
+    latestCode = internal.code.replace('render(', 'window.dispose = render(');
+    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
+  });
 
-    iframe.contentWindow!.postMessage({ event, code }, '*');
+  createEffect(() => {
+    // Bail early on first mount
+    if (!internal.reloadSignal) return;
+
+    // Otherwise, reload everytime we clicked the reload button
+    iframe.contentWindow!.postMessage({ event: 'RELOAD' }, '*');
   });
 
   function attachToIframe() {
@@ -35,6 +44,11 @@ export const Preview: Component<Props> = (props) => {
       if (data.event === 'LOG') {
         const { level, args } = data;
         setLogs([...logs(), { level, args }]);
+      }
+
+      if (data.event === 'RELOADED') {
+        setLogs([]);
+        iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
       }
     });
   }
@@ -130,9 +144,21 @@ export const Preview: Component<Props> = (props) => {
             }
           }
 
+          const currentUrl = new URL(location.href);
+          if (currentUrl.searchParams.get('reload')) {
+            window.postMessage({ event: 'RELOADED' }, '*');
+          }
+
           window.addEventListener('message', ({ data }) => {
             try {
               const { event, code } = data;
+
+              if (event === 'RELOAD') {
+                const url = new URL(location.href);
+                url.searchParams.set('reload', '1');
+                return location.href = url.toString(); 
+              }
+
               if (event !== 'CODE_UPDATE') return;
               let app = document.getElementById('app');
 
@@ -226,9 +252,10 @@ export const Preview: Component<Props> = (props) => {
   );
 };
 
-interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
+type Props = JSX.HTMLAttributes<HTMLDivElement> & {
   code: string;
-}
+  reloadSignal: boolean;
+};
 
 interface LogPayload {
   level: 'log' | 'warn' | 'error';

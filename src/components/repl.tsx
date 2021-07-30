@@ -1,4 +1,6 @@
 import { Component, Show, For, Suspense, createSignal, createEffect, lazy, batch } from 'solid-js';
+import { Icon } from '@amoutonbrady/solid-heroicons';
+import { refresh } from '@amoutonbrady/solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
 import { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
@@ -226,6 +228,8 @@ export const Repl: Component<ReplProps> = (props) => {
     }
   });
 
+  const [reloadSignal, reload] = createSignal(false, { equals: false });
+
   return (
     <div
       class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans"
@@ -345,6 +349,18 @@ export const Repl: Component<ReplProps> = (props) => {
           props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
         }`}
       >
+        <TabItem>
+          <button
+            type="button"
+            title="Refresh the page"
+            class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25 active:animate-spin"
+            onClick={[reload, true]}
+            disabled={!showPreview()}
+          >
+            <span class="sr-only">Refresh the page</span>
+            <Icon path={refresh} class="h-5" />
+          </button>
+        </TabItem>
         <TabItem class="flex-1" active={showPreview()}>
           <button
             type="button"
@@ -463,6 +479,7 @@ export const Repl: Component<ReplProps> = (props) => {
 
         <Show when={showPreview()}>
           <Preview
+            reloadSignal={reloadSignal()}
             code={store.compiled}
             class={`h-full w-full bg-white row-start-4 ${
               props.isHorizontal ? '' : 'md:row-start-2'
