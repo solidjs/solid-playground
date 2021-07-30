@@ -247,7 +247,7 @@ export const Repl: Component<ReplProps> = (props) => {
                   setEdit(index());
                   tabRefs.get(id(tab))?.focus();
                 }}
-                class="cursor-pointer focus:outline-none -mb-0.5"
+                class="cursor-pointer focus:outline-none -mb-0.5 py-2 px-3"
               >
                 <span
                   ref={(el) => tabRefs.set(id(tab), el)}
@@ -348,7 +348,7 @@ export const Repl: Component<ReplProps> = (props) => {
         <TabItem class="flex-1" active={showPreview()}>
           <button
             type="button"
-            class="w-full focus:outline-none -mb-0.5"
+            class="w-full focus:outline-none -mb-0.5 py-2 px-3"
             onClick={[setShowPreview, true]}
           >
             Result
@@ -357,7 +357,7 @@ export const Repl: Component<ReplProps> = (props) => {
         <TabItem class="flex-1" active={!showPreview()}>
           <button
             type="button"
-            class="w-full focus:outline-none -mb-0.5"
+            class="w-full focus:outline-none -mb-0.5 py-2 px-3"
             onClick={[setShowPreview, false]}
           >
             Output
