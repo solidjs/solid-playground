@@ -4,6 +4,7 @@ import { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
+import { GridResizer } from './gridResizer';
 import { Error } from './error';
 
 import type { Tab } from '../';
@@ -201,79 +202,50 @@ export const Repl: Component<ReplProps> = (props) => {
   };
 
   /**
-   * This whole block before the next comment section
-   * is an experimental resizer, need to tidy this up
+   * Upcomming 2 blocks before the slice of view is used for horizontal and vertical resizers.
+   * This first block controls the horizontal resizer.
    */
+  const [horizontalResizer, setHorizontalResizer] = createSignal<HTMLElement>();
   const [left, setLeft] = createSignal(1.25);
-  const [isDraggingColumn, setIsDraggingColumn] = createSignal(false);
+  const [isDraggingHorizontal, setIsDraggingHorizontal] = createSignal(false);
 
-  const onMouseMoveColumn = throttle((e: MouseEvent) => {
-    const percentage = e.clientX / (document.body.offsetWidth / 2);
+  const changeLeft = (clientX: number, _clientY: number) => {
+    // Adjust the reading according to the width of the resizable panes
+    const clientXAdjusted = clientX - horizontalResizer()!.offsetWidth / 2;
+    const widthAdjusted = document.body.offsetWidth - horizontalResizer()!.offsetWidth;
+    const percentage = clientXAdjusted / (widthAdjusted / 2);
     if (percentage < 0.5 || percentage > 1.5) return;
 
     setLeft(percentage);
-  }, 10);
-
-  const onMouseUpColumn = () => setIsDraggingColumn(false);
-
-  createEffect(() => {
-    if (isDraggingColumn()) {
-      window.addEventListener('mousemove', onMouseMoveColumn);
-      window.addEventListener('mouseup', onMouseUpColumn);
-    } else {
-      window.removeEventListener('mousemove', onMouseMoveColumn);
-      window.removeEventListener('mouseup', onMouseUpColumn);
-    }
-  });
+  };
 
   /**
-   * This whole block before the slice of view
-   * is an experimental resizer
+   * This second block controls the vertical resizer.
    */
   const [grid, setGrid] = createSignal<HTMLElement>();
   const [fileTabs, setFileTabs] = createSignal<HTMLElement>();
   const [resultTabs, setResultTabs] = createSignal<HTMLElement>();
-  const [resizer, setResizer] = createSignal<HTMLElement>();
+  const [verticalResizer, setVerticalResizer] = createSignal<HTMLElement>();
   const [top, setTop] = createSignal(1);
-  const [isDraggingRow, setIsDraggingRow] = createSignal(false);
+  const [isDraggingVertical, setIsDraggingVertical] = createSignal(false);
 
-  const changeTop = (clientY: number) => {
+  const changeTop = (_clientX: number, clientY: number) => {
     // Adjust the reading according to the height of the resizable panes
-    const headerSize = document.body.offsetHeight - grid()!.clientHeight;
-    const clientYAdjusted = clientY - headerSize - fileTabs()!.clientHeight - (resizer()!.clientHeight / 2);
-    const heightAdjusted = document.body.offsetHeight - headerSize - fileTabs()!.clientHeight - resizer()!.clientHeight - resultTabs()!.clientHeight;
+    const headerSize = document.body.offsetHeight - grid()!.offsetHeight;
+    const clientYAdjusted =
+      clientY - headerSize - fileTabs()!.offsetHeight - verticalResizer()!.offsetHeight / 2;
+    const heightAdjusted =
+      document.body.offsetHeight -
+      headerSize -
+      fileTabs()!.offsetHeight -
+      verticalResizer()!.offsetHeight -
+      resultTabs()!.offsetHeight;
 
     const percentage = clientYAdjusted / (heightAdjusted / 2);
     if (percentage < 0.5 || percentage > 1.5) return;
 
     setTop(percentage);
   };
-
-  const onMouseMoveRow = throttle((e: MouseEvent) => {
-    changeTop(e.clientY);
-  }, 10);
-
-  const onMouseUpRow = () => setIsDraggingRow(false);
-
-  const onTouchMoveRow = throttle((e: TouchEvent) => {
-    changeTop(e.touches[0].clientY);
-  }, 10);
-
-  const onTouchEndRow = () => setIsDraggingRow(false);
-
-  createEffect(() => {
-  if (isDraggingRow()) {
-    window.addEventListener('mousemove', onMouseMoveRow);
-    window.addEventListener('mouseup', onMouseUpRow);
-    window.addEventListener('touchmove', onTouchMoveRow);
-    window.addEventListener('touchend', onTouchEndRow);
-  } else {
-    window.removeEventListener('mousemove', onMouseMoveRow);
-    window.removeEventListener('mouseup', onMouseUpRow);
-    window.removeEventListener('touchmove', onTouchMoveRow);
-    window.removeEventListener('touchend', onTouchEndRow);
-  }
-  });
 
   return (
     <div
@@ -283,12 +255,14 @@ export const Repl: Component<ReplProps> = (props) => {
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
       }}
-      style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr`, '--top': `${top()}fr`, '--bottom': `${2 - top()}fr` }}
+      style={{
+        '--left': `${left()}fr`,
+        '--right': `${2 - left()}fr`,
+        '--top': `${top()}fr`,
+        '--bottom': `${2 - top()}fr`,
+      }}
     >
-      <TabList
-        ref={(el) => setFileTabs(el)}
-        class="row-start-1 space-x-2"
-      >
+      <TabList ref={(el) => setFileTabs(el)} class="row-start-1 space-x-2">
         <For each={props.tabs}>
           {(tab, index) => (
             <TabItem active={props.current === id(tab)}>
@@ -395,7 +369,7 @@ export const Repl: Component<ReplProps> = (props) => {
 
       <TabList
         ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-t-2 border-blueGray-200 ${
+        class={`row-start-4 border-blueGray-200 ${
           props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
         }`}
       >
@@ -442,20 +416,25 @@ export const Repl: Component<ReplProps> = (props) => {
           ref={props.onEditorReady}
         />
 
-        <div
-          ref={(el) => setResizer(el)}
-          class={'grid-resizer row-start-3 cursor-row-resize md:hidden'}
-          onMouseDown={[setIsDraggingRow, true]} onTouchStart={[setIsDraggingRow, true]}
-        >
-          <div class="border-blueGray-200 dark:border-blueGray-700 border-t border-b rounded-lg w-full my-auto h-0"></div>
-        </div>
+        <GridResizer
+          ref={(el) => setVerticalResizer(el)}
+          isHorizontal={props.isHorizontal}
+          direction="vertical"
+          class="row-start-3"
+          onResizeStart={() => setIsDraggingVertical(true)}
+          onResizeEnd={() => setIsDraggingVertical(false)}
+          onResize={changeTop}
+        />
 
-        <div
-          class={'grid-resizer h-full w-full cursor-col-resize row-start-1 row-end-3 col-start-2 xs:hidden md:block'}
-          onMouseDown={[setIsDraggingColumn, true]}
-        >
-          <div class="border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg h-full mx-auto w-0"></div>
-        </div>
+        <GridResizer
+          ref={(el) => setHorizontalResizer(el)}
+          isHorizontal={props.isHorizontal}
+          direction="horizontal"
+          class="row-start-1 row-end-3 col-start-2"
+          onResizeStart={() => setIsDraggingHorizontal(true)}
+          onResizeEnd={() => setIsDraggingHorizontal(false)}
+          onResize={changeLeft}
+        />
 
         <Show when={!showPreview()}>
           <section
@@ -528,7 +507,7 @@ export const Repl: Component<ReplProps> = (props) => {
               props.isHorizontal ? '' : 'md:row-start-2'
             }`}
             classList={{
-              'pointer-events-none': isDraggingColumn() || isDraggingRow(),
+              'pointer-events-none': isDraggingHorizontal() || isDraggingVertical(),
             }}
           />
         </Show>
