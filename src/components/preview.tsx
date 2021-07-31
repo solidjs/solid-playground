@@ -30,10 +30,11 @@ export const Preview: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    // Bail early on first mount
+    // Bail early on first mount or we are already reloading
     if (!internal.reloadSignal) return;
 
     // Otherwise, reload everytime we clicked the reload button
+    setIframeReady(false);
     iframe.contentWindow!.postMessage({ event: 'RELOAD' }, '*');
   });
 
@@ -109,15 +110,8 @@ export const Preview: Component<Props> = (props) => {
           }
 		    </style>
 
-      </head>
-      
-      <body>
-        <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
-          <p style="font-size: 1.5rem">Loading the playground...</p>
-        </div>
-        <div id="app"></div>
-
-        <script id="setup">
+        <script type="module" id="setup">
+          const url = new URL(location.href);
           const fakeConsole = {};
 
           function formatArgs(args) {
@@ -144,38 +138,31 @@ export const Preview: Component<Props> = (props) => {
             }
           }
 
-          const currentUrl = new URL(location.href);
-          if (currentUrl.searchParams.get('reload')) {
-            window.postMessage({ event: 'RELOADED' }, '*');
-          }
-
           window.addEventListener('message', ({ data }) => {
             try {
               const { event, code } = data;
 
               if (event === 'RELOAD') {
-                const url = new URL(location.href);
                 url.searchParams.set('reload', '1');
                 return location.href = url.toString(); 
               }
 
               if (event !== 'CODE_UPDATE') return;
-              let app = document.getElementById('app');
 
-              if (window.dispose && typeof window.dispose === 'function') {
-                window.dispose();
+              window?.dispose?.();
+              window.dispose = undefined;
+
+              let app = document.getElementById('app');
+              if (app) {
+                app.remove();
+                app = document.createElement('div');
+                app.id = 'app';
+                document.body.prepend(app);
               }
-  
-              const oldScript = document.getElementById('script');
-              if (oldScript) oldScript.remove();
-  
-              const script = document.createElement('script');
-              script.innerHTML = code;
-              script.type = 'module';
-              script.id = 'script';
-  
-              const setupScript = document.getElementById('setup');
-              setupScript.insertAdjacentElement('afterend', script);
+
+              const encodedCode = encodeURIComponent(code);
+              const dataUri = 'data:text/javascript;charset=utf-8,' + encodedCode;
+              import(dataUri);
   
               const load = document.getElementById('load');
               if (code && load) load.remove();
@@ -183,7 +170,18 @@ export const Preview: Component<Props> = (props) => {
               console.error(e)
             }
           })
+              
+          if (url.searchParams.get('reload')) {
+            window.postMessage({ event: 'RELOADED' }, '*');
+          }
         </script>
+      </head>
+      
+      <body>
+        <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
+          <p style="font-size: 1.5rem">Loading the playground...</p>
+        </div>
+        <div id="app"></div>
       </body>
     </html>
   `;
