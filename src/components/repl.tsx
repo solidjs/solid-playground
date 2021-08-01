@@ -205,6 +205,16 @@ export const Repl: Component<ReplProps> = (props) => {
    * Upcomming 2 blocks before the slice of view is used for horizontal and vertical resizers.
    * This first block controls the horizontal resizer.
    */
+  const adjustPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
+    if (percentage < lowerBound) {
+      return lowerBound;
+    } else if (percentage > upperBound) {
+      return upperBound;
+    } else {
+      return percentage;
+    }
+  };
+
   const [horizontalResizer, setHorizontalResizer] = createSignal<HTMLElement>();
   const [left, setLeft] = createSignal(1.25);
 
@@ -212,10 +222,11 @@ export const Repl: Component<ReplProps> = (props) => {
     // Adjust the reading according to the width of the resizable panes
     const clientXAdjusted = clientX - horizontalResizer()!.offsetWidth / 2;
     const widthAdjusted = document.body.offsetWidth - horizontalResizer()!.offsetWidth;
-    const percentage = clientXAdjusted / (widthAdjusted / 2);
-    if (percentage < 0.5 || percentage > 1.5) return;
 
-    setLeft(percentage);
+    const percentage = clientXAdjusted / (widthAdjusted / 2);
+    const percentageAdjusted = adjustPercentage(percentage, 0.5, 1.5);
+
+    setLeft(percentageAdjusted);
   };
 
   /**
@@ -240,9 +251,9 @@ export const Repl: Component<ReplProps> = (props) => {
       resultTabs()!.offsetHeight;
 
     const percentage = clientYAdjusted / (heightAdjusted / 2);
-    if (percentage < 0.5 || percentage > 1.5) return;
+    const percentageAdjusted = adjustPercentage(percentage, 0.5, 1.5);
 
-    setTop(percentage);
+    setTop(percentageAdjusted);
   };
 
   return (
