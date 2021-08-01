@@ -23,6 +23,7 @@ import { isValidUrl } from './utils/isValidUrl';
 
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
+import useZoom from '../src/hooks/useZoom';
 
 (window as any).MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
@@ -107,6 +108,26 @@ export const App = (): JSX.Element => {
   const interactive = !noInteractive;
   const actionBar = !noActionBar;
   const editableTabs = !noEditableTabs;
+
+  const { zoomState, updateZoomScale } = useZoom();
+
+  document.addEventListener('keydown', (e) => {
+    const key = e.key;
+
+    if (!zoomState.overrideNative) return;
+
+    if (!((e.ctrlKey || e.metaKey) && (key === '=' || key === '-'))) {
+      return;
+    }
+
+    e.preventDefault();
+
+    if (key === '=') {
+      updateZoomScale('increase');
+    } else {
+      updateZoomScale('decrease');
+    }
+  });
 
   return (
     <div class="relative flex bg-blueGray-50 h-screen overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans flex-col">

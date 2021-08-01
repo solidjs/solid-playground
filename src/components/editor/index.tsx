@@ -17,12 +17,15 @@ import {
   clipboardCheck,
 } from '@amoutonbrady/solid-heroicons/outline';
 import { liftOff } from './setupSolid';
+import useZoom from '../../hooks/useZoom';
 
 const Editor: Component<Props> = (props) => {
   const finalProps = mergeProps({ showActionBar: true }, props);
 
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
+
+  const { zoomState } = useZoom();
 
   const model = () => mEditor.getModel(Uri.parse(finalProps.url));
 
@@ -82,7 +85,7 @@ const Editor: Component<Props> = (props) => {
       model: null,
       automaticLayout: true,
       readOnly: finalProps.disabled,
-      fontSize: 15,
+      fontSize: zoomState.fontSize,
       lineDecorationsWidth: 5,
       lineNumbersMinChars: 3,
       padding: { top: 15 },
@@ -112,6 +115,7 @@ const Editor: Component<Props> = (props) => {
       setupEditor();
     }
   });
+
   onCleanup(() => editor?.dispose());
 
   const updateModel = () => {
@@ -123,6 +127,13 @@ const Editor: Component<Props> = (props) => {
   createEffect(updateModel);
   createEffect(() => {
     mEditor.setTheme(finalProps.isDark ? 'vs-dark-plus' : 'vs-light-plus');
+  });
+  createEffect(() => {
+    const fontSize = zoomState.fontSize;
+
+    if (!editor) return;
+
+    editor.updateOptions({ fontSize });
   });
 
   const showActionBar = () => {
