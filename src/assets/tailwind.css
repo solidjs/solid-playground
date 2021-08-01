@@ -22,17 +22,11 @@ div[contenteditable='true']:focus {
 
 .wrapper,
 .wrapper--forced {
-  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  --top: minmax(0, 1fr);
+  --bottom: minmax(0, 1fr);
+
+  grid-template-rows: auto minmax(0, var(--top)) 12px auto minmax(0, var(--bottom));
   grid-template-columns: 1fr;
-}
-
-.column-resizer {
-  @apply relative z-50;
-}
-
-.column-resizer:hover::after {
-  content: '';
-  @apply absolute top-0 left-[-6px] right-[-6px] bg-brand-default h-full;
 }
 
 @screen md {
@@ -41,7 +35,7 @@ div[contenteditable='true']:focus {
     --right: minmax(0, 1fr);
 
     grid-template-rows: auto minmax(0, 1fr);
-    grid-template-columns: minmax(0, var(--left)) 2px minmax(0, var(--right));
+    grid-template-columns: minmax(0, var(--left)) 12px minmax(0, var(--right));
   }
 }
 

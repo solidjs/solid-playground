@@ -6,6 +6,7 @@ import { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
+import { GridResizer } from './gridResizer';
 import { Error } from './error';
 
 import type { Tab } from '../';
@@ -203,43 +204,78 @@ export const Repl: Component<ReplProps> = (props) => {
   };
 
   /**
-   * This whole block before the slice of view
-   * is an experimental resizer, need to tidy this up
+   * Upcomming 2 blocks before the slice of view is used for horizontal and vertical resizers.
+   * This first block controls the horizontal resizer.
    */
-  const [left, setLeft] = createSignal(1.25);
-  const [isDragging, setIsDragging] = createSignal(false);
-
-  const onMouseMove = throttle((e: MouseEvent) => {
-    const percentage = e.clientX / (document.body.offsetWidth / 2);
-    if (percentage < 0.5 || percentage > 1.5) return;
-
-    setLeft(percentage);
-  }, 10);
-
-  const onMouseUp = () => setIsDragging(false);
-
-  createEffect(() => {
-    if (isDragging()) {
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
+  const adjustPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
+    if (percentage < lowerBound) {
+      return lowerBound;
+    } else if (percentage > upperBound) {
+      return upperBound;
     } else {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      return percentage;
     }
-  });
+  };
+
+  const [horizontalResizer, setHorizontalResizer] = createSignal<HTMLElement>();
+  const [left, setLeft] = createSignal(1.25);
+
+  const changeLeft = (clientX: number, _clientY: number) => {
+    // Adjust the reading according to the width of the resizable panes
+    const clientXAdjusted = clientX - horizontalResizer()!.offsetWidth / 2;
+    const widthAdjusted = document.body.offsetWidth - horizontalResizer()!.offsetWidth;
+
+    const percentage = clientXAdjusted / (widthAdjusted / 2);
+    const percentageAdjusted = adjustPercentage(percentage, 0.5, 1.5);
+
+    setLeft(percentageAdjusted);
+  };
+
+  /**
+   * This second block controls the vertical resizer.
+   */
+  const [grid, setGrid] = createSignal<HTMLElement>();
+  const [fileTabs, setFileTabs] = createSignal<HTMLElement>();
+  const [resultTabs, setResultTabs] = createSignal<HTMLElement>();
+  const [verticalResizer, setVerticalResizer] = createSignal<HTMLElement>();
+  const [top, setTop] = createSignal(1);
+
+  const changeTop = (_clientX: number, clientY: number) => {
+    // Adjust the reading according to the height of the resizable panes
+    const headerSize = document.body.offsetHeight - grid()!.offsetHeight;
+    const clientYAdjusted =
+      clientY - headerSize - fileTabs()!.offsetHeight - verticalResizer()!.offsetHeight / 2;
+    const heightAdjusted =
+      document.body.offsetHeight -
+      headerSize -
+      fileTabs()!.offsetHeight -
+      verticalResizer()!.offsetHeight -
+      resultTabs()!.offsetHeight;
+
+    const percentage = clientYAdjusted / (heightAdjusted / 2);
+    const percentageAdjusted = adjustPercentage(percentage, 0.5, 1.5);
+
+    setTop(percentageAdjusted);
+  };
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
 
   return (
     <div
+      ref={(el) => setGrid(el)}
       class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
       }}
-      style={{ '--left': `${left()}fr`, '--right': `${2 - left()}fr` }}
+      style={{
+        '--left': `${left()}fr`,
+        '--right': `${2 - left()}fr`,
+        '--top': `${top()}fr`,
+        '--bottom': `${2 - top()}fr`,
+      }}
     >
-      <TabList class="row-start-1 space-x-2">
+      <TabList ref={(el) => setFileTabs(el)} class="row-start-1 space-x-2">
         <For each={props.tabs}>
           {(tab, index) => (
             <TabItem active={props.current === id(tab)}>
@@ -345,7 +381,8 @@ export const Repl: Component<ReplProps> = (props) => {
       </TabList>
 
       <TabList
-        class={`row-start-3 border-t-2 border-blueGray-200 ${
+        ref={(el) => setResultTabs(el)}
+        class={`row-start-4 border-blueGray-200 ${
           props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
         }`}
       >
@@ -404,18 +441,25 @@ export const Repl: Component<ReplProps> = (props) => {
           ref={props.onEditorReady}
         />
 
-        <div
-          class="column-resizer h-full w-full row-start-1 row-end-3 col-start-2 hidden"
-          style="cursor: col-resize"
-          classList={{ 'md:block': !props.isHorizontal }}
-          onMouseDown={[setIsDragging, true]}
-        >
-          <div class="h-full border-blueGray-200 dark:border-blueGray-700 border-l border-r rounded-lg mx-auto w-0"></div>
-        </div>
+        <GridResizer
+          ref={(el) => setVerticalResizer(el)}
+          isHorizontal={props.isHorizontal}
+          direction="vertical"
+          class="row-start-3"
+          onResize={changeTop}
+        />
+
+        <GridResizer
+          ref={(el) => setHorizontalResizer(el)}
+          isHorizontal={props.isHorizontal}
+          direction="horizontal"
+          class="row-start-1 row-end-3 col-start-2"
+          onResize={changeLeft}
+        />
 
         <Show when={!showPreview()}>
           <section
-            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-4 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
             classList={{ 'md:row-start-2': !props.isHorizontal }}
             style="grid-template-rows: minmax(0, 1fr) auto"
           >
@@ -481,12 +525,9 @@ export const Repl: Component<ReplProps> = (props) => {
           <Preview
             reloadSignal={reloadSignal()}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-4 ${
+            class={`h-full w-full bg-white row-start-5 ${
               props.isHorizontal ? '' : 'md:row-start-2'
             }`}
-            classList={{
-              'pointer-events-none': isDragging(),
-            }}
           />
         </Show>
       </Suspense>

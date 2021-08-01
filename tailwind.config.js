@@ -27,6 +27,10 @@ module.exports = {
       fontSize: {
         '0.5sm': ['0.84375rem', '1.25rem'],
       },
+      cursor: {
+        'col-resize': 'col-resize',
+        'row-resize': 'row-resize'
+      }
     },
   },
   darkMode: 'class',
