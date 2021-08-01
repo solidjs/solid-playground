@@ -207,7 +207,6 @@ export const Repl: Component<ReplProps> = (props) => {
    */
   const [horizontalResizer, setHorizontalResizer] = createSignal<HTMLElement>();
   const [left, setLeft] = createSignal(1.25);
-  const [isDraggingHorizontal, setIsDraggingHorizontal] = createSignal(false);
 
   const changeLeft = (clientX: number, _clientY: number) => {
     // Adjust the reading according to the width of the resizable panes
@@ -227,7 +226,6 @@ export const Repl: Component<ReplProps> = (props) => {
   const [resultTabs, setResultTabs] = createSignal<HTMLElement>();
   const [verticalResizer, setVerticalResizer] = createSignal<HTMLElement>();
   const [top, setTop] = createSignal(1);
-  const [isDraggingVertical, setIsDraggingVertical] = createSignal(false);
 
   const changeTop = (_clientX: number, clientY: number) => {
     // Adjust the reading according to the height of the resizable panes
@@ -421,8 +419,6 @@ export const Repl: Component<ReplProps> = (props) => {
           isHorizontal={props.isHorizontal}
           direction="vertical"
           class="row-start-3"
-          onResizeStart={() => setIsDraggingVertical(true)}
-          onResizeEnd={() => setIsDraggingVertical(false)}
           onResize={changeTop}
         />
 
@@ -431,8 +427,6 @@ export const Repl: Component<ReplProps> = (props) => {
           isHorizontal={props.isHorizontal}
           direction="horizontal"
           class="row-start-1 row-end-3 col-start-2"
-          onResizeStart={() => setIsDraggingHorizontal(true)}
-          onResizeEnd={() => setIsDraggingHorizontal(false)}
           onResize={changeLeft}
         />
 
@@ -506,9 +500,6 @@ export const Repl: Component<ReplProps> = (props) => {
             class={`h-full w-full bg-white row-start-5 ${
               props.isHorizontal ? '' : 'md:row-start-2'
             }`}
-            classList={{
-              'pointer-events-none': isDraggingHorizontal() || isDraggingVertical(),
-            }}
           />
         </Show>
       </Suspense>

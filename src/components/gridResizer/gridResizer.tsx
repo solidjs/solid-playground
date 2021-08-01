@@ -4,7 +4,6 @@ import {
   splitProps,
   createSignal,
   createEffect,
-  onMount,
   onCleanup,
 } from 'solid-js';
 import { throttle } from '../../utils/throttle';
@@ -14,8 +13,6 @@ interface GridResizerProps extends JSX.HTMLAttributes<HTMLDivElement> {
   ref?: (el: HTMLDivElement) => any | undefined;
   isHorizontal: boolean;
   direction: 'horizontal' | 'vertical';
-  onResizeStart?: () => void;
-  onResizeEnd?: () => void;
   onResize: (clientX: number, clientY: number) => void;
 }
 
@@ -26,24 +23,16 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
     'isHorizontal',
     'direction',
     'onResize',
-    'onResizeStart',
-    'onResizeEnd',
   ]);
 
   const [isDragging, setIsDragging] = createSignal(false);
 
   const onResizeStart = () => {
     setIsDragging(true);
-    if (local.onResizeStart) {
-      local.onResizeStart();
-    }
   };
 
   const onResizeEnd = () => {
     setIsDragging(false);
-    if (local.onResizeEnd) {
-      local.onResizeEnd();
-    }
   };
 
   const onMouseMove = throttle((e: MouseEvent) => {
