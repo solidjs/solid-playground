@@ -104,14 +104,14 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       </button>
       <Show when={toggle()}>
         <div
-          class="absolute top-full left-1/2 bg-white text-brand-default border border-gray-900 rounded shadow  p-6 -translate-x-1/2 z-10"
+          class="absolute top-full left-1/2 bg-white dark:bg-gray-700 text-brand-default border border-gray-900 rounded shadow  p-6 -translate-x-1/2 z-10"
           classList={{
             'left-1/4': props.showMenu,
           }}
         >
           <div class="flex">
             <button
-              class="bg-gray-500 text-white px-3 py-1 rounded-l text-sm uppercase tracking-wide hover:bg-gray-800"
+              class="bg-gray-500 text-white px-3 py-1 rounded-l text-sm uppercase tracking-wide hover:bg-gray-800 dark:hover:bg-black"
               aria-label="decrease font size"
               onClick={() => updateZoomScale('decrease')}
             >
@@ -121,14 +121,14 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               {zoomState.zoom}%
             </div>
             <button
-              class="bg-gray-500 text-white px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-800"
+              class="bg-gray-500 text-white px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-800 dark:hover:bg-black"
               aria-label="increase font size"
               onClick={() => updateZoomScale('increase')}
             >
               +
             </button>
             <button
-              class="bg-gray-500 text-white px-3 py-1 rounded  text-sm uppercase tracking-wide hover:bg-gray-800"
+              class="bg-gray-500 text-white px-3 py-1 rounded  text-sm uppercase tracking-wide hover:bg-gray-800 dark:hover:bg-black"
               aria-label="reset font size"
               onClick={() => updateZoomScale('reset')}
             >
@@ -136,7 +136,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             </button>
           </div>
           <div className="mt-10">
-            <label class="block my-3 cursor-pointer">
+            <label class="block my-3 cursor-pointer dark:text-white">
               <input
                 type="checkbox"
                 class="mr-4 cursor-pointer"
@@ -145,7 +145,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               />
               Override browser zoom keyboard shortcut
             </label>
-            <label class="block my-3 cursor-pointer">
+            <label class="block my-3 cursor-pointer dark:text-white">
               <input
                 type="checkbox"
                 class="mr-4 cursor-pointer"
