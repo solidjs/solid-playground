@@ -3,11 +3,7 @@ const theme = require('tailwindcss/defaultTheme');
 
 module.exports = {
   mode: 'jit',
-  purge: [
-    "./src/**/*.{tsx,ts,css}",
-    "./playground/**/*.{tsx,ts,css}",
-    "./index.html"
-  ],
+  purge: ['./src/**/*.{tsx,ts,css}', './playground/**/*.{tsx,ts,css}', './index.html'],
   theme: {
     extend: {
       colors: {
@@ -18,7 +14,7 @@ module.exports = {
           medium: '#446b9e',
           light: '#4f88c6',
         },
-        other: '#1e1e1e'
+        other: '#1e1e1e',
       },
       fontFamily: {
         // This font doesn't render properly, it seems it has a line-height issue
@@ -29,10 +25,15 @@ module.exports = {
       },
       cursor: {
         'col-resize': 'col-resize',
-        'row-resize': 'row-resize'
-      }
+        'row-resize': 'row-resize',
+      },
     },
   },
   darkMode: 'class',
+  variants: {
+    extend: {
+      backgroundColor: ['group-hover'],
+    },
+  },
   plugins: [require('@tailwindcss/forms')],
 };

@@ -1,11 +1,4 @@
-import {
-  Component,
-  JSX,
-  splitProps,
-  createSignal,
-  createEffect,
-  onCleanup,
-} from 'solid-js';
+import { Component, JSX, splitProps, createSignal, createEffect, onCleanup } from 'solid-js';
 import { throttle } from '../../utils/throttle';
 import { Dot } from './dot';
 
@@ -72,9 +65,14 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
     }
   });
 
-  const baseClasses = 'justify-center items-center border-blueGray-200 hover:bg-brand-default';
+  const baseClasses =
+    'justify-center group items-center border-blueGray-200 dark:border-blueGray-700 dark:bg-gray-900 hover:bg-brand-default dark:hover:bg-brand-default';
   const resizingClasses = () =>
-    `${isDragging() ? 'bg-brand-default' : 'bg-blueGray-50 dark:bg-blueGray-800'}`;
+    `${
+      isDragging()
+        ? 'bg-brand-default dark:bg-brand-default'
+        : 'bg-blueGray-50 dark:bg-blueGray-800'
+    }`;
   const directionClasses = () =>
     local.direction === 'horizontal'
       ? `flex-col cursor-col-resize border-l-2 border-r-2 hidden${
@@ -95,9 +93,9 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
         }
       />
       <div ref={setRef} class={classes()} {...other}>
-        <Dot />
-        <Dot />
-        <Dot />
+        <Dot isDragging={isDragging()} />
+        <Dot isDragging={isDragging()} />
+        <Dot isDragging={isDragging()} />
       </div>
     </>
   );
