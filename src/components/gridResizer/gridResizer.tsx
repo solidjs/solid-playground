@@ -66,12 +66,10 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
   });
 
   const baseClasses =
-    'justify-center group items-center border-blueGray-200 dark:border-blueGray-700 dark:bg-gray-900 hover:bg-brand-default dark:hover:bg-brand-default';
+    'justify-center group items-center border-blueGray-200 dark:border-blueGray-700 hover:bg-brand-default dark:hover:bg-brand-default';
   const resizingClasses = () =>
     `${
-      isDragging()
-        ? 'bg-brand-default dark:bg-brand-default'
-        : 'bg-blueGray-50 dark:bg-blueGray-800'
+      isDragging() ? 'bg-brand-default dark:bg-brand-default' : 'bg-blueGray-50 dark:bg-gray-900'
     }`;
   const directionClasses = () =>
     local.direction === 'horizontal'
