@@ -118,7 +118,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               -
             </button>
             <div class="text-black bg-gray-100 dark:bg-gray-200 px-3 py-1 text-sm text-center w-20 uppercase tracking-wide ">
-              <span>{zoomState.zoom}%</span>
+              {zoomState.zoom}%
             </div>
             <button
               class="bg-gray-500 text-white px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-800 dark:hover:bg-black"
