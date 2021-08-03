@@ -88,11 +88,11 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
     >
       <button
         type="button"
-        class="text-black md:text-white flex flex-row space-x-2 items-center w-full md:px-3 px-2 py-2 focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+        class="dark:text-white md:text-white flex flex-row space-x-2 items-center w-full md:px-3 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
         classList={{
           'bg-gray-900': toggle() && !props.showMenu,
-          'bg-gray-300': toggle() && props.showMenu,
-          'rounded-none	active:bg-gray-300 hover:bg-gray-300 focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+          'bg-gray-300 dark:text-black': toggle() && props.showMenu,
+          'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
             props.showMenu,
         }}
         onClick={onFOClick}
