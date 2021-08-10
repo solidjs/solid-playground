@@ -87,18 +87,18 @@ export const Header: Component<{
           class="z-10"
         >
           <div
-            class="md:items-center md:space-x-2 md:flex md:flex-row"
+            class="md:items-center md:space-x-2 md:flex md:flex-row text-black dark:text-white"
             classList={{
-              'shadow-md flex flex-col justify-center bg-white': showMenu(),
+              'shadow-md flex flex-col justify-center bg-white dark:bg-gray-700': showMenu(),
               hidden: !showMenu(),
             }}
           >
             <button
               type="button"
               onClick={props.toggleDark}
-              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
-                'rounded-none	active:bg-gray-300 hover:bg-gray-300 focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
               }}
               title="Toggle dark mode"
@@ -110,9 +110,9 @@ export const Header: Component<{
             </button>
 
             <label
-              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 cursor-pointer"
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100 cursor-pointer"
               classList={{
-                'rounded-none	active:bg-gray-300 hover:bg-gray-300 focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
               }}
               title="Import from JSON"
@@ -125,9 +125,9 @@ export const Header: Component<{
             <button
               type="button"
               onClick={() => exportToJSON(props.tabs)}
-              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
-                'rounded-none	active:bg-gray-300 hover:bg-gray-300 focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
               }}
               title="Export to JSON"
@@ -141,9 +141,9 @@ export const Header: Component<{
             <button
               type="button"
               onClick={() => exportToCsb(props.tabs)}
-              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100"
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
-                'rounded-none	active:bg-gray-300 hover:bg-gray-300 focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
               }}
               title="Export to CodeSandbox"
@@ -161,11 +161,11 @@ export const Header: Component<{
             <button
               type="button"
               onClick={shareLink}
-              class="text-black md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded"
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded"
               classList={{
                 'opacity-80 hover:opacity-100': !copy(),
                 'text-green-100': copy() && !showMenu(),
-                'rounded-none	active:bg-gray-300 hover:bg-gray-300 focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
               }}
               title="Share with a minified link"

@@ -474,7 +474,7 @@ export const Repl: Component<ReplProps> = (props) => {
               showActionBar={props.actionBar}
             />
 
-            <div class="bg-white dark:bg-blueGray-800 p-5 hidden md:block">
+            <div class="bg-white dark:bg-blueGray-800 p-5">
               <label class="font-semibold text-sm uppercase">Compile mode</label>
 
               <div class="mt-1 space-y-1 text-sm">
