@@ -3,3 +3,7 @@ dist
 lib
 .parcel-cache
 .env
+
+.yarn*
+yarn.lock
+package-lock.json
