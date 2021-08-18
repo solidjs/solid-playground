@@ -18,7 +18,7 @@
     "dev": "vite",
     "build": "vite build && workbox generateSW workbox-config.js",
     "build:lib": "vite build -c vite-lib.config.ts",
-    "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\"",
+    "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\" \"*.{js,ts}\"",
     "prepublishOnly": "pnpm build:lib"
   },
   "devDependencies": {
