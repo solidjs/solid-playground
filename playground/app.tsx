@@ -24,6 +24,7 @@ import { isValidUrl } from './utils/isValidUrl';
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
 import useZoom from '../src/hooks/useZoom';
+import { isDarkTheme } from './utils/isDarkTheme';
 
 (window as any).MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
@@ -96,12 +97,11 @@ export const App = (): JSX.Element => {
     'noEditableTabs',
   ].map((key) => key in params);
 
-  const [dark, setDark] = createSignal(localStorage.getItem('dark') === 'true');
+  const [dark, setDark] = createSignal(isDarkTheme());
 
   createEffect(() => {
     const action = dark() ? 'add' : 'remove';
     document.body.classList[action]('dark');
-    localStorage.setItem('dark', String(dark()));
   });
 
   const header = !noHeader;
@@ -136,7 +136,11 @@ export const App = (): JSX.Element => {
         children={
           <Header
             dark={dark()}
-            toggleDark={() => setDark(!dark())}
+            toggleDark={() => {
+              const toggledValue = !dark();
+              setDark(toggledValue);
+              localStorage.setItem('dark', String(toggledValue));
+            }}
             isHorizontal={isHorizontal}
             tabs={tabs()}
             setTabs={setTabs}
