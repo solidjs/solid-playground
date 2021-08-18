@@ -102,7 +102,6 @@ export const App = (): JSX.Element => {
   createEffect(() => {
     const action = dark() ? 'add' : 'remove';
     document.body.classList[action]('dark');
-    localStorage.setItem('dark', String(dark()));
   });
 
   const header = !noHeader;
@@ -137,7 +136,11 @@ export const App = (): JSX.Element => {
         children={
           <Header
             dark={dark()}
-            toggleDark={() => setDark(!dark())}
+            toggleDark={() => {
+              const toggledValue = !dark();
+              setDark(toggledValue);
+              localStorage.setItem('dark', String(toggledValue));
+            }}
             isHorizontal={isHorizontal}
             tabs={tabs()}
             setTabs={setTabs}
