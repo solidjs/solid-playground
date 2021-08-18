@@ -35,15 +35,15 @@
     "typescript": "^4.3.5",
     "vite": "2.3.8",
     "vite-plugin-solid": "^2.0.1",
-    "workbox-cli": "^6.2.3"
+    "workbox-cli": "^6.2.4"
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@amoutonbrady/solid-heroicons": "^0.9.0-rc.0",
     "@babel/preset-typescript": "^7.15.0",
-    "@babel/standalone": "^7.15.2",
+    "@babel/standalone": "^7.15.3",
     "@tailwindcss/forms": "^0.3.3",
-    "babel-preset-solid": "1.1.0",
+    "babel-preset-solid": "1.1.1",
     "dedent": "^0.7.0",
     "mitt": "^3.0.0",
     "monaco-editor": "^0.25.2",
@@ -53,6 +53,6 @@
     "prettier": "=2.3.0",
     "register-service-worker": "^1.7.2",
     "rollup": "^2.56.2",
-    "solid-js": "1.1.0"
+    "solid-js": "1.1.1"
   }
 }
