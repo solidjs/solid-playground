@@ -24,6 +24,7 @@ import { isValidUrl } from './utils/isValidUrl';
 import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
 import useZoom from '../src/hooks/useZoom';
+import { isDarkTheme } from './utils/isDarkTheme';
 
 (window as any).MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
@@ -96,7 +97,7 @@ export const App = (): JSX.Element => {
     'noEditableTabs',
   ].map((key) => key in params);
 
-  const [dark, setDark] = createSignal(localStorage.getItem('dark') === 'true');
+  const [dark, setDark] = createSignal(isDarkTheme());
 
   createEffect(() => {
     const action = dark() ? 'add' : 'remove';
