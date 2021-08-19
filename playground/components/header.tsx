@@ -15,10 +15,9 @@ import { processImport, Tab } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
 import { ZoomDropdown } from './zoomDropdown';
+import { dark, setDark } from '../store';
 
 export const Header: Component<{
-  dark: boolean;
-  toggleDark: () => void;
   isHorizontal: boolean;
   tabs: Tab[];
   setTabs: (tabs: Tab[]) => void;
@@ -95,7 +94,11 @@ export const Header: Component<{
           >
             <button
               type="button"
-              onClick={props.toggleDark}
+              onClick={() => {
+                const toggledValue = !dark();
+                setDark(toggledValue);
+                localStorage.setItem('dark', String(toggledValue));
+              }}
               class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
                 'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
@@ -103,10 +106,10 @@ export const Header: Component<{
               }}
               title="Toggle dark mode"
             >
-              <Show when={props.dark} fallback={<Icon path={moon} class="h-6" />}>
+              <Show when={dark} fallback={<Icon path={moon} class="h-6" />}>
                 <Icon path={sun} class="h-6" />
               </Show>
-              <span class="text-xs md:sr-only">{props.dark ? 'Light' : 'Dark'} mode</span>
+              <span class="text-xs md:sr-only">{dark() ? 'Light' : 'Dark'} mode</span>
             </button>
 
             <label
