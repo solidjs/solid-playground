@@ -110,6 +110,10 @@ export const Preview: Component<Props> = (props) => {
           button:focus {
             border-color: #666;
           }
+
+          .dark {
+            color: rgba(248, 250, 252, 1)
+          }
 		    </style>
 
         <script type="module" id="setup">
@@ -160,6 +164,7 @@ export const Preview: Component<Props> = (props) => {
                 app = document.createElement('div');
                 app.id = 'app';
                 document.body.prepend(app);
+              ${props.isDark ? '  app.classList.add("dark");\n' : ''}
               }
 
               const encodedCode = encodeURIComponent(code);
@@ -263,6 +268,7 @@ export const Preview: Component<Props> = (props) => {
 type Props = JSX.HTMLAttributes<HTMLDivElement> & {
   code: string;
   reloadSignal: boolean;
+  isDark: boolean;
 };
 
 interface LogPayload {

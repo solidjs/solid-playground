@@ -528,6 +528,7 @@ export const Repl: Component<ReplProps> = (props) => {
             class={`h-full w-full bg-white row-start-5 ${
               props.isHorizontal ? '' : 'md:row-start-2'
             }`}
+            isDark={props.dark}
           />
         </Show>
       </Suspense>
