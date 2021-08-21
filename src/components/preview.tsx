@@ -31,15 +31,6 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
   });
 
-  createEffect(() => {
-    // Bail early on first mount or we are already reloading
-    if (!internal.reloadSignal) return;
-
-    // Otherwise, reload everytime we clicked the reload button
-    setIframeReady(false);
-    iframe.contentWindow!.postMessage({ event: 'RELOAD' }, '*');
-  });
-
   function attachToIframe() {
     setIframeReady(true);
 
@@ -47,11 +38,6 @@ export const Preview: Component<Props> = (props) => {
       if (data.event === 'LOG') {
         const { level, args } = data;
         setLogs([...logs(), { level, args }]);
-      }
-
-      if (data.event === 'RELOADED') {
-        setLogs([]);
-        iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
       }
     });
   }
@@ -113,7 +99,6 @@ export const Preview: Component<Props> = (props) => {
 		    </style>
 
         <script type="module" id="setup">
-          const url = new URL(location.href);
           const fakeConsole = {};
 
           function formatArgs(args) {
@@ -144,11 +129,6 @@ export const Preview: Component<Props> = (props) => {
             try {
               const { event, code } = data;
 
-              if (event === 'RELOAD') {
-                url.searchParams.set('reload', '1');
-                return location.href = url.toString(); 
-              }
-
               if (event !== 'CODE_UPDATE') return;
 
               window?.dispose?.();
@@ -172,10 +152,6 @@ export const Preview: Component<Props> = (props) => {
               console.error(e)
             }
           })
-              
-          if (url.searchParams.get('reload')) {
-            window.postMessage({ event: 'RELOADED' }, '*');
-          }
         </script>
       </head>
       
@@ -187,6 +163,15 @@ export const Preview: Component<Props> = (props) => {
       </body>
     </html>
   `;
+
+  createEffect(() => {
+    // Bail early on first mount or we are already reloading
+    if (!internal.reloadSignal) return;
+
+    // Otherwise, reload everytime we clicked the reload button
+    setIframeReady(false);
+    iframe.srcdoc = html;
+  });
 
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
