@@ -16,7 +16,7 @@ specifiers:
   babel-preset-solid: 1.1.5
   dedent: ^0.7.0
   mitt: ^3.0.0
-  monaco-editor: ^0.25.2
+  monaco-editor: ^0.28.1
   monaco-editor-textmate: ^3.0.0
   monaco-textmate: ^3.0.1
   onigasm: ^2.2.5
@@ -41,8 +41,8 @@ dependencies:
   babel-preset-solid: 1.1.5_@babel+core@7.15.5
   dedent: 0.7.0
   mitt: 3.0.0
-  monaco-editor: 0.25.2
-  monaco-editor-textmate: 3.0.0_7433eca6fca91ee8e682154bf8474308
+  monaco-editor: 0.28.1
+  monaco-editor-textmate: 3.0.0_12b5cb4ede7f984163e23374feeabcfe
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
   prettier: 2.4.1
@@ -3503,18 +3503,18 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /monaco-editor-textmate/3.0.0_7433eca6fca91ee8e682154bf8474308:
+  /monaco-editor-textmate/3.0.0_12b5cb4ede7f984163e23374feeabcfe:
     resolution: {integrity: sha512-4BK3ual4WllRpiQBDcBO8NKdbk4ukdBtnl23cRYvu1eNWOWKYOBM0rYac50HvFClSbtd5GMezLPjkaim0iM7sw==}
     peerDependencies:
       monaco-editor: 0.x.x
       monaco-textmate: ^3.0.0
     dependencies:
-      monaco-editor: 0.25.2
+      monaco-editor: 0.28.1
       monaco-textmate: 3.0.1_onigasm@2.2.5
     dev: false
 
-  /monaco-editor/0.25.2:
-    resolution: {integrity: sha512-5iylzSJevCnzJn9UVsW8yOZ3yHjmAs4TfvH3zsbftKiFKmHG0xirGN6DK9Kk04VSWxYCZZAIafYJoNJJMAU1KA==}
+  /monaco-editor/0.28.1:
+    resolution: {integrity: sha512-P1vPqxB4B1ZFzTeR1ScggSp9/5NoQrLCq88fnlNUsuRAP1usEBN4TIpI2lw0AYIZNVIanHk0qwjze2uJwGOHUw==}
     dev: false
 
   /monaco-textmate/3.0.1_onigasm@2.2.5:

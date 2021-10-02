@@ -46,7 +46,7 @@
     "babel-preset-solid": "1.1.5",
     "dedent": "^0.7.0",
     "mitt": "^3.0.0",
-    "monaco-editor": "^0.25.2",
+    "monaco-editor": "^0.28.1",
     "monaco-editor-textmate": "^3.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
