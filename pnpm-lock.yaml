@@ -22,7 +22,7 @@ specifiers:
   onigasm: ^2.2.5
   patch-package: ^6.4.7
   postcss: ^8.3.8
-  prettier: '=2.3.0'
+  prettier: ^2.4.1
   register-service-worker: ^1.7.2
   rollup: ^2.58.0
   solid-js: 1.1.5
@@ -45,7 +45,7 @@ dependencies:
   monaco-editor-textmate: 3.0.0_7433eca6fca91ee8e682154bf8474308
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
-  prettier: 2.3.0
+  prettier: 2.4.1
   register-service-worker: 1.7.2
   rollup: 2.58.0
   solid-js: 1.1.5
@@ -3841,8 +3841,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /prettier/2.3.0:
-    resolution: {integrity: sha512-kXtO4s0Lz/DW/IJ9QdWhAf7/NmPWQXkFr/r/WkR3vyI+0v8amTDxiaQSLzs8NBlytfLWX/7uQUMIW677yLKl4w==}
+  /prettier/2.4.1:
+    resolution: {integrity: sha512-9fbDAXSBcc6Bs1mZrDYb3XKzDLm4EXXL9sC1LqKP5rZkT6KRr/rf9amVUcODVXgguK/isJz0d0hP72WeaKWsvA==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: false
