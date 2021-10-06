@@ -15,6 +15,7 @@ import { processImport, Tab } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
 import { ZoomDropdown } from './zoomDropdown';
+import Dismiss from 'solid-dismiss';
 
 export const Header: Component<{
   dark: boolean;
@@ -28,6 +29,7 @@ export const Header: Component<{
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const [showMenu, setShowMenu] = createSignal(false);
+  let menuBtnEl!: HTMLButtonElement;
 
   window.addEventListener('resize', closeMobileMenu);
   onCleanup(() => {
@@ -82,9 +84,13 @@ export const Header: Component<{
         <span class="inline-block -mb-1">Solid Playground</span>
       </h1>
       <div class="flex items-center space-x-2">
-        <div
-          classList={{ 'absolute top-[53px] right-[10px] w-[fit-content]': showMenu() }}
+        <Dismiss
           class="z-10"
+          classList={{ 'absolute top-[53px] right-[10px] w-[fit-content]': showMenu() }}
+          menuButton={() => menuBtnEl}
+          open={showMenu}
+          setOpen={setShowMenu}
+          show
         >
           <div
             class="md:items-center md:space-x-2 md:flex md:flex-row text-black dark:text-white"
@@ -175,7 +181,7 @@ export const Header: Component<{
             </button>
             <ZoomDropdown showMenu={showMenu()} />
           </div>
-        </div>
+        </Dismiss>
         <button
           type="button"
           id="menu-btn"
@@ -184,7 +190,7 @@ export const Header: Component<{
           }}
           class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
           title="Mobile Menu Button"
-          onClick={() => setShowMenu(!showMenu())}
+          ref={menuBtnEl}
         >
           <Show when={showMenu()} fallback={<Icon path={menu} class="h-6 w-6" />}>
             <Icon path={xCircle} class="h-[22px] w-[22px]" /* adjusted to account for border */ />

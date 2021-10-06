@@ -25,6 +25,7 @@ specifiers:
   prettier: ^2.4.1
   register-service-worker: ^1.7.2
   rollup: ^2.58.0
+  solid-dismiss: ^1.0.11
   solid-js: 1.1.5
   tailwindcss: ^2.2.16
   typescript: ^4.4.3
@@ -48,6 +49,7 @@ dependencies:
   prettier: 2.4.1
   register-service-worker: 1.7.2
   rollup: 2.58.0
+  solid-dismiss: 1.0.11_solid-js@1.1.5
   solid-js: 1.1.5
 
 devDependencies:
@@ -4173,6 +4175,14 @@ packages:
     resolution: {integrity: sha512-ZYKh3Wh2z1PpEXWr0MpSBZ0V6mZHAQfYevttO11c51CaWjGTaadiKZ+wVt1PbMlDV5qhMFslpZCemhwOK7C89A==}
     engines: {node: '>=6'}
     dev: true
+
+  /solid-dismiss/1.0.11_solid-js@1.1.5:
+    resolution: {integrity: sha512-araev0eiqGs2e/T0ma0MjDGik/PcIJUyvAHAx7PVWkeoaFfA0oBrlykbfus48Dygr87qgVFT2O1+cOhag8B1KA==}
+    peerDependencies:
+      solid-js: '1'
+    dependencies:
+      solid-js: 1.1.5
+    dev: false
 
   /solid-js/1.0.0-rc.9:
     resolution: {integrity: sha512-bhSihGFDn0Bh06shr+Qy6pb5Mrx571BnTGn0TNcYG34CU5lwFwe3czpHvmZzMXcnBv8dF+BkM+xWDyKtRq9z8Q==}
