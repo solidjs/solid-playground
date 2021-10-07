@@ -53,6 +53,7 @@
     "prettier": "^2.4.1",
     "register-service-worker": "^1.7.2",
     "rollup": "^2.58.0",
+    "solid-dismiss": "^1.0.11",
     "solid-js": "1.1.5"
   }
 }

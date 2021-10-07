@@ -1,11 +1,11 @@
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { zoomIn } from '@amoutonbrady/solid-heroicons/outline';
-import { Component, createSignal, Show, createEffect } from 'solid-js';
-import useFocusOut from '../../src/hooks/useFocusOut';
+import Dismiss from 'solid-dismiss';
+import { Component, createSignal, createEffect } from 'solid-js';
 import useZoom from '../../src/hooks/useZoom';
 
 export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
-  const [[toggle, setToggle], { onFOBlur, onFOClick, onFOFocus }] = useFocusOut();
+  const [open, setOpen] = createSignal(false);
   const { zoomState, updateZoomScale, updateZoomSettings } = useZoom();
   const popupDuration = 1250;
   let containerEl!: HTMLDivElement;
@@ -21,10 +21,11 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   };
 
   const onKeyDownContainer = (e: KeyboardEvent) => {
-    if (!toggle()) return;
+    if (!open()) return;
 
     if (e.key === 'Escape' && !stealFocus) {
       if (prevFocusedEl) {
+        setOpen(false);
         prevFocusedEl.focus();
         stealFocus = true;
       }
@@ -47,12 +48,12 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       stealFocus = false;
     }
 
-    setToggle(true);
+    setOpen(true);
 
     window.clearTimeout(timeoutId!);
 
     timeoutId = setTimeout(() => {
-      setToggle(false);
+      setOpen(false);
 
       stealFocus = true;
       if (prevFocusedEl) {
@@ -62,7 +63,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   });
 
   createEffect(() => {
-    if (!toggle()) {
+    if (!open()) {
       if (containerEl) {
         containerEl.removeEventListener('mousemove', onMouseMove);
       }
@@ -77,8 +78,6 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   return (
     <div
       class="relative"
-      onFocusIn={onFOFocus}
-      onFocusOut={onFOBlur}
       onKeyDown={onKeyDownContainer}
       onClick={() => {
         window.clearTimeout(timeoutId!);
@@ -90,19 +89,18 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         type="button"
         class="dark:text-white md:text-white flex flex-row space-x-2 items-center w-full md:px-3 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
         classList={{
-          'bg-gray-900': toggle() && !props.showMenu,
-          'bg-gray-300 dark:text-black': toggle() && props.showMenu,
+          'bg-gray-900': open() && !props.showMenu,
+          'bg-gray-300 dark:text-black': open() && props.showMenu,
           'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
             props.showMenu,
         }}
-        onClick={onFOClick}
         title="Scale editor to make text larger or smaller"
         ref={btnEl}
       >
         <Icon class="h-6" path={zoomIn} />
         <span class="text-xs md:sr-only">Scale Editor</span>
       </button>
-      <Show when={toggle()}>
+      <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
           class="absolute top-full left-1/2 bg-white dark:bg-gray-700 text-brand-default border border-gray-900 rounded shadow  p-6 -translate-x-1/2 z-10"
           classList={{
@@ -156,7 +154,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             </label>
           </div>
         </div>
-      </Show>
+      </Dismiss>
     </div>
   );
 };
