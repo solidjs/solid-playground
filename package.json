@@ -14,7 +14,6 @@
   "module": "lib/index.js",
   "types": "lib/types.d.ts",
   "scripts": {
-    "prepare": "patch-package",
     "dev": "vite",
     "build": "vite build && workbox generateSW workbox-config.js",
     "build:lib": "vite build -c vite-lib.config.ts",
@@ -22,28 +21,27 @@
     "prepublishOnly": "pnpm build:lib"
   },
   "devDependencies": {
-    "@babel/core": "^7.15.8",
-    "@babel/types": "^7.15.6",
+    "@babel/core": "^7.16.0",
+    "@babel/types": "^7.16.0",
     "@types/babel__standalone": "^7.1.3",
     "@types/dedent": "^0.7.0",
     "@types/workbox-sw": "^4.3.2",
     "assert": "^2.0.0",
-    "autoprefixer": "^10.3.7",
-    "patch-package": "^6.4.7",
-    "postcss": "^8.3.9",
-    "tailwindcss": "^2.2.17",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.3.11",
+    "tailwindcss": "^2.2.19",
     "typescript": "^4.4.4",
-    "vite": "2.6.7",
-    "vite-plugin-solid": "^2.1.0",
+    "vite": "2.6.13",
+    "vite-plugin-solid": "^2.1.1",
     "workbox-cli": "^6.3.0"
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@amoutonbrady/solid-heroicons": "^0.9.0-rc.0",
-    "@babel/preset-typescript": "^7.15.0",
-    "@babel/standalone": "^7.15.8",
+    "@babel/preset-typescript": "^7.16.0",
+    "@babel/standalone": "^7.16.2",
     "@tailwindcss/forms": "^0.3.4",
-    "babel-preset-solid": "1.1.5",
+    "babel-preset-solid": "1.2.2",
     "dedent": "^0.7.0",
     "mitt": "^3.0.0",
     "monaco-editor": "^0.29.1",
@@ -52,8 +50,8 @@
     "onigasm": "^2.2.5",
     "prettier": "^2.4.1",
     "register-service-worker": "^1.7.2",
-    "rollup": "^2.58.0",
-    "solid-dismiss": "^1.0.13",
-    "solid-js": "1.1.6"
+    "rollup": "^2.59.0",
+    "solid-dismiss": "^1.0.19",
+    "solid-js": "1.2.2"
   }
 }
