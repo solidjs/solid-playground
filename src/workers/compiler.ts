@@ -152,7 +152,7 @@ async function compile(
 
     return [null, code as string];
   } catch (e) {
-    return [e.message, null];
+    return [(e as Error).message, null];
   }
 }
 
