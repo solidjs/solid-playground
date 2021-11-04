@@ -1,4 +1,13 @@
-import { Component, createEffect, createSignal, splitProps, JSX, For, Show } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  splitProps,
+  JSX,
+  For,
+  Show,
+  onMount,
+} from 'solid-js';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { chevronDown, chevronRight } from '@amoutonbrady/solid-heroicons/solid';
 import useZoom from '../hooks/useZoom';
@@ -181,6 +190,10 @@ export const Preview: Component<Props> = (props) => {
     }); transform-origin: 0 0;`;
   };
 
+  onMount(() => {
+    iframe.srcdoc = html;
+  });
+
   return (
     <div
       class={`grid relative ${internal.class}`}
@@ -191,7 +204,6 @@ export const Preview: Component<Props> = (props) => {
         title="Solid REPL"
         class="overflow-auto p-2 w-full h-full dark:bg-other"
         ref={iframe}
-        srcdoc={html}
         onLoad={attachToIframe}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
