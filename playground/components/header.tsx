@@ -9,13 +9,16 @@ import {
   moon,
   sun,
 } from '@amoutonbrady/solid-heroicons/outline';
+import Dismiss from 'solid-dismiss';
 
 import logo from '../assets/logo.svg?url';
 import { processImport, Tab } from '../../src';
 import { exportToCsb } from '../utils/exportToCsb';
 import { exportToJSON } from '../utils/exportToJson';
 import { ZoomDropdown } from './zoomDropdown';
-import Dismiss from 'solid-dismiss';
+import pkg from '../../package.json';
+
+const SOLID_VERSION = pkg.dependencies['solid-js'];
 
 export const Header: Component<{
   dark: boolean;
@@ -67,7 +70,7 @@ export const Header: Component<{
   };
 
   const versions = createMemo(() => {
-    const hardCoded = ['0.26.5', '1.0.0'];
+    const hardCoded = ['0.26.5', '1.0.0', SOLID_VERSION];
 
     return hardCoded.includes(props.version) ? hardCoded : [props.version, ...hardCoded];
   });
