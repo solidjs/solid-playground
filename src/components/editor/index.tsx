@@ -19,6 +19,24 @@ import {
 import { liftOff } from './setupSolid';
 import useZoom from '../../hooks/useZoom';
 
+interface Props {
+  classList?: {
+    [k: string]: boolean | undefined;
+  };
+  class?: string;
+  url: string;
+  disabled: boolean;
+  styles: Record<string, string>;
+  canCopy?: boolean;
+  canFormat?: boolean;
+  isDark?: boolean;
+  withMinimap?: boolean;
+  formatter?: Worker;
+  onDocChange?: (code: string) => unknown;
+  showActionBar?: boolean;
+  ref?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
+}
+
 const Editor: Component<Props> = (props) => {
   const finalProps = mergeProps({ showActionBar: true }, props);
 
@@ -187,17 +205,3 @@ const Editor: Component<Props> = (props) => {
 };
 
 export default Editor;
-
-interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
-  url: string;
-  disabled: boolean;
-  styles: Record<string, string>;
-  canCopy?: boolean;
-  canFormat?: boolean;
-  isDark?: boolean;
-  withMinimap?: boolean;
-  formatter?: Worker;
-  onDocChange?: (code: string) => unknown;
-  showActionBar?: boolean;
-  ref?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
-}
