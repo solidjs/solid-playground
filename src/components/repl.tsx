@@ -1,4 +1,5 @@
 import { Component, Show, For, Suspense, createSignal, createEffect, lazy, batch } from 'solid-js';
+import { isServer } from 'solid-js/web';
 import { Icon } from '@amoutonbrady/solid-heroicons';
 import { refresh } from '@amoutonbrady/solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
@@ -11,7 +12,6 @@ import { Error } from './error';
 
 import type { Tab } from '../';
 import { debounce } from '../utils/debounce';
-import { throttle } from '../utils/throttle';
 import { formatMs } from '../utils/formatTime';
 
 import MonacoTabs from './monacoTabs';
@@ -426,21 +426,22 @@ export const Repl: Component<ReplProps> = (props) => {
         }
       >
         <MonacoTabs tabs={props.tabs} compiled={store.compiled} />
-        <Editor
-          url={`file:///${props.current}`}
-          onDocChange={handleDocChange}
-          class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
-          styles={{ backgroundColor: '#F8FAFC' }}
-          disabled={!props.interactive}
-          canCopy
-          canFormat
-          formatter={formatter}
-          isDark={props.dark}
-          withMinimap={false}
-          showActionBar={props.actionBar}
-          ref={props.onEditorReady}
-        />
-
+        <Show when={!isServer}>
+          <Editor
+            url={`file:///${props.current}`}
+            onDocChange={handleDocChange}
+            class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
+            styles={{ backgroundColor: '#F8FAFC' }}
+            disabled={!props.interactive}
+            canCopy
+            canFormat
+            formatter={formatter}
+            isDark={props.dark}
+            withMinimap={false}
+            showActionBar={props.actionBar}
+            ref={props.onEditorReady}
+          />
+        </Show>
         <GridResizer
           ref={(el) => setVerticalResizer(el)}
           isHorizontal={props.isHorizontal}
@@ -457,7 +458,7 @@ export const Repl: Component<ReplProps> = (props) => {
           onResize={changeLeft}
         />
 
-        <Show when={!showPreview()}>
+        <Show when={!isServer && !showPreview()}>
           <section
             class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
             classList={{ 'md:row-start-2': !props.isHorizontal }}
