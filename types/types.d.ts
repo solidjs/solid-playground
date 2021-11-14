@@ -1,4 +1,5 @@
 import { Component } from 'solid-js';
+import { editor as mEditor } from 'monaco-editor';
 
 export declare const Repl: Component<{
   compiler: Worker;
@@ -9,10 +10,11 @@ export declare const Repl: Component<{
   editableTabs: boolean;
   dark: boolean;
   tabs: Tab[];
-  setTabs: (x: Tab[]) => void;
-  current: string;
-  setCurrent: (x: string) => void;
+  id: string;
   version?: string;
+  setTabs: (tab: Tab[]) => void;
+  current: string;
+  setCurrent: (tabId: string) => void;
   onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
 }>;
 

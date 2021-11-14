@@ -11,7 +11,6 @@ import { Error } from './error';
 
 import type { Tab } from '../';
 import { debounce } from '../utils/debounce';
-import { throttle } from '../utils/throttle';
 import { formatMs } from '../utils/formatTime';
 
 import MonacoTabs from './monacoTabs';
@@ -36,6 +35,7 @@ export interface ReplProps {
   editableTabs: boolean;
   dark: boolean;
   tabs: Tab[];
+  id: string;
   version?: string;
   setTabs: (tab: Tab[]) => void;
   current: string;
@@ -425,9 +425,9 @@ export const Repl: Component<ReplProps> = (props) => {
           </div>
         }
       >
-        <MonacoTabs tabs={props.tabs} compiled={store.compiled} />
+        <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
         <Editor
-          url={`file:///${props.current}`}
+          url={`file:///${props.id}/${props.current}`}
           onDocChange={handleDocChange}
           class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
           styles={{ backgroundColor: '#F8FAFC' }}
@@ -464,7 +464,7 @@ export const Repl: Component<ReplProps> = (props) => {
             style="grid-template-rows: minmax(0, 1fr) auto"
           >
             <Editor
-              url="file:///output_dont_import.tsx"
+              url={`file:///${props.id}/output_dont_import.tsx`}
               class="h-full focus:outline-none"
               styles={{ backgroundColor: '#fff' }}
               isDark={props.dark}

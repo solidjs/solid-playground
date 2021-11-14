@@ -166,6 +166,7 @@ export const App = (): JSX.Element => {
           current={current()}
           setCurrent={setCurrent}
           version={version()}
+          id="repl"
         />
       </Show>
 
