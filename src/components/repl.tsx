@@ -41,7 +41,7 @@ export interface ReplProps {
   current: string;
   setCurrent: (tabId: string) => void;
   onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
-  ref?: HTMLDivElement | ((el: HTMLDivElement) => void) | undefined;
+  ref?: HTMLDivElement | ((el: HTMLDivElement) => void);
 }
 
 export const Repl: Component<ReplProps> = (props) => {
