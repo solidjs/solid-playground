@@ -31,27 +31,27 @@
     "postcss": "^8.3.11",
     "tailwindcss": "^2.2.19",
     "typescript": "^4.4.4",
-    "vite": "2.6.13",
-    "vite-plugin-solid": "^2.1.1",
+    "vite": "2.6.14",
+    "vite-plugin-solid": "^2.1.2",
     "workbox-cli": "^6.3.0"
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@amoutonbrady/solid-heroicons": "^0.9.0-rc.0",
     "@babel/preset-typescript": "^7.16.0",
-    "@babel/standalone": "^7.16.2",
+    "@babel/standalone": "^7.16.3",
     "@tailwindcss/forms": "^0.3.4",
-    "babel-preset-solid": "1.2.2",
+    "babel-preset-solid": "1.2.3",
     "dedent": "^0.7.0",
     "mitt": "^3.0.0",
-    "monaco-editor": "^0.29.1",
+    "monaco-editor": "^0.30.1",
     "monaco-editor-textmate": "^3.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
     "prettier": "^2.4.1",
     "register-service-worker": "^1.7.2",
-    "rollup": "^2.59.0",
-    "solid-dismiss": "^1.0.19",
-    "solid-js": "1.2.2"
+    "rollup": "^2.60.0",
+    "solid-dismiss": "^1.0.22",
+    "solid-js": "1.2.3"
   }
 }

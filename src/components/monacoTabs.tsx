@@ -3,8 +3,8 @@ import type { Tab } from '..';
 import { Uri, editor } from 'monaco-editor';
 import { keyedMap } from '../utils/keyedMap';
 
-const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
-  const fileUri = Uri.parse(`file:///output_dont_import.tsx`);
+const MonacoTabs: Component<{ folder: string, tabs: Tab[]; compiled: string }> = (props) => {
+  const fileUri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
   const model = editor.createModel('', 'typescript', fileUri);
   createEffect(() => {
     model.setValue(
@@ -19,7 +19,7 @@ const MonacoTabs: Component<{ tabs: Tab[]; compiled: string }> = (props) => {
       return props.tabs;
     },
     children: (tab) => {
-      const uri = Uri.parse(`file:///${tab().name}.${tab().type}`);
+      const uri = Uri.parse(`file:///${props.folder}/${tab().name}.${tab().type}`);
       const model = editor.createModel(
         tab().source,
         tab().type === 'tsx' ? 'typescript' : 'css',
