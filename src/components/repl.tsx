@@ -42,6 +42,7 @@ export interface ReplProps {
   current: string;
   setCurrent: (tabId: string) => void;
   onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
+  ref?: HTMLDivElement | ((el: HTMLDivElement) => void);
 }
 
 export const Repl: Component<ReplProps> = (props) => {
@@ -263,7 +264,12 @@ export const Repl: Component<ReplProps> = (props) => {
 
   return (
     <div
-      ref={(el) => setGrid(el)}
+      ref={(el) => {
+        setGrid(el);
+        if (props.ref) {
+          (props.ref as (el: HTMLDivElement) => void)(el);
+        }
+      }}
       class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,

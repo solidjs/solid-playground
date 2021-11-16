@@ -16,6 +16,7 @@ export declare const Repl: Component<{
   current: string;
   setCurrent: (tabId: string) => void;
   onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
+  ref?: HTMLDivElement | ((el: HTMLDivElement) => void);
 }>;
 
 export interface Tab {
