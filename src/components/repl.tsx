@@ -432,8 +432,8 @@ export const Repl: Component<ReplProps> = (props) => {
           </div>
         }
       >
-        <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
         <Show when={!isServer}>
+          <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
           <Editor
             url={`file:///${props.id}/${props.current}`}
             onDocChange={handleDocChange}

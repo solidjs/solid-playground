@@ -1,29 +1,21 @@
-dependencies:
-  '@cloudflare/kv-asset-handler': 0.1.1
-lockfileVersion: 5.2
-packages:
-  /@cloudflare/kv-asset-handler/0.1.1:
-    dependencies:
-      '@cloudflare/workers-types': 2.2.1
-      '@types/mime': 2.0.3
-      mime: 2.5.2
-    dev: false
-    resolution:
-      integrity: sha512-loZzVTXfoSKsZ/VVeHGuRlQFcxUEmTPIyWx3Zti9/lShfhETZJ90nKpbvoWps7P60kILWpILE/5EfHDiumfYEQ==
-  /@cloudflare/workers-types/2.2.1:
-    dev: false
-    resolution:
-      integrity: sha512-gxI3CytBWzdtvQ7tu3I1biYN6QU18OInYKfOL5Twlbs4dRTx4ib5/2FrzwYaPFFfCg5ocy38aG1A/69satjXBQ==
-  /@types/mime/2.0.3:
-    dev: false
-    resolution:
-      integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==
-  /mime/2.5.2:
-    dev: false
-    engines:
-      node: '>=4.0.0'
-    hasBin: true
-    resolution:
-      integrity: sha512-tqkh47FzKeCPD2PUiPB6pkbMzsCasjxAfC62/Wap5qrUWcb+sFasXUC5I3gYM5iBM8v/Qpn4UK0x+j0iHyFPDg==
+lockfileVersion: 5.3
+
 specifiers:
-  '@cloudflare/kv-asset-handler': ^0.1.0
+  '@cloudflare/kv-asset-handler': ^0.2.0
+
+dependencies:
+  '@cloudflare/kv-asset-handler': 0.2.0
+
+packages:
+
+  /@cloudflare/kv-asset-handler/0.2.0:
+    resolution: {integrity: sha512-MVbXLbTcAotOPUj0pAMhVtJ+3/kFkwJqc5qNOleOZTv6QkZZABDMS21dSrSlVswEHwrpWC03e4fWytjqKvuE2A==}
+    dependencies:
+      mime: 3.0.0
+    dev: false
+
+  /mime/3.0.0:
+    resolution: {integrity: sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    dev: false

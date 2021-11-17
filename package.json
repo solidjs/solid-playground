@@ -8,7 +8,7 @@
   "files": [
     "lib"
   ],
-  "version": "0.17.0",
+  "version": "0.18.0",
   "homepage": "https://playground.solidjs.com",
   "author": "Alexandre Mouton-Brady",
   "module": "lib/index.js",
@@ -33,13 +33,13 @@
     "typescript": "^4.4.4",
     "vite": "2.6.14",
     "vite-plugin-solid": "^2.1.2",
-    "workbox-cli": "^6.3.0"
+    "workbox-cli": "^6.4.1"
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@amoutonbrady/solid-heroicons": "^0.9.0-rc.0",
     "@babel/preset-typescript": "^7.16.0",
-    "@babel/standalone": "^7.16.3",
+    "@babel/standalone": "^7.16.4",
     "@tailwindcss/forms": "^0.3.4",
     "babel-preset-solid": "1.2.3",
     "dedent": "^0.7.0",
