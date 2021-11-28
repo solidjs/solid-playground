@@ -1,8 +1,8 @@
 import { Component } from 'solid-js';
 import { Portal } from 'solid-js/web';
 
-import { Icon } from '@amoutonbrady/solid-heroicons';
-import { x } from '@amoutonbrady/solid-heroicons/outline';
+import { Icon } from 'solid-heroicons';
+import { x } from 'solid-heroicons/outline';
 
 interface Props {
   onDismiss: (...args: unknown[]) => unknown;

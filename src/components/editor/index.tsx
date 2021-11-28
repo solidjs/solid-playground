@@ -9,13 +9,8 @@ import {
   mergeProps,
 } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
-import { Icon } from '@amoutonbrady/solid-heroicons';
-import {
-  clipboard,
-  code,
-  checkCircle,
-  clipboardCheck,
-} from '@amoutonbrady/solid-heroicons/outline';
+import { Icon } from 'solid-heroicons';
+import { clipboard, code, checkCircle, clipboardCheck } from 'solid-heroicons/outline';
 import { liftOff } from './setupSolid';
 import useZoom from '../../hooks/useZoom';
 

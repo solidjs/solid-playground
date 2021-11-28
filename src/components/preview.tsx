@@ -8,8 +8,8 @@ import {
   Show,
   onMount,
 } from 'solid-js';
-import { Icon } from '@amoutonbrady/solid-heroicons';
-import { chevronDown, chevronRight } from '@amoutonbrady/solid-heroicons/solid';
+import { Icon } from 'solid-heroicons';
+import { chevronDown, chevronRight } from 'solid-heroicons/solid';
 import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {

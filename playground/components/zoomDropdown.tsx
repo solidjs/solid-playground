@@ -1,5 +1,5 @@
-import { Icon } from '@amoutonbrady/solid-heroicons';
-import { zoomIn } from '@amoutonbrady/solid-heroicons/outline';
+import { Icon } from 'solid-heroicons';
+import { zoomIn } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
 import { Component, createSignal, createEffect } from 'solid-js';
 import useZoom from '../../src/hooks/useZoom';

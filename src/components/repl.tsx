@@ -1,7 +1,7 @@
 import { Component, Show, For, Suspense, createSignal, createEffect, lazy, batch } from 'solid-js';
 import { isServer } from 'solid-js/web';
-import { Icon } from '@amoutonbrady/solid-heroicons';
-import { refresh } from '@amoutonbrady/solid-heroicons/outline';
+import { Icon } from 'solid-heroicons';
+import { refresh } from 'solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
 import { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';

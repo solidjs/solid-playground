@@ -1,14 +1,6 @@
 import { Component, onCleanup, createSignal, JSX, Show, createMemo, For } from 'solid-js';
-import { Icon } from '@amoutonbrady/solid-heroicons';
-import {
-  share,
-  link,
-  upload,
-  xCircle,
-  menu,
-  moon,
-  sun,
-} from '@amoutonbrady/solid-heroicons/outline';
+import { Icon } from 'solid-heroicons';
+import { share, link, upload, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
 
 import logo from '../assets/logo.svg?url';
