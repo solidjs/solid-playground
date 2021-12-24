@@ -3,7 +3,7 @@ const theme = require('tailwindcss/defaultTheme');
 
 module.exports = {
   mode: 'jit',
-  purge: ['./src/**/*.{tsx,ts,css}', './playground/**/*.{tsx,ts,css}', './index.html'],
+  content: ['./src/**/*.{tsx,ts,css}', './playground/**/*.{tsx,ts,css}', './index.html'],
   theme: {
     extend: {
       colors: {
@@ -30,10 +30,4 @@ module.exports = {
     },
   },
   darkMode: 'class',
-  variants: {
-    extend: {
-      backgroundColor: ['group-hover'],
-    },
-  },
-  plugins: [require('@tailwindcss/forms')],
 };
