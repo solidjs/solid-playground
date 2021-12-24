@@ -1,13 +1,5 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
-import {
-  Show,
-  onCleanup,
-  createEffect,
-  createSignal,
-  createComputed,
-  untrack,
-  JSX,
-} from 'solid-js';
+import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
 
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
