@@ -1,11 +1,5 @@
 import { compressToURL as encode } from '@amoutonbrady/lz-string';
-import {
-  Show,
-  onCleanup,
-  createEffect,
-  createSignal,
-  JSX,
-} from 'solid-js';
+import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
 
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
@@ -59,7 +53,6 @@ export const App = (): JSX.Element => {
   const initialTabs = parseHash(url.hash && url.hash.slice(1), defaultTabs) || defaultTabs;
   const [tabs, setTabs] = createTabList(initialTabs);
   const [current, setCurrent] = createSignal('main.tsx');
-  const [isReady, setIsReady] = createSignal(false);
 
   const params = Object.fromEntries(url.searchParams.entries());
   const [version, setVersion] = createSignal(params.version || pkg.dependencies['solid-js']);
@@ -81,17 +74,13 @@ export const App = (): JSX.Element => {
       .then((data) => {
         setTabs(processImport(data));
       })
-      .then(() => setIsReady(true))
       .catch((e) => console.error('Failed to import browser data', e));
-  } else {
-    setIsReady(true);
   }
 
-  const [noHeader, noInteractive, isHorizontal, noActionBar, noEditableTabs] = [
+  const [noHeader, noInteractive, isHorizontal, noEditableTabs] = [
     'noHeader',
     'noInteractive',
     'isHorizontal',
-    'noActionBar',
     'noEditableTabs',
   ].map((key) => key in params);
 
@@ -104,7 +93,6 @@ export const App = (): JSX.Element => {
 
   const header = !noHeader;
   const interactive = !noInteractive;
-  const actionBar = !noActionBar;
   const editableTabs = !noEditableTabs;
 
   const { zoomState, updateZoomScale } = useZoom();
@@ -150,23 +138,20 @@ export const App = (): JSX.Element => {
         fallback={<div classList={{ 'md:col-span-2': !isHorizontal }}></div>}
       />
 
-      <Show when={isReady()}>
-        <Repl
-          compiler={compiler}
-          formatter={formatter}
-          isHorizontal={isHorizontal}
-          interactive={interactive}
-          actionBar={actionBar}
-          editableTabs={editableTabs}
-          dark={dark()}
-          tabs={tabs()}
-          setTabs={setTabs}
-          current={current()}
-          setCurrent={setCurrent}
-          version={version()}
-          id="repl"
-        />
-      </Show>
+      <Repl
+        compiler={compiler}
+        formatter={formatter}
+        isHorizontal={isHorizontal}
+        interactive={interactive}
+        editableTabs={editableTabs}
+        dark={dark()}
+        tabs={tabs()}
+        setTabs={setTabs}
+        current={current()}
+        setCurrent={setCurrent}
+        version={version()}
+        id="repl"
+      />
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
     </div>
