@@ -3,7 +3,7 @@ import { isServer } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
 import { refresh } from 'solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
-import { editor as mEditor } from 'monaco-editor';
+import type { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';

@@ -31,7 +31,7 @@ export const Header: Component<{
     window.removeEventListener('resize', closeMobileMenu);
   });
 
-  function closeMobileMenu(event: any) {
+  function closeMobileMenu() {
     setShowMenu(false);
   }
 
@@ -195,7 +195,7 @@ export const Header: Component<{
         <select
           name="version"
           id="version"
-          onClick={(e) => setShowMenu(false)}
+          onClick={() => setShowMenu(false)}
           class="-mb-1 leading-snug text-white bg-transparent border-transparent hover:border-white cursor-pointer"
           style={`background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`}
           onChange={(e) => props.onVersionChange(e.currentTarget.value)}

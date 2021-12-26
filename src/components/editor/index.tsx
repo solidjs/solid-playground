@@ -2,7 +2,6 @@ import {
   Component,
   createEffect,
   onMount,
-  JSX,
   Show,
   createSignal,
   onCleanup,
