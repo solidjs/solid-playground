@@ -69,7 +69,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white z-20"
+      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
@@ -80,7 +80,6 @@ export const Header: Component<{
       </h1>
       <div class="flex items-center space-x-2">
         <Dismiss
-          class="z-10"
           classList={{ 'absolute top-[53px] right-[10px] w-[fit-content]': showMenu() }}
           menuButton={() => menuBtnEl}
           open={showMenu}
@@ -183,7 +182,7 @@ export const Header: Component<{
           classList={{
             'border-white border': showMenu(),
           }}
-          class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
+          class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
           title="Mobile Menu Button"
           ref={menuBtnEl}
         >

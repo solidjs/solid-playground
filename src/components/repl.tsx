@@ -268,7 +268,7 @@ export const Repl: Component<ReplProps> = (props) => {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans z-50"
+      class="relative grid bg-blueGray-50 h-full text-blueGray-900 dark:text-blueGray-50 font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
