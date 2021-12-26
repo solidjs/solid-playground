@@ -95,6 +95,7 @@ editor.defineTheme('vs-dark-plus', vsDark as editor.IStandaloneThemeData);
 editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
 
 const hookLanguages = languages.setLanguageConfiguration;
+
 languages.setLanguageConfiguration = (
   languageId: string,
   configuration: languages.LanguageConfiguration,
@@ -105,8 +106,8 @@ languages.setLanguageConfiguration = (
 
 export async function liftOff(): Promise<void> {
   await loadingWasm;
+
   // wireTmGrammars only cares about the language part, but asks for all of monaco
   // we fool it by just passing in an object with languages
-
   await wireTmGrammars({ languages } as any, registry, grammars);
 }

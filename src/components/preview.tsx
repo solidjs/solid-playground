@@ -192,6 +192,7 @@ export const Preview: Component<Props> = (props) => {
 
   onMount(() => {
     iframe.srcdoc = html;
+    iframe.addEventListener('load', attachToIframe);
   });
 
   return (
@@ -204,7 +205,6 @@ export const Preview: Component<Props> = (props) => {
         title="Solid REPL"
         class="overflow-auto p-2 w-full h-full dark:bg-other"
         ref={iframe}
-        onLoad={attachToIframe}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       ></iframe>

@@ -316,9 +316,9 @@ export const Repl: Component<ReplProps> = (props) => {
                   fallback={<span>.{tab.type}</span>}
                 >
                   <select
-                    class="bg-none p-0"
+                    class="dark:bg-gray-700 bg-none p-0"
                     value={tab.type}
-                    onChange={(e) => {
+                    onBlur={(e) => {
                       setEdit(-1);
                       actions.setTabType(id(tab), e.currentTarget.value);
                     }}

@@ -29,12 +29,13 @@ const Editor: Component<Props> = (props) => {
 
   if (props.formatter) {
     languages.registerDocumentFormattingEditProvider('typescript', {
-      provideDocumentFormattingEdits: async (model) => {
+      async provideDocumentFormattingEdits(model) {
         props.formatter!.postMessage({
           event: 'FORMAT',
           code: model.getValue(),
           pos: editor.getPosition(),
         });
+
         return new Promise((resolve, reject) => {
           props.formatter!.addEventListener(
             'message',
@@ -72,11 +73,14 @@ const Editor: Component<Props> = (props) => {
         enabled: props.withMinimap,
       },
     });
+
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
     });
+
     props.ref?.(editor);
   };
+
   // Initialize Monaco
   onMount(() => setupEditor());
   onCleanup(() => editor?.dispose());
@@ -85,9 +89,11 @@ const Editor: Component<Props> = (props) => {
     editor.setModel(model());
     liftOff();
   });
+
   createEffect(() => {
     mEditor.setTheme(props.isDark ? 'vs-dark-plus' : 'vs-light-plus');
   });
+
   createEffect(() => {
     const fontSize = zoomState.fontSize;
     editor.updateOptions({ fontSize });
