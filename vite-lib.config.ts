@@ -1,8 +1,20 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-
+import { copyFile } from 'fs/promises';
 export default defineConfig({
-  plugins: [solidPlugin()],
+  plugins: [
+    solidPlugin(),
+    {
+      name: 'copy',
+      writeBundle: async () => {
+        const copyList = [
+          { src: './public/Gordita-Bold.woff', dest: './lib/Gordita-Bold.woff' },
+          { src: './public/Gordita-Regular.woff', dest: './lib/Gordita-Regular.woff' },
+        ];
+        await Promise.all(copyList.map(({ src, dest }) => copyFile(src, dest)));
+      },
+    },
+  ],
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',

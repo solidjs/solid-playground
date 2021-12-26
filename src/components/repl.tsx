@@ -1,9 +1,8 @@
-import { Component, Show, For, Suspense, createSignal, createEffect, lazy, batch } from 'solid-js';
-import { isServer } from 'solid-js/web';
+import { Component, Show, For, createSignal, createEffect, batch } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { refresh } from 'solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
-import { editor as mEditor } from 'monaco-editor';
+import type { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
@@ -14,8 +13,8 @@ import type { Tab } from '../';
 import { debounce } from '../utils/debounce';
 import { formatMs } from '../utils/formatTime';
 
-import MonacoTabs from './monacoTabs';
-const Editor = lazy(() => import('./editor'));
+import MonacoTabs from './editor/monacoTabs';
+import Editor from './editor';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -32,7 +31,6 @@ export interface ReplProps {
   formatter?: Worker;
   isHorizontal: boolean;
   interactive: boolean;
-  actionBar: boolean;
   editableTabs: boolean;
   dark: boolean;
   tabs: Tab[];
@@ -270,7 +268,7 @@ export const Repl: Component<ReplProps> = (props) => {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="relative grid bg-blueGray-50 h-full overflow-hidden text-blueGray-900 dark:text-blueGray-50 font-sans z-50"
+      class="relative grid bg-blueGray-50 h-full text-blueGray-900 dark:text-blueGray-50 font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
@@ -425,112 +423,39 @@ export const Repl: Component<ReplProps> = (props) => {
         </TabItem>
       </TabList>
 
-      <Suspense
+      <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
+      <Editor
+        url={`file:///${props.id}/${props.current}`}
+        onDocChange={handleDocChange}
+        class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
+        styles={{ backgroundColor: '#F8FAFC' }}
+        disabled={!props.interactive}
+        canFormat
+        formatter={formatter}
+        isDark={props.dark}
+        withMinimap={false}
+        ref={props.onEditorReady}
+      />
+
+      <GridResizer
+        ref={(el) => setVerticalResizer(el)}
+        isHorizontal={props.isHorizontal}
+        direction="vertical"
+        class="row-start-3"
+        onResize={changeTop}
+      />
+
+      <GridResizer
+        ref={(el) => setHorizontalResizer(el)}
+        isHorizontal={props.isHorizontal}
+        direction="horizontal"
+        class="row-start-1 row-end-3 col-start-2"
+        onResize={changeLeft}
+      />
+
+      <Show
+        when={!showPreview()}
         fallback={
-          <div class="row-start-2 col-span-3 flex items-center justify-center h-full">
-            <p class="animate-pulse text-xl font-sans">Loading the playground...</p>
-          </div>
-        }
-      >
-        <Show when={!isServer}>
-          <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
-          <Editor
-            url={`file:///${props.id}/${props.current}`}
-            onDocChange={handleDocChange}
-            class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
-            styles={{ backgroundColor: '#F8FAFC' }}
-            disabled={!props.interactive}
-            canCopy
-            canFormat
-            formatter={formatter}
-            isDark={props.dark}
-            withMinimap={false}
-            showActionBar={props.actionBar}
-            ref={props.onEditorReady}
-          />
-        </Show>
-
-        <GridResizer
-          ref={(el) => setVerticalResizer(el)}
-          isHorizontal={props.isHorizontal}
-          direction="vertical"
-          class="row-start-3"
-          onResize={changeTop}
-        />
-
-        <GridResizer
-          ref={(el) => setHorizontalResizer(el)}
-          isHorizontal={props.isHorizontal}
-          direction="horizontal"
-          class="row-start-1 row-end-3 col-start-2"
-          onResize={changeLeft}
-        />
-
-        <Show when={!isServer && !showPreview()}>
-          <section
-            class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
-            classList={{ 'md:row-start-2': !props.isHorizontal }}
-            style="grid-template-rows: minmax(0, 1fr) auto"
-          >
-            <Editor
-              url={`file:///${props.id}/output_dont_import.tsx`}
-              class="h-full focus:outline-none"
-              styles={{ backgroundColor: '#fff' }}
-              isDark={props.dark}
-              disabled
-              canCopy
-              withMinimap={false}
-              showActionBar={props.actionBar}
-            />
-
-            <div class="bg-white dark:bg-blueGray-800 p-5">
-              <label class="font-semibold text-sm uppercase">Compile mode</label>
-
-              <div class="mt-1 space-y-1 text-sm">
-                <label class="block mr-auto cursor-pointer space-x-2">
-                  <input
-                    checked={store.mode === 'DOM'}
-                    value="DOM"
-                    class="text-brand-default"
-                    onChange={(e) => setStore('mode', e.currentTarget.value as any)}
-                    type="radio"
-                    name="dom"
-                    id="dom"
-                  />
-                  <span>Client side rendering</span>
-                </label>
-
-                <label class="block mr-auto cursor-pointer space-x-2">
-                  <input
-                    checked={store.mode === 'SSR'}
-                    value="SSR"
-                    class="text-brand-default"
-                    onChange={(e) => setStore('mode', e.currentTarget.value as any)}
-                    type="radio"
-                    name="dom"
-                    id="dom"
-                  />
-                  <span>Server side rendering</span>
-                </label>
-
-                <label class="block mr-auto cursor-pointer space-x-2">
-                  <input
-                    checked={store.mode === 'HYDRATABLE'}
-                    value="HYDRATABLE"
-                    class="text-brand-default"
-                    onChange={(e) => setStore('mode', e.currentTarget.value as any)}
-                    type="radio"
-                    name="dom"
-                    id="dom"
-                  />
-                  <span>Client side rendering with hydration</span>
-                </label>
-              </div>
-            </div>
-          </section>
-        </Show>
-
-        <Show when={showPreview()}>
           <Preview
             reloadSignal={reloadSignal()}
             code={store.compiled}
@@ -538,8 +463,68 @@ export const Repl: Component<ReplProps> = (props) => {
               props.isHorizontal ? '' : 'md:row-start-2'
             }`}
           />
-        </Show>
-      </Suspense>
+        }
+      >
+        <section
+          class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+          classList={{ 'md:row-start-2': !props.isHorizontal }}
+          style="grid-template-rows: minmax(0, 1fr) auto"
+        >
+          <Editor
+            url={`file:///${props.id}/output_dont_import.tsx`}
+            class="h-full focus:outline-none"
+            styles={{ backgroundColor: '#fff' }}
+            isDark={props.dark}
+            disabled
+            withMinimap={false}
+          />
+
+          <div class="bg-white dark:bg-blueGray-800 p-5">
+            <label class="font-semibold text-sm uppercase">Compile mode</label>
+
+            <div class="mt-1 space-y-1 text-sm">
+              <label class="block mr-auto cursor-pointer space-x-2">
+                <input
+                  checked={store.mode === 'DOM'}
+                  value="DOM"
+                  class="text-brand-default"
+                  onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                  type="radio"
+                  name="dom"
+                  id="dom"
+                />
+                <span>Client side rendering</span>
+              </label>
+
+              <label class="block mr-auto cursor-pointer space-x-2">
+                <input
+                  checked={store.mode === 'SSR'}
+                  value="SSR"
+                  class="text-brand-default"
+                  onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                  type="radio"
+                  name="dom"
+                  id="dom"
+                />
+                <span>Server side rendering</span>
+              </label>
+
+              <label class="block mr-auto cursor-pointer space-x-2">
+                <input
+                  checked={store.mode === 'HYDRATABLE'}
+                  value="HYDRATABLE"
+                  class="text-brand-default"
+                  onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                  type="radio"
+                  name="dom"
+                  id="dom"
+                />
+                <span>Client side rendering with hydration</span>
+              </label>
+            </div>
+          </div>
+        </section>
+      </Show>
 
       <Show
         when={store.error}

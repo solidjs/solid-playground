@@ -4,14 +4,14 @@
 
 @font-face {
   font-family: 'Gordita';
-  src: url('./fonts/Gordita/Gordita-Regular.woff') format('woff');
+  src: url('/Gordita-Regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Gordita';
-  src: url('./fonts/Gordita/Gordita-Bold.woff') format('woff');
+  src: url('/Gordita-Bold.woff') format('woff');
   font-weight: bold;
   font-style: normal;
 }

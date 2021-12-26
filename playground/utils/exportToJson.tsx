@@ -1,4 +1,4 @@
-import { Tab } from '../../src';
+import type { Tab } from '../../src';
 
 /**
  * This function will convert the tabs of the playground

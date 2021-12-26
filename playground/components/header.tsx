@@ -31,7 +31,7 @@ export const Header: Component<{
     window.removeEventListener('resize', closeMobileMenu);
   });
 
-  function closeMobileMenu(event: any) {
+  function closeMobileMenu() {
     setShowMenu(false);
   }
 
@@ -69,7 +69,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white z-20"
+      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
@@ -80,7 +80,6 @@ export const Header: Component<{
       </h1>
       <div class="flex items-center space-x-2">
         <Dismiss
-          class="z-10"
           classList={{ 'absolute top-[53px] right-[10px] w-[fit-content]': showMenu() }}
           menuButton={() => menuBtnEl}
           open={showMenu}
@@ -183,7 +182,7 @@ export const Header: Component<{
           classList={{
             'border-white border': showMenu(),
           }}
-          class="z-40 px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
+          class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
           title="Mobile Menu Button"
           ref={menuBtnEl}
         >
@@ -195,7 +194,7 @@ export const Header: Component<{
         <select
           name="version"
           id="version"
-          onClick={(e) => setShowMenu(false)}
+          onClick={() => setShowMenu(false)}
           class="-mb-1 leading-snug text-white bg-transparent border-transparent hover:border-white cursor-pointer"
           style={`background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`}
           onChange={(e) => props.onVersionChange(e.currentTarget.value)}

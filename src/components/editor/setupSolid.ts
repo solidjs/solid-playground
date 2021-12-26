@@ -62,6 +62,8 @@ cm(sMutable, 'store/types/mutable.d.ts');
 cm(sServer, 'store/types/server.d.ts');
 cm(sStore, 'store/types/store.d.ts');
 
+languages.typescript.typescriptDefaults.setEagerModelSync(true);
+
 languages.typescript.typescriptDefaults.setCompilerOptions({
   lib: ['es6', 'DOM', 'DOM.Iterable'],
   target: languages.typescript.ScriptTarget.ESNext,
@@ -92,9 +94,19 @@ grammars.set('css', 'source.css');
 editor.defineTheme('vs-dark-plus', vsDark as editor.IStandaloneThemeData);
 editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
 
-export async function liftOff(editor: editor.ICodeEditor): Promise<void> {
+const hookLanguages = languages.setLanguageConfiguration;
+languages.setLanguageConfiguration = (
+  languageId: string,
+  configuration: languages.LanguageConfiguration,
+) => {
+  liftOff();
+  return hookLanguages(languageId, configuration);
+};
+
+export async function liftOff(): Promise<void> {
   await loadingWasm;
   // wireTmGrammars only cares about the language part, but asks for all of monaco
   // we fool it by just passing in an object with languages
-  wireTmGrammars({ languages } as any, registry, grammars, editor);
+
+  await wireTmGrammars({ languages } as any, registry, grammars);
 }

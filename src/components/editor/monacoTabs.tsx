@@ -1,9 +1,9 @@
 import { Component, createEffect, onCleanup } from 'solid-js';
-import type { Tab } from '..';
+import type { Tab } from '../..';
 import { Uri, editor } from 'monaco-editor';
-import { keyedMap } from '../utils/keyedMap';
+import { keyedMap } from '../../utils/keyedMap';
 
-const MonacoTabs: Component<{ folder: string, tabs: Tab[]; compiled: string }> = (props) => {
+const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {
   const fileUri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
   const model = editor.createModel('', 'typescript', fileUri);
   createEffect(() => {
