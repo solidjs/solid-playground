@@ -52,7 +52,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
 
     window.clearTimeout(timeoutId!);
 
-    timeoutId = setTimeout(() => {
+    timeoutId = window.setTimeout(() => {
       setOpen(false);
 
       stealFocus = true;
