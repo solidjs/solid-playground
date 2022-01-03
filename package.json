@@ -42,6 +42,7 @@
     "@tailwindcss/forms": "^0.4.0",
     "babel-preset-solid": "1.2.6",
     "dedent": "^0.7.0",
+    "jszip": "^3.7.1",
     "mitt": "^3.0.0",
     "monaco-editor": "^0.31.1",
     "monaco-editor-textmate": "^3.0.0",
