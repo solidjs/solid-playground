@@ -203,7 +203,7 @@ export const Preview: Component<Props> = (props) => {
     >
       <iframe
         title="Solid REPL"
-        class="overflow-auto p-2 w-full h-full dark:bg-other"
+        class="overflow-auto p-0 w-full h-full dark:bg-other block"
         ref={iframe}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
