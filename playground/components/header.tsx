@@ -71,7 +71,7 @@ export const Header: Component<{
       </h1>
       <div class="flex items-center space-x-2">
         <Dismiss
-          classList={{ 'absolute top-[53px] right-[10px] w-[fit-content]': showMenu() }}
+          classList={{ 'absolute top-[53px] right-[10px] w-[fit-content] z-10': showMenu() }}
           menuButton={() => menuBtnEl}
           open={showMenu}
           setOpen={setShowMenu}
