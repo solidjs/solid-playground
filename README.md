@@ -29,6 +29,8 @@ $ pnpm run dev
 $ pnpm run build
 ```
 
+:warning: Make sure to use Chromium-based browser for dev mode. Firefox doesn't work due to to [vite's limitation with web worker](https://vitejs.dev/guide/features.html#web-workers).
+
 ## Credits / Technologies used
 
 - [solid-js](https://github.com/solidjs/solid/): The view library
