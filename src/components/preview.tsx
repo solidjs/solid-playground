@@ -234,7 +234,7 @@ export const Preview: Component<Props> = (props) => {
         </div>
 
         <Show when={showLogs()}>
-          <ul class="text-xs overflow-auto px-2 divide-y">
+          <ul class="text-xs overflow-auto px-2 divide-y dark:divide-blueGray-300">
             <For each={logs()}>
               {(log) => (
                 <li
