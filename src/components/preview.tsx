@@ -185,9 +185,8 @@ export const Preview: Component<Props> = (props) => {
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
-      zoomState.zoom / 100
-    }); transform-origin: 0 0;`;
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${zoomState.zoom / 100
+      }); transform-origin: 0 0;`;
   };
 
   onMount(() => {
@@ -241,9 +240,9 @@ export const Preview: Component<Props> = (props) => {
                 <li
                   class="py-1"
                   classList={{
-                    'text-blue-700': log.level === 'log',
-                    'text-yello-700': log.level === 'warn',
-                    'text-red-700': log.level === 'error',
+                    'text-blue-700 dark:text-gray-300': log.level === 'log',
+                    'text-yellow-500': log.level === 'warn',
+                    'text-red-700 dark:text-red-300': log.level === 'error',
                   }}
                 >
                   <code class="whitespace-pre-wrap">{log.args}</code>
