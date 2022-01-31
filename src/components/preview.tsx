@@ -14,7 +14,7 @@ import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
-  const [internal, external] = splitProps(props, ['code', 'class', 'reloadSignal']);
+  const [internal, external] = splitProps(props, ['code', 'isDark', 'class', 'reloadSignal']);
 
   let iframe!: HTMLIFrameElement;
 
@@ -40,6 +40,19 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
   });
 
+
+  const setDarkMode = () => {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    doc?.body!.classList.toggle("dark", internal.isDark);
+  }
+
+  createEffect(() => {
+    if (iframe && isIframeReady()) {
+      setDarkMode();
+    }
+  })
+
+
   function attachToIframe() {
     setIframeReady(true);
 
@@ -49,6 +62,8 @@ export const Preview: Component<Props> = (props) => {
         setLogs([...logs(), { level, args }]);
       }
     });
+
+    setDarkMode();
   }
 
   const html = `
@@ -78,6 +93,10 @@ export const Preview: Component<Props> = (props) => {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
             max-width: 100%;
+          }
+
+          .dark {
+            color: #e5e7eb;
           }
 
           input, button, select, textarea {
@@ -164,7 +183,7 @@ export const Preview: Component<Props> = (props) => {
         </script>
       </head>
       
-      <body>
+      <body class="dark">
         <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>
@@ -185,9 +204,8 @@ export const Preview: Component<Props> = (props) => {
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
-      zoomState.zoom / 100
-    }); transform-origin: 0 0;`;
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${zoomState.zoom / 100
+      }); transform-origin: 0 0;`;
   };
 
   onMount(() => {
@@ -235,15 +253,15 @@ export const Preview: Component<Props> = (props) => {
         </div>
 
         <Show when={showLogs()}>
-          <ul class="text-xs overflow-auto px-2 divide-y">
+          <ul class="text-xs overflow-auto px-2 divide-y dark:divide-blueGray-300">
             <For each={logs()}>
               {(log) => (
                 <li
                   class="py-1"
                   classList={{
-                    'text-blue-700': log.level === 'log',
-                    'text-yello-700': log.level === 'warn',
-                    'text-red-700': log.level === 'error',
+                    'text-blue-700 dark:text-gray-300': log.level === 'log',
+                    'text-yellow-500': log.level === 'warn',
+                    'text-red-700 dark:text-red-300': log.level === 'error',
                   }}
                 >
                   <code class="whitespace-pre-wrap">{log.args}</code>
@@ -260,6 +278,7 @@ export const Preview: Component<Props> = (props) => {
 type Props = JSX.HTMLAttributes<HTMLDivElement> & {
   code: string;
   reloadSignal: boolean;
+  isDark: boolean;
 };
 
 interface LogPayload {
