@@ -387,9 +387,8 @@ export const Repl: Component<ReplProps> = (props) => {
 
       <TabList
         ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-blueGray-200 ${
-          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
-        }`}
+        class={`row-start-4 border-blueGray-200 ${props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
+          }`}
       >
         <TabItem>
           <button
@@ -427,7 +426,7 @@ export const Repl: Component<ReplProps> = (props) => {
       <Editor
         url={`file:///${props.id}/${props.current}`}
         onDocChange={handleDocChange}
-        class="h-full focus:outline-none bg-blueGray-50 dark:bg-blueGray-800 row-start-2"
+        class="h-full focus:outline-none bg-blueGray-50 dark:bg-yellow-400 row-start-2"
         styles={{ backgroundColor: '#F8FAFC' }}
         disabled={!props.interactive}
         canFormat
@@ -458,15 +457,15 @@ export const Repl: Component<ReplProps> = (props) => {
         fallback={
           <Preview
             reloadSignal={reloadSignal()}
+            isDark={props.dark}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${
-              props.isHorizontal ? '' : 'md:row-start-2'
-            }`}
+            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'
+              }`}
           />
         }
       >
         <section
-          class="h-full max-h-screen bg-white dark:bg-blueGray-800 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+          class="h-full max-h-screen bg-white dark:bg-gray-400 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
           classList={{ 'md:row-start-2': !props.isHorizontal }}
           style="grid-template-rows: minmax(0, 1fr) auto"
         >
@@ -479,7 +478,7 @@ export const Repl: Component<ReplProps> = (props) => {
             withMinimap={false}
           />
 
-          <div class="bg-white dark:bg-blueGray-800 p-5">
+          <div class="bg-white dark:bg-gray-400 p-5">
             <label class="font-semibold text-sm uppercase">Compile mode</label>
 
             <div class="mt-1 space-y-1 text-sm">
