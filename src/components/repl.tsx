@@ -457,6 +457,7 @@ export const Repl: Component<ReplProps> = (props) => {
         fallback={
           <Preview
             reloadSignal={reloadSignal()}
+            isDark={props.dark}
             code={store.compiled}
             class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'
               }`}

@@ -14,7 +14,7 @@ import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
-  const [internal, external] = splitProps(props, ['code', 'class', 'reloadSignal']);
+  const [internal, external] = splitProps(props, ['code', 'isDark', 'class', 'reloadSignal']);
 
   let iframe!: HTMLIFrameElement;
 
@@ -40,6 +40,19 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
   });
 
+
+  const setDarkMode = () => {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    doc?.body!.classList.toggle("dark", internal.isDark);
+  }
+
+  createEffect(() => {
+    if (iframe && isIframeReady()) {
+      setDarkMode();
+    }
+  })
+
+
   function attachToIframe() {
     setIframeReady(true);
 
@@ -49,6 +62,8 @@ export const Preview: Component<Props> = (props) => {
         setLogs([...logs(), { level, args }]);
       }
     });
+
+    setDarkMode();
   }
 
   const html = `
@@ -78,6 +93,10 @@ export const Preview: Component<Props> = (props) => {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
             max-width: 100%;
+          }
+
+          .dark {
+            color: #e5e7eb;
           }
 
           input, button, select, textarea {
@@ -164,7 +183,7 @@ export const Preview: Component<Props> = (props) => {
         </script>
       </head>
       
-      <body>
+      <body class="dark">
         <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>
@@ -259,6 +278,7 @@ export const Preview: Component<Props> = (props) => {
 type Props = JSX.HTMLAttributes<HTMLDivElement> & {
   code: string;
   reloadSignal: boolean;
+  isDark: boolean;
 };
 
 interface LogPayload {
