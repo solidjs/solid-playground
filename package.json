@@ -21,7 +21,7 @@
     "prepublishOnly": "pnpm build:lib"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.7",
+    "@babel/core": "^7.16.12",
     "@babel/types": "^7.16.8",
     "@types/babel__standalone": "^7.1.4",
     "@types/dedent": "^0.7.0",
@@ -29,18 +29,18 @@
     "assert": "^2.0.0",
     "autoprefixer": "^10.4.2",
     "postcss": "^8.4.5",
-    "tailwindcss": "^3.0.14",
-    "typescript": "^4.5.4",
-    "vite": "2.7.12",
-    "vite-plugin-solid": "^2.2.2",
+    "tailwindcss": "^3.0.18",
+    "typescript": "^4.5.5",
+    "vite": "2.7.13",
+    "vite-plugin-solid": "^2.2.5",
     "workbox-cli": "^6.4.2"
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@babel/preset-typescript": "^7.16.7",
-    "@babel/standalone": "^7.16.9",
+    "@babel/standalone": "^7.16.12",
     "@tailwindcss/forms": "^0.4.0",
-    "babel-preset-solid": "1.3.2",
+    "babel-preset-solid": "1.3.5",
     "dedent": "^0.7.0",
     "jszip": "^3.7.1",
     "mitt": "^3.0.0",
@@ -50,9 +50,9 @@
     "onigasm": "^2.2.5",
     "prettier": "^2.5.1",
     "register-service-worker": "^1.7.2",
-    "rollup": "^2.64.0",
+    "rollup": "^2.66.1",
     "solid-dismiss": "^1.0.27",
     "solid-heroicons": "^1.1.1",
-    "solid-js": "1.3.3"
+    "solid-js": "1.3.5"
   }
 }
