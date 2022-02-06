@@ -44,7 +44,7 @@
     "dedent": "^0.7.0",
     "jszip": "^3.7.1",
     "mitt": "^3.0.0",
-    "monaco-editor": "^0.31.1",
+    "monaco-editor": "^0.32.1",
     "monaco-editor-textmate": "^3.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
