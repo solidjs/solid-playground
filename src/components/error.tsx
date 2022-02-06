@@ -1,30 +1,44 @@
-import type { Component } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { Component, createEffect, createSignal } from 'solid-js';
 
 import { Icon } from 'solid-heroicons';
-import { x } from 'solid-heroicons/outline';
+import { chevronDown, chevronRight } from 'solid-heroicons/solid';
 
 interface Props {
   onDismiss: (...args: unknown[]) => unknown;
   message: string;
 }
 
+function doSomethingWithError(message: string) {
+  const [firstLine, setFirstLine] = createSignal('');
+  const [stackTrace, setStackTrace] = createSignal('');
+
+  createEffect(() => {
+    const [first, ...stack] = message.split('\n');
+    setFirstLine(first);
+    setStackTrace(stack.join('\n'));
+  });
+
+  return [firstLine, stackTrace] as const;
+}
+
 export const Error: Component<Props> = (props) => {
-  const mount = document.getElementById('error');
+  const [firstLine, stackTrace] = doSomethingWithError(props.message);
+  const [isOpen, setIsOpen] = createSignal(false);
 
   return (
-    <Portal mount={mount!}>
-      <pre class="bg-red-200 text-red-800 border border-red-400 rounded shadow px-6 py-4 z-10 max-w-2xl whitespace-pre-line">
-        <button
-          title="close"
-          type="button"
-          onClick={props.onDismiss}
-          class="absolute top-1 right-1 hover:text-red-900"
-        >
-          <Icon path={x} class="h-6 " />
-        </button>
-        <code innerText={props.message}></code>
+    // @ts-expect-error Missing `onToggle` type
+    // The PR: https://github.com/ryansolid/dom-expressions/pull/110
+    // If we format this, the @ts-expect-error won't work 😭
+    // prettier-ignore
+    <details class="bg-red-200 text-red-800 p-2 border-t-2 border-red-300" onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+      <summary class="flex cursor-pointer">
+        <Icon class="h-7 opacity-70" path={isOpen() ? chevronDown : chevronRight} />
+        <code innerText={firstLine()}></code>
+      </summary>
+
+      <pre class="whitespace-pre-line">
+        <code innerText={stackTrace()}></code>
       </pre>
-    </Portal>
+    </details>
   );
 };

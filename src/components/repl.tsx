@@ -260,6 +260,8 @@ export const Repl: Component<ReplProps> = (props) => {
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
 
+  const [displayErrors, setDisplayErrors] = createSignal(true);
+
   return (
     <div
       ref={(el) => {
@@ -268,7 +270,7 @@ export const Repl: Component<ReplProps> = (props) => {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="relative grid bg-blueGray-50 h-full text-blueGray-900 dark:text-blueGray-50 font-sans"
+      class="relative grid bg-blueGray-50 h-full text-blueGray-900 dark:text-blueGray-50 font-sans overflow-hidden"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
@@ -280,115 +282,132 @@ export const Repl: Component<ReplProps> = (props) => {
         '--bottom': `${2 - top()}fr`,
       }}
     >
-      <TabList ref={(el) => setFileTabs(el)} class="row-start-1 space-x-2">
-        <For each={props.tabs}>
-          {(tab, index) => (
-            <TabItem active={props.current === id(tab)}>
-              <button
-                type="button"
-                onClick={() => actions.setCurrentTab(id(tab))}
-                onDblClick={() => {
-                  if (index() <= 0 || !props.interactive) return;
-                  setEdit(index());
-                  tabRefs.get(id(tab))?.focus();
-                }}
-                class="cursor-pointer focus:outline-none -mb-0.5 py-2 px-3"
-              >
-                <span
-                  ref={(el) => tabRefs.set(id(tab), el)}
-                  contentEditable={props.current === id(tab) && edit() >= 0}
-                  // onBlur={(e) => {
-                  //   setEdit(-1);
-                  //   actions.setTabName(tab.id, e.currentTarget.textContent!);
-                  // }}
-                  onKeyDown={(e) => {
-                    if (e.code === 'Space') e.preventDefault();
-                    if (e.code !== 'Enter') return;
-                    setEdit(-1);
-                    actions.setTabName(id(tab), e.currentTarget.textContent!);
-                  }}
-                  class="outline-none"
-                >
-                  {tab.name}
-                </span>
-                <Show
-                  when={props.current === id(tab) && edit() >= 0}
-                  fallback={<span>.{tab.type}</span>}
-                >
-                  <select
-                    class="dark:bg-gray-700 bg-none p-0"
-                    value={tab.type}
-                    onBlur={(e) => {
-                      setEdit(-1);
-                      actions.setTabType(id(tab), e.currentTarget.value);
-                    }}
-                  >
-                    <option value="tsx">.tsx</option>
-                    <option value="css">.css</option>
-                  </select>
-                </Show>
-              </button>
-
-              <Show when={index() > 0}>
+      <nav class="row-start-1 flex items-center">
+        <TabList ref={(el) => setFileTabs(el)} class="flex-1 space-x-2 ">
+          <For each={props.tabs}>
+            {(tab, index) => (
+              <TabItem active={props.current === id(tab)}>
                 <button
                   type="button"
-                  class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
-                  disabled={!props.interactive}
-                  onClick={() => {
-                    if (!props.interactive) return;
-                    actions.removeTab(id(tab));
+                  onClick={() => actions.setCurrentTab(id(tab))}
+                  onDblClick={() => {
+                    if (index() <= 0 || !props.interactive) return;
+                    setEdit(index());
+                    tabRefs.get(id(tab))?.focus();
                   }}
+                  class="cursor-pointer focus:outline-none -mb-0.5 py-2 px-3"
                 >
-                  <span class="sr-only">Delete this tab</span>
-                  <svg
-                    style="stroke: currentColor; fill: none;"
-                    class="h-4 opacity-60"
-                    viewBox="0 0 24 24"
+                  <span
+                    ref={(el) => tabRefs.set(id(tab), el)}
+                    contentEditable={props.current === id(tab) && edit() >= 0}
+                    // onBlur={(e) => {
+                    //   setEdit(-1);
+                    //   actions.setTabName(tab.id, e.currentTarget.textContent!);
+                    // }}
+                    onKeyDown={(e) => {
+                      if (e.code === 'Space') e.preventDefault();
+                      if (e.code !== 'Enter') return;
+                      setEdit(-1);
+                      actions.setTabName(id(tab), e.currentTarget.textContent!);
+                    }}
+                    class="outline-none"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                    {tab.name}
+                  </span>
+                  <Show
+                    when={props.current === id(tab) && edit() >= 0}
+                    fallback={<span>.{tab.type}</span>}
+                  >
+                    <select
+                      class="dark:bg-gray-700 bg-none p-0"
+                      value={tab.type}
+                      onBlur={(e) => {
+                        setEdit(-1);
+                        actions.setTabType(id(tab), e.currentTarget.value);
+                      }}
+                    >
+                      <option value="tsx">.tsx</option>
+                      <option value="css">.css</option>
+                    </select>
+                  </Show>
                 </button>
-              </Show>
-            </TabItem>
-          )}
-        </For>
 
-        <Show when={props.editableTabs}>
-          <li class="inline-flex items-center m-0 border-b-2 border-transparent">
-            <button
-              type="button"
-              class="focus:outline-none"
-              onClick={props.interactive ? actions.addTab : undefined}
-              disabled={!props.interactive}
-              title="Add a new tab"
-            >
-              <span class="sr-only">Add a new tab</span>
-              <svg
-                viewBox="0 0 24 24"
-                style="stroke: currentColor; fill: none;"
-                class="h-5 text-brand-default dark:text-blueGray-50"
+                <Show when={index() > 0}>
+                  <button
+                    type="button"
+                    class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
+                    disabled={!props.interactive}
+                    onClick={() => {
+                      if (!props.interactive) return;
+                      actions.removeTab(id(tab));
+                    }}
+                  >
+                    <span class="sr-only">Delete this tab</span>
+                    <svg
+                      style="stroke: currentColor; fill: none;"
+                      class="h-4 opacity-60"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </Show>
+              </TabItem>
+            )}
+          </For>
+
+          <Show when={props.editableTabs}>
+            <li class="inline-flex items-center m-0 border-b-2 border-transparent">
+              <button
+                type="button"
+                class="focus:outline-none"
+                onClick={props.interactive ? actions.addTab : undefined}
+                disabled={!props.interactive}
+                title="Add a new tab"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-            </button>
-          </li>
-        </Show>
-      </TabList>
+                <span class="sr-only">Add a new tab</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  style="stroke: currentColor; fill: none;"
+                  class="h-5 text-brand-default dark:text-blueGray-50"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </button>
+            </li>
+          </Show>
+        </TabList>
+
+        <label
+          for="display-errors"
+          class="relative inline-flex text-sm font-sans leading-snug items-center bg-opacity-0 hover:bg-opacity-5 overflow-hidden space-x-2 border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2 bg-white dark:bg-blueGray-800 cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            id="display-errors"
+            name="display-errors"
+            checked={displayErrors()}
+            onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
+          />
+          <span>Display Errors</span>
+        </label>
+      </nav>
 
       <TabList
         ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-blueGray-200 ${props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
-          }`}
+        class={`row-start-4 border-blueGray-200 ${
+          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
+        }`}
       >
         <TabItem>
           <button
@@ -422,19 +441,27 @@ export const Repl: Component<ReplProps> = (props) => {
         </TabItem>
       </TabList>
 
-      <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
-      <Editor
-        url={`file:///${props.id}/${props.current}`}
-        onDocChange={handleDocChange}
-        class="h-full focus:outline-none bg-blueGray-50 dark:bg-yellow-400 row-start-2"
-        styles={{ backgroundColor: '#F8FAFC' }}
-        disabled={!props.interactive}
-        canFormat
-        formatter={formatter}
-        isDark={props.dark}
-        withMinimap={false}
-        ref={props.onEditorReady}
-      />
+      <div class="h-full row-start-2 flex flex-col overflow-hidden">
+        <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
+
+        <Editor
+          url={`file:///${props.id}/${props.current}`}
+          onDocChange={handleDocChange}
+          class="flex-1 overflow-auto focus:outline-none bg-blueGray-50 dark:bg-yellow-400"
+          styles={{ backgroundColor: '#F8FAFC' }}
+          disabled={!props.interactive}
+          canFormat
+          formatter={formatter}
+          isDark={props.dark}
+          withMinimap={false}
+          ref={props.onEditorReady}
+        />
+
+        <Show
+          when={displayErrors() && store.error}
+          children={<Error onDismiss={actions.resetError} message={store.error} />}
+        />
+      </div>
 
       <GridResizer
         ref={(el) => setVerticalResizer(el)}
@@ -459,8 +486,9 @@ export const Repl: Component<ReplProps> = (props) => {
             reloadSignal={reloadSignal()}
             isDark={props.dark}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'
-              }`}
+            class={`h-full w-full bg-white row-start-5 ${
+              props.isHorizontal ? '' : 'md:row-start-2'
+            }`}
           />
         }
       >
@@ -524,11 +552,6 @@ export const Repl: Component<ReplProps> = (props) => {
           </div>
         </section>
       </Show>
-
-      <Show
-        when={store.error}
-        children={<Error onDismiss={actions.resetError} message={store.error} />}
-      />
     </div>
   );
 };

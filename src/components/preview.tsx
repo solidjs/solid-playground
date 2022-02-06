@@ -40,18 +40,16 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
   });
 
-
   const setDarkMode = () => {
-    const doc = iframe.contentDocument || iframe.contentWindow?.document
-    doc?.body!.classList.toggle("dark", internal.isDark);
-  }
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    doc?.body!.classList.toggle('dark', internal.isDark);
+  };
 
   createEffect(() => {
     if (iframe && isIframeReady()) {
       setDarkMode();
     }
-  })
-
+  });
 
   function attachToIframe() {
     setIframeReady(true);
@@ -204,8 +202,9 @@ export const Preview: Component<Props> = (props) => {
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${zoomState.zoom / 100
-      }); transform-origin: 0 0;`;
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+      zoomState.zoom / 100
+    }); transform-origin: 0 0;`;
   };
 
   onMount(() => {
@@ -231,21 +230,19 @@ export const Preview: Component<Props> = (props) => {
         class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-blueGray-800 text-blueGray-600 dark:text-gray-300"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
-        <div class="flex justify-between items-start w-full">
+        <div class="flex justify-between items-center w-full">
           <button
             type="button"
-            class="relative text-left font-semibold uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight"
+            class="relative text-left font-semibold uppercase text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight flex items-center"
             onClick={() => setShowLogs(!showLogs())}
           >
-            <Icon
-              class="h-[28px] absolute top-[7px] left-[2px]"
-              path={showLogs() ? chevronDown : chevronRight}
-            />
-            <span class="ml-4">Console ({logs().length})</span>
+            <Icon class="h-7" path={showLogs() ? chevronDown : chevronRight} />
+            <span>Console ({logs().length})</span>
           </button>
+
           <button
             type="button"
-            class="uppercase text-xs md:text-sm px-2 py-3 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800"
+            class="uppercase text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800 dark:hover:text-blueGray-200"
             onClick={[setLogs, []]}
           >
             Clear
