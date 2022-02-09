@@ -282,7 +282,7 @@ export const Repl: Component<ReplProps> = (props) => {
         '--bottom': `${2 - top()}fr`,
       }}
     >
-      <nav class="row-start-1 flex items-center">
+      <nav class="row-start-1 flex items-center bg-solid-medium">
         <TabList ref={(el) => setFileTabs(el)} class="flex-1 space-x-2 ">
           <For each={props.tabs}>
             {(tab, index) => (
@@ -390,7 +390,7 @@ export const Repl: Component<ReplProps> = (props) => {
 
         <label
           for="display-errors"
-          class="relative inline-flex text-sm font-sans leading-snug items-center bg-opacity-0 hover:bg-opacity-5 overflow-hidden space-x-2 border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2 bg-white dark:bg-blueGray-800 cursor-pointer"
+          class="relative inline-flex text-sm font-sans leading-snug items-center bg-opacity-0 hover:bg-opacity-5 overflow-hidden space-x-2 border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2 bg-white dark:bg-solid-medium cursor-pointer"
         >
           <input
             type="checkbox"
@@ -405,9 +405,8 @@ export const Repl: Component<ReplProps> = (props) => {
 
       <TabList
         ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-blueGray-200 ${
-          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
-        }`}
+        class={`row-start-4 border-blueGray-200 ${props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
+          }`}
       >
         <TabItem>
           <button
@@ -486,9 +485,8 @@ export const Repl: Component<ReplProps> = (props) => {
             reloadSignal={reloadSignal()}
             isDark={props.dark}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${
-              props.isHorizontal ? '' : 'md:row-start-2'
-            }`}
+            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'
+              }`}
           />
         }
       >
