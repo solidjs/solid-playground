@@ -282,7 +282,7 @@ export const Repl: Component<ReplProps> = (props) => {
         '--bottom': `${2 - top()}fr`,
       }}
     >
-      <nav class="row-start-1 flex items-center">
+      <nav class="row-start-1 flex items-center bg-solid-medium">
         <TabList ref={(el) => setFileTabs(el)} class="flex-1 space-x-2 ">
           <For each={props.tabs}>
             {(tab, index) => (
