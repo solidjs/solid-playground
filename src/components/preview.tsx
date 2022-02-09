@@ -202,9 +202,8 @@ export const Preview: Component<Props> = (props) => {
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
-      zoomState.zoom / 100
-    }); transform-origin: 0 0;`;
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${zoomState.zoom / 100
+      }); transform-origin: 0 0;`;
   };
 
   onMount(() => {
@@ -227,7 +226,7 @@ export const Preview: Component<Props> = (props) => {
       ></iframe>
 
       <div
-        class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-blueGray-800 text-blueGray-600 dark:text-gray-300"
+        class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-solid-medium text-blueGray-600 dark:text-gray-300"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
         <div class="flex justify-between items-center w-full">
