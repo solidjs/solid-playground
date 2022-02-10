@@ -282,11 +282,11 @@ export const Repl: Component<ReplProps> = (props) => {
         '--bottom': `${2 - top()}fr`,
       }}
     >
-      <nav class="row-start-1 flex items-center bg-solid-medium">
-        <TabList ref={(el) => setFileTabs(el)} class="flex-1 space-x-2 ">
+      <nav class="row-start-1 flex items-center dark:bg-solid-medium">
+        <TabList ref={(el) => setFileTabs(el)} class="flex-1">
           <For each={props.tabs}>
             {(tab, index) => (
-              <TabItem active={props.current === id(tab)}>
+              <TabItem active={props.current === id(tab)} class="mr-2">
                 <button
                   type="button"
                   onClick={() => actions.setCurrentTab(id(tab))}
@@ -386,21 +386,24 @@ export const Repl: Component<ReplProps> = (props) => {
               </button>
             </li>
           </Show>
+          <label
+            for="display-errors"
+            class="ml-auto relative justify-self-end inline-flex text-sm font-sans 
+          leading-snug items-center bg-opacity-0 
+          hover:bg-opacity-5 overflow-hidden space-x-2 
+          dark:text-white
+          border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2  dark:bg-solid-medium cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              id="display-errors"
+              name="display-errors"
+              checked={displayErrors()}
+              onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
+            />
+            <span>Display Errors</span>
+          </label>
         </TabList>
-
-        <label
-          for="display-errors"
-          class="relative inline-flex text-sm font-sans leading-snug items-center bg-opacity-0 hover:bg-opacity-5 overflow-hidden space-x-2 border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2 bg-white dark:bg-solid-medium cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            id="display-errors"
-            name="display-errors"
-            checked={displayErrors()}
-            onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
-          />
-          <span>Display Errors</span>
-        </label>
       </nav>
 
       <TabList

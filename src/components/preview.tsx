@@ -226,13 +226,13 @@ export const Preview: Component<Props> = (props) => {
       ></iframe>
 
       <div
-        class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-solid-medium text-blueGray-600 dark:text-gray-300"
+        class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-solid-medium text-blueGray-600 dark:text-gray-200"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
         <div class="flex justify-between items-center w-full">
           <button
             type="button"
-            class="relative text-left font-semibold uppercase text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight flex items-center"
+            class="relative text-left text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight flex items-center"
             onClick={() => setShowLogs(!showLogs())}
           >
             <Icon class="h-7" path={showLogs() ? chevronDown : chevronRight} />
@@ -241,7 +241,7 @@ export const Preview: Component<Props> = (props) => {
 
           <button
             type="button"
-            class="uppercase text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800 dark:hover:text-blueGray-200"
+            class="text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800 dark:hover:text-blueGray-200"
             onClick={[setLogs, []]}
           >
             Clear
