@@ -202,8 +202,9 @@ export const Preview: Component<Props> = (props) => {
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${zoomState.zoom / 100
-      }); transform-origin: 0 0;`;
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+      zoomState.zoom / 100
+    }); transform-origin: 0 0;`;
   };
 
   onMount(() => {

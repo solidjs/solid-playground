@@ -408,8 +408,9 @@ export const Repl: Component<ReplProps> = (props) => {
 
       <TabList
         ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-blueGray-200 ${props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
-          }`}
+        class={`row-start-4 border-blueGray-200 ${
+          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
+        }`}
       >
         <TabItem>
           <button
@@ -488,8 +489,9 @@ export const Repl: Component<ReplProps> = (props) => {
             reloadSignal={reloadSignal()}
             isDark={props.dark}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'
-              }`}
+            class={`h-full w-full bg-white row-start-5 ${
+              props.isHorizontal ? '' : 'md:row-start-2'
+            }`}
           />
         }
       >
