@@ -14,6 +14,7 @@ const SOLID_VERSION = pkg.dependencies['solid-js'];
 export const Header: Component<{
   dark: boolean;
   toggleDark: () => void;
+  formatCode: () => void;
   isHorizontal: boolean;
   tabs: Tab[];
   setTabs: (tabs: Tab[]) => void;
@@ -84,6 +85,33 @@ export const Header: Component<{
               hidden: !showMenu(),
             }}
           >
+            <button
+              type="button"
+              onClick={props.formatCode}
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
+              classList={{
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                  showMenu(),
+              }}
+              title="Format current document"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h7"
+                />
+              </svg>
+              <span class="text-xs md:sr-only">Format current document</span>
+            </button>
+
             <button
               type="button"
               onClick={props.toggleDark}

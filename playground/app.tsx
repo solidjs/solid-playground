@@ -4,6 +4,7 @@ import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import type { editor as mEditor } from 'monaco-editor';
 
 import pkg from '../package.json';
 import { eventBus } from './utils/eventBus';
@@ -56,6 +57,9 @@ export const App = (): JSX.Element => {
 
   const params = Object.fromEntries(url.searchParams.entries());
   const [version, setVersion] = createSignal(params.version || pkg.dependencies['solid-js']);
+
+  const [format, setFormat] = createSignal(false);
+  let editor: mEditor.IStandaloneCodeEditor | undefined;
 
   /**
    * This syncs the URL hash with the state of the current tab.
@@ -127,6 +131,14 @@ export const App = (): JSX.Element => {
               setDark(toggledValue);
               localStorage.setItem('dark', String(toggledValue));
             }}
+            formatCode={() => {
+              if (!format()) {
+                editor?.getAction('editor.action.formatDocument').run();
+                editor?.focus();
+              }
+              setFormat(true);
+              setTimeout(setFormat, 750, false);
+            }}
             isHorizontal={isHorizontal}
             tabs={tabs()}
             setTabs={setTabs}
@@ -151,6 +163,9 @@ export const App = (): JSX.Element => {
         setCurrent={setCurrent}
         version={version()}
         id="repl"
+        onEditorReady={(_editor) => {
+          editor = _editor;
+        }}
       />
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
