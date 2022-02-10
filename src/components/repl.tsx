@@ -270,7 +270,7 @@ export const Repl: Component<ReplProps> = (props) => {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="relative grid bg-blueGray-50 h-full text-blueGray-900 dark:text-blueGray-50 font-sans overflow-hidden"
+      class="relative grid bg-slate-50 h-full text-slate-900 dark:text-slate-50 font-sans overflow-hidden"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
@@ -374,7 +374,7 @@ export const Repl: Component<ReplProps> = (props) => {
                 <svg
                   viewBox="0 0 24 24"
                   style="stroke: currentColor; fill: none;"
-                  class="h-5 text-brand-default dark:text-blueGray-50"
+                  class="h-5 text-brand-default dark:text-slate-50"
                 >
                   <path
                     stroke-linecap="round"
@@ -408,8 +408,9 @@ export const Repl: Component<ReplProps> = (props) => {
 
       <TabList
         ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-blueGray-200 ${props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
-          }`}
+        class={`row-start-4 border-slate-200 ${
+          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
+        }`}
       >
         <TabItem>
           <button
@@ -449,7 +450,7 @@ export const Repl: Component<ReplProps> = (props) => {
         <Editor
           url={`file:///${props.id}/${props.current}`}
           onDocChange={handleDocChange}
-          class="flex-1 overflow-auto focus:outline-none bg-blueGray-50 dark:bg-yellow-400"
+          class="flex-1 overflow-auto focus:outline-none bg-slate-50 dark:bg-yellow-400"
           styles={{ backgroundColor: '#F8FAFC' }}
           disabled={!props.interactive}
           canFormat
@@ -488,13 +489,14 @@ export const Repl: Component<ReplProps> = (props) => {
             reloadSignal={reloadSignal()}
             isDark={props.dark}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'
-              }`}
+            class={`h-full w-full bg-white row-start-5 ${
+              props.isHorizontal ? '' : 'md:row-start-2'
+            }`}
           />
         }
       >
         <section
-          class="h-full max-h-screen bg-white dark:bg-gray-400 grid focus:outline-none row-start-5 relative divide-y-2 divide-blueGray-200 dark:divide-blueGray-500"
+          class="h-full max-h-screen bg-white dark:bg-gray-400 grid focus:outline-none row-start-5 relative divide-y-2 divide-slate-200 dark:divide-slate-500"
           classList={{ 'md:row-start-2': !props.isHorizontal }}
           style="grid-template-rows: minmax(0, 1fr) auto"
         >

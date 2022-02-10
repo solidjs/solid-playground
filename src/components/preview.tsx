@@ -202,8 +202,9 @@ export const Preview: Component<Props> = (props) => {
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${zoomState.zoom / 100
-      }); transform-origin: 0 0;`;
+    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+      zoomState.zoom / 100
+    }); transform-origin: 0 0;`;
   };
 
   onMount(() => {
@@ -226,7 +227,7 @@ export const Preview: Component<Props> = (props) => {
       ></iframe>
 
       <div
-        class="grid border-t-2 border-blueGray-200 dark:border-blueGray-700 border-solid dark:bg-solid-medium text-blueGray-600 dark:text-gray-200"
+        class="grid border-t-2 border-slate-200 dark:border-slate-700 border-solid dark:bg-solid-medium text-slate-600 dark:text-gray-200"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
         <div class="flex justify-between items-center w-full">
@@ -241,7 +242,7 @@ export const Preview: Component<Props> = (props) => {
 
           <button
             type="button"
-            class="text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-blueGray-800 dark:hover:text-blueGray-200"
+            class="text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-slate-800 dark:hover:text-slate-200"
             onClick={[setLogs, []]}
           >
             Clear
@@ -249,7 +250,7 @@ export const Preview: Component<Props> = (props) => {
         </div>
 
         <Show when={showLogs()}>
-          <ul class="text-xs overflow-auto px-2 divide-y dark:divide-blueGray-300">
+          <ul class="text-xs overflow-auto px-2 divide-y dark:divide-slate-300">
             <For each={logs()}>
               {(log) => (
                 <li

@@ -1,4 +1,3 @@
-const colors = require('tailwindcss/colors');
 const theme = require('tailwindcss/defaultTheme');
 
 module.exports = {
@@ -7,7 +6,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ...colors,
         brand: {
           default: '#2c4f7c',
           dark: '#335d92',
