@@ -14,6 +14,7 @@ const SOLID_VERSION = pkg.dependencies['solid-js'];
 export const Header: Component<{
   dark: boolean;
   toggleDark: () => void;
+  formatCode: () => void;
   isHorizontal: boolean;
   tabs: Tab[];
   setTabs: (tabs: Tab[]) => void;
@@ -84,6 +85,27 @@ export const Header: Component<{
               hidden: !showMenu(),
             }}
           >
+            <button
+              type="button"
+              onClick={props.formatCode}
+              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
+              classList={{
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
+                  showMenu(),
+              }}
+              title="Format current document"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                class="h-5"
+              >
+                <path d="M10.33 1.67h-8c-.45-.02-.43-.67 0-.67h8c.44 0 .46.64 0 .67zm-8 2.66c-.45-.02-.43-.66 0-.66H7c.44 0 .45.64 0 .66H2.33zM5.67 3c-.46-.02-.44-.66 0-.67h6.66c.44.01.46.65 0 .67H5.67zm5.33.67c.44 0 .45.64 0 .66H8.33c-.45-.02-.43-.66 0-.66H11zm1.33.66c-.45-.02-.43-.66 0-.66H13c.44 0 .45.64 0 .66h-.67zm-10 1.34c-.45-.02-.43-.67 0-.67h1.34c.43 0 .45.64 0 .67H2.33zm8 0c-.45-.02-.43-.67 0-.67h3.34c.43 0 .45.64 0 .67h-3.34zM5 5.67C4.55 5.65 4.57 5 5 5h.67c.43 0 .45.64 0 .67H5zm-2.67 8c-.45-.02-.43-.67 0-.67h1.34c.43 0 .45.64 0 .67H2.33zm2.67 0c-.45-.02-.43-.67 0-.67h.67c.43 0 .45.64 0 .67H5zM10.33 7c-.45-.02-.43-.66 0-.67h3.34c.43.01.45.65 0 .67h-3.34zm-8 0c-.45-.02-.43-.66 0-.67h3.34c.43.01.45.65 0 .67H2.33zm0 5.33c-.45-.02-.43-.66 0-.66h3.34c.43 0 .45.64 0 .66H2.33zm0 2.67c-.45-.02-.43-.66 0-.67h3.34c.43.01.45.65 0 .67H2.33zm0-6.67c-.45-.02-.43-.66 0-.66H3c.44 0 .45.64 0 .66h-.67zm2 0c-.45-.02-.43-.66 0-.66h2c.44 0 .46.64 0 .66h-2zm3.34 0c-.46-.02-.44-.66 0-.66H13c.44 0 .45.64 0 .66H7.67zm2.66 1.34c-.45-.02-.43-.67 0-.67h2c.44 0 .46.64 0 .67h-2zm-4 0c-.45-.02-.43-.67 0-.67H9c.44 0 .45.64 0 .67H6.33zm-4 0c-.45-.02-.43-.67 0-.67H5c.44 0 .45.64 0 .67H2.33zm0 1.33c-.45-.02-.43-.66 0-.67H3c.44.01.45.65 0 .67h-.67zm2 0c-.45-.02-.43-.66 0-.67h6c.44.01.46.65 0 .67h-6zm-2-8c-.45-.02-.43-.66 0-.67h2c.44.01.46.65 0 .67h-2z"></path>
+              </svg>
+              <span class="text-xs md:sr-only">Format current document</span>
+            </button>
+
             <button
               type="button"
               onClick={props.toggleDark}
