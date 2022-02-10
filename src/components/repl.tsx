@@ -283,10 +283,10 @@ export const Repl: Component<ReplProps> = (props) => {
       }}
     >
       <nav class="row-start-1 flex items-center dark:bg-solid-medium">
-        <TabList ref={(el) => setFileTabs(el)} class="flex-1 space-x-2 ">
+        <TabList ref={(el) => setFileTabs(el)} class="flex-1">
           <For each={props.tabs}>
             {(tab, index) => (
-              <TabItem active={props.current === id(tab)}>
+              <TabItem active={props.current === id(tab)} class="mr-2">
                 <button
                   type="button"
                   onClick={() => actions.setCurrentTab(id(tab))}
@@ -388,9 +388,10 @@ export const Repl: Component<ReplProps> = (props) => {
           </Show>
           <label
             for="display-errors"
-            class="relative justify-self-end inline-flex text-sm font-sans 
+            class="ml-auto relative justify-self-end inline-flex text-sm font-sans 
           leading-snug items-center bg-opacity-0 
           hover:bg-opacity-5 overflow-hidden space-x-2 
+          dark:text-white
           border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2  dark:bg-solid-medium cursor-pointer"
           >
             <input
