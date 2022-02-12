@@ -14,10 +14,10 @@ specifiers:
   autoprefixer: ^10.4.2
   babel-preset-solid: 1.3.6
   dedent: ^0.7.0
-  husky: ^7.0.4
+  husky: ^7.0.0
   jszip: ^3.7.1
   mitt: ^3.0.0
-  monaco-editor: ^0.32.1
+  monaco-editor: '0.31'
   monaco-editor-textmate: ^3.0.0
   monaco-textmate: ^3.0.1
   onigasm: ^2.2.5
@@ -43,8 +43,7 @@ dependencies:
   dedent: 0.7.0
   jszip: 3.7.1
   mitt: 3.0.0
-  monaco-editor: 0.32.1
-  monaco-editor-textmate: 3.0.0_42b6272e4a04d7f7f9abdeccdd00d076
+  monaco-editor-textmate: 3.0.0_ea17634d814a6623378c9542a40f2505
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
   prettier: 2.5.1
@@ -63,6 +62,7 @@ devDependencies:
   assert: 2.0.0
   autoprefixer: 10.4.2_postcss@8.4.6
   husky: 7.0.4
+  monaco-editor: 0.31.1
   postcss: 8.4.6
   tailwindcss: 3.0.19_833e1018ad0d7954aa80c53675939269
   typescript: 4.5.5
@@ -3196,19 +3196,19 @@ packages:
     resolution: {integrity: sha512-7dX2/10ITVyqh4aOSVI9gdape+t9l2/8QxHrFmUXu4EEUpdlxl6RudZUPZoc+zuY2hk1j7XxVroIVIan/pD/SQ==}
     dev: false
 
-  /monaco-editor-textmate/3.0.0_42b6272e4a04d7f7f9abdeccdd00d076:
+  /monaco-editor-textmate/3.0.0_ea17634d814a6623378c9542a40f2505:
     resolution: {integrity: sha512-4BK3ual4WllRpiQBDcBO8NKdbk4ukdBtnl23cRYvu1eNWOWKYOBM0rYac50HvFClSbtd5GMezLPjkaim0iM7sw==}
     peerDependencies:
       monaco-editor: 0.x.x
       monaco-textmate: ^3.0.0
     dependencies:
-      monaco-editor: 0.32.1
+      monaco-editor: 0.31.1
       monaco-textmate: 3.0.1_onigasm@2.2.5
     dev: false
 
-  /monaco-editor/0.32.1:
-    resolution: {integrity: sha512-LUt2wsUvQmEi2tfTOK+tjAPvt7eQ+K5C4rZPr6SeuyzjAuAHrIvlUloTcOiGjZW3fn3a/jFQCONrEJbNOaCqbA==}
-    dev: false
+  /monaco-editor/0.31.1:
+    resolution: {integrity: sha512-FYPwxGZAeP6mRRyrr5XTGHD9gRXVjy7GUzF4IPChnyt3fS5WrNxIkS8DNujWf6EQy0Zlzpxw8oTVE+mWI2/D1Q==}
+    dev: true
 
   /monaco-textmate/3.0.1_onigasm@2.2.5:
     resolution: {integrity: sha512-ZxxY3OsqUczYP1sGqo97tu+CJmMBwuSW+dL0WEBdDhOZ5G1zntw72hvBc68ZQAirosWvbDKgN1dL5k173QtFww==}
