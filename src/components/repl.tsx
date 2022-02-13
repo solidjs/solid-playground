@@ -282,7 +282,7 @@ export const Repl: Component<ReplProps> = (props) => {
         '--bottom': `${2 - top()}fr`,
       }}
     >
-      <nav class="row-start-1 flex items-center dark:bg-solid-medium">
+      <nav class="row-start-1 flex items-center dark:bg-solid-darkbg ">
         <TabList ref={(el) => setFileTabs(el)} class="flex-1">
           <For each={props.tabs}>
             {(tab, index) => (
@@ -392,7 +392,7 @@ export const Repl: Component<ReplProps> = (props) => {
           leading-snug items-center bg-opacity-0 
           hover:bg-opacity-5 overflow-hidden space-x-2 
           dark:text-white
-          border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2  dark:bg-solid-medium cursor-pointer"
+          border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2  dark:bg-solid-darkbg cursor-pointer"
           >
             <input
               type="checkbox"
@@ -496,7 +496,7 @@ export const Repl: Component<ReplProps> = (props) => {
         }
       >
         <section
-          class="h-full max-h-screen bg-white dark:bg-gray-400 grid focus:outline-none row-start-5 relative divide-y-2 divide-slate-200 dark:divide-slate-500"
+          class="h-full max-h-screen bg-white dark:bg-solid-darkbg grid focus:outline-none row-start-5 relative divide-y-2 divide-slate-200 dark:divide-slate-500"
           classList={{ 'md:row-start-2': !props.isHorizontal }}
           style="grid-template-rows: minmax(0, 1fr) auto"
         >
@@ -509,7 +509,7 @@ export const Repl: Component<ReplProps> = (props) => {
             withMinimap={false}
           />
 
-          <div class="bg-white dark:bg-gray-400 p-5">
+          <div class="bg-white dark:bg-solid-darkbg p-5">
             <label class="font-semibold text-sm uppercase">Compile mode</label>
 
             <div class="mt-1 space-y-1 text-sm">

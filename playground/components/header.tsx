@@ -64,11 +64,13 @@ export const Header: Component<{
       class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
-      <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest">
+      <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
         <a href="https://github.com/solidjs/solid">
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
-        <span class="inline-block -mb-1">Solid Playground</span>
+        <span class="inline-block -mb-1">
+          Solid<b>JS</b> Playground
+        </span>
       </h1>
       <div class="flex items-center space-x-2">
         <Dismiss
