@@ -227,7 +227,7 @@ export const Preview: Component<Props> = (props) => {
       ></iframe>
 
       <div
-        class="grid border-t-2 border-slate-200 dark:border-slate-700 border-solid dark:bg-solid-darkbg text-slate-600 dark:text-gray-200"
+        class="grid border-t-2 border-slate-200 dark:border-slate-700 border-solid dark:bg-solid-darkLighterBg text-slate-600 dark:text-gray-200"
         style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
       >
         <div class="flex justify-between items-center w-full">
