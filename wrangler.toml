@@ -1,11 +1,18 @@
-name = "solid-playground"
 type = "webpack"
 account_id = ""
 workers_dev = true
-route = "playground.solidjs.com/*"
 zone_id = ""
+compatibility_date = "2021-10-23"
 kv_namespaces = [ 
 ]
+
+[env.development]
+name = "solid-playground-dev"
+route = "dev.playground.solidjs.com/*"
+
+[env.production]
+name = "solid-playground"
+route = "playground.solidjs.com/*"
 
 [site]
 bucket = "./dist"
