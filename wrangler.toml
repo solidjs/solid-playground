@@ -1,18 +1,24 @@
 type = "webpack"
 account_id = ""
 workers_dev = true
-zone_id = ""
 compatibility_date = "2021-10-23"
-kv_namespaces = [ 
-]
+zone_id = ""
 
+# wrangler publish --env=development
 [env.development]
 name = "solid-playground-dev"
 route = "dev.playground.solidjs.com/*"
+kv_namespaces = [ 
+    { binding = "URLS", id = "", preview_id = "" }
+]
 
+# wrangler publish --env=production
 [env.production]
 name = "solid-playground"
 route = "playground.solidjs.com/*"
+kv_namespaces = [ 
+    { binding = "URLS", id = "", preview_id = "" }
+]
 
 [site]
 bucket = "./dist"
