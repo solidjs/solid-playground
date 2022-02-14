@@ -1,5 +1,5 @@
 {
-  "version": "0.21.7",
+  "version": "0.21.9",
   "name": "solid-repl",
   "description": "Quickly discover what the solid compiler will generate from your JSX template",
   "repository": {

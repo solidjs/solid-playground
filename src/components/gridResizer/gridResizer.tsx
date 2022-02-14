@@ -66,9 +66,13 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
   });
 
   const baseClasses =
-    'justify-center group items-center border-slate-200 dark:border-slate-700 hover:bg-brand-default dark:hover:bg-brand-default';
+    'justify-center group items-center border-slate-200 dark:border-solid-darkbg/30 hover:bg-brand-default dark:hover:bg-solid-medium';
   const resizingClasses = () =>
-    `${isDragging() ? 'bg-brand-default dark:bg-brand-default' : 'bg-slate-50 dark:bg-gray-900'}`;
+    `${
+      isDragging()
+        ? 'bg-brand-default dark:bg-brand-default'
+        : 'bg-slate-50 dark:bg-solid-darkbg/70'
+    }`;
   const directionClasses = () =>
     local.direction === 'horizontal'
       ? `flex-col cursor-col-resize border-l-2 border-r-2 hidden${
