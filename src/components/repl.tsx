@@ -458,6 +458,7 @@ export const Repl: Component<ReplProps> = (props) => {
           isDark={props.dark}
           withMinimap={false}
           ref={props.onEditorReady}
+          displayErrors={displayErrors()}
         />
 
         <Show

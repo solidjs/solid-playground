@@ -15,6 +15,7 @@ interface Props {
   isDark?: boolean;
   withMinimap?: boolean;
   formatter?: Worker;
+  displayErrors?: boolean;
   onDocChange?: (code: string) => unknown;
   ref?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
 }
@@ -97,6 +98,13 @@ const Editor: Component<Props> = (props) => {
   createEffect(() => {
     const fontSize = zoomState.fontSize;
     editor.updateOptions({ fontSize });
+  });
+
+  createEffect(() => {
+    languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: !props.displayErrors,
+      noSyntaxValidation: !props.displayErrors,
+    });
   });
 
   return (
