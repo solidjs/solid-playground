@@ -1,8 +1,9 @@
-const theme = require('tailwindcss/defaultTheme');
+import theme from 'windicss/defaultTheme';
 
-module.exports = {
-  mode: 'jit',
-  content: ['./src/**/*.{tsx,ts,css}', './playground/**/*.{tsx,ts,css}', './index.html'],
+export default {
+  extract: {
+    include: ['./src/**/*.{tsx,ts,css}', './playground/**/*.{tsx,ts,css}', './index.html'],
+  },
   theme: {
     extend: {
       colors: {
