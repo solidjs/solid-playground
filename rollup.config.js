@@ -10,8 +10,11 @@ import path from 'path';
 import fs from 'fs';
 import makeDir from 'make-dir';
 import replace from '@rollup/plugin-replace';
+import util from 'util';
+import mime from 'mime';
 
 const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.d.ts'];
+const fsReadFilePromise = util.promisify(fs.readFile);
 const copies = Object.create(null);
 
 function copy(src, dest) {
@@ -28,7 +31,6 @@ import MagicString from 'magic-string';
 import { walk } from 'estree-walker';
 
 let nextId = 0;
-
 function getJsxName(node) {
   if (node.type === 'JSXMemberExpression') {
     return `${getJsxName(node.object)}.${getJsxName(node.property)}`;
@@ -127,7 +129,7 @@ export default defineConfig({
         return null;
       },
     },
-    nodeResolve({ extensions, exportConditions: ['solid'] }),
+    nodeResolve({ extensions, exportConditions: ['solid'], preferBuiltins: false }),
     json(),
     ...WindiCSS(),
     css(),
@@ -138,14 +140,23 @@ export default defineConfig({
         if (!id.endsWith('?url')) {
           return null;
         }
+        let base64 = true; // ideally, we wouldn't have to do this, but current end user bundlers can't handle non base64
+
         let url = id.slice(0, -4);
+        if (base64) {
+          const mimetype = mime.getType(url);
 
-        const ext = path.extname(url);
-        const name = path.basename(url, ext);
+          return fsReadFilePromise(url).then(
+            (x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`,
+          );
+        } else {
+          const ext = path.extname(url);
+          const name = path.basename(url, ext);
 
-        copies[url] = `./${name}${ext}`;
+          copies[url] = `./${name}${ext}`;
 
-        return `export default "${copies[url]}"`;
+          return `export default "${copies[url]}"`;
+        }
       },
       generateBundle: async function write(outputOptions) {
         const base = outputOptions.dir;
