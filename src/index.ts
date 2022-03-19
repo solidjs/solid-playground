@@ -1,4 +1,4 @@
-import './assets/tailwind.css';
+import './assets/main.css';
 import 'virtual:windi.css';
 
 export { Repl } from './components/repl';

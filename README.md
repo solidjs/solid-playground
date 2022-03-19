@@ -36,7 +36,7 @@ $ pnpm run build
 - [solid-js](https://github.com/solidjs/solid/): The view library
 - [@babel/standalone](https://babeljs.io/docs/en/babel-standalone): The in-browser compiler. Solid compiler relies on babel
 - [monaco](https://microsoft.github.io/monaco-editor/): The in-browser code editor. This is the code editor that powers VS Code
-- [tailwindcss](https://tailwindcss.com/): The CSS framework
+- [Windi CSS](https://windicss.org/): The CSS framework
 - [vite](https://vitejs.dev/): The module bundler
 - [workbox](https://developers.google.com/web/tools/workbox): The service worker generator
 - [pnpm](https://pnpm.js.org/)
