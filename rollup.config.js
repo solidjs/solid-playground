@@ -1,36 +1,38 @@
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import { babel } from '@rollup/plugin-babel';
-import json from '@rollup/plugin-json';
-import WindiCSS from 'rollup-plugin-windicss';
-import css from 'rollup-plugin-import-css';
-import commonjs from '@rollup/plugin-commonjs';
-import jsx from 'acorn-jsx';
-import { defineConfig } from 'rollup';
-import path from 'path';
-import fs from 'fs';
-import makeDir from 'make-dir';
-import replace from '@rollup/plugin-replace';
-import util from 'util';
 import mime from 'mime';
+import jsx from 'acorn-jsx';
+import { cwd } from 'process';
+import { walk } from 'estree-walker';
+import copy from 'rollup-plugin-copy';
+import { defineConfig } from 'rollup';
+import { readFile } from 'fs/promises';
+import MagicString from 'magic-string';
+import json from '@rollup/plugin-json';
+import css from 'rollup-plugin-import-css';
+import { babel } from '@rollup/plugin-babel';
+import replace from '@rollup/plugin-replace';
+import WindiCSS from 'rollup-plugin-windicss';
+import commonjs from '@rollup/plugin-commonjs';
+import { renameSync, ensureDirSync } from 'fs-extra';
+import { basename, join, extname, resolve } from 'path';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { createReadStream, createWriteStream, readFileSync } from 'fs';
 
 const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.d.ts'];
-const fsReadFilePromise = util.promisify(fs.readFile);
 const copies = Object.create(null);
 
-function copy(src, dest) {
+function copyFile(src, dest) {
   return new Promise((resolve, reject) => {
-    const read = fs.createReadStream(src);
+    const read = createReadStream(src);
     read.on('error', reject);
-    const write = fs.createWriteStream(dest);
+    const write = createWriteStream(dest);
     write.on('error', reject);
     write.on('finish', resolve);
     read.pipe(write);
   });
 }
-import MagicString from 'magic-string';
-import { walk } from 'estree-walker';
 
 let nextId = 0;
+
 function getJsxName(node) {
   if (node.type === 'JSXMemberExpression') {
     return `${getJsxName(node.object)}.${getJsxName(node.property)}`;
@@ -120,12 +122,14 @@ export default defineConfig({
         if (!id.endsWith('?raw')) {
           return;
         }
-        return `export default ${JSON.stringify(fs.readFileSync(id.slice(1, -4)).toString())};`;
+
+        return `export default ${JSON.stringify(readFileSync(id.slice(1, -4)).toString())};`;
       },
       resolveId(source) {
         if (source.endsWith('?raw')) {
           return source;
         }
+
         return null;
       },
     },
@@ -146,27 +150,26 @@ export default defineConfig({
         if (base64) {
           const mimetype = mime.getType(url);
 
-          return fsReadFilePromise(url).then(
+          return readFile(url).then(
             (x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`,
           );
         } else {
-          const ext = path.extname(url);
-          const name = path.basename(url, ext);
+          const ext = extname(url);
+          const name = basename(url, ext);
 
           copies[url] = `./${name}${ext}`;
 
           return `export default "${copies[url]}"`;
         }
       },
-      generateBundle: async function write(outputOptions) {
+      async generateBundle(outputOptions) {
         const base = outputOptions.dir;
-
-        await makeDir(base);
+        ensureDirSync(base);
 
         await Promise.all(
           Object.keys(copies).map(async (name) => {
             const output = copies[name];
-            return copy(name, path.join(base, output));
+            return copyFile(name, join(base, output));
           }),
         );
       },
@@ -187,5 +190,21 @@ export default defineConfig({
       plugins: ['@babel/plugin-syntax-jsx'],
     }),
     preppy,
+    copy({
+      targets: [
+        {
+          src: 'types',
+          dest: 'lib/types',
+        },
+      ],
+    }),
+    {
+      name: 'cleanup',
+      buildEnd() {
+        const basePath = cwd();
+
+        renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
+      },
+    },
   ],
 });

@@ -16,8 +16,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && workbox generateSW workbox-config.js",
-    "build:lib": "rollup -c && cp -r types/ lib/ && mv lib/index.js lib/index.jsx",
-    "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\" \"*.{js,ts}\""
+    "build:lib": "rollup -c",
+    "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\" \"*.{js,ts}\"",
+    "prepublishOnly": "pnpm build:lib"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",
@@ -30,14 +31,16 @@
     "@rollup/plugin-replace": "^4.0.0",
     "@types/babel__standalone": "^7.1.4",
     "@types/dedent": "^0.7.0",
+    "@types/fs-extra": "^9.0.13",
     "@types/workbox-sw": "^4.3.2",
     "acorn": "^8.7.0",
     "acorn-jsx": "^5.3.2",
     "assert": "^2.0.0",
-    "make-dir": "^3.1.0",
+    "fs-extra": "^10.0.1",
     "mime": "^3.0.0",
     "monaco-editor": "~0.33.0",
     "register-service-worker": "^1.7.2",
+    "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-import-css": "^3.0.3",
     "rollup-plugin-windicss": "^1.8.3",
     "typescript": "^4.6.2",
