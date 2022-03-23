@@ -18,6 +18,7 @@ import CompilerWorker from '../src/workers/compiler?worker';
 import FormatterWorker from '../src/workers/formatter?worker';
 import useZoom from '../src/hooks/useZoom';
 import { isDarkTheme } from './utils/isDarkTheme';
+import { exportToJSON } from './utils/exportFiles';
 
 (window as any).MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
@@ -87,6 +88,10 @@ export const App = (): JSX.Element => {
     'isHorizontal',
     'noEditableTabs',
   ].map((key) => key in params);
+
+  if (params.format === 'json') {
+    exportToJSON(tabs());
+  }
 
   const [dark, setDark] = createSignal(isDarkTheme());
 
