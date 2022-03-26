@@ -7,7 +7,7 @@ const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> =
   const fileUri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
 
   const model =
-    editor.getModels().find((model) => model.uri === fileUri) ||
+    editor.getModels().find((model) => model.uri.path === fileUri.path) ||
     editor.createModel('', 'typescript', fileUri);
 
   createEffect(() => {
