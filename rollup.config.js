@@ -3,7 +3,7 @@ import jsx from 'acorn-jsx';
 import { cwd } from 'process';
 import { walk } from 'estree-walker';
 import copy from 'rollup-plugin-copy';
-import { defineConfig } from 'rollup';
+import { rollup } from 'rollup';
 import { readFile } from 'fs/promises';
 import MagicString from 'magic-string';
 import json from '@rollup/plugin-json';
@@ -110,10 +110,9 @@ const preppy = {
   },
 };
 
-export default defineConfig({
+rollup({
   input: ['src/index.ts', 'src/workers/compiler.ts', 'src/workers/formatter.ts'],
   external: ['solid-js', 'solid-js/web', 'solid-js/store', 'monaco-editor'],
-  output: { dir: 'lib', chunkFileNames: (info) => (info.isEntry ? '[name].jsx' : '[name].js') },
   acornInjectPlugins: [jsx()],
   plugins: [
     {
@@ -198,13 +197,13 @@ export default defineConfig({
         },
       ],
     }),
-    {
-      name: 'cleanup',
-      buildEnd() {
-        const basePath = cwd();
-
-        renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
-      },
-    },
   ],
+}).then((builder) => {
+  builder
+    .write({ dir: 'lib', chunkFileNames: (info) => (info.isEntry ? '[name].jsx' : '[name].js') })
+    .then(() => {
+      const basePath = cwd();
+
+      renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
+    });
 });

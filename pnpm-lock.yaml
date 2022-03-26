@@ -22,6 +22,7 @@ specifiers:
   babel-preset-solid: 1.3.13
   dedent: ^0.7.0
   fs-extra: ^10.0.1
+  jiti: ^1.13.0
   jszip: ^3.7.1
   mime: ^3.0.0
   mitt: ^3.0.0
@@ -79,6 +80,7 @@ devDependencies:
   acorn-jsx: 5.3.2_acorn@8.7.0
   assert: 2.0.0
   fs-extra: 10.0.1
+  jiti: 1.13.0
   mime: 3.0.0
   monaco-editor: 0.33.0
   register-service-worker: 1.7.2
