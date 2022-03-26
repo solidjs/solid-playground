@@ -1,9 +1,9 @@
 import mime from 'mime';
 import jsx from 'acorn-jsx';
 import { cwd } from 'process';
-import { walk } from 'estree-walker';
-import copy from 'rollup-plugin-copy';
 import { rollup } from 'rollup';
+import { walk } from 'estree-walker';
+import del from 'rollup-plugin-delete';
 import { readFile } from 'fs/promises';
 import MagicString from 'magic-string';
 import json from '@rollup/plugin-json';
@@ -115,6 +115,7 @@ rollup({
   external: ['solid-js', 'solid-js/web', 'solid-js/store', 'monaco-editor'],
   acornInjectPlugins: [jsx()],
   plugins: [
+    del({ targets: 'lib/*' }),
     {
       name: 'raw',
       load(id) {
@@ -189,14 +190,6 @@ rollup({
       plugins: ['@babel/plugin-syntax-jsx'],
     }),
     preppy,
-    copy({
-      targets: [
-        {
-          src: 'types',
-          dest: 'lib/types',
-        },
-      ],
-    }),
   ],
 }).then((builder) => {
   builder
