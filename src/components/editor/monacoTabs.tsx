@@ -5,7 +5,11 @@ import { keyedMap } from '../../utils/keyedMap';
 
 const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {
   const fileUri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
-  const model = editor.createModel('', 'typescript', fileUri);
+
+  const model =
+    editor.getModels().find((model) => model.uri === fileUri) ||
+    editor.createModel('', 'typescript', fileUri);
+
   createEffect(() => {
     model.setValue(
       props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9][0-9.\-a-z]+)/g, ''),
