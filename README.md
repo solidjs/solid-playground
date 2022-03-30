@@ -1,3 +1,7 @@
+<p>
+  <img width="100%" src="https://assets.solidjs.com/banner?project=Playground&type=core" alt="Solid Playground">
+</p>
+
 # Solid Template Explorer
 
 This is the source code of the [solid playground](https://playground.solidjs.com) website.
