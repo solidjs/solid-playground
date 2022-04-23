@@ -80,7 +80,7 @@ async function handleCreateUrl(request) {
 
   // And return it with proper headers
   const response = new Response(id, { status: 200 });
-  response.headers.set('Access-Control-Allow-Origin', corsHeaders['ccess-Control-Allow-Origin']);
+  response.headers.set('Access-Control-Allow-Origin', corsHeaders['Access-Control-Allow-Origin']);
   response.headers.append('Vary', 'Origin');
 
   return response;
