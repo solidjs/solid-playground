@@ -124,6 +124,9 @@ function virtual({
       // Compile solid code
       if (/\.(j|t)sx$/.test(filename)) {
         const babel = await loadBabel(solidVersion);
+        // HACK: Import untrack from the same solid-js version; used when logging to fake console
+        code =
+          ';import { untrack as $$untrack } from "solid-js";window.$$untrack = $$untrack;' + code;
 
         return babel(code, { solid: solidOptions, babel: { filename } });
       }

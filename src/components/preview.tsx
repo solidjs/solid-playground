@@ -128,17 +128,35 @@ export const Preview: Component<Props> = (props) => {
           const fakeConsole = {};
 
           function formatArgs(args) {
-            return args
-              .map((arg) => {
-                if (arg instanceof Element) {
-                  return arg.outerHTML;
-                }
-
-                return typeof arg === 'object' 
-                  ? JSON.stringify(arg, null, 2)
-                  : '"' + String(arg) + '"';
-              })
-              .join(' ')
+            const untrack = window.$$untrack || ((fn) => fn());
+            return untrack(() =>
+              args
+                .map((arg) => {
+                  if (arg instanceof Element) {
+                    return arg.outerHTML;
+                  } else if (typeof arg === 'object' && arg !== null) {
+                    const traversed = new Set();
+                    return JSON.stringify(
+                      arg,
+                      (_, v) => {
+                        if (typeof v === 'object' && v !== null) {
+                          if (traversed.has(v)) {
+                            return '[circular object]';
+                          }
+                          traversed.add(v);
+                          return v;
+                        } else if (typeof v === 'bigint') {
+                          return v.toString();
+                        }
+                        return v;
+                      },
+                      2,
+                    );
+                  }
+                  return '"' + String(arg) + '"';
+                })
+                .join(' '),
+            );
           }
 
           
