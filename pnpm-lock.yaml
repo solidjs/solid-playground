@@ -8,7 +8,7 @@ specifiers:
   '@babel/standalone': ^7.17.9
   '@babel/types': ^7.17.0
   '@rollup/plugin-babel': ^5.3.1
-  '@rollup/plugin-commonjs': ^21.1.0
+  '@rollup/plugin-commonjs': ^22.0.0
   '@rollup/plugin-json': ^4.1.0
   '@rollup/plugin-node-resolve': ^13.2.1
   '@rollup/plugin-replace': ^4.0.0
@@ -16,10 +16,10 @@ specifiers:
   '@types/dedent': ^0.7.0
   '@types/fs-extra': ^9.0.13
   '@types/workbox-sw': ^4.3.2
-  acorn: ^8.7.0
+  acorn: ^8.7.1
   acorn-jsx: ^5.3.2
   assert: ^2.0.0
-  babel-preset-solid: 1.3.16
+  babel-preset-solid: 1.3.17
   dedent: ^0.7.0
   fs-extra: ^10.1.0
   jiti: ^1.13.0
@@ -38,9 +38,9 @@ specifiers:
   rollup-plugin-windicss: ^1.8.4
   solid-dismiss: ^1.1.0
   solid-heroicons: ^2.0.3
-  solid-js: 1.3.16
-  typescript: ^4.6.3
-  vite: ~2.9.5
+  solid-js: 1.3.17
+  typescript: ^4.6.4
+  vite: ~2.9.6
   vite-plugin-solid: ^2.2.6
   vite-plugin-windicss: ^1.8.4
   windicss: ^3.5.1
@@ -50,7 +50,7 @@ dependencies:
   '@amoutonbrady/lz-string': 0.0.1
   '@babel/preset-typescript': 7.16.7_@babel+core@7.17.9
   '@babel/standalone': 7.17.9
-  babel-preset-solid: 1.3.16_@babel+core@7.17.9
+  babel-preset-solid: 1.3.17_@babel+core@7.17.9
   dedent: 0.7.0
   jszip: 3.9.1
   mitt: 3.0.0
@@ -59,16 +59,16 @@ dependencies:
   onigasm: 2.2.5
   prettier: 2.6.2
   rollup: 2.70.2
-  solid-dismiss: 1.1.0_solid-js@1.3.16
+  solid-dismiss: 1.1.0_solid-js@1.3.17
   solid-heroicons: 2.0.3
-  solid-js: 1.3.16
+  solid-js: 1.3.17
 
 devDependencies:
   '@babel/core': 7.17.9
   '@babel/plugin-syntax-jsx': 7.16.7_@babel+core@7.17.9
   '@babel/types': 7.17.0
   '@rollup/plugin-babel': 5.3.1_@babel+core@7.17.9+rollup@2.70.2
-  '@rollup/plugin-commonjs': 21.1.0_rollup@2.70.2
+  '@rollup/plugin-commonjs': 22.0.0_rollup@2.70.2
   '@rollup/plugin-json': 4.1.0_rollup@2.70.2
   '@rollup/plugin-node-resolve': 13.2.1_rollup@2.70.2
   '@rollup/plugin-replace': 4.0.0_rollup@2.70.2
@@ -76,8 +76,8 @@ devDependencies:
   '@types/dedent': 0.7.0
   '@types/fs-extra': 9.0.13
   '@types/workbox-sw': 4.3.2
-  acorn: 8.7.0
-  acorn-jsx: 5.3.2_acorn@8.7.0
+  acorn: 8.7.1
+  acorn-jsx: 5.3.2_acorn@8.7.1
   assert: 2.0.0
   fs-extra: 10.1.0
   jiti: 1.13.0
@@ -87,10 +87,10 @@ devDependencies:
   rollup-plugin-delete: 2.0.0
   rollup-plugin-import-css: 3.0.3_rollup@2.70.2
   rollup-plugin-windicss: 1.8.4_rollup@2.70.2
-  typescript: 4.6.3
-  vite: 2.9.5
+  typescript: 4.6.4
+  vite: 2.9.6
   vite-plugin-solid: 2.2.6
-  vite-plugin-windicss: 1.8.4_vite@2.9.5
+  vite-plugin-windicss: 1.8.4_vite@2.9.6
   windicss: 3.5.1
   workbox-cli: 6.5.3
 
@@ -1362,11 +1362,11 @@ packages:
       rollup: 2.70.2
     dev: true
 
-  /@rollup/plugin-commonjs/21.1.0_rollup@2.70.2:
-    resolution: {integrity: sha512-6ZtHx3VHIp2ReNNDxHjuUml6ur+WcQ28N1yHgCQwsbNkQg2suhxGMDQGJOn/KuDxKtd1xuZP5xSTwBA4GQ8hbA==}
-    engines: {node: '>= 8.0.0'}
+  /@rollup/plugin-commonjs/22.0.0_rollup@2.70.2:
+    resolution: {integrity: sha512-Ktvf2j+bAO+30awhbYoCaXpBcyPmJbaEUYClQns/+6SNCYFURbvBiNbWgHITEsIgDDWCDUclWRKEuf8cwZCFoQ==}
+    engines: {node: '>= 12.0.0'}
     peerDependencies:
-      rollup: ^2.38.3
+      rollup: ^2.68.0
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.70.2
       commondir: 1.0.1
@@ -1647,16 +1647,16 @@ packages:
       - supports-color
     dev: true
 
-  /acorn-jsx/5.3.2_acorn@8.7.0:
+  /acorn-jsx/5.3.2_acorn@8.7.1:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      acorn: 8.7.0
+      acorn: 8.7.1
     dev: true
 
-  /acorn/8.7.0:
-    resolution: {integrity: sha512-V/LGr1APy+PXIwKebEWrkZPwoeoF+w1jiOBUmuxuiUIaOHtob8Qc9BTrYo7VuI5fR8tqsy+buA2WFooR5olqvQ==}
+  /acorn/8.7.1:
+    resolution: {integrity: sha512-Xx54uLJQZ19lKygFXOWsscKUbsBZW0CPykPhVQdhIeIwrbPmJzqeASDInc8nKBnp/JT6igTs82qPXz069H8I/A==}
     engines: {node: '>=0.4.0'}
     hasBin: true
     dev: true
@@ -1756,8 +1756,8 @@ packages:
       object.assign: 4.1.2
     dev: true
 
-  /babel-plugin-jsx-dom-expressions/0.32.16_@babel+core@7.17.9:
-    resolution: {integrity: sha512-bKyjMBFmwZ9X9eFbJj+zvy1X7PSkenzFS5Qdv7Rli1WwxQceSLb7MjhipnLonKnS63HUqFjm1g0aXp6LJPSiRQ==}
+  /babel-plugin-jsx-dom-expressions/0.32.17_@babel+core@7.17.9:
+    resolution: {integrity: sha512-S3VLVh4zBsyWqNhMQq/Kof/sxULKZXaIhiNEy8Iy7XlpMXY4rpJ6XYtRVFtN/2+OnH+tyGDpZRWflvwqbuZxmA==}
     dependencies:
       '@babel/helper-module-imports': 7.16.0
       '@babel/plugin-syntax-jsx': 7.16.7_@babel+core@7.17.9
@@ -1802,10 +1802,10 @@ packages:
       - supports-color
     dev: true
 
-  /babel-preset-solid/1.3.16_@babel+core@7.17.9:
-    resolution: {integrity: sha512-2EvhAh9GK4O8OWsYIQVZIapcA5cjQDHFFDDMSDjnFo8sY+RCUfT6hMg+tnJpJJlwSle4mtE933pxgMsMtVeD5w==}
+  /babel-preset-solid/1.3.17_@babel+core@7.17.9:
+    resolution: {integrity: sha512-3lBNUtDj9SkEuO+sJCUlSkW7s8U/yhPJIxmRlXauSMOcGHgeOMu3omx//C9Fnz0DajG3fgSBeQLl7nhy5tS+dA==}
     dependencies:
-      babel-plugin-jsx-dom-expressions: 0.32.16_@babel+core@7.17.9
+      babel-plugin-jsx-dom-expressions: 0.32.17_@babel+core@7.17.9
     transitivePeerDependencies:
       - '@babel/core'
 
@@ -3966,24 +3966,24 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /solid-dismiss/1.1.0_solid-js@1.3.16:
+  /solid-dismiss/1.1.0_solid-js@1.3.17:
     resolution: {integrity: sha512-UnlNbtOqoRTsEhb/YOfiGkqKoz09ULFwFNE9TU9kqFqdZESxyVfjjut6+jNuJ4war9RkGz2ASbq8ersxk7WmDA==}
     peerDependencies:
       solid-js: '1'
     dependencies:
-      solid-js: 1.3.16
+      solid-js: 1.3.17
     dev: false
 
   /solid-heroicons/2.0.3:
     resolution: {integrity: sha512-sHlEaCaFFD8s/RDWTlmfIC/5dUPOtRB/UqOTpXQLq/BUZ94jWS58CANwONBclxwKFFGu6iasaP5zN4iYqORlVg==}
     dependencies:
-      solid-js: 1.3.16
+      solid-js: 1.3.17
     dev: false
 
-  /solid-js/1.3.16:
-    resolution: {integrity: sha512-ks9wrUFLx2vzXnR+yXLtL/qO++lixueYsPb9baN0jMNpe1nzAdZn8AbodCmDu9yLPrA7oEFt5CYnzN6/MwtswA==}
+  /solid-js/1.3.17:
+    resolution: {integrity: sha512-BFCosxa4hRm+LF7S+kBL5bNr4RtuZif6AaR5FdQkBpV1E6QNLAOFm4HWgEN8vL2aCWEKl384cT8Etw8ziW8aag==}
 
-  /solid-refresh/0.4.0_solid-js@1.3.16:
+  /solid-refresh/0.4.0_solid-js@1.3.17:
     resolution: {integrity: sha512-5XCUz845n/sHPzKK2i2G2EeV61tAmzv6SqzqhXcPaYhrgzVy7nKTQaBpKK8InKrriq9Z2JFF/mguIU00t/73xw==}
     peerDependencies:
       solid-js: ^1.3.0
@@ -3991,7 +3991,7 @@ packages:
       '@babel/generator': 7.17.9
       '@babel/helper-module-imports': 7.16.7
       '@babel/types': 7.17.0
-      solid-js: 1.3.16
+      solid-js: 1.3.17
     dev: true
 
   /source-map-js/1.0.2:
@@ -4177,7 +4177,7 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      acorn: 8.7.0
+      acorn: 8.7.1
       commander: 2.20.3
       source-map: 0.7.3
       source-map-support: 0.5.21
@@ -4260,8 +4260,8 @@ packages:
       is-typedarray: 1.0.0
     dev: true
 
-  /typescript/4.6.3:
-    resolution: {integrity: sha512-yNIatDa5iaofVozS/uQJEl3JRWLKKGJKh6Yaiv0GLGSuhpFJe7P3SbHZ8/yjAHRQwKRoA6YZqlfjXWmVzoVSMw==}
+  /typescript/4.6.4:
+    resolution: {integrity: sha512-9ia/jWHIEbo49HfjrLGfKbZSuWo9iTMwXO+Ca3pRsSpbsMbc7/IU8NKdCZVRRBafVPGnoJeFL76ZOAA84I9fEg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
@@ -4373,11 +4373,11 @@ packages:
     dependencies:
       '@babel/core': 7.17.9
       '@babel/preset-typescript': 7.16.7_@babel+core@7.17.9
-      babel-preset-solid: 1.3.16_@babel+core@7.17.9
+      babel-preset-solid: 1.3.17_@babel+core@7.17.9
       merge-anything: 5.0.2
-      solid-js: 1.3.16
-      solid-refresh: 0.4.0_solid-js@1.3.16
-      vite: 2.9.5
+      solid-js: 1.3.17
+      solid-refresh: 0.4.0_solid-js@1.3.17
+      vite: 2.9.6
     transitivePeerDependencies:
       - less
       - sass
@@ -4385,7 +4385,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-windicss/1.8.4_vite@2.9.5:
+  /vite-plugin-windicss/1.8.4_vite@2.9.6:
     resolution: {integrity: sha512-LSZAO8BZn3x406GRbYX5t5ONXXJVdqiQtN1qrznLA/Dy5/NzZVhfcrL6N1qEYYO7HsCDT4pLAjTzObvDnM9Y8A==}
     peerDependencies:
       vite: ^2.0.1
@@ -4393,14 +4393,14 @@ packages:
       '@windicss/plugin-utils': 1.8.4
       debug: 4.3.4
       kolorist: 1.5.1
-      vite: 2.9.5
+      vite: 2.9.6
       windicss: 3.5.1
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /vite/2.9.5:
-    resolution: {integrity: sha512-dvMN64X2YEQgSXF1lYabKXw3BbN6e+BL67+P3Vy4MacnY+UzT1AfkHiioFSi9+uiDUiaDy7Ax/LQqivk6orilg==}
+  /vite/2.9.6:
+    resolution: {integrity: sha512-3IffdrByHW95Yjv0a13TQOQfJs7L5dVlSPuTt432XLbRMriWbThqJN2k/IS6kXn5WY4xBLhK9XoaWay1B8VzUw==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
