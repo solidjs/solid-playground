@@ -1,7 +1,8 @@
-import { Component, onCleanup, createSignal, Show, createMemo, For } from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
+import { Icon } from 'solid-heroicons';
+import { compressToURL as encode } from '@amoutonbrady/lz-string';
+import { Component, onCleanup, createSignal, Show, createMemo, For } from 'solid-js';
+import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 
 import logo from '../assets/logo.svg?url';
 import type { Tab } from '../../src';
@@ -36,10 +37,20 @@ export const Header: Component<{
   }
 
   function shareLink() {
-    const url = location.href;
+    const url = new URL(location.href);
 
-    fetch('/', { method: 'PUT', body: `{"url":"${url}"}` })
-      .then((r) => r.text())
+    url.hash = encode(JSON.stringify(props.tabs));
+    url.searchParams.set('version', props.version);
+    history.replaceState(null, '', url.toString());
+
+    fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` })
+      .then((response) => {
+        if (response.status >= 400) {
+          throw new Error(response.statusText);
+        }
+
+        return response.text();
+      })
       .then((hash) => {
         const tinyUrl = new URL(location.origin);
         tinyUrl.searchParams.set('hash', hash);
@@ -50,7 +61,12 @@ export const Header: Component<{
           setTimeout(setCopy, 750, false);
         });
       })
-      .catch(console.error);
+      .catch(() => {
+        navigator.clipboard.writeText(url.href).then(() => {
+          setCopy(true);
+          setTimeout(setCopy, 750, false);
+        });
+      });
   }
 
   const versions = createMemo(() => {

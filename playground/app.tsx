@@ -1,4 +1,3 @@
-import { compressToURL as encode } from '@amoutonbrady/lz-string';
 import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
 
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
@@ -61,17 +60,6 @@ export const App = (): JSX.Element => {
 
   const [format, setFormat] = createSignal(false);
   let editor: mEditor.IStandaloneCodeEditor | undefined;
-
-  /**
-   * This syncs the URL hash with the state of the current tab.
-   * This is an optimized encoding for limiting URL size...
-   */
-  createEffect(() => {
-    const url = new URL(location.href);
-    url.hash = encode(JSON.stringify(tabs()));
-    url.searchParams.set('version', version());
-    history.replaceState({}, '', url.toString());
-  });
 
   if (params.data && isValidUrl(params.data)) {
     fetch(params.data)
