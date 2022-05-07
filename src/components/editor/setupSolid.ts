@@ -65,7 +65,6 @@ cm(sStore, 'store/types/store.d.ts');
 languages.typescript.typescriptDefaults.setEagerModelSync(true);
 
 languages.typescript.typescriptDefaults.setCompilerOptions({
-  lib: ['es6', 'DOM', 'DOM.Iterable'],
   target: languages.typescript.ScriptTarget.ESNext,
   module: languages.typescript.ModuleKind.ESNext,
   moduleResolution: languages.typescript.ModuleResolutionKind.NodeJs,
