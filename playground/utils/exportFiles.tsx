@@ -19,7 +19,7 @@ export default defineConfig({
 const tsConfig = JSON.stringify(
   {
     compilerOptions: {
-      strict: false,
+      strict: true,
       module: 'ESNext',
       target: 'ESNext',
       jsx: 'preserve',
