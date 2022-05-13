@@ -1,4 +1,4 @@
-lockfileVersion: 5.3
+lockfileVersion: 5.4
 
 specifiers:
   '@amoutonbrady/lz-string': ^0.0.1
@@ -54,7 +54,7 @@ dependencies:
   dedent: 0.7.0
   jszip: 3.9.1
   mitt: 3.0.0
-  monaco-editor-textmate: 3.0.0_6d22eb5a7571917e7ded964fc67d726d
+  monaco-editor-textmate: 3.0.0_nurowwtvogix47pnszh4m7lsnu
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
   prettier: 2.6.2
@@ -67,7 +67,7 @@ devDependencies:
   '@babel/core': 7.17.10
   '@babel/plugin-syntax-jsx': 7.16.7_@babel+core@7.17.10
   '@babel/types': 7.17.10
-  '@rollup/plugin-babel': 5.3.1_b2ace10b8392be11fbae66c6d89d8c0c
+  '@rollup/plugin-babel': 5.3.1_wkwocc4dsk7bd65om3dnrhmmbq
   '@rollup/plugin-commonjs': 22.0.0_rollup@2.72.0
   '@rollup/plugin-json': 4.1.0_rollup@2.72.0
   '@rollup/plugin-node-resolve': 13.3.0_rollup@2.72.0
@@ -428,6 +428,8 @@ packages:
     resolution: {integrity: sha512-n2Q6i+fnJqzOaq2VkdXxy2TCPCWQZHiCo0XqmrCvDWcZQKRyZzYi4Z0yxlBuN0w+r2ZHmre+Q087DSrw3pbJDQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
+    dependencies:
+      '@babel/types': 7.17.10
 
   /@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression/7.16.7_@babel+core@7.17.10:
     resolution: {integrity: sha512-anv/DObl7waiGEnC24O9zqL0pSuI9hljihqiDuFHC8d7/bjr/4RLGPWuc8rYOff/QPzbEPSkzG8wGG9aDuhHRg==}
@@ -1356,7 +1358,7 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@rollup/plugin-babel/5.3.1_b2ace10b8392be11fbae66c6d89d8c0c:
+  /@rollup/plugin-babel/5.3.1_wkwocc4dsk7bd65om3dnrhmmbq:
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
@@ -1522,6 +1524,12 @@ packages:
       '@types/node': 17.0.31
     dev: true
 
+  /@types/keyv/3.1.4:
+    resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+    dependencies:
+      '@types/node': 17.0.31
+    dev: true
+
   /@types/minimatch/3.0.5:
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
     dev: true
@@ -1544,6 +1552,12 @@ packages:
 
   /@types/resolve/1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
+    dependencies:
+      '@types/node': 17.0.31
+    dev: true
+
+  /@types/responselike/1.0.0:
+    resolution: {integrity: sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==}
     dependencies:
       '@types/node': 17.0.31
     dev: true
@@ -2722,6 +2736,8 @@ packages:
     dependencies:
       '@sindresorhus/is': 0.14.0
       '@szmarczak/http-timer': 1.1.2
+      '@types/keyv': 3.1.4
+      '@types/responselike': 1.0.0
       cacheable-request: 6.1.0
       decompress-response: 3.3.0
       duplexer3: 0.1.4
@@ -3410,7 +3426,7 @@ packages:
     resolution: {integrity: sha512-7dX2/10ITVyqh4aOSVI9gdape+t9l2/8QxHrFmUXu4EEUpdlxl6RudZUPZoc+zuY2hk1j7XxVroIVIan/pD/SQ==}
     dev: false
 
-  /monaco-editor-textmate/3.0.0_6d22eb5a7571917e7ded964fc67d726d:
+  /monaco-editor-textmate/3.0.0_nurowwtvogix47pnszh4m7lsnu:
     resolution: {integrity: sha512-4BK3ual4WllRpiQBDcBO8NKdbk4ukdBtnl23cRYvu1eNWOWKYOBM0rYac50HvFClSbtd5GMezLPjkaim0iM7sw==}
     peerDependencies:
       monaco-editor: 0.x.x
@@ -4511,7 +4527,7 @@ packages:
       '@babel/core': 7.17.10
       '@babel/preset-env': 7.16.11_@babel+core@7.17.10
       '@babel/runtime': 7.17.9
-      '@rollup/plugin-babel': 5.3.1_b2ace10b8392be11fbae66c6d89d8c0c
+      '@rollup/plugin-babel': 5.3.1_wkwocc4dsk7bd65om3dnrhmmbq
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.72.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.72.0
       '@surma/rollup-plugin-off-main-thread': 2.2.3
