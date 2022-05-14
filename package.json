@@ -67,6 +67,6 @@
     "rollup": "^2.72.0",
     "solid-dismiss": "^1.1.0",
     "solid-heroicons": "^2.0.3",
-    "solid-js": "1.4.0"
+    "solid-js": "^1.4.1"
   }
 }
