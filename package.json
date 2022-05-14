@@ -1,5 +1,5 @@
 {
-  "version": "0.23.9",
+  "version": "0.23.10",
   "name": "solid-repl",
   "description": "Quickly discover what the solid compiler will generate from your JSX template",
   "repository": {
@@ -67,6 +67,6 @@
     "rollup": "^2.72.0",
     "solid-dismiss": "^1.1.0",
     "solid-heroicons": "^2.0.3",
-    "solid-js": "^1.4.1"
+    "solid-js": "1.4.1"
   }
 }
