@@ -1,15 +1,4 @@
-import {
-  Component,
-  createEffect,
-  createSignal,
-  splitProps,
-  JSX,
-  For,
-  Show,
-  onMount,
-} from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { chevronDown, chevronRight } from 'solid-heroicons/solid';
+import { Component, createEffect, createSignal, splitProps, JSX, onMount } from 'solid-js';
 import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
@@ -18,8 +7,6 @@ export const Preview: Component<Props> = (props) => {
 
   let iframe!: HTMLIFrameElement;
 
-  const [showLogs, setShowLogs] = createSignal(false);
-  const [logs, setLogs] = createSignal<LogPayload[]>([]);
   const [isIframeReady, setIframeReady] = createSignal(false);
 
   let latestCode: string;
@@ -33,8 +20,6 @@ export const Preview: Component<Props> = (props) => {
     const isEmpty = !internal.code;
 
     if (isNotDom || isEmpty || !isIframeReady()) return;
-    // Clear logs on every playground changes
-    setLogs([]);
 
     latestCode = internal.code.replace('render(', 'window.dispose = render(');
     iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
@@ -50,19 +35,6 @@ export const Preview: Component<Props> = (props) => {
       setDarkMode();
     }
   });
-
-  function attachToIframe() {
-    setIframeReady(true);
-
-    iframe.contentWindow!.addEventListener('message', ({ data }) => {
-      if (data.event === 'LOG') {
-        const { level, args } = data;
-        setLogs([...logs(), { level, args }]);
-      }
-    });
-
-    setDarkMode();
-  }
 
   const html = `
     <!doctype html>
@@ -124,34 +96,17 @@ export const Preview: Component<Props> = (props) => {
           }
 		    </style>
 
-        <script type="module" id="setup">
-          const fakeConsole = {};
-
-          function formatArgs(args) {
-            return args
-              .map((arg) => {
-                if (arg instanceof Element) {
-                  return arg.outerHTML;
-                }
-
-                return typeof arg === 'object' 
-                  ? JSON.stringify(arg, null, 2)
-                  : '"' + String(arg) + '"';
-              })
-              .join(' ')
-          }
-
-          
-          for (const level of ['log', 'error', 'warn']) {
-            fakeConsole[level] = console[level];
-
-            console[level] = (...args) => {
-              fakeConsole[level](...args);
-              window.postMessage({ event: 'LOG', level, args: formatArgs(args) }, '*');
+        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+        <script type="module">
+          eruda.init({
+            defaults: {
+              displaySize: 30
             }
-          }
-
-          window.addEventListener('message', ({ data }) => {
+          });
+          eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
+        </script>
+        <script type="module" id="setup">
+          window.addEventListener('message', async ({ data }) => {
             try {
               const { event, code } = data;
 
@@ -168,9 +123,11 @@ export const Preview: Component<Props> = (props) => {
                 document.body.prepend(app);
               }
 
+              console.clear();
+
               const encodedCode = encodeURIComponent(code);
               const dataUri = 'data:text/javascript;charset=utf-8,' + encodedCode;
-              import(dataUri);
+              await import(dataUri);
   
               const load = document.getElementById('load');
               if (code && load) load.remove();
@@ -209,7 +166,11 @@ export const Preview: Component<Props> = (props) => {
 
   onMount(() => {
     iframe.srcdoc = html;
-    iframe.addEventListener('load', attachToIframe);
+    iframe.addEventListener('load', () => {
+      setIframeReady(true);
+
+      setDarkMode();
+    });
   });
 
   return (
@@ -225,49 +186,6 @@ export const Preview: Component<Props> = (props) => {
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       ></iframe>
-
-      <div
-        class="grid border-t-2 border-slate-200 dark:border-slate-700 border-solid dark:bg-solid-darkLighterBg text-slate-600 dark:text-gray-200"
-        style={{ 'grid-template-rows': `1fr ${showLogs() ? 'minmax(auto, 20vh)' : '0px'}` }}
-      >
-        <div class="flex justify-between items-center w-full">
-          <button
-            type="button"
-            class="relative text-left text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight flex items-center"
-            onClick={() => setShowLogs(!showLogs())}
-          >
-            <Icon class="h-7" path={showLogs() ? chevronDown : chevronRight} />
-            <span>Console ({logs().length})</span>
-          </button>
-
-          <button
-            type="button"
-            class="text-xs md:text-sm p-2 focus:outline-none -mb-1 md:-mb-0.5 leading-none md:leading-tight hover:text-slate-800 dark:hover:text-slate-200"
-            onClick={[setLogs, []]}
-          >
-            Clear
-          </button>
-        </div>
-
-        <Show when={showLogs()}>
-          <ul class="text-xs overflow-auto px-2 divide-y dark:divide-slate-300">
-            <For each={logs()}>
-              {(log) => (
-                <li
-                  class="py-1"
-                  classList={{
-                    'text-blue-700 dark:text-gray-300': log.level === 'log',
-                    'text-yellow-500': log.level === 'warn',
-                    'text-red-700 dark:text-red-300': log.level === 'error',
-                  }}
-                >
-                  <code class="whitespace-pre-wrap">{log.args}</code>
-                </li>
-              )}
-            </For>
-          </ul>
-        </Show>
-      </div>
     </div>
   );
 };
@@ -277,8 +195,3 @@ type Props = JSX.HTMLAttributes<HTMLDivElement> & {
   reloadSignal: boolean;
   isDark: boolean;
 };
-
-interface LogPayload {
-  level: 'log' | 'warn' | 'error';
-  args: string;
-}

@@ -26,11 +26,10 @@ export const Error: Component<Props> = (props) => {
   const [isOpen, setIsOpen] = createSignal(false);
 
   return (
-    // @ts-expect-error Missing `onToggle` type
-    // The PR: https://github.com/ryansolid/dom-expressions/pull/110
-    // If we format this, the @ts-expect-error won't work 😭
-    // prettier-ignore
-    <details class="bg-red-200 text-red-800 p-2 border-t-2 border-red-300" onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+    <details
+      class="bg-red-200 text-red-800 p-2 border-t-2 border-red-300"
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
       <summary class="flex cursor-pointer">
         <Icon class="h-7 opacity-70" path={isOpen() ? chevronDown : chevronRight} />
         <code innerText={firstLine()}></code>

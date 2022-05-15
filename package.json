@@ -46,7 +46,7 @@
     "rollup-plugin-import-css": "^3.0.3",
     "rollup-plugin-windicss": "^1.8.4",
     "typescript": "^4.6.4",
-    "vite": "~2.9.8",
+    "vite": "^2.9.9",
     "vite-plugin-solid": "^2.2.6",
     "vite-plugin-windicss": "^1.8.4",
     "windicss": "^3.5.1",
