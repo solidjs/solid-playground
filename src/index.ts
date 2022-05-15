@@ -4,12 +4,8 @@ import 'virtual:windi.css';
 export { Repl } from './components/repl';
 export { processImport } from './utils/processImport';
 export { createTabList } from './utils/createTabList';
-
-export interface Tab {
-  name: string;
-  type: string;
-  source: string;
-}
+import type { Tab } from '../types/types';
+export type { Tab };
 
 export const defaultTabs: Tab[] = [
   {

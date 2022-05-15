@@ -3,7 +3,13 @@ import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
-  const [internal, external] = splitProps(props, ['code', 'isDark', 'class', 'reloadSignal']);
+  const [internal, external] = splitProps(props, [
+    'code',
+    'isDark',
+    'class',
+    'reloadSignal',
+    'devtools',
+  ]);
 
   let iframe!: HTMLIFrameElement;
 
@@ -25,9 +31,15 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
   });
 
+  createEffect(() => {
+    if (!iframe) return;
+    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', open: internal.devtools }, '*');
+  });
+
   const setDarkMode = () => {
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     doc?.body!.classList.toggle('dark', internal.isDark);
+    iframe.contentWindow!.postMessage({ event: 'THEME', dark: internal.isDark }, '*');
   };
 
   createEffect(() => {
@@ -97,19 +109,36 @@ export const Preview: Component<Props> = (props) => {
 		    </style>
 
         <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+        <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
         <script type="module">
           eruda.init({
+            tool: ["console", "elements", "network", "resources"],
             defaults: {
-              displaySize: 30
+              displaySize: 40,
+              theme: "${internal.isDark ? 'Dark' : 'Light'}"
             }
           });
+          eruda.add(erudaDom);
           eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
+          const style = Object.assign(document.createElement('link'), {
+            rel: 'stylesheet',
+            href: '/eruda.css'
+          });
+          eruda._shadowRoot.appendChild(style);
+          if (${internal.devtools}) eruda.show();
         </script>
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
             try {
               const { event, code } = data;
 
+              if (event === 'DEVTOOLS') {
+                if (data.open) eruda.show();
+                else eruda.hide();
+              } else if (event === 'THEME') {
+                eruda._devTools.config.set('theme', data.dark ? 'Dark' : 'Light');
+                eruda._$el[0].style.colorScheme = data.dark ? 'dark' : 'light';
+              }
               if (event !== 'CODE_UPDATE') return;
 
               window?.dispose?.();
@@ -193,5 +222,6 @@ export const Preview: Component<Props> = (props) => {
 type Props = JSX.HTMLAttributes<HTMLDivElement> & {
   code: string;
   reloadSignal: boolean;
+  devtools: boolean;
   isDark: boolean;
 };

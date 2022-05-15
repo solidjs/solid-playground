@@ -6,7 +6,6 @@ export declare const Repl: Component<{
   formatter?: Worker;
   isHorizontal: boolean;
   interactive: boolean;
-  actionBar: boolean;
   editableTabs: boolean;
   dark: boolean;
   tabs: Tab[];
@@ -30,6 +29,7 @@ interface PlaygroundFile {
   description?: string;
   files: {
     name: string;
+    type?: 'tsx' | 'css';
     content: string | string[];
   }[];
 }

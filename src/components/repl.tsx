@@ -1,8 +1,7 @@
-import { Component, Show, For, createSignal, createEffect, batch } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { refresh } from 'solid-heroicons/outline';
+import { refresh, terminal } from 'solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
-import type { editor as mEditor } from 'monaco-editor';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
@@ -10,6 +9,7 @@ import { GridResizer } from './gridResizer';
 import { Error } from './error';
 
 import type { Tab } from '../';
+import type { Repl as ReplProps } from '../../types/types';
 import { debounce } from '../utils/debounce';
 import { formatMs } from '../utils/formatTime';
 
@@ -26,24 +26,7 @@ type ValueOf<T> = T[keyof T];
 
 const id = (tab: Tab) => `${tab.name}.${tab.type}`;
 
-export interface ReplProps {
-  compiler: Worker;
-  formatter?: Worker;
-  isHorizontal: boolean;
-  interactive: boolean;
-  editableTabs: boolean;
-  dark: boolean;
-  tabs: Tab[];
-  id: string;
-  version?: string;
-  setTabs: (tab: Tab[]) => void;
-  current: string;
-  setCurrent: (tabId: string) => void;
-  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
-  ref?: HTMLDivElement | ((el: HTMLDivElement) => void);
-}
-
-export const Repl: Component<ReplProps> = (props) => {
+export const Repl: typeof ReplProps = (props) => {
   // this is bad style don't do this
   const { compiler, formatter } = props;
   let now: number;
@@ -259,6 +242,7 @@ export const Repl: Component<ReplProps> = (props) => {
   };
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
+  const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
 
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
@@ -424,6 +408,18 @@ export const Repl: Component<ReplProps> = (props) => {
             <Icon path={refresh} class="h-5" />
           </button>
         </TabItem>
+        <TabItem>
+          <button
+            type="button"
+            title="Open the devtools"
+            class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
+            onClick={() => setDevtoolsOpen(!devtoolsOpen())}
+            disabled={!showPreview()}
+          >
+            <span class="sr-only">Open the devtools</span>
+            <Icon path={terminal} class="h-5" />
+          </button>
+        </TabItem>
         <TabItem class="flex-1" active={showPreview()}>
           <button
             type="button"
@@ -488,6 +484,7 @@ export const Repl: Component<ReplProps> = (props) => {
         fallback={
           <Preview
             reloadSignal={reloadSignal()}
+            devtools={devtoolsOpen()}
             isDark={props.dark}
             code={store.compiled}
             class={`h-full w-full bg-white row-start-5 ${

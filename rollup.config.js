@@ -19,6 +19,7 @@ import { createReadStream, createWriteStream, readFileSync } from 'fs';
 
 const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.d.ts'];
 const copies = Object.create(null);
+copies['public/eruda.css'] = 'eruda.css';
 
 function copyFile(src, dest) {
   return new Promise((resolve, reject) => {
@@ -183,8 +184,7 @@ rollup({
       extensions: extensions,
       babelHelpers: 'bundled',
       presets: [
-        // We don't use solid because we want to preserve jsx
-        // ['babel-preset-solid', {}],
+        // We don't use dom-expressions to preserve jsx
         ['@babel/preset-typescript', { jsx: 'preserve' }],
       ],
       plugins: ['@babel/plugin-syntax-jsx'],

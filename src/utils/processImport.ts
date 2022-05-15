@@ -1,14 +1,4 @@
-import type { Tab } from '../';
-
-interface PlaygroundFile {
-  name?: string;
-  description?: string;
-  files: {
-    name: string;
-    type?: 'tsx' | 'css';
-    content: string | string[];
-  }[];
-}
+import type { Tab, PlaygroundFile } from '../../types/types';
 
 /**
  * This function transform a JSON file into a format understood by the playground
