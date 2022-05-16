@@ -1,0 +1,286 @@
+/* Inspired by https://replit.com */
+.eruda-entry-btn {
+  display: none !important;
+}
+div.eruda-dev-tools {
+  padding-top: 30px !important;
+}
+.eruda-nav-bar-container {
+  height: auto !important;
+}
+.eruda-nav-bar-container .eruda-bottom-bar {
+  display: none;
+}
+.eruda-nav-bar {
+  border: none !important;
+}
+.eruda-nav-bar-item {
+  padding: 8px !important;
+  line-height: 14px !important;
+  height: auto !important;
+  transition: none !important;
+}
+.eruda-nav-bar-item:nth-child(5) {
+  text-transform: uppercase !important;
+}
+.eruda-console-container {
+  padding-top: 34px !important;
+  padding-bottom: 32px !important;
+}
+.eruda-control {
+  padding: 4px 8px !important;
+  height: auto !important;
+}
+.eruda-filter {
+  padding: 6px 8px !important;
+  height: auto !important;
+  border-radius: 16px !important;
+  line-height: 12px !important;
+  transition: none !important;
+}
+.eruda-icon-clear,
+.eruda-icon-search {
+  line-height: 16px !important;
+  padding: 4px !important;
+  top: 4px !important;
+  transition: none !important;
+}
+.eruda-icon-clear:hover,
+.eruda-icon-search {
+  right: 4px !important;
+}
+.eruda-icon-clear {
+  right: 32px !important;
+  left: auto !important;
+}
+.eruda-js-input {
+  height: 32px !important;
+}
+.eruda-js-input.eruda-active {
+  height: 100% !important;
+  border-top: none !important;
+}
+.eruda-js-input.eruda-active textarea {
+  padding-left: 8px !important;
+}
+.eruda-js-input textarea {
+  line-height: 22px !important;
+  padding-left: 32px !important;
+}
+.eruda-js-input .eruda-icon-arrow-right {
+  line-height: 31px !important;
+  margin-right: 4px !important;
+}
+.eruda-buttons {
+  height: auto !important;
+  padding: 4px !important;
+}
+.eruda-button {
+  border: none !important;
+  border-radius: 8px !important;
+  margin: 4px !important;
+  width: calc(50% - 8px) !important;
+  height: auto !important;
+  font-size: 14px !important;
+  line-height: 14px !important;
+  padding: 8px !important;
+}
+.eruda-log-content {
+  font-size: 14px !important;
+  line-height: 22px !important;
+  margin-left: 12px !important;
+}
+.eruda-icon-arrow-left,
+.eruda-log-item .eruda-icon {
+  line-height: 26px !important;
+}
+.eruda-parents {
+  border: none !important;
+  padding: 8px 8px 0 !important;
+}
+.eruda-parent {
+  margin-right: 2px !important;
+}
+.erudaparents .eruda-icon-arrow-right {
+  margin-right: 2px !important;
+}
+.eruda-breadcrumb {
+  border: none !important;
+  font-size: 20px !important;
+  line-height: 24px !important;
+  padding: 8px !important;
+  pointer-events: none !important;
+  margin-bottom: 0 !important;
+}
+#eruda-elements ul.eruda-children {
+  margin-bottom: 16px !important;
+}
+.eruda-elements .eruda-child {
+  transition: none !important;
+}
+.eruda-section {
+  margin-bottom: 16px !important;
+}
+.eruda-section h2 {
+  border-top: none !important;
+  padding: 4px 8px !important;
+}
+.eruda-table-wrapper {
+  font-size: 14px !important;
+  line-height: 22px !important;
+  border-top: none !important;
+}
+.eruda-table-wrapper td {
+  padding: 4px 8px !important;
+}
+div#eruda-elements div.eruda-styles div.eruda-style-wrapper {
+  padding: 0 !important;
+}
+div#eruda-elements .eruda-styles .eruda-style-wrapper .eruda-style-rules {
+  border: none !important;
+  padding: 8px !important;
+  margin-bottom: 0 !important;
+  font-size: 14px !important;
+  line-height: 22px !important;
+}
+#eruda-elements .eruda-bottom-bar {
+  height: auto !important;
+  padding: 4px !important;
+}
+#eruda-elements .eruda-bottom-bar .eruda-btn {
+  border-radius: 8px !important;
+  margin: 4px !important;
+  width: calc(33.3333333333% - 8px) !important;
+  height: auto !important;
+  font-size: 14px !important;
+  line-height: 14px !important;
+  padding: 8px !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+#eruda-elements .eruda-bottom-bar .eruda-select {
+  display: none !important;
+}
+#eruda-elements .eruda-bottom-bar .eruda-icon-refresh:before {
+  content: 'Refresh' !important;
+  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma,
+    sans-serif;
+}
+#eruda-elements .eruda-bottom-bar .eruda-icon-eye:before {
+  content: 'Toggle highlight' !important;
+  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma,
+    sans-serif;
+}
+#eruda-elements .eruda-bottom-bar .eruda-icon-reset:before {
+  content: 'Reset to root' !important;
+  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma,
+    sans-serif;
+}
+.luna-notification-item {
+  padding: 8px !important;
+  border-radius: 8px !important;
+}
+#eruda-network .eruda-title {
+  height: auto !important;
+  padding: 8px !important;
+}
+#eruda-network .eruda-requests li {
+  font-size: 14px !important;
+  line-height: 22px !important;
+}
+.eruda-inspect {
+  height: auto !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+  font-size: 14px !important;
+  line-height: 14px !important;
+  cursor: pointer !important;
+  text-transform: lowercase !important;
+}
+.eruda-inspect:first-letter {
+  text-transform: uppercase !important;
+}
+#eruda-settings .eruda-separator {
+  height: 12px !important;
+}
+#eruda-settings .eruda-text {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  line-height: 18px !important;
+}
+#eruda-settings .eruda-select .eruda-head {
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+  line-height: 22px !important;
+  text-transform: lowercase !important;
+  transition: none !important;
+}
+#eruda-settings .eruda-select .eruda-head:first-letter {
+  text-transform: uppercase !important;
+}
+#eruda-settings .eruda-select li {
+  font-size: 14px !important;
+  line-height: 22px !important;
+  padding: 4px 8px !important;
+  transition: none !important;
+}
+#eruda-settings .eruda-range .eruda-head {
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+  line-height: 22px !important;
+  text-transform: lowercase !important;
+  transition: none !important;
+}
+#eruda-settings1,
+#eruda-settings2,
+.eruda-separator:first-child {
+  display: none !important;
+}
+#eruda-settings .eruda-range .eruda-head:first-letter {
+  text-transform: uppercase !important;
+}
+div#eruda-settings .eruda-range .eruda-input-container .eruda-range-track {
+  top: 19px !important;
+}
+#eruda-settings .eruda-switch {
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+  line-height: 22px !important;
+  text-transform: lowercase !important;
+}
+#eruda-settings .eruda-switch:first-letter {
+  text-transform: uppercase !important;
+}
+#eruda-settings .eruda-switch .eruda-checkbox {
+  border: none !important;
+  width: 40px !important;
+  padding: 0 !important;
+}
+#eruda-settings .eruda-switch .eruda-checkbox .eruda-label {
+  border-radius: 8px !important;
+  height: 100% !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+#eruda-settings .eruda-switch .eruda-checkbox .eruda-handle {
+  border-radius: 6px !important;
+  height: 16px !important;
+  width: 16px !important;
+  top: 2px !important;
+  left: 2px !important;
+  box-shadow: none !important;
+}
+#eruda-settings .eruda-switch .eruda-checkbox .eruda-handle:before {
+  display: none !important;
+}
+#eruda-settings .eruda-switch .eruda-checkbox .eruda-input:checked ~ .eruda-handle {
+  left: 22px !important;
+}
+.eruda-nav-bar-item[data-name='console'][data-counter]:after {
+  border-radius: 7px;
+  content: attr(data-counter);
+  display: inline-block;
+  margin-left: 3px;
+  width: 14px;
+}

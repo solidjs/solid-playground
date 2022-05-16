@@ -133,7 +133,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               Reset
             </button>
           </div>
-          <div className="mt-10">
+          <div class="mt-10">
             <label class="block my-3 cursor-pointer dark:text-white">
               <input
                 type="checkbox"

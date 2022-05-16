@@ -10,8 +10,6 @@ import dd from 'dedent';
 
 type TransformFunction = (code: string, opts: { babel: any; solid: any }) => any;
 
-globalThis.window = globalThis as typeof window;
-
 const CDN_URL = 'https://cdn.skypack.dev';
 const SOLID_VERSION = pkg.dependencies['solid-js'];
 
