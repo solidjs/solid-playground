@@ -22,9 +22,9 @@
     "prepublishOnly": "pnpm build:lib"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.10",
-    "@babel/plugin-syntax-jsx": "^7.16.7",
-    "@babel/types": "^7.17.10",
+    "@babel/core": "^7.17.12",
+    "@babel/plugin-syntax-jsx": "^7.17.12",
+    "@babel/types": "^7.17.12",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-json": "^4.1.0",
@@ -54,8 +54,8 @@
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
-    "@babel/preset-typescript": "^7.16.7",
-    "@babel/standalone": "^7.17.11",
+    "@babel/preset-typescript": "^7.17.12",
+    "@babel/standalone": "^7.17.12",
     "babel-preset-solid": "1.4.0",
     "dedent": "^0.7.0",
     "jszip": "^3.9.1",
