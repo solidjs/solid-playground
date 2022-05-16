@@ -45,7 +45,6 @@ div.eruda-dev-tools {
   top: 4px !important;
   transition: none !important;
 }
-.eruda-icon-clear:hover,
 .eruda-icon-search {
   right: 4px !important;
 }
@@ -90,7 +89,6 @@ div.eruda-dev-tools {
   line-height: 22px !important;
   margin-left: 12px !important;
 }
-.eruda-icon-arrow-left,
 .eruda-log-item .eruda-icon {
   line-height: 26px !important;
 }
