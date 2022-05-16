@@ -87,7 +87,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
     >
       <button
         type="button"
-        class="dark:text-white md:text-white flex flex-row space-x-2 items-center w-full md:px-3 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
+        class="flex flex-row space-x-2 items-center w-full md:px-3 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
         classList={{
           'bg-gray-900': open() && !props.showMenu,
           'bg-gray-300 dark:text-black': open() && props.showMenu,

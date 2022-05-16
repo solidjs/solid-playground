@@ -15,8 +15,8 @@ export default {
         },
         solid: {
           default: '#2c4f7c',
-          darkbg: '#3e3e3e',
-          darkLighterBg: '#595959',
+          darkbg: '#222222',
+          darkLighterBg: '#444444',
           darkdefault: '#b8d7ff', //'#87b1e6',
           darkgray: '#252525',
           gray: '#414042',

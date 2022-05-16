@@ -63,7 +63,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center bg-brand-default text-white"
+      class="p-2 flex text-sm justify-between items-center bg-white dark:bg-solid-darkbg dark:text-white text-black"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
@@ -92,7 +92,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={props.toggleDark}
-              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
+              class="flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
                 'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
@@ -108,7 +108,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={() => exportToZip(props.tabs)}
-              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
+              class="flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
                 'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
@@ -121,7 +121,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={shareLink}
-              class="md:text-white flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded"
+              class="flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded"
               classList={{
                 'opacity-80 hover:opacity-100': !copy(),
                 'text-green-100': copy() && !showMenu(),
@@ -142,18 +142,18 @@ export const Header: Component<{
           classList={{
             'border-white border': showMenu(),
           }}
-          class="px-3 py-2 focus:outline-none focus:ring-1 rounded text-white opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
+          class="px-3 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100 visible relative md:hidden m-0 mr-[10px]"
           title="Mobile Menu Button"
           ref={menuBtnEl}
         >
           <Show when={showMenu()} fallback={<Icon path={menu} class="h-6 w-6" />}>
             <Icon path={xCircle} class="h-[22px] w-[22px]" /* adjusted to account for border */ />
           </Show>
-          <span class="sr-only text-black md:text-white">Show menu</span>
+          <span class="sr-only">Show menu</span>
         </button>
-        <div class="-mb-1 leading-snug text-white bg-transparent border-transparent hover:border-white cursor-pointer">
+        <div class="-mb-1 leading-snug cursor-pointer">
           <a
-            href={`https://api.solidjs.com/auth/login?redirect=${window.location.href}/login?auth=success`}
+            href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}
           >
             Login
           </a>
