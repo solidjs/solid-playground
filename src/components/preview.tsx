@@ -112,7 +112,7 @@ export const Preview: Component<Props> = (props) => {
         <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
         <script type="module">
           eruda.init({
-            tool: ["console", "elements", "network", "resources"],
+            tool: ["console", "network", "resources", "elements"],
             defaults: {
               displaySize: 40,
               theme: "${internal.isDark ? 'Dark' : 'Light'}"
