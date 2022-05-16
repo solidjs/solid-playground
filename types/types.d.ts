@@ -10,7 +10,6 @@ export declare const Repl: Component<{
   dark: boolean;
   tabs: Tab[];
   id: string;
-  version?: string;
   setTabs: (tab: Tab[]) => void;
   current: string;
   setCurrent: (tabId: string) => void;

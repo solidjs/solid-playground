@@ -133,10 +133,10 @@ export const Repl: typeof ReplProps = (props) => {
   createEffect(() => showPreview() && setStore('mode', 'DOM'));
 
   compiler.addEventListener('message', ({ data }) => {
-    const { event, result } = data;
+    const { event } = data;
 
     if (event === 'RESULT') {
-      const [error, compiled] = result;
+      const { compiled, error } = data;
 
       if (error) return setStore({ error });
       if (!compiled) return;
@@ -152,20 +152,16 @@ export const Repl: typeof ReplProps = (props) => {
    * it takes ~15ms to compile with the web worker...
    * Also, real time feedback can be stressful
    */
-  const applyCompilation = debounce(
-    (tabs: Tab[], compileOpts: Record<string, any>, solidVersion?: string) => {
-      setStore('isCompiling', true);
-      now = performance.now();
+  const applyCompilation = debounce((tabs: Tab[], compileOpts: Record<string, any>) => {
+    setStore('isCompiling', true);
+    now = performance.now();
 
-      compiler.postMessage({
-        event: 'COMPILE',
-        tabs,
-        compileOpts,
-        solidVersion,
-      });
-    },
-    250,
-  );
+    compiler.postMessage({
+      event: 'COMPILE',
+      tabs,
+      compileOpts,
+    });
+  }, 250);
 
   /**
    * The heart of the playground. This recompile on
@@ -173,7 +169,7 @@ export const Repl: typeof ReplProps = (props) => {
    */
   createEffect(() => {
     for (const tab of props.tabs) tab.source;
-    applyCompilation(unwrap(props.tabs), unwrap(compileMode[store.mode]), props.version);
+    applyCompilation(unwrap(props.tabs), unwrap(compileMode[store.mode]));
   });
 
   /**

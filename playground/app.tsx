@@ -3,9 +3,7 @@ import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import type { editor as mEditor } from 'monaco-editor';
 
-import pkg from '../package.json';
 import { eventBus } from './utils/eventBus';
 import { createTabList, defaultTabs, processImport, Repl } from '../src';
 import { Update } from './components/update';
@@ -56,10 +54,6 @@ export const App = (): JSX.Element => {
   const [current, setCurrent] = createSignal('main.tsx');
 
   const params = Object.fromEntries(url.searchParams.entries());
-  const [version, setVersion] = createSignal(params.version || pkg.dependencies['solid-js']);
-
-  const [format, setFormat] = createSignal(false);
-  let editor: mEditor.IStandaloneCodeEditor | undefined;
 
   if (params.data && isValidUrl(params.data)) {
     fetch(params.data)
@@ -124,20 +118,10 @@ export const App = (): JSX.Element => {
               setDark(toggledValue);
               localStorage.setItem('dark', String(toggledValue));
             }}
-            formatCode={() => {
-              if (!format()) {
-                editor?.getAction('editor.action.formatDocument').run();
-                editor?.focus();
-              }
-              setFormat(true);
-              setTimeout(setFormat, 750, false);
-            }}
             isHorizontal={isHorizontal}
             tabs={tabs()}
             setTabs={setTabs}
             setCurrent={setCurrent}
-            onVersionChange={setVersion}
-            version={version()}
           />
         }
         fallback={<div classList={{ 'md:col-span-2': !isHorizontal }}></div>}
@@ -154,11 +138,7 @@ export const App = (): JSX.Element => {
         setTabs={setTabs}
         current={current()}
         setCurrent={setCurrent}
-        version={version()}
         id="repl"
-        onEditorReady={(_editor) => {
-          editor = _editor;
-        }}
       />
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />

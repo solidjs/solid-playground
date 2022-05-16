@@ -1,5 +1,4 @@
 import type { Tab } from '../';
-import pkg from '../../package.json';
 
 import { transform } from '@babel/standalone';
 // @ts-ignore
@@ -8,60 +7,14 @@ import babelPresetSolid from 'babel-preset-solid';
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 import dd from 'dedent';
 
-type TransformFunction = (code: string, opts: { babel: any; solid: any }) => any;
-
 const CDN_URL = 'https://cdn.skypack.dev';
-const SOLID_VERSION = pkg.dependencies['solid-js'];
 
 const tabsLookup = new Map<string, Tab>();
-const versionManager = new Map<string, TransformFunction>();
 
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
-}
-
-async function loadBabel(solidVersion: string) {
-  if (versionManager.has(solidVersion)) {
-    return versionManager.get(solidVersion)!;
-  }
-
-  let solid: any;
-
-  try {
-    const preset =
-      solidVersion === SOLID_VERSION
-        ? await Promise.resolve({ default: babelPresetSolid })
-        : await import(/* @vite-ignore */ `https://esm.sh/babel-preset-solid@${solidVersion}`);
-
-    solid = preset.default;
-  } catch {
-    solid = babelPresetSolid;
-  }
-
-  const babel = (code: string, opts: { babel: any; solid: any } = { babel: {}, solid: {} }) =>
-    transform(code, {
-      presets: [
-        [solid, { ...opts.solid }],
-        ['typescript', { onlyRemoveTypeImports: true }],
-      ],
-      ...opts.babel,
-    });
-
-  versionManager.set(solidVersion, babel);
-
-  return babel;
-}
-
-/**
- * This function helps identify each section of the final compiled
- * output from the rollup concatenation.
- *
- * @param tab {Tab} - A tab
- */
-function generateCodeString(tab: Tab) {
-  return `/* source: ${tab.name}.${tab.type} */\n${tab.source}`;
 }
 
 /**
@@ -71,19 +24,13 @@ function generateCodeString(tab: Tab) {
  *
  * Note: Passing in the Solid Version for later use
  */
-function virtual({
-  solidVersion,
-  solidOptions = {},
-}: {
-  solidVersion: string;
-  solidOptions: unknown;
-}) {
+function virtual({ solidOptions = {} }: { solidOptions: unknown }) {
   return {
     name: 'repl-plugin',
 
     async resolveId(importee: string) {
-      if (importee.startsWith('.') && importee.endsWith('.css')) return importee;
       // This is a tab being imported
+      if (importee.startsWith('.') && importee.endsWith('.css')) return importee;
       if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
 
       // External URL
@@ -96,14 +43,13 @@ function virtual({
 
       // NPM module via ESM CDN
       return {
-        id: `${CDN_URL}/${importee.replace('solid-js', `solid-js@${solidVersion}`)}`,
+        id: `${CDN_URL}/${importee}`,
         external: true,
       };
     },
 
     async load(id: string) {
-      const tab = tabsLookup.get(id);
-      return tab ? generateCodeString(tab) : null;
+      return tabsLookup.get(id)?.source;
     },
 
     async transform(code: string, filename: string) {
@@ -129,9 +75,13 @@ function virtual({
 
       // Compile solid code
       if (/\.(j|t)sx$/.test(filename)) {
-        const babel = await loadBabel(solidVersion);
-
-        return babel(code, { solid: solidOptions, babel: { filename } });
+        return transform(code, {
+          presets: [
+            [babelPresetSolid, solidOptions],
+            ['typescript', { onlyRemoveTypeImports: true }],
+          ],
+          filename,
+        });
       }
     },
   };
@@ -140,8 +90,7 @@ function virtual({
 async function compile(
   tabs: Tab[],
   solidOptions = {},
-  solidVersion: string,
-): Promise<[string, null] | [null, string]> {
+): Promise<{ compiled: string } | { error: string }> {
   try {
     for (const tab of tabs) {
       tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
@@ -149,28 +98,28 @@ async function compile(
 
     const compiler = await rollup({
       input: `./${tabs[0].name}`,
-      plugins: [virtual({ solidVersion: solidVersion, solidOptions })],
+      plugins: [virtual({ solidOptions })],
     });
 
     const {
       output: [{ code }],
     } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
-    return [null, code as string];
+    return { compiled: code as string };
   } catch (e) {
-    return [(e as Error).message, null];
+    return { error: (e as Error).message };
   }
 }
 
 self.addEventListener('message', async ({ data }) => {
-  const { event, tabs, compileOpts, solidVersion = SOLID_VERSION } = data;
+  const { event, tabs, compileOpts } = data;
 
   switch (event) {
     case 'COMPILE':
       // @ts-ignore
       self.postMessage({
         event: 'RESULT',
-        result: await compile(tabs, compileOpts, solidVersion),
+        ...(await compile(tabs, compileOpts)),
       });
       break;
   }
