@@ -35,16 +35,6 @@ div[contenteditable='true']:focus {
   }
 }
 
-.tabs {
-  @apply relative;
-}
-
-.tabs::after {
-  content: '';
-  height: 2px;
-  @apply absolute w-full left-0 bottom-0 bg-slate-200 dark:bg-slate-700 z-0;
-}
-
 textarea.monaco-mouse-cursor-text:focus {
   box-shadow: unset;
 }

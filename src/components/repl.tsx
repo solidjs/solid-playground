@@ -222,8 +222,7 @@ export const Repl: typeof ReplProps = (props) => {
   const changeTop = (_clientX: number, clientY: number) => {
     // Adjust the reading according to the height of the resizable panes
     const headerSize = document.body.offsetHeight - grid()!.offsetHeight;
-    const clientYAdjusted =
-      clientY - headerSize - fileTabs()!.offsetHeight - verticalResizer()!.offsetHeight / 2;
+    const clientYAdjusted = clientY - headerSize - fileTabs()!.offsetHeight - verticalResizer()!.offsetHeight / 2;
     const heightAdjusted =
       document.body.offsetHeight -
       headerSize -
@@ -250,7 +249,7 @@ export const Repl: typeof ReplProps = (props) => {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="relative grid bg-slate-50 h-full text-slate-900 dark:text-slate-50 font-sans overflow-hidden"
+      class="grid h-full text-slate-900 dark:text-slate-50 font-sans overflow-hidden"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
@@ -262,7 +261,7 @@ export const Repl: typeof ReplProps = (props) => {
         '--bottom': `${2 - top()}fr`,
       }}
     >
-      <nav class="row-start-1 flex items-center dark:bg-solid-darkLighterBg ">
+      <nav class="row-start-1 flex items-center">
         <TabList ref={(el) => setFileTabs(el)} class="flex-1">
           <For each={props.tabs}>
             {(tab, index) => (
@@ -271,7 +270,7 @@ export const Repl: typeof ReplProps = (props) => {
                   type="button"
                   onClick={() => actions.setCurrentTab(id(tab))}
                   onDblClick={() => {
-                    if (index() <= 0 || !props.interactive) return;
+                    if (index() <= 0) return;
                     setEdit(index());
                     tabRefs.get(id(tab))?.focus();
                   }}
@@ -294,10 +293,7 @@ export const Repl: typeof ReplProps = (props) => {
                   >
                     {tab.name}
                   </span>
-                  <Show
-                    when={props.current === id(tab) && edit() >= 0}
-                    fallback={<span>.{tab.type}</span>}
-                  >
+                  <Show when={props.current === id(tab) && edit() >= 0} fallback={<span>.{tab.type}</span>}>
                     <select
                       class="dark:bg-gray-700 bg-none p-0"
                       value={tab.type}
@@ -316,24 +312,13 @@ export const Repl: typeof ReplProps = (props) => {
                   <button
                     type="button"
                     class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
-                    disabled={!props.interactive}
                     onClick={() => {
-                      if (!props.interactive) return;
                       actions.removeTab(id(tab));
                     }}
                   >
                     <span class="sr-only">Delete this tab</span>
-                    <svg
-                      style="stroke: currentColor; fill: none;"
-                      class="h-4 opacity-60"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg style="stroke: currentColor; fill: none;" class="h-4 opacity-60" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </Show>
@@ -341,48 +326,30 @@ export const Repl: typeof ReplProps = (props) => {
             )}
           </For>
 
-          <Show when={props.editableTabs}>
-            <li class="inline-flex items-center m-0 border-b-2 border-transparent">
-              <button
-                type="button"
-                class="focus:outline-none"
-                onClick={props.interactive ? actions.addTab : undefined}
-                disabled={!props.interactive}
-                title="Add a new tab"
+          <li class="inline-flex items-center m-0 border-b-2 border-transparent">
+            <button type="button" class="focus:outline-none" onClick={actions.addTab} title="Add a new tab">
+              <span class="sr-only">Add a new tab</span>
+              <svg
+                viewBox="0 0 24 24"
+                style="stroke: currentColor; fill: none;"
+                class="h-5 text-brand-default dark:text-slate-50"
               >
-                <span class="sr-only">Add a new tab</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  style="stroke: currentColor; fill: none;"
-                  class="h-5 text-brand-default dark:text-slate-50"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-              </button>
-            </li>
-          </Show>
-          <label
-            for="display-errors"
-            class="ml-auto relative justify-self-end inline-flex text-sm font-sans 
-          leading-snug items-center bg-opacity-0 
-          hover:bg-opacity-5 overflow-hidden space-x-2 
-          dark:text-white
-          border-solid border-brand-default dark:border-gray-200 border-opacity-5 dark:border-opacity-5 border-b-2 px-3 py-2  dark:bg-solid-darkLighterBg cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              id="display-errors"
-              name="display-errors"
-              checked={displayErrors()}
-              onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
-            />
-            <span>Display Errors</span>
-          </label>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+          </li>
+          <TabItem class="ml-auto justify-self-end">
+            <label for="display-errors" class="space-x-2 px-3 py-2 cursor-pointer">
+              <input
+                type="checkbox"
+                id="display-errors"
+                name="display-errors"
+                checked={displayErrors()}
+                onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
+              />
+              <span>Display Errors</span>
+            </label>
+          </TabItem>
         </TabList>
       </nav>
 
@@ -417,20 +384,12 @@ export const Repl: typeof ReplProps = (props) => {
           </button>
         </TabItem>
         <TabItem class="flex-1" active={showPreview()}>
-          <button
-            type="button"
-            class="w-full focus:outline-none -mb-0.5 py-2 px-3"
-            onClick={[setShowPreview, true]}
-          >
+          <button type="button" class="w-full focus:outline-none -mb-0.5 py-2 px-3" onClick={[setShowPreview, true]}>
             Result
           </button>
         </TabItem>
         <TabItem class="flex-1" active={!showPreview()}>
-          <button
-            type="button"
-            class="w-full focus:outline-none -mb-0.5 py-2 px-3"
-            onClick={[setShowPreview, false]}
-          >
+          <button type="button" class="w-full focus:outline-none -mb-0.5 py-2 px-3" onClick={[setShowPreview, false]}>
             Output
           </button>
         </TabItem>
@@ -444,7 +403,6 @@ export const Repl: typeof ReplProps = (props) => {
           onDocChange={handleDocChange}
           class="flex-1 overflow-auto focus:outline-none bg-slate-50 dark:bg-yellow-400"
           styles={{ backgroundColor: '#F8FAFC' }}
-          disabled={!props.interactive}
           canFormat
           formatter={formatter}
           isDark={props.dark}
@@ -483,9 +441,7 @@ export const Repl: typeof ReplProps = (props) => {
             devtools={devtoolsOpen()}
             isDark={props.dark}
             code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${
-              props.isHorizontal ? '' : 'md:row-start-2'
-            }`}
+            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'}`}
           />
         }
       >

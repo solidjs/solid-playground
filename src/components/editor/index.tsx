@@ -9,7 +9,7 @@ interface Props {
   };
   class?: string;
   url: string;
-  disabled: boolean;
+  disabled?: true;
   styles: Record<string, string>;
   canFormat?: boolean;
   isDark?: boolean;
@@ -107,13 +107,7 @@ const Editor: Component<Props> = (props) => {
     });
   });
 
-  return (
-    <div
-      class={`p-0 dark:text-white ${props.class || ''}`}
-      classList={props.classList}
-      ref={parent}
-    />
-  );
+  return <div class={`p-0 dark:text-white ${props.class || ''}`} classList={props.classList} ref={parent} />;
 };
 
 export default Editor;

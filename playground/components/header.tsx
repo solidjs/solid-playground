@@ -63,7 +63,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center bg-white dark:bg-solid-darkbg dark:text-white text-black"
+      class="p-2 flex text-sm justify-between items-center bg-white dark:bg-solid-darkbg dark:text-white text-black border-slate-200 dark:border-neutral-800 border-b-2px"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
@@ -74,7 +74,7 @@ export const Header: Component<{
           Solid<b>JS</b> Playground
         </span>
       </h1>
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center">
         <Dismiss
           classList={{ 'absolute top-[53px] right-[10px] w-[fit-content] z-10': showMenu() }}
           menuButton={() => menuBtnEl}
@@ -151,12 +151,8 @@ export const Header: Component<{
           </Show>
           <span class="sr-only">Show menu</span>
         </button>
-        <div class="-mb-1 leading-snug cursor-pointer">
-          <a
-            href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}
-          >
-            Login
-          </a>
+        <div class="mx-2 -mb-1 leading-snug cursor-pointer">
+          <a href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}>Login</a>
         </div>
       </div>
     </header>

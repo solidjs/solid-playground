@@ -87,10 +87,7 @@ function virtual({ solidOptions = {} }: { solidOptions: unknown }) {
   };
 }
 
-async function compile(
-  tabs: Tab[],
-  solidOptions = {},
-): Promise<{ compiled: string } | { error: string }> {
+async function compile(tabs: Tab[], solidOptions = {}): Promise<{ compiled: string } | { error: string }> {
   try {
     for (const tab of tabs) {
       tabsLookup.set(`./${tab.name}.${tab.type}`, tab);

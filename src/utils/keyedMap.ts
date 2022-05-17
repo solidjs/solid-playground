@@ -4,11 +4,7 @@ import { onCleanup, createEffect, createSignal, untrack, createRoot } from 'soli
 // This version is designed to call a function on creation and onCleanup on removal
 // for a certain keying function (the by parameter)
 // this does not return any values, and is designed as more of a hook
-export const keyedMap = <T>(props: {
-  by: (a: T) => string;
-  children: (a: () => T) => void;
-  each: T[];
-}): void => {
+export const keyedMap = <T>(props: { by: (a: T) => string; children: (a: () => T) => void; each: T[] }): void => {
   const key = props.by;
   const mapFn = props.children;
   const disposers = new Map();

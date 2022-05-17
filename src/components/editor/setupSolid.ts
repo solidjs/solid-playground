@@ -96,10 +96,7 @@ editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
 
 const hookLanguages = languages.setLanguageConfiguration;
 
-languages.setLanguageConfiguration = (
-  languageId: string,
-  configuration: languages.LanguageConfiguration,
-) => {
+languages.setLanguageConfiguration = (languageId: string, configuration: languages.LanguageConfiguration) => {
   liftOff();
   return hookLanguages(languageId, configuration);
 };

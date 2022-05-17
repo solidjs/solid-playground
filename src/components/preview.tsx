@@ -3,13 +3,7 @@ import useZoom from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
-  const [internal, external] = splitProps(props, [
-    'code',
-    'isDark',
-    'class',
-    'reloadSignal',
-    'devtools',
-  ]);
+  const [internal, external] = splitProps(props, ['code', 'isDark', 'class', 'reloadSignal', 'devtools']);
 
   let iframe!: HTMLIFrameElement;
 
@@ -20,8 +14,7 @@ export const Preview: Component<Props> = (props) => {
 
   createEffect(() => {
     // HACK: This helps prevent unnecessary updates
-    const isNotDom =
-      internal.code.includes('getNextElement') || internal.code.includes('getHydrationKey');
+    const isNotDom = internal.code.includes('getNextElement') || internal.code.includes('getHydrationKey');
 
     const isEmpty = !internal.code;
 

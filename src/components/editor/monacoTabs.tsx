@@ -12,9 +12,7 @@ const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> =
   const model = editor.createModel('', 'typescript', fileUri);
 
   createEffect(() => {
-    model.setValue(
-      props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9][0-9.\-a-z]+)/g, ''),
-    );
+    model.setValue(props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9][0-9.\-a-z]+)/g, ''));
   });
   onCleanup(() => model.dispose());
 
@@ -25,11 +23,7 @@ const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> =
     },
     children: (tab) => {
       const uri = Uri.parse(`file:///${props.folder}/${tab().name}.${tab().type}`);
-      const model = editor.createModel(
-        tab().source,
-        tab().type === 'tsx' ? 'typescript' : 'css',
-        uri,
-      );
+      const model = editor.createModel(tab().source, tab().type === 'tsx' ? 'typescript' : 'css', uri);
 
       let first = true;
       createEffect(() => {

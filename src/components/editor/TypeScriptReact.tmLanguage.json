@@ -7,11 +7,7 @@
   "version": "https://github.com/microsoft/TypeScript-TmLanguage/commit/d3c203d25a1df5def83082a47d1fe20fda2e80df",
   "name": "TypeScriptReact",
   "scopeName": "source.tsx",
-  "patterns": [
-    { "include": "#directives" },
-    { "include": "#statements" },
-    { "include": "#shebang" }
-  ],
+  "patterns": [{ "include": "#directives" }, { "include": "#statements" }, { "include": "#shebang" }],
   "repository": {
     "shebang": {
       "name": "comment.line.shebang.tsx",
@@ -291,11 +287,7 @@
       ]
     },
     "var-single-variable-type-annotation": {
-      "patterns": [
-        { "include": "#type-annotation" },
-        { "include": "#string" },
-        { "include": "#comment" }
-      ]
+      "patterns": [{ "include": "#type-annotation" }, { "include": "#string" }, { "include": "#comment" }]
     },
     "destructuring-variable": {
       "patterns": [
@@ -351,10 +343,7 @@
         {
           "begin": "(?x)(?=((\\b(?<!\\$)0(?:x|X)[0-9a-fA-F][0-9a-fA-F_]*(n)?\\b(?!\\$))|(\\b(?<!\\$)0(?:b|B)[01][01_]*(n)?\\b(?!\\$))|(\\b(?<!\\$)0(?:o|O)?[0-7][0-7_]*(n)?\\b(?!\\$))|((?<!\\$)(?:\n  (?:\\b[0-9][0-9_]*(\\.)[0-9][0-9_]*[eE][+-]?[0-9][0-9_]*(n)?\\b)| # 1.1E+3\n  (?:\\b[0-9][0-9_]*(\\.)[eE][+-]?[0-9][0-9_]*(n)?\\b)|             # 1.E+3\n  (?:\\B(\\.)[0-9][0-9_]*[eE][+-]?[0-9][0-9_]*(n)?\\b)|             # .1E+3\n  (?:\\b[0-9][0-9_]*[eE][+-]?[0-9][0-9_]*(n)?\\b)|                 # 1E+3\n  (?:\\b[0-9][0-9_]*(\\.)[0-9][0-9_]*(n)?\\b)|                      # 1.1\n  (?:\\b[0-9][0-9_]*(\\.)(n)?\\B)|                                  # 1.\n  (?:\\B(\\.)[0-9][0-9_]*(n)?\\b)|                                  # .1\n  (?:\\b[0-9][0-9_]*(n)?\\b(?!\\.))                                 # 1\n)(?!\\$))|([_$[:alpha:]][_$[:alnum:]]*)|(\\'([^\\'\\\\]|\\\\.)*\\')|(\\\"([^\\\"\\\\]|\\\\.)*\\\")|(\\`([^\\`\\\\]|\\\\.)*\\`)|(\\[([^\\[\\]]|\\[[^\\[\\]]*\\])+\\]))\\s*(:))",
           "end": "(?=,|\\})",
-          "patterns": [
-            { "include": "#object-binding-element-propertyName" },
-            { "include": "#binding-element" }
-          ]
+          "patterns": [{ "include": "#object-binding-element-propertyName" }, { "include": "#binding-element" }]
         },
         { "include": "#object-binding-pattern" },
         { "include": "#destructuring-variable-rest" },
@@ -368,10 +357,7 @@
         {
           "begin": "(?x)(?=((\\b(?<!\\$)0(?:x|X)[0-9a-fA-F][0-9a-fA-F_]*(n)?\\b(?!\\$))|(\\b(?<!\\$)0(?:b|B)[01][01_]*(n)?\\b(?!\\$))|(\\b(?<!\\$)0(?:o|O)?[0-7][0-7_]*(n)?\\b(?!\\$))|((?<!\\$)(?:\n  (?:\\b[0-9][0-9_]*(\\.)[0-9][0-9_]*[eE][+-]?[0-9][0-9_]*(n)?\\b)| # 1.1E+3\n  (?:\\b[0-9][0-9_]*(\\.)[eE][+-]?[0-9][0-9_]*(n)?\\b)|             # 1.E+3\n  (?:\\B(\\.)[0-9][0-9_]*[eE][+-]?[0-9][0-9_]*(n)?\\b)|             # .1E+3\n  (?:\\b[0-9][0-9_]*[eE][+-]?[0-9][0-9_]*(n)?\\b)|                 # 1E+3\n  (?:\\b[0-9][0-9_]*(\\.)[0-9][0-9_]*(n)?\\b)|                      # 1.1\n  (?:\\b[0-9][0-9_]*(\\.)(n)?\\B)|                                  # 1.\n  (?:\\B(\\.)[0-9][0-9_]*(n)?\\b)|                                  # .1\n  (?:\\b[0-9][0-9_]*(n)?\\b(?!\\.))                                 # 1\n)(?!\\$))|([_$[:alpha:]][_$[:alnum:]]*)|(\\'([^\\'\\\\]|\\\\.)*\\')|(\\\"([^\\\"\\\\]|\\\\.)*\\\")|(\\`([^\\`\\\\]|\\\\.)*\\`)|(\\[([^\\[\\]]|\\[[^\\[\\]]*\\])+\\]))\\s*(:))",
           "end": "(?=,|\\})",
-          "patterns": [
-            { "include": "#object-binding-element-propertyName" },
-            { "include": "#binding-element-const" }
-          ]
+          "patterns": [{ "include": "#object-binding-element-propertyName" }, { "include": "#binding-element-const" }]
         },
         { "include": "#object-binding-pattern-const" },
         { "include": "#destructuring-variable-rest-const" },
@@ -518,10 +504,7 @@
           },
           "end": "\\]",
           "endCaptures": { "0": { "name": "punctuation.definition.binding-pattern.array.tsx" } },
-          "patterns": [
-            { "include": "#parameter-binding-element" },
-            { "include": "#punctuation-comma" }
-          ]
+          "patterns": [{ "include": "#parameter-binding-element" }, { "include": "#punctuation-comma" }]
         }
       ]
     },
@@ -2385,11 +2368,7 @@
       }
     },
     "string": {
-      "patterns": [
-        { "include": "#qstring-single" },
-        { "include": "#qstring-double" },
-        { "include": "#template" }
-      ]
+      "patterns": [{ "include": "#qstring-single" }, { "include": "#qstring-double" }, { "include": "#template" }]
     },
     "qstring-double": {
       "name": "string.quoted.double.tsx",
@@ -2429,10 +2408,7 @@
           },
           "end": "`",
           "endCaptures": { "0": { "name": "punctuation.definition.string.template.end.tsx" } },
-          "patterns": [
-            { "include": "#template-substitution-element" },
-            { "include": "#string-character-escape" }
-          ]
+          "patterns": [{ "include": "#template-substitution-element" }, { "include": "#string-character-escape" }]
         }
       ]
     },
@@ -2476,11 +2452,7 @@
       "contentName": "meta.embedded.line.tsx"
     },
     "type-string": {
-      "patterns": [
-        { "include": "#qstring-single" },
-        { "include": "#qstring-double" },
-        { "include": "#template-type" }
-      ]
+      "patterns": [{ "include": "#qstring-single" }, { "include": "#qstring-double" }, { "include": "#template-type" }]
     },
     "template-type": {
       "patterns": [
@@ -2494,10 +2466,7 @@
           },
           "end": "`",
           "endCaptures": { "0": { "name": "punctuation.definition.string.template.end.tsx" } },
-          "patterns": [
-            { "include": "#template-type-substitution-element" },
-            { "include": "#string-character-escape" }
-          ]
+          "patterns": [{ "include": "#template-type-substitution-element" }, { "include": "#string-character-escape" }]
         }
       ]
     },
@@ -2939,10 +2908,7 @@
       ]
     },
     "jsx": {
-      "patterns": [
-        { "include": "#jsx-tag-without-attributes-in-expression" },
-        { "include": "#jsx-tag-in-expression" }
-      ]
+      "patterns": [{ "include": "#jsx-tag-without-attributes-in-expression" }, { "include": "#jsx-tag-in-expression" }]
     },
     "jsx-tag-without-attributes-in-expression": {
       "begin": "(?<!\\+\\+|--)(?<=[({\\[,?=>:*]|&&|\\|\\||\\?|\\*\\/|^await|[^\\._$[:alnum:]]await|^return|[^\\._$[:alnum:]]return|^default|[^\\._$[:alnum:]]default|^yield|[^\\._$[:alnum:]]yield|^)\\s*(?=(<)\\s*(?:([_$[:alpha:]][-_$[:alnum:].]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$[:alpha:]][-_$[:alnum:].]*))(?<!\\.|-))?\\s*(>))",

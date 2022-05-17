@@ -5,8 +5,6 @@ export declare const Repl: Component<{
   compiler: Worker;
   formatter?: Worker;
   isHorizontal: boolean;
-  interactive: boolean;
-  editableTabs: boolean;
   dark: boolean;
   tabs: Tab[];
   id: string;

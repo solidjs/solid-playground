@@ -64,12 +64,8 @@ export const App = (): JSX.Element => {
       .catch((e) => console.error('Failed to import browser data', e));
   }
 
-  const [noHeader, noInteractive, isHorizontal, noEditableTabs] = [
-    'noHeader',
-    'noInteractive',
-    'isHorizontal',
-    'noEditableTabs',
-  ].map((key) => key in params);
+  const noHeader = 'noHeader' in params;
+  const isHorizontal = 'isHorizontal' in params;
 
   if (params.format === 'json') {
     exportToJSON(tabs());
@@ -83,8 +79,6 @@ export const App = (): JSX.Element => {
   });
 
   const header = !noHeader;
-  const interactive = !noInteractive;
-  const editableTabs = !noEditableTabs;
 
   const { zoomState, updateZoomScale } = useZoom();
 
@@ -131,8 +125,6 @@ export const App = (): JSX.Element => {
         compiler={compiler}
         formatter={formatter}
         isHorizontal={isHorizontal}
-        interactive={interactive}
-        editableTabs={editableTabs}
         dark={dark()}
         tabs={tabs()}
         setTabs={setTabs}

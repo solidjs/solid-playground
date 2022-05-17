@@ -1,7 +1,4 @@
-export const throttle = <T extends any[]>(
-  fn: (...params: T) => unknown,
-  wait: number,
-): ((...args: T) => void) => {
+export const throttle = <T extends any[]>(fn: (...params: T) => unknown, wait: number): ((...args: T) => void) => {
   let previouslyRun: number;
   let queuedToRun: number | undefined;
 

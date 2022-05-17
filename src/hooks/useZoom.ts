@@ -54,10 +54,7 @@ const useZoom = () => {
     setZoomState({ ...zoomState, fontSize, zoom, scale });
   };
 
-  const updateZoomSettings = (
-    input: keyof Pick<TZoomState, 'overrideNative' | 'scaleIframe'>,
-    value: boolean,
-  ) => {
+  const updateZoomSettings = (input: keyof Pick<TZoomState, 'overrideNative' | 'scaleIframe'>, value: boolean) => {
     let { overrideNative, scaleIframe } = zoomState;
 
     switch (input) {
@@ -69,10 +66,7 @@ const useZoom = () => {
         break;
     }
 
-    localStorage.setItem(
-      'zoomState',
-      JSON.stringify({ ...zoomState, overrideNative, scaleIframe }),
-    );
+    localStorage.setItem('zoomState', JSON.stringify({ ...zoomState, overrideNative, scaleIframe }));
 
     setZoomState({ ...zoomState, overrideNative, scaleIframe });
   };
