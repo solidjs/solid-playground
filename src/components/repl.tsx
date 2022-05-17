@@ -36,6 +36,9 @@ export const Repl: typeof ReplProps = (props) => {
   const [store, setStore] = createStore({
     error: '',
     compiled: '',
+    compiledTabs: {
+      [`./${props.current}`]: '',
+    },
     mode: 'DOM' as keyof typeof compileMode,
     isCompiling: false,
     get compileMode(): ValueOf<typeof compileMode> {
@@ -50,8 +53,8 @@ export const Repl: typeof ReplProps = (props) => {
       if (idx < 0) return;
       props.setCurrent(current);
     },
-    setCompiled(compiled: string) {
-      setStore({ compiled, isCompiling: false });
+    setCompiled(compiled: string, tabs: Record<string, string>) {
+      setStore({ compiled, isCompiling: false, compiledTabs: tabs });
     },
     setTabName(id1: string, name: string) {
       const idx = props.tabs.findIndex((tab) => id(tab) === id1);
@@ -136,12 +139,12 @@ export const Repl: typeof ReplProps = (props) => {
     const { event } = data;
 
     if (event === 'RESULT') {
-      const { compiled, error } = data;
+      const { compiled, tabs, error } = data;
 
       if (error) return setStore({ error });
       if (!compiled) return;
 
-      actions.setCompiled(compiled);
+      actions.setCompiled(compiled, tabs);
 
       console.log('Compilation took:', formatMs(performance.now() - now));
     }
@@ -396,7 +399,7 @@ export const Repl: typeof ReplProps = (props) => {
       </TabList>
 
       <div class="h-full row-start-2 flex flex-col overflow-hidden">
-        <MonacoTabs tabs={props.tabs} compiled={store.compiled} folder={props.id} />
+        <MonacoTabs tabs={props.tabs} compiled={store.compiledTabs[`./${props.current}`] || ''} folder={props.id} />
 
         <Editor
           url={`file:///${props.id}/${props.current}`}

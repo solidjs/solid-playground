@@ -6,10 +6,12 @@ import babelPresetSolid from 'babel-preset-solid';
 // @ts-ignore
 import { rollup } from 'rollup/dist/es/rollup.browser.js';
 import dd from 'dedent';
+import type { Plugin } from 'rollup';
 
 const CDN_URL = 'https://cdn.skypack.dev';
 
 const tabsLookup = new Map<string, Tab>();
+let tabsOutput: { [key: string]: string } = {};
 
 function uid(str: string) {
   return Array.from(str)
@@ -24,7 +26,7 @@ function uid(str: string) {
  *
  * Note: Passing in the Solid Version for later use
  */
-function virtual({ solidOptions = {} }: { solidOptions: unknown }) {
+function virtual({ solidOptions = {} }: { solidOptions: unknown }): Plugin {
   return {
     name: 'repl-plugin',
 
@@ -75,24 +77,31 @@ function virtual({ solidOptions = {} }: { solidOptions: unknown }) {
 
       // Compile solid code
       if (/\.(j|t)sx$/.test(filename)) {
-        return transform(code, {
+        let transformed = transform(code, {
           presets: [
             [babelPresetSolid, solidOptions],
             ['typescript', { onlyRemoveTypeImports: true }],
           ],
           filename,
         });
+        tabsOutput[filename] = transformed.code;
+        return transformed;
       }
     },
   };
 }
 
-async function compile(tabs: Tab[], solidOptions = {}): Promise<{ compiled: string } | { error: string }> {
-  try {
-    for (const tab of tabs) {
-      tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
-    }
+async function compile(
+  tabs: Tab[],
+  solidOptions = {},
+): Promise<{ event: 'RESULT' } & ({ compiled: string; tabs: { [key: string]: string } } | { error: string })> {
+  tabsOutput = {};
+  tabsLookup.clear();
+  for (const tab of tabs) {
+    tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
+  }
 
+  try {
     const compiler = await rollup({
       input: `./${tabs[0].name}`,
       plugins: [virtual({ solidOptions })],
@@ -102,9 +111,9 @@ async function compile(tabs: Tab[], solidOptions = {}): Promise<{ compiled: stri
       output: [{ code }],
     } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
-    return { compiled: code as string };
+    return { event: 'RESULT', compiled: code as string, tabs: tabsOutput };
   } catch (e) {
-    return { error: (e as Error).message };
+    return { event: 'RESULT', error: (e as Error).message };
   }
 }
 
@@ -114,10 +123,7 @@ self.addEventListener('message', async ({ data }) => {
   switch (event) {
     case 'COMPILE':
       // @ts-ignore
-      self.postMessage({
-        event: 'RESULT',
-        ...(await compile(tabs, compileOpts)),
-      });
+      self.postMessage(await compile(tabs, compileOpts));
       break;
   }
 });
