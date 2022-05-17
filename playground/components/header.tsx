@@ -63,7 +63,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px"
+      class="p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
@@ -85,14 +85,14 @@ export const Header: Component<{
           <div
             class="md:items-center md:space-x-2 md:flex md:flex-row"
             classList={{
-              'shadow-md flex flex-col justify-center bg-white dark:bg-gray-700': showMenu(),
+              'shadow-md flex flex-col justify-center bg-white dark:bg-solid-darkbg': showMenu(),
               hidden: !showMenu(),
             }}
           >
             <button
               type="button"
               onClick={props.toggleDark}
-              class="flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
+              class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
                 'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
@@ -108,7 +108,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={() => exportToZip(props.tabs)}
-              class="flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
+              class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 focus:outline-none focus:ring-1 rounded opacity-80 hover:opacity-100"
               classList={{
                 'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
                   showMenu(),
@@ -121,7 +121,7 @@ export const Header: Component<{
             <button
               type="button"
               onClick={shareLink}
-              class="flex flex-row space-x-2 items-center md:px-3 px-2 py-2 focus:outline-none focus:ring-1 rounded"
+              class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 focus:outline-none focus:ring-1 rounded"
               classList={{
                 'opacity-80 hover:opacity-100': !copy(),
                 'text-green-100': copy() && !showMenu(),

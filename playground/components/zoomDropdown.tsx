@@ -87,9 +87,8 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
     >
       <button
         type="button"
-        class="flex flex-row space-x-2 items-center w-full md:px-3 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
+        class="flex flex-row space-x-2 items-center w-full md:px-1 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
         classList={{
-          'bg-gray-900': open() && !props.showMenu,
           'bg-gray-300 dark:text-black': open() && props.showMenu,
           'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
             props.showMenu,
@@ -102,31 +101,31 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       </button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="fixed right-0 top-[48px] bg-white dark:bg-gray-700 text-brand-default border border-gray-900 rounded shadow p-6 w-min z-10"
+          class="fixed right-0 top-[48px] bg-white dark:bg-solid-darkbg rounded shadow p-6 w-min z-10"
           classList={{
             'left-1/4': props.showMenu,
           }}
         >
           <div class="flex">
             <button
-              class="bg-gray-500 text-white px-3 py-1 rounded-l text-sm uppercase tracking-wide hover:bg-gray-800 dark:hover:bg-black"
+              class="px-3 py-1 rounded-l text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
               aria-label="decrease font size"
               onClick={() => updateZoomScale('decrease')}
             >
               -
             </button>
-            <div class="text-black bg-gray-100 dark:bg-gray-200 px-3 py-1 text-sm text-center w-20 uppercase tracking-wide ">
+            <div class="px-3 py-1 text-sm text-center w-20 uppercase tracking-wide border-1 dark:border-gray-700">
               {zoomState.zoom}%
             </div>
             <button
-              class="bg-gray-500 text-white px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-800 dark:hover:bg-black"
+              class="px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
               aria-label="increase font size"
               onClick={() => updateZoomScale('increase')}
             >
               +
             </button>
             <button
-              class="bg-gray-500 text-white px-3 py-1 rounded  text-sm uppercase tracking-wide hover:bg-gray-800 dark:hover:bg-black"
+              class="px-3 py-1 rounded  text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
               aria-label="reset font size"
               onClick={() => updateZoomScale('reset')}
             >
