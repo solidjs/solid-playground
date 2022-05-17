@@ -101,7 +101,7 @@ export const App = (): JSX.Element => {
   });
 
   return (
-    <div class="relative flex bg-solid-medium h-screen overflow-hidden text-slate-900 dark:text-slate-50 font-sans flex-col">
+    <div class="relative flex bg-white dark:bg-solid-darkbg dark:text-white text-black h-screen overflow-hidden text-slate-900 dark:text-slate-50 font-sans flex-col">
       <Show
         when={header}
         children={

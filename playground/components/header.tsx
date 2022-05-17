@@ -63,7 +63,7 @@ export const Header: Component<{
 
   return (
     <header
-      class="p-2 flex text-sm justify-between items-center bg-white dark:bg-solid-darkbg dark:text-white text-black border-slate-200 dark:border-neutral-800 border-b-2px"
+      class="p-2 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px"
       classList={{ 'md:col-span-3': !props.isHorizontal }}
     >
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
@@ -83,7 +83,7 @@ export const Header: Component<{
           show
         >
           <div
-            class="md:items-center md:space-x-2 md:flex md:flex-row text-black dark:text-white"
+            class="md:items-center md:space-x-2 md:flex md:flex-row"
             classList={{
               'shadow-md flex flex-col justify-center bg-white dark:bg-gray-700': showMenu(),
               hidden: !showMenu(),

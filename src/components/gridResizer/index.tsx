@@ -60,7 +60,7 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
   });
 
   const baseClasses =
-    'justify-center group items-center border-slate-200 dark:border-solid-darkbg/30 hover:bg-brand-default dark:hover:bg-solid-medium';
+    'justify-center group items-center border-slate-200 dark:border-neutral-800 hover:bg-brand-default dark:hover:bg-brand-default';
   const resizingClasses = () =>
     `${isDragging() ? 'bg-brand-default dark:bg-brand-default' : 'bg-slate-50 dark:bg-solid-darkbg/70'}`;
   const directionClasses = () =>

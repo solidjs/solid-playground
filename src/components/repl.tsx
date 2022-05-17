@@ -249,7 +249,7 @@ export const Repl: typeof ReplProps = (props) => {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="grid h-full text-slate-900 dark:text-slate-50 font-sans overflow-hidden"
+      class="grid h-full bg-white dark:bg-solid-darkbg dark:text-white text-black font-sans overflow-hidden"
       classList={{
         'wrapper--forced': props.isHorizontal,
         wrapper: !props.isHorizontal,
@@ -311,7 +311,7 @@ export const Repl: typeof ReplProps = (props) => {
                 <Show when={index() > 0}>
                   <button
                     type="button"
-                    class="border-0 bg-transparent cursor-pointer focus:outline-none -mb-0.5"
+                    class="border-0 cursor-pointer focus:outline-none -mb-0.5"
                     onClick={() => {
                       actions.removeTab(id(tab));
                     }}
@@ -401,7 +401,7 @@ export const Repl: typeof ReplProps = (props) => {
         <Editor
           url={`file:///${props.id}/${props.current}`}
           onDocChange={handleDocChange}
-          class="flex-1 overflow-auto focus:outline-none bg-slate-50 dark:bg-yellow-400"
+          class="flex-1 overflow-auto focus:outline-none"
           styles={{ backgroundColor: '#F8FAFC' }}
           canFormat
           formatter={formatter}
@@ -446,7 +446,7 @@ export const Repl: typeof ReplProps = (props) => {
         }
       >
         <section
-          class="h-full max-h-screen bg-white dark:bg-solid-darkLighterBg grid focus:outline-none row-start-5 relative divide-y-2 divide-slate-200 dark:divide-slate-500"
+          class="h-full max-h-screen grid focus:outline-none row-start-5 relative divide-y-2 divide-slate-200 dark:divide-neutral-800"
           classList={{ 'md:row-start-2': !props.isHorizontal }}
           style="grid-template-rows: minmax(0, 1fr) auto"
         >
@@ -459,7 +459,7 @@ export const Repl: typeof ReplProps = (props) => {
             withMinimap={false}
           />
 
-          <div class="bg-white dark:bg-solid-darkLighterBg p-5">
+          <div class="p-5">
             <label class="font-semibold text-sm uppercase">Compile mode</label>
 
             <div class="mt-1 space-y-1 text-sm">
