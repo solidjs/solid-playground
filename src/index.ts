@@ -26,6 +26,6 @@ export const defaultTabs: Tab[] = [
       '  );\n' +
       '}\n' +
       '\n' +
-      'render(() => <Counter />, document.getElementById("app"));\n',
+      'render(() => <Counter />, document.getElementById("app")!);\n',
   },
 ];
