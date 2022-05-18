@@ -76,7 +76,7 @@ const Editor: Component<Props> = (props) => {
     });
 
     editor.onKeyDown(e => {
-      if (e.browserEvent.key === 's' && e.metaKey && props.formatter) {
+      if ((e.metaKey || e.ctrlKey) && e.browserEvent.key === 's') {
         e.preventDefault();
         editor?.getAction('editor.action.formatDocument').run();
         editor?.focus();
