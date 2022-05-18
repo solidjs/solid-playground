@@ -1,15 +1,13 @@
 import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
-
 import { Routes, Route } from 'solid-app-router';
 import { eventBus } from './utils/eventBus';
-
 import { Update } from './components/update';
 import { Header } from './components/header';
-
 import { useZoom } from '../src/hooks/useZoom';
 import { isDarkTheme } from './utils/isDarkTheme';
-import { Edit } from './edit';
-import { Home } from './home';
+import { Edit } from './pages/edit';
+import { Home } from './pages/home';
+import { Login } from './pages/login';
 
 let swUpdatedBeforeRender = false;
 eventBus.on('sw-update', () => (swUpdatedBeforeRender = true));
@@ -58,6 +56,7 @@ export const App = (): JSX.Element => {
         <Route path="/:user/:repl" element={<Edit dark={dark()} />} />
         <Route path="/:id" element={<Home />} />
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
 
       <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />

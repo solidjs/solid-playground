@@ -1,13 +1,12 @@
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import { parseHash } from './utils/parseHash';
-import { isValidUrl } from './utils/isValidUrl';
+import { parseHash } from '../utils/parseHash';
+import { isValidUrl } from '../utils/isValidUrl';
 
-import CompilerWorker from '../src/workers/compiler?worker';
-import FormatterWorker from '../src/workers/formatter?worker';
-import { exportToJSON } from './utils/exportFiles';
-import { createTabList, defaultTabs, processImport, Repl, Tab } from '../src';
+import CompilerWorker from '../../src/workers/compiler?worker';
+import FormatterWorker from '../../src/workers/formatter?worker';
+import { createTabList, defaultTabs, processImport, Repl, Tab } from '../../src';
 import { createSignal } from 'solid-js';
 
 (window as any).MonacoEnvironment = {
@@ -44,10 +43,6 @@ export const Edit = (props: { dark: boolean }) => {
   }
 
   const isHorizontal = 'isHorizontal' in params;
-
-  if (params.format === 'json') {
-    exportToJSON(tabs());
-  }
 
   return (
     <Repl

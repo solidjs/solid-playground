@@ -1,20 +1,20 @@
 import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
-import { compressToURL as encode } from '@amoutonbrady/lz-string';
 import { Component, onCleanup, createSignal, Show } from 'solid-js';
-import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
+import { download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 
 import logo from '../assets/logo.svg?url';
 import type { Tab } from '../../src';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
+import { useAppContext } from '../context';
 
 export const Header: Component<{
   dark: boolean;
   toggleDark: () => void;
   tabs: Tab[];
 }> = (props) => {
-  const [copy, setCopy] = createSignal(false);
+  const context = useAppContext()!;
   const [showMenu, setShowMenu] = createSignal(false);
   let menuBtnEl!: HTMLButtonElement;
 
@@ -25,37 +25,6 @@ export const Header: Component<{
 
   function closeMobileMenu() {
     setShowMenu(false);
-  }
-
-  function shareLink() {
-    const url = new URL(location.href);
-
-    url.hash = encode(JSON.stringify(props.tabs));
-    history.replaceState(null, '', url.toString());
-
-    fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` })
-      .then((response) => {
-        if (response.status >= 400) {
-          throw new Error(response.statusText);
-        }
-
-        return response.text();
-      })
-      .then((hash) => {
-        const tinyUrl = new URL(location.origin);
-        tinyUrl.searchParams.set('hash', hash);
-
-        navigator.clipboard.writeText(tinyUrl.toString()).then(() => {
-          setCopy(true);
-          setTimeout(setCopy, 750, false);
-        });
-      })
-      .catch(() => {
-        navigator.clipboard.writeText(url.href).then(() => {
-          setCopy(true);
-          setTimeout(setCopy, 750, false);
-        });
-      });
   }
 
   return (
@@ -112,21 +81,6 @@ export const Header: Component<{
               <Icon path={download} class="h-6" style={{ margin: '0' }} />
               <span class="text-xs md:sr-only">Export to Zip</span>
             </button>
-            <button
-              type="button"
-              onClick={shareLink}
-              class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 focus:outline-none focus:ring-1 rounded"
-              classList={{
-                'opacity-80 hover:opacity-100': !copy(),
-                'text-green-100': copy() && !showMenu(),
-                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
-                  showMenu(),
-              }}
-              title="Share with a minified link"
-            >
-              <Icon class="h-6" path={copy() ? link : share} />
-              <span class="text-xs md:sr-only">{copy() ? 'Copied to clipboard' : 'Share'}</span>
-            </button>
             <ZoomDropdown showMenu={showMenu()} />
           </div>
         </Dismiss>
@@ -146,7 +100,16 @@ export const Header: Component<{
           <span class="sr-only">Show menu</span>
         </button>
         <div class="mx-5 -mb-1 leading-snug cursor-pointer">
-          <a href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}>Login</a>
+          <Show
+            when={context.user()?.display}
+            fallback={
+              <a href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}>
+                Login
+              </a>
+            }
+          >
+            {(x) => x}
+          </Show>
         </div>
       </div>
     </header>

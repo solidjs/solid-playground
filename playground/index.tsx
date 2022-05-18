@@ -1,12 +1,15 @@
 import { Router } from 'solid-app-router';
 import { render } from 'solid-js/web';
 import { App } from './app';
+import { AppContextProvider } from './context';
 import { registerServiceWorker } from './utils/serviceWorker';
 
 render(
   () => (
     <Router>
-      <App />
+      <AppContextProvider>
+        <App />
+      </AppContextProvider>
     </Router>
   ),
   document.querySelector('#app')!,

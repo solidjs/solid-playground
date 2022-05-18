@@ -65,12 +65,12 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   createEffect(() => {
     if (!open()) {
       if (containerEl) {
-        containerEl.removeEventListener('mousemove', onMouseMove);
+        containerEl.removeEventListener('mouseenter', onMouseMove);
       }
       stealFocus = true;
     } else {
       if (containerEl) {
-        containerEl.addEventListener('mousemove', onMouseMove, { once: true });
+        containerEl.addEventListener('mouseenter', onMouseMove, { once: true });
       }
     }
   });
