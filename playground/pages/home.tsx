@@ -1,7 +1,8 @@
-import { useRouteData } from 'solid-app-router';
+import { useNavigate, useRouteData } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
 import { createResource, For } from 'solid-js';
+import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
 
 interface Repls {
@@ -22,6 +23,7 @@ interface Repls {
 export const Home = () => {
   const user = useRouteData();
   const context = useAppContext()!;
+  const navigate = useNavigate();
 
   const [repls] = createResource(
     () => user || context.user()?.display,
@@ -34,13 +36,26 @@ export const Home = () => {
 
   return (
     <div class="bg-brand-other h-full m-8">
-      <button class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto" onClick={
-        () => {
-          fetch(`${API}/repls`, {
-            method: "POST",
-          })
-        }
-      }>
+      <button
+        class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
+        onClick={async () => {
+          const result = await fetch(`${API}/repl`, {
+            method: 'POST',
+            headers: {
+              authorization: `Bearer ${context.token}`,
+            },
+            body: JSON.stringify({
+              title: 'Counter Example',
+              public: true,
+              labels: [],
+              version: '1.0',
+              files: defaultTabs.map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') })),
+            }),
+          });
+          const { id } = await result.json();
+          navigate(`/${context.user()?.display}/${id}`);
+        }}
+      >
         <Icon path={plus} class="w-8" /> Create new REPL
       </button>
 

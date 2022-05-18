@@ -17,4 +17,13 @@ export default defineConfig((env) => ({
       },
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api.solidjs.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 }));
