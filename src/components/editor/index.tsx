@@ -79,8 +79,7 @@ const Editor: Component<Props> = (props) => {
     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
       editor?.getAction('editor.action.formatDocument').run();
       editor?.focus();
-      
-    })
+    });
 
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
