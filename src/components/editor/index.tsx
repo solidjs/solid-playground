@@ -2,6 +2,7 @@ import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import useZoom from '../../hooks/useZoom';
+import { KeyMod, KeyCode } from 'monaco-editor';
 
 interface Props {
   classList?: {
@@ -75,13 +76,11 @@ const Editor: Component<Props> = (props) => {
       },
     });
 
-    editor.onKeyDown(e => {
-      if ((e.metaKey || e.ctrlKey) && e.browserEvent.key === 's') {
-        e.preventDefault();
-        editor?.getAction('editor.action.formatDocument').run();
-        editor?.focus();
-      }
-    });
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
+      editor?.getAction('editor.action.formatDocument').run();
+      editor?.focus();
+      
+    })
 
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
