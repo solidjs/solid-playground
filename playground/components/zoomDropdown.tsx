@@ -2,11 +2,11 @@ import { Icon } from 'solid-heroicons';
 import { zoomIn } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
 import { Component, createSignal, createEffect } from 'solid-js';
-import useZoom from '../../src/hooks/useZoom';
+import { useZoom } from '../../src/hooks/useZoom';
 
 export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   const [open, setOpen] = createSignal(false);
-  const { zoomState, updateZoomScale, updateZoomSettings } = useZoom();
+  const { zoomState, updateZoom, setZoomState } = useZoom();
   const popupDuration = 1250;
   let containerEl!: HTMLDivElement;
   let prevZoom = zoomState.zoom;
@@ -110,7 +110,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             <button
               class="px-3 py-1 rounded-l text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
               aria-label="decrease font size"
-              onClick={() => updateZoomScale('decrease')}
+              onClick={() => updateZoom('decrease')}
             >
               -
             </button>
@@ -120,14 +120,14 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             <button
               class="px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
               aria-label="increase font size"
-              onClick={() => updateZoomScale('increase')}
+              onClick={() => updateZoom('increase')}
             >
               +
             </button>
             <button
               class="px-3 py-1 rounded  text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
               aria-label="reset font size"
-              onClick={() => updateZoomScale('reset')}
+              onClick={() => updateZoom('reset')}
             >
               Reset
             </button>
@@ -138,7 +138,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
                 type="checkbox"
                 class="mr-4 cursor-pointer"
                 checked={zoomState.overrideNative}
-                onChange={(e) => updateZoomSettings('overrideNative', e.currentTarget.checked)}
+                onChange={(e) => setZoomState('overrideNative', e.currentTarget.checked)}
               />
               Override browser zoom keyboard shortcut
             </label>
@@ -147,7 +147,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
                 type="checkbox"
                 class="mr-4 cursor-pointer"
                 checked={zoomState.scaleIframe}
-                onChange={(e) => updateZoomSettings('scaleIframe', e.currentTarget.checked)}
+                onChange={(e) => setZoomState('scaleIframe', e.currentTarget.checked)}
               />
               Scale iframe <strong>Result</strong>
             </label>

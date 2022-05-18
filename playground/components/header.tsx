@@ -12,10 +12,7 @@ import { ZoomDropdown } from './zoomDropdown';
 export const Header: Component<{
   dark: boolean;
   toggleDark: () => void;
-  isHorizontal: boolean;
   tabs: Tab[];
-  setTabs: (tabs: Tab[]) => void;
-  setCurrent: (tabId: string) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const [showMenu, setShowMenu] = createSignal(false);
@@ -62,10 +59,7 @@ export const Header: Component<{
   }
 
   return (
-    <header
-      class="p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px"
-      classList={{ 'md:col-span-3': !props.isHorizontal }}
-    >
+    <header class="p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px">
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
         <a href="https://github.com/solidjs/solid">
           <img src={logo} alt="solid-js logo" class="w-8" />
@@ -151,7 +145,7 @@ export const Header: Component<{
           </Show>
           <span class="sr-only">Show menu</span>
         </button>
-        <div class="mx-2 -mb-1 leading-snug cursor-pointer">
+        <div class="mx-5 -mb-1 leading-snug cursor-pointer">
           <a href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}>Login</a>
         </div>
       </div>

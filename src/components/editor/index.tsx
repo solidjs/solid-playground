@@ -1,7 +1,7 @@
 import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { liftOff } from './setupSolid';
-import useZoom from '../../hooks/useZoom';
+import { useZoom } from '../../hooks/useZoom';
 
 interface Props {
   classList?: {

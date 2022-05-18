@@ -1,5 +1,5 @@
 import { Component, createEffect, createSignal, splitProps, JSX, onMount } from 'solid-js';
-import useZoom from '../hooks/useZoom';
+import { useZoom } from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();

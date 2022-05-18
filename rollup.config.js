@@ -94,9 +94,7 @@ const preppy = {
 
             // this extracts the artificial tag id from the comment and the possibly renamed variable
             // name from the variable via two capture groups
-            .map((replacementAndVariable) =>
-              replacementAndVariable.match(/^\s*?\/\*([^*]*)\*\/\s*?(\S*)$/),
-            )
+            .map((replacementAndVariable) => replacementAndVariable.match(/^\s*?\/\*([^*]*)\*\/\s*?(\S*)$/))
             .filter(Boolean)
             .forEach(([usedEntry, tagId, updatedName]) => replacements.set(tagId, updatedName));
 
@@ -145,15 +143,13 @@ rollup({
         if (!id.endsWith('?url')) {
           return null;
         }
-        let base64 = true; // ideally, we wouldn't have to do this, but current end user bundlers can't handle non base64
+        let base64 = false; // ideally, we wouldn't have to do this, but current end user bundlers can't handle non base64
 
         let url = id.slice(0, -4);
         if (base64) {
           const mimetype = mime.getType(url);
 
-          return readFile(url).then(
-            (x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`,
-          );
+          return readFile(url).then((x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`);
         } else {
           const ext = extname(url);
           const name = basename(url, ext);
@@ -192,11 +188,9 @@ rollup({
     preppy,
   ],
 }).then((builder) => {
-  builder
-    .write({ dir: 'lib', chunkFileNames: (info) => (info.isEntry ? '[name].jsx' : '[name].js') })
-    .then(() => {
-      const basePath = cwd();
+  builder.write({ dir: 'lib', chunkFileNames: (info) => (info.isEntry ? '[name].jsx' : '[name].js') }).then(() => {
+    const basePath = cwd();
 
-      renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
-    });
+    renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
+  });
 });
