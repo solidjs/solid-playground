@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, splitProps, JSX, onMount } from 'solid-js';
+import { Component, createEffect, createSignal, splitProps, JSX, onMount, onCleanup } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
@@ -21,7 +21,14 @@ export const Preview: Component<Props> = (props) => {
     if (isNotDom || isEmpty || !isIframeReady()) return;
 
     latestCode = internal.code.replace('render(', 'window.dispose = render(');
-    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
+
+    const blob = new Blob([latestCode], {
+      type: 'text/javascript',
+    });
+    const src = URL.createObjectURL(blob);
+    onCleanup(() => URL.revokeObjectURL(src));
+
+    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: src }, '*');
   });
 
   createEffect(() => {
@@ -49,7 +56,7 @@ export const Preview: Component<Props> = (props) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <!-- Ressource hints -->
-        <link rel="dns-prefetch" href="//unpkg.com">
+        <link rel="dns-prefetch" href="https://unpkg.com">
         <link href="https://unpkg.com" rel="preconnect" crossorigin>
         <link rel="preload" href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" as="style">
         <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
@@ -115,7 +122,7 @@ export const Preview: Component<Props> = (props) => {
           eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
           const style = Object.assign(document.createElement('link'), {
             rel: 'stylesheet',
-            href: '/eruda.css'
+            href: '${location.origin}/eruda.css'
           });
           eruda._shadowRoot.appendChild(style);
           if (${internal.devtools}) eruda.show();
@@ -147,9 +154,7 @@ export const Preview: Component<Props> = (props) => {
 
               console.clear();
 
-              const encodedCode = encodeURIComponent(code);
-              const dataUri = 'data:text/javascript;charset=utf-8,' + encodedCode;
-              await import(dataUri);
+              await import(code);
   
               const load = document.getElementById('load');
               if (code && load) load.remove();
@@ -168,6 +173,11 @@ export const Preview: Component<Props> = (props) => {
       </body>
     </html>
   `;
+  const blob = new Blob([html], {
+    type: 'text/html',
+  });
+  const src = URL.createObjectURL(blob);
+  onCleanup(() => URL.revokeObjectURL(src));
 
   createEffect(() => {
     // Bail early on first mount or we are already reloading
@@ -175,7 +185,7 @@ export const Preview: Component<Props> = (props) => {
 
     // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
-    iframe.srcdoc = html;
+    iframe.src = src;
   });
 
   const styleScale = () => {
@@ -187,7 +197,6 @@ export const Preview: Component<Props> = (props) => {
   };
 
   onMount(() => {
-    iframe.srcdoc = html;
     iframe.addEventListener('load', () => {
       setIframeReady(true);
 
@@ -205,6 +214,7 @@ export const Preview: Component<Props> = (props) => {
         title="Solid REPL"
         class="overflow-auto p-0 w-full h-full dark:bg-other block"
         ref={iframe}
+        src={src}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       ></iframe>
