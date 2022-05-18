@@ -75,6 +75,14 @@ const Editor: Component<Props> = (props) => {
       },
     });
 
+    editor.onKeyDown(e => {
+      if (e.browserEvent.key === 's' && e.metaKey && props.formatter) {
+        e.preventDefault();
+        editor?.getAction('editor.action.formatDocument').run();
+        editor?.focus();
+      }
+    });
+
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
     });
