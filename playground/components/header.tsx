@@ -7,7 +7,7 @@ import logo from '../assets/logo.svg?url';
 import type { Tab } from '../../src';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
-import { useAppContext } from '../context';
+import { API, useAppContext } from '../context';
 
 export const Header: Component<{
   dark: boolean;
@@ -103,12 +103,12 @@ export const Header: Component<{
           <Show
             when={context.user()?.display}
             fallback={
-              <a href={`https://api.solidjs.com/auth/login?redirect=${window.location.origin}/login?auth=success`}>
+              <a href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`} rel="external">
                 Login
               </a>
             }
           >
-            {(x) => x}
+            {(x) => <a href="/">{x}</a>}
           </Show>
         </div>
       </div>

@@ -21,18 +21,17 @@ interface Repls {
 }
 
 export const Home = () => {
-  const user = useRouteData();
+  const routeUser = useRouteData();
   const context = useAppContext()!;
   const navigate = useNavigate();
 
-  const [repls] = createResource(
-    () => user || context.user()?.display,
-    async (user) => {
-      if (!user) return { total: 0, list: [] };
-      const result = await fetch(`${API}/repls/${user}/list`);
-      return (await result.json()) as Repls;
-    },
-  );
+  const user = () => routeUser || context.user()?.display;
+
+  const [repls] = createResource(user, async (user) => {
+    if (!user) return { total: 0, list: [] };
+    const result = await fetch(`${API}/repl/${user}/list`);
+    return (await result.json()) as Repls;
+  });
 
   return (
     <div class="bg-brand-other h-full m-8">
@@ -43,6 +42,7 @@ export const Home = () => {
             method: 'POST',
             headers: {
               authorization: `Bearer ${context.token}`,
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               title: 'Counter Example',
@@ -71,8 +71,10 @@ export const Home = () => {
           <For each={repls()?.list}>
             {(repl) => (
               <tr>
-                <td>{repl.title}</td>
-                <td>{repl.created_at}</td>
+                <td>
+                  <a href={`${user()}/${repl.id}`}>{repl.title}</a>
+                </td>
+                <td>{new Date(repl.created_at).toLocaleString()}</td>
                 <td>
                   <Icon path={repl.public ? eye : eyeOff} class="w-6 inline m-2 ml-0" />
                   <Icon path={x} class="w-6 inline m-2 mr-0 text-red-700" />

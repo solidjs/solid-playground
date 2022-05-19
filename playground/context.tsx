@@ -8,7 +8,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType>();
 
 // const API = "http://localhost:8787";
-export const API = '/api';
+export const API = 'https://api.solidjs.com'; // '/api';
 
 export const AppContextProvider: ParentComponent = (props) => {
   const [token, setToken] = createSignal(localStorage.getItem('token') || '');
