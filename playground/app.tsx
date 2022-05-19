@@ -54,7 +54,7 @@ export const App = (): JSX.Element => {
 
       <Routes>
         <Route path="/:user/:repl" element={<Edit dark={dark()} />} />
-        <Route path="/:id" element={<Home />} />
+        <Route path="/:user" element={<Home />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
       </Routes>

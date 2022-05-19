@@ -1,4 +1,4 @@
-import { useNavigate, useRouteData } from 'solid-app-router';
+import { useNavigate, useParams } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
 import { createResource, For } from 'solid-js';
@@ -21,11 +21,10 @@ interface Repls {
 }
 
 export const Home = () => {
-  const routeUser = useRouteData();
+  const params = useParams();
   const context = useAppContext()!;
   const navigate = useNavigate();
-
-  const user = () => routeUser || context.user()?.display;
+  const user = () => params.user || context.user()?.display;
 
   const [repls] = createResource(user, async (user) => {
     if (!user) return { total: 0, list: [] };
