@@ -1,7 +1,7 @@
 import { Component } from 'solid-js';
 import { editor as mEditor } from 'monaco-editor';
 
-export declare const Repl: Component<{
+export type Repl = Component<{
   compiler: Worker;
   formatter?: Worker;
   isHorizontal: boolean;

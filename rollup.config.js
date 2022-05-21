@@ -110,7 +110,7 @@ const preppy = {
 };
 
 rollup({
-  input: ['src/index.ts', 'src/workers/compiler.ts', 'src/workers/formatter.ts'],
+  input: ['src/index.ts', 'src/workers/compiler.ts', 'src/workers/formatter.ts', 'src/components/repl.tsx'],
   external: ['solid-js', 'solid-js/web', 'solid-js/store', 'monaco-editor'],
   acornInjectPlugins: [jsx()],
   plugins: [
@@ -192,5 +192,6 @@ rollup({
     const basePath = cwd();
 
     renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
+    renameSync(resolve(basePath, 'lib/repl.js'), resolve(basePath, 'lib/repl.jsx'));
   });
 });

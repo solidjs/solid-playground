@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
-import { createResource, For } from 'solid-js';
+import { createResource, For, Suspense } from 'solid-js';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
 
@@ -67,20 +67,42 @@ export const Home = () => {
           </tr>
         </thead>
         <tbody>
-          <For each={repls()?.list}>
-            {(repl) => (
+          <Suspense
+            fallback={
               <tr>
-                <td>
-                  <a href={`${user()}/${repl.id}`}>{repl.title}</a>
-                </td>
-                <td>{new Date(repl.created_at).toLocaleString()}</td>
-                <td>
-                  <Icon path={repl.public ? eye : eyeOff} class="w-6 inline m-2 ml-0" />
-                  <Icon path={x} class="w-6 inline m-2 mr-0 text-red-700" />
+                <td colspan="3" class="text-center">
+                  <svg
+                    class="animate-spin h-8 w-8 text-white mx-auto mt-8"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
                 </td>
               </tr>
-            )}
-          </For>
+            }
+          >
+            <For each={repls()?.list}>
+              {(repl) => (
+                <tr>
+                  <td>
+                    <a href={`${user()}/${repl.id}`}>{repl.title}</a>
+                  </td>
+                  <td>{new Date(repl.created_at).toLocaleString()}</td>
+                  <td>
+                    <Icon path={repl.public ? eye : eyeOff} class="w-6 inline m-2 ml-0" />
+                    <Icon path={x} class="w-6 inline m-2 mr-0 text-red-700" />
+                  </td>
+                </tr>
+              )}
+            </For>
+          </Suspense>
         </tbody>
       </table>
     </div>

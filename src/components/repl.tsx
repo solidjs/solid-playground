@@ -26,7 +26,7 @@ type ValueOf<T> = T[keyof T];
 
 const id = (tab: Tab) => `${tab.name}.${tab.type}`;
 
-export const Repl: typeof ReplProps = (props) => {
+const Repl: typeof ReplProps = (props) => {
   // this is bad style don't do this
   const { compiler, formatter } = props;
   let now: number;
@@ -511,3 +511,5 @@ export const Repl: typeof ReplProps = (props) => {
     </div>
   );
 };
+
+export default Repl;
