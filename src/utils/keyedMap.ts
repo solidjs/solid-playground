@@ -17,8 +17,7 @@ export const keyedMap = <T>(props: { by: (a: T) => string; children: (a: () => T
     const list = props.each || [];
     const newNodes = new Map<string, Signal<T>>();
     return untrack(() => {
-      for (let i = 0; i < list.length; i++) {
-        const listItem = list[i];
+      for (const listItem of list) {
         const keyValue = key(listItem);
         const lookup = prev.get(keyValue);
         if (!lookup) {

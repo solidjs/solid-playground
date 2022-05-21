@@ -10,8 +10,7 @@ import { Error } from './error';
 
 import type { Tab } from '../';
 import type { Repl as ReplProps } from '../../types/types';
-import { debounce } from '../utils/debounce';
-import { formatMs } from '../utils/formatTime';
+import debounce from '@solid-primitives/debounce';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
@@ -26,7 +25,7 @@ type ValueOf<T> = T[keyof T];
 
 const id = (tab: Tab) => `${tab.name}.${tab.type}`;
 
-const Repl: typeof ReplProps = (props) => {
+const Repl: ReplProps = (props) => {
   // this is bad style don't do this
   const { compiler, formatter } = props;
   let now: number;
@@ -146,7 +145,7 @@ const Repl: typeof ReplProps = (props) => {
 
       actions.setCompiled(compiled, tabs);
 
-      console.log('Compilation took:', formatMs(performance.now() - now));
+      console.log(`Compilation took: ${performance.now() - now}ms`);
     }
   });
 
@@ -401,18 +400,22 @@ const Repl: typeof ReplProps = (props) => {
       <div class="h-full row-start-2 flex flex-col overflow-hidden">
         <MonacoTabs tabs={props.tabs} compiled={store.compiledTabs[`./${props.current}`] || ''} folder={props.id} />
 
-        <Editor
-          url={`file:///${props.id}/${props.current}`}
-          onDocChange={handleDocChange}
-          class="flex-1 overflow-auto focus:outline-none"
-          styles={{ backgroundColor: '#F8FAFC' }}
-          canFormat
-          formatter={formatter}
-          isDark={props.dark}
-          withMinimap={false}
-          ref={props.onEditorReady}
-          displayErrors={displayErrors()}
-        />
+        <Show when={props.current}>
+          {(current) => (
+            <Editor
+              url={`file:///${props.id}/${current}`}
+              onDocChange={handleDocChange}
+              class="flex-1 overflow-auto focus:outline-none"
+              styles={{ backgroundColor: '#F8FAFC' }}
+              canFormat
+              formatter={formatter}
+              isDark={props.dark}
+              withMinimap={false}
+              ref={props.onEditorReady}
+              displayErrors={displayErrors()}
+            />
+          )}
+        </Show>
 
         <Show
           when={displayErrors() && store.error}

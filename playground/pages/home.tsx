@@ -5,19 +5,24 @@ import { createResource, For, Suspense } from 'solid-js';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
 
+export interface ReplFile {
+  name: string;
+  content: string[];
+}
+export interface APIRepl {
+  id: string;
+  title: string;
+  labels: string[];
+  files: ReplFile[];
+  version: string;
+  public: boolean;
+  size: number;
+  created_at: string;
+  updated_at?: string;
+}
 interface Repls {
   total: number;
-  list: {
-    id: string;
-    title: string;
-    labels: string[];
-    files: unknown;
-    version: string;
-    public: boolean;
-    size: number;
-    created_at: string;
-    updated_at?: string;
-  }[];
+  list: APIRepl[];
 }
 
 export const Home = () => {
@@ -26,10 +31,9 @@ export const Home = () => {
   const navigate = useNavigate();
   const user = () => params.user || context.user()?.display;
 
-  const [repls] = createResource(user, async (user) => {
+  const [repls] = createResource<Repls, string>(user, async (user) => {
     if (!user) return { total: 0, list: [] };
-    const result = await fetch(`${API}/repl/${user}/list`);
-    return (await result.json()) as Repls;
+    return await fetch(`${API}/repl/${user}/list`).then((r) => r.json());
   });
 
   return (

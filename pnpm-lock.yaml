@@ -12,6 +12,8 @@ specifiers:
   '@rollup/plugin-json': ^4.1.0
   '@rollup/plugin-node-resolve': ^13.3.0
   '@rollup/plugin-replace': ^4.0.0
+  '@solid-primitives/debounce': ^1.3.0
+  '@solid-primitives/throttle': ^1.2.0
   '@types/babel__standalone': ^7.1.4
   '@types/dedent': ^0.7.0
   '@types/fs-extra': ^9.0.13
@@ -25,7 +27,6 @@ specifiers:
   jiti: ^1.13.0
   jszip: ^3.10.0
   mime: ^3.0.0
-  mitt: ^3.0.0
   monaco-editor: ~0.33.0
   monaco-editor-textmate: ^3.0.0
   monaco-textmate: ^3.0.1
@@ -51,10 +52,10 @@ dependencies:
   '@amoutonbrady/lz-string': 0.0.1
   '@babel/preset-typescript': 7.17.12_@babel+core@7.18.0
   '@babel/standalone': 7.18.1
+  '@solid-primitives/throttle': 1.2.0_solid-js@1.4.2
   babel-preset-solid: 1.4.2_@babel+core@7.18.0
   dedent: 0.7.0
   jszip: 3.10.0
-  mitt: 3.0.0
   monaco-editor-textmate: 3.0.0_nurowwtvogix47pnszh4m7lsnu
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
@@ -73,6 +74,7 @@ devDependencies:
   '@rollup/plugin-json': 4.1.0_rollup@2.74.1
   '@rollup/plugin-node-resolve': 13.3.0_rollup@2.74.1
   '@rollup/plugin-replace': 4.0.0_rollup@2.74.1
+  '@solid-primitives/debounce': 1.3.0_solid-js@1.4.2
   '@types/babel__standalone': 7.1.4
   '@types/dedent': 0.7.0
   '@types/fs-extra': 9.0.13
@@ -1465,6 +1467,22 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /@solid-primitives/debounce/1.3.0_solid-js@1.4.2:
+    resolution: {integrity: sha512-Cen4ccCPTuEtQM7o9aEKuOJ0LRlAnzKvN7loEBBOQ+zKdu7/7kYKr7HHE/WS8JAI3QeQr5v2ModYRIZLERw5zw==}
+    peerDependencies:
+      solid-js: '>=1.0.0'
+    dependencies:
+      solid-js: 1.4.2
+    dev: true
+
+  /@solid-primitives/throttle/1.2.0_solid-js@1.4.2:
+    resolution: {integrity: sha512-qYKYEgGl/nSCF+wq7H6zFFi8s2e/woFZJkZbCbyUrtbEIvCze4xSZRr64Xi067GlBE+T/N4LZX/htJmLfwkAeg==}
+    peerDependencies:
+      solid-js: ^1.3.1
+    dependencies:
+      solid-js: 1.4.2
+    dev: false
+
   /@surma/rollup-plugin-off-main-thread/2.2.3:
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
     dependencies:
@@ -2239,7 +2257,7 @@ packages:
       is-shared-array-buffer: 1.0.2
       is-string: 1.0.7
       is-weakref: 1.0.2
-      object-inspect: 1.12.0
+      object-inspect: 1.12.1
       object-keys: 1.1.1
       object.assign: 4.1.2
       regexp.prototype.flags: 1.4.3
@@ -3390,10 +3408,6 @@ packages:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
     dev: true
 
-  /mitt/3.0.0:
-    resolution: {integrity: sha512-7dX2/10ITVyqh4aOSVI9gdape+t9l2/8QxHrFmUXu4EEUpdlxl6RudZUPZoc+zuY2hk1j7XxVroIVIan/pD/SQ==}
-    dev: false
-
   /monaco-editor-textmate/3.0.0_nurowwtvogix47pnszh4m7lsnu:
     resolution: {integrity: sha512-4BK3ual4WllRpiQBDcBO8NKdbk4ukdBtnl23cRYvu1eNWOWKYOBM0rYac50HvFClSbtd5GMezLPjkaim0iM7sw==}
     peerDependencies:
@@ -3453,8 +3467,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /object-inspect/1.12.0:
-    resolution: {integrity: sha512-Ho2z80bVIvJloH+YzRmpZVQe87+qASmBUKZDWgx9cu+KDrX2ZDH/3tMy+gXbZETVGs2M8YdxObOh7XAtim9Y0g==}
+  /object-inspect/1.12.1:
+    resolution: {integrity: sha512-Y/jF6vnvEtOPGiKD1+q+X0CiUYRQtEHp89MLLUJ7TUivtH8Ugn2+3A7Rynqk7BRsAoqeOQWnFnjpDrKSxDgIGA==}
     dev: true
 
   /object-is/1.1.5:
@@ -3955,7 +3969,7 @@ packages:
     dependencies:
       call-bind: 1.0.2
       get-intrinsic: 1.1.1
-      object-inspect: 1.12.0
+      object-inspect: 1.12.1
     dev: true
 
   /signal-exit/3.0.7:

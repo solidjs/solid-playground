@@ -1,6 +1,6 @@
-import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
-import { Routes, Route } from 'solid-app-router';
-import { eventBus } from './utils/eventBus';
+import { Show, createEffect, createSignal, JSX, on } from 'solid-js';
+import { Routes, Route, useSearchParams } from 'solid-app-router';
+import { eventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { Header } from './components/header';
 import { useZoom } from '../src/hooks/useZoom';
@@ -9,9 +9,6 @@ import { Edit } from './pages/edit';
 import { Home } from './pages/home';
 import { Login } from './pages/login';
 
-let swUpdatedBeforeRender = false;
-eventBus.on('sw-update', () => (swUpdatedBeforeRender = true));
-
 export const App = (): JSX.Element => {
   /**
    * Those next three lines are useful to display a popup
@@ -19,9 +16,8 @@ export const App = (): JSX.Element => {
    * via an EventBus initiated in the service worker and
    * the couple line above.
    */
-  const [newUpdate, setNewUpdate] = createSignal(swUpdatedBeforeRender);
-  eventBus.on('sw-update', () => setNewUpdate(true));
-  onCleanup(() => eventBus.all.clear());
+  const [newUpdate, setNewUpdate] = createSignal(eventBus() != undefined);
+  on(eventBus, () => setNewUpdate(true));
 
   const [dark, setDark] = createSignal(isDarkTheme());
   createEffect(() => document.body.classList.toggle('dark', dark()));
@@ -40,6 +36,8 @@ export const App = (): JSX.Element => {
     }
   });
 
+  const [searchParams] = useSearchParams();
+
   return (
     <div class="relative flex bg-white dark:bg-solid-darkbg dark:text-white text-black h-screen overflow-hidden text-slate-900 dark:text-slate-50 font-sans flex-col">
       <Header
@@ -53,7 +51,10 @@ export const App = (): JSX.Element => {
       />
 
       <Routes>
-        <Route path="/:user/:repl" element={<Edit dark={dark()} />} />
+        <Route
+          path="/:user/:repl"
+          element={<Edit dark={dark()} horizontal={searchParams.isHorizontal != undefined} />}
+        />
         <Route path="/:user" element={<Home />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />

@@ -9,7 +9,7 @@ export type Repl = Component<{
   tabs: Tab[];
   id: string;
   setTabs: (tab: Tab[]) => void;
-  current: string;
+  current: string | undefined;
   setCurrent: (tabId: string) => void;
   onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
   ref?: HTMLDivElement | ((el: HTMLDivElement) => void);

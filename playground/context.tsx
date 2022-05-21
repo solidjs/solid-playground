@@ -2,7 +2,7 @@ import { createContext, createResource, createSignal, ParentComponent, Resource,
 
 interface AppContextType {
   token: string;
-  user: Resource<{ display: any; avatar: any } | undefined>;
+  user: Resource<{ display: string; avatar: string } | undefined>;
 }
 
 const AppContext = createContext<AppContextType>();

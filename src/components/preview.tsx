@@ -28,18 +28,18 @@ export const Preview: Component<Props> = (props) => {
     const src = URL.createObjectURL(blob);
     onCleanup(() => URL.revokeObjectURL(src));
 
-    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: src }, '*');
+    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, value: src }, '*');
   });
 
   createEffect(() => {
     if (!iframe) return;
-    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', open: internal.devtools }, '*');
+    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: internal.devtools }, '*');
   });
 
   const setDarkMode = () => {
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     doc?.body!.classList.toggle('dark', internal.isDark);
-    iframe.contentWindow!.postMessage({ event: 'THEME', dark: internal.isDark }, '*');
+    iframe.contentWindow!.postMessage({ event: 'THEME', value: internal.isDark }, '*');
   };
 
   createEffect(() => {
@@ -130,34 +130,31 @@ export const Preview: Component<Props> = (props) => {
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
             try {
-              const { event, code } = data;
+              const { event, value } = data;
 
               if (event === 'DEVTOOLS') {
-                if (data.open) eruda.show();
+                if (value) eruda.show();
                 else eruda.hide();
               } else if (event === 'THEME') {
-                eruda._devTools.config.set('theme', data.dark ? 'Dark' : 'Light');
-                eruda._$el[0].style.colorScheme = data.dark ? 'dark' : 'light';
-              }
-              if (event !== 'CODE_UPDATE') return;
+                eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
+                eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
+              } else if (event === 'CODE_UPDATE') {
+                window?.dispose?.();
+                window.dispose = undefined;
 
-              window?.dispose?.();
-              window.dispose = undefined;
-
-              let app = document.getElementById('app');
-              if (app) {
-                app.remove();
+                let app = document.getElementById('app');
+                if (app) app.remove();
                 app = document.createElement('div');
                 app.id = 'app';
                 document.body.prepend(app);
+
+                console.clear();
+
+                await import(value);
+    
+                const load = document.getElementById('load');
+                if (load) load.remove();
               }
-
-              console.clear();
-
-              await import(code);
-  
-              const load = document.getElementById('load');
-              if (code && load) load.remove();
             } catch (e) {
               console.error(e)
             }
