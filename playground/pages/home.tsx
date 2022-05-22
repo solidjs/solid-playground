@@ -31,7 +31,7 @@ export const Home = () => {
   const navigate = useNavigate();
   const user = () => params.user || context.user()?.display;
 
-  const [repls] = createResource<Repls, string>(user, async (user) => {
+  const [repls, { mutate }] = createResource<Repls, string>(user, async (user) => {
     if (!user) return { total: 0, list: [] };
     return await fetch(`${API}/repl/${user}/list`).then((r) => r.json());
   });
@@ -101,7 +101,23 @@ export const Home = () => {
                   <td>{new Date(repl.created_at).toLocaleString()}</td>
                   <td>
                     <Icon path={repl.public ? eye : eyeOff} class="w-6 inline m-2 ml-0" />
-                    <Icon path={x} class="w-6 inline m-2 mr-0 text-red-700" />
+                    <Icon
+                      path={x}
+                      class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
+                      onClick={async () => {
+                        fetch(`${API}/repl/${repl.id}`, {
+                          method: 'DELETE',
+                          headers: {
+                            authorization: `Bearer ${context.token}`,
+                          },
+                        });
+                        const current = repls.latest!;
+                        mutate({
+                          total: current.total - 1,
+                          list: current.list.filter((x) => x.id !== repl.id),
+                        });
+                      }}
+                    />
                   </td>
                 </tr>
               )}
