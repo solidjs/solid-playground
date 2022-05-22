@@ -33,9 +33,11 @@ export const Header: Component<{
         <a href="https://github.com/solidjs/solid">
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
-        <span class="inline-block -mb-1">
-          Solid<b>JS</b> Playground
-        </span>
+        <div id="project-name">
+          <span class="inline-block -mb-1">
+            Solid<b>JS</b> Playground
+          </span>
+        </div>
       </h1>
       <div class="flex items-center">
         <Dismiss

@@ -3,7 +3,16 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
-import { createEffect, createResource, createSignal, lazy, Suspense } from 'solid-js';
+import {
+  createEffect,
+  createResource,
+  createSignal,
+  lazy,
+  onCleanup,
+  onMount,
+  ParentComponent,
+  Suspense,
+} from 'solid-js';
 import { useParams } from 'solid-app-router';
 import { API, useAppContext } from '../context';
 import createDebounce from '@solid-primitives/debounce';
@@ -53,6 +62,21 @@ const createTabList = () => {
   };
 
   return mapTabs;
+};
+
+const RenderHeader: ParentComponent = (props) => {
+  onMount(() => {
+    const projectName = document.getElementById('project-name')!;
+    const content = projectName.firstChild!;
+    content.remove();
+    const children = props.children as HTMLElement;
+    projectName.appendChild(children);
+    onCleanup(() => {
+      projectName.appendChild(content);
+      projectName.removeChild(children);
+    });
+  });
+  return <></>;
 };
 
 export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
@@ -148,6 +172,9 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
         setCurrent={setCurrent}
         id="repl"
       />
+      <RenderHeader>
+        <input class="bg-transparent" value={resource()?.repl?.title || ''} />
+      </RenderHeader>
     </Suspense>
   );
 };
