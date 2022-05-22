@@ -3,11 +3,11 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
-import { createTabList } from '../../src';
 import { createEffect, createResource, createSignal, lazy, Suspense } from 'solid-js';
 import { useParams } from 'solid-app-router';
 import { API, useAppContext } from '../context';
 import createDebounce from '@solid-primitives/debounce';
+import type { Tab } from '../../src';
 import type { APIRepl } from './home';
 
 const Repl = lazy(() => import('../../src/components/repl'));
@@ -26,53 +26,97 @@ const Repl = lazy(() => import('../../src/components/repl'));
   },
 };
 
+// Custom version of createTabList that allows us to use a resource as the backing signal
+const createTabList = () => {
+  let sourceSignals: Record<string, [get: () => string, set: (value: string) => string]> = {};
+
+  const mapTabs = (tabs: Tab[]): Tab[] => {
+    const oldSignals = sourceSignals;
+    sourceSignals = {};
+
+    return tabs.map((tab) => {
+      const id = `${tab.name}.${tab.type}`;
+      sourceSignals[id] = oldSignals[id] || createSignal(tab.source);
+      if (oldSignals[id]) oldSignals[id][1](tab.source);
+
+      return {
+        name: tab.name,
+        type: tab.type,
+        get source() {
+          return sourceSignals[id][0]();
+        },
+        set source(source: string) {
+          sourceSignals[id][1](source);
+        },
+      };
+    });
+  };
+
+  return mapTabs;
+};
+
 export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
 
   const params = useParams();
   const context = useAppContext()!;
-  const [fetchedTabs] = createResource<APIRepl, string>(params.repl, (repl) =>
-    fetch(`${API}/repl/${repl}`).then((r) => r.json()),
-  );
 
-  const [tabs, setTabs] = createTabList([]);
-  const [current, setCurrent] = createSignal<string>();
-  createEffect(() => {
-    const myRepl = fetchedTabs();
-    if (!myRepl) return;
-    setTabs(
-      myRepl.files.map((x) => {
-        let dot = x.name.lastIndexOf('.');
-        return { name: x.name.slice(0, dot), type: x.name.slice(dot + 1), source: x.content.join('\n') };
-      }),
-    );
-    setCurrent(myRepl.files[0].name);
+  const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') }));
+  const mapTabs = createTabList();
+  const [resource, { mutate }] = createResource<{ tabs: Tab[]; repl: APIRepl }, string>(params.repl, async (repl) => {
+    let x: APIRepl = await fetch(`${API}/repl/${repl}`, {
+      headers: { authorization: `Bearer ${context.token}` },
+    }).then((r) => r.json());
+
+    return {
+      repl: x,
+      tabs: mapTabs(
+        x.files.map((x) => {
+          let dot = x.name.lastIndexOf('.');
+          return { name: x.name.slice(0, dot), type: x.name.slice(dot + 1), source: x.content.join('\n') };
+        }),
+      ),
+    };
   });
 
-  const tabMapper = () => tabs().map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') }));
+  const [current, setCurrent] = createSignal<string>();
+  createEffect(() => {
+    const myRepl = resource();
+    if (!myRepl) return;
+    setCurrent(`${myRepl.tabs[0].name}.${myRepl.tabs[0].type}`);
+  });
+
+  const tabs = () => resource()?.tabs || [];
+  const setTabs = (tabs: Tab[]) => {
+    if (resource.latest) mutate({ repl: resource.latest.repl, tabs: mapTabs(tabs) });
+  };
+
   const updateRepl = createDebounce(() => {
-    const repl = fetchedTabs();
-    const tabs = tabMapper();
-    if (!repl || !tabs.length) return;
-    fetch(`${API}/repl/${repl.id}`, {
+    const repl = resource();
+    if (!repl) return;
+    const tabs = tabMapper(repl.tabs);
+    fetch(`${API}/repl/${params.repl}`, {
       method: 'PUT',
       headers: {
         authorization: `Bearer ${context.token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: repl.title,
-        version: repl.version,
-        public: repl.public,
-        labels: repl.labels,
+        title: repl.repl.title,
+        version: repl.repl.version,
+        public: repl.repl.public,
+        labels: repl.repl.labels,
         files: tabs,
       }),
     });
   }, 1000);
+
+  let firstRun = true;
   createEffect(() => {
-    tabMapper();
-    updateRepl();
+    tabMapper(tabs()); // use the latest value on debounce, and just throw this value away (but use it to track)
+    if (firstRun) firstRun = false;
+    else updateRepl();
   });
 
   return (

@@ -35,9 +35,11 @@ const Repl: ReplProps = (props) => {
   const [store, setStore] = createStore({
     error: '',
     compiled: '',
-    compiledTabs: {
-      [`./${props.current}`]: '',
-    },
+    compiledTabs: props.current
+      ? {
+          [`./${props.current}`]: '',
+        }
+      : {},
     mode: 'DOM' as keyof typeof compileMode,
     isCompiling: false,
     get compileMode(): ValueOf<typeof compileMode> {
@@ -155,6 +157,8 @@ const Repl: ReplProps = (props) => {
    * Also, real time feedback can be stressful
    */
   const applyCompilation = debounce((tabs: Tab[], compileOpts: Record<string, any>) => {
+    if (!tabs.length) return;
+
     setStore('isCompiling', true);
     now = performance.now();
 
