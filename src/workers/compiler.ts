@@ -66,10 +66,10 @@ function generateCodeString(tab: Tab) {
 
 /**
  * This is a custom rollup plugin to handle tabs as a
- * virtual file system and replacing every imports with a
+ * virtual file system and replacing every non-URL import with an
  * ESM CDN import.
  *
- * Note: Passing in the Solid Version for letter use
+ * Note: Passing in the Solid Version for later use
  */
 function virtual({
   solidVersion,
@@ -86,7 +86,15 @@ function virtual({
       // This is a tab being imported
       if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
 
-      // This is an external module
+      // External URL
+      if (importee.includes('://')) {
+        return {
+          id: importee,
+          external: true
+        };
+      }
+
+      // NPM module via ESM CDN
       return {
         id: `${CDN_URL}/${importee.replace('solid-js', `solid-js@${solidVersion}`)}`,
         external: true,
