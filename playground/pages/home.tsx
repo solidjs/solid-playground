@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
 import { createResource, For, Suspense } from 'solid-js';
+import { createStore, produce } from 'solid-js/store';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
 
@@ -29,12 +30,25 @@ export const Home = () => {
   const params = useParams();
   const context = useAppContext()!;
   const navigate = useNavigate();
-  const user = () => params.user || context.user()?.display;
 
-  const [repls, { mutate }] = createResource<Repls, string>(user, async (user) => {
-    if (!user) return { total: 0, list: [] };
-    return await fetch(`${API}/repl/${user}/list`).then((r) => r.json());
-  });
+  const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
+  const [resourceRepls] = createResource<Repls, string>(
+    () => params.user || '',
+    async (user) => {
+      if (!user && !context.token) return { total: 0, list: [] };
+      let output = await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
+        headers: {
+          Authorization: `Bearer ${context.token}`,
+        },
+      }).then((r) => r.json());
+      setRepls(output);
+      return output;
+    },
+  );
+  const get = <T,>(x: T) => {
+    resourceRepls();
+    return x;
+  };
 
   return (
     <div class="bg-brand-other h-full m-8">
@@ -92,15 +106,36 @@ export const Home = () => {
               </tr>
             }
           >
-            <For each={repls()?.list}>
-              {(repl) => (
+            <For each={get(repls.list)}>
+              {(repl, i) => (
                 <tr>
                   <td>
-                    <a href={`${user()}/${repl.id}`}>{repl.title}</a>
+                    <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
                   </td>
                   <td>{new Date(repl.created_at).toLocaleString()}</td>
                   <td>
-                    <Icon path={repl.public ? eye : eyeOff} class="w-6 inline m-2 ml-0" />
+                    <Icon
+                      path={repl.public ? eye : eyeOff}
+                      class="w-6 inline m-2 ml-0"
+                      onClick={async () => {
+                        fetch(`${API}/repl/${repl.id}`, {
+                          method: 'PUT',
+                          headers: {
+                            authorization: `Bearer ${context.token}`,
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            ...repl,
+                            public: !repl.public,
+                          }),
+                        });
+                        setRepls(
+                          produce((x) => {
+                            x!.list[i()].public = !repl.public;
+                          }),
+                        );
+                      }}
+                    />
                     <Icon
                       path={x}
                       class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
@@ -111,10 +146,9 @@ export const Home = () => {
                             authorization: `Bearer ${context.token}`,
                           },
                         });
-                        const current = repls.latest!;
-                        mutate({
-                          total: current.total - 1,
-                          list: current.list.filter((x) => x.id !== repl.id),
+                        setRepls({
+                          total: repls.total - 1,
+                          list: repls.list.filter((x) => x.id !== repl.id),
                         });
                       }}
                     />

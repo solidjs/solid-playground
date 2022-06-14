@@ -1,5 +1,5 @@
 import { Component, JSX, splitProps, createSignal, createEffect, onCleanup } from 'solid-js';
-import throttle from '@solid-primitives/throttle';
+import { throttle } from '@solid-primitives/scheduled';
 import { Dot } from './dot';
 
 interface GridResizerProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -17,11 +17,11 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
   const onResizeStart = () => setIsDragging(true);
   const onResizeEnd = () => setIsDragging(false);
 
-  const [onMouseMove] = throttle((e: MouseEvent) => {
+  const onMouseMove = throttle((e: MouseEvent) => {
     local.onResize(e.clientX, e.clientY);
   }, 10);
 
-  const [onTouchMove] = throttle((e: TouchEvent) => {
+  const onTouchMove = throttle((e: TouchEvent) => {
     const touch = e.touches[0];
     local.onResize(touch.clientX, touch.clientY);
   }, 10);

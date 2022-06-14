@@ -30,7 +30,7 @@ export const Header: Component<{
   return (
     <header class="p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px">
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
-        <a href="https://github.com/solidjs/solid">
+        <a href="/">
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
         <div id="project-name">

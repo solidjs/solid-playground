@@ -15,8 +15,8 @@ import {
 } from 'solid-js';
 import { useParams } from 'solid-app-router';
 import { API, useAppContext } from '../context';
-import createDebounce from '@solid-primitives/debounce';
-import type { Tab } from '../../src';
+import { debounce } from '@solid-primitives/scheduled';
+import { createTabList, Tab } from '../../src';
 import type { APIRepl } from './home';
 
 const Repl = lazy(() => import('../../src/components/repl'));
@@ -33,35 +33,6 @@ const Repl = lazy(() => import('../../src/components/repl'));
         return new editorWorker();
     }
   },
-};
-
-// Custom version of createTabList that allows us to use a resource as the backing signal
-const createTabList = () => {
-  let sourceSignals: Record<string, [get: () => string, set: (value: string) => string]> = {};
-
-  const mapTabs = (tabs: Tab[]): Tab[] => {
-    const oldSignals = sourceSignals;
-    sourceSignals = {};
-
-    return tabs.map((tab) => {
-      const id = `${tab.name}.${tab.type}`;
-      sourceSignals[id] = oldSignals[id] || createSignal(tab.source);
-      if (oldSignals[id]) oldSignals[id][1](tab.source);
-
-      return {
-        name: tab.name,
-        type: tab.type,
-        get source() {
-          return sourceSignals[id][0]();
-        },
-        set source(source: string) {
-          sourceSignals[id][1](source);
-        },
-      };
-    });
-  };
-
-  return mapTabs;
 };
 
 const RenderHeader: ParentComponent = (props) => {
@@ -86,40 +57,28 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
   const params = useParams();
   const context = useAppContext()!;
 
-  const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') }));
-  const mapTabs = createTabList();
-  const [resource, { mutate }] = createResource<{ tabs: Tab[]; repl: APIRepl }, string>(params.repl, async (repl) => {
-    let x: APIRepl = await fetch(`${API}/repl/${repl}`, {
+  const [tabs, setTabs] = createTabList([]);
+  const [current, setCurrent] = createSignal<string>();
+  const [resource, { mutate }] = createResource<APIRepl, string>(params.repl, async (repl) => {
+    let output: APIRepl = await fetch(`${API}/repl/${repl}`, {
       headers: { authorization: `Bearer ${context.token}` },
     }).then((r) => r.json());
 
-    return {
-      repl: x,
-      tabs: mapTabs(
-        x.files.map((x) => {
-          let dot = x.name.lastIndexOf('.');
-          return { name: x.name.slice(0, dot), type: x.name.slice(dot + 1), source: x.content.join('\n') };
-        }),
-      ),
-    };
+    setCurrent(output.files[0].name);
+    setTabs(
+      output.files.map((x) => {
+        let dot = x.name.lastIndexOf('.');
+        return { name: x.name.slice(0, dot), type: x.name.slice(dot + 1), source: x.content.join('\n') };
+      }),
+    );
+    return output;
   });
 
-  const [current, setCurrent] = createSignal<string>();
-  createEffect(() => {
-    const myRepl = resource();
-    if (!myRepl) return;
-    setCurrent(`${myRepl.tabs[0].name}.${myRepl.tabs[0].type}`);
-  });
-
-  const tabs = () => resource()?.tabs || [];
-  const setTabs = (tabs: Tab[]) => {
-    if (resource.latest) mutate({ repl: resource.latest.repl, tabs: mapTabs(tabs) });
-  };
-
-  const updateRepl = createDebounce(() => {
-    const repl = resource();
+  const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') }));
+  const updateRepl = debounce(() => {
+    const repl = resource.latest;
     if (!repl) return;
-    const tabs = tabMapper(repl.tabs);
+    const files = tabMapper(tabs());
     fetch(`${API}/repl/${params.repl}`, {
       method: 'PUT',
       headers: {
@@ -127,11 +86,11 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: repl.repl.title,
-        version: repl.repl.version,
-        public: repl.repl.public,
-        labels: repl.repl.labels,
-        files: tabs,
+        title: repl.title,
+        version: repl.version,
+        public: repl.public,
+        labels: repl.labels,
+        files,
       }),
     });
   }, 1000);
@@ -173,7 +132,29 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
         id="repl"
       />
       <RenderHeader>
-        <input class="bg-transparent" value={resource()?.repl?.title || ''} />
+        <input
+          class="bg-transparent"
+          value={resource()?.title || ''}
+          onChange={(e) => {
+            mutate((x) => x && { ...x, title: e.currentTarget.value });
+            const repl = resource.latest!;
+            const files = tabMapper(tabs());
+            fetch(`${API}/repl/${params.repl}`, {
+              method: 'PUT',
+              headers: {
+                authorization: `Bearer ${context.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: e.currentTarget.value,
+                version: repl.version,
+                public: repl.public,
+                labels: repl.labels,
+                files: files,
+              }),
+            });
+          }}
+        />
       </RenderHeader>
     </Suspense>
   );

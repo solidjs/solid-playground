@@ -101,7 +101,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       </button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="fixed right-0 top-[48px] bg-white dark:bg-solid-darkbg rounded shadow p-6 w-min z-10"
+          class="absolute transform -translate-x-1/2 bg-white dark:bg-solid-darkbg rounded shadow-md border-2 border-slate-200 dark:border-neutral-800 p-6 w-min z-10"
           classList={{
             'left-1/4': props.showMenu,
           }}

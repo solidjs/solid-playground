@@ -10,7 +10,7 @@ import { Error } from './error';
 
 import type { Tab } from '../';
 import type { Repl as ReplProps } from '../../types/types';
-import debounce from '@solid-primitives/debounce';
+import { debounce } from '@solid-primitives/scheduled';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';

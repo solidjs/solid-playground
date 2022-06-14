@@ -19,18 +19,18 @@
     "build": "vite build && workbox generateSW workbox-config.js",
     "build:lib": "jiti rollup.config.js",
     "format": "prettier -w \"{src,playground}/**/*.{js,json,ts,tsx,html,css}\" \"*.{js,ts}\"",
-    "prepublishOnly": "pnpm build:lib"
+    "prepublishOnly": "pnpm build:lib",
+    "tsc": "tsc"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.0",
+    "@babel/core": "^7.18.2",
     "@babel/plugin-syntax-jsx": "^7.17.12",
-    "@babel/types": "^7.18.0",
+    "@babel/types": "^7.18.4",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
-    "@solid-primitives/debounce": "^1.3.0",
     "@types/babel__standalone": "^7.1.4",
     "@types/dedent": "^0.7.0",
     "@types/fs-extra": "^9.0.13",
@@ -47,8 +47,8 @@
     "rollup-plugin-import-css": "^3.0.3",
     "rollup-plugin-windicss": "^1.8.4",
     "solid-app-router": "^0.3.3",
-    "typescript": "^4.6.4",
-    "vite": "^2.9.9",
+    "typescript": "^4.7.3",
+    "vite": "^2.9.10",
     "vite-plugin-solid": "^2.2.6",
     "vite-plugin-windicss": "^1.8.4",
     "windicss": "^3.5.4",
@@ -57,8 +57,8 @@
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@babel/preset-typescript": "^7.17.12",
-    "@babel/standalone": "^7.18.1",
-    "@solid-primitives/throttle": "^1.2.0",
+    "@babel/standalone": "^7.18.4",
+    "@solid-primitives/scheduled": "^1.0.0",
     "babel-preset-solid": "1.4.2",
     "dedent": "^0.7.0",
     "jszip": "^3.10.0",
@@ -66,9 +66,9 @@
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
     "prettier": "^2.6.2",
-    "rollup": "^2.74.1",
+    "rollup": "^2.75.6",
     "solid-dismiss": "^1.2.1",
     "solid-heroicons": "^2.0.3",
-    "solid-js": "1.4.2"
+    "solid-js": "1.4.3"
   }
 }

@@ -39,7 +39,7 @@ function virtual({ solidOptions = {} }: { solidOptions: unknown }): Plugin {
       if (importee.includes('://')) {
         return {
           id: importee,
-          external: true
+          external: true,
         };
       }
 
