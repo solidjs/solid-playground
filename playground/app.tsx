@@ -39,7 +39,7 @@ export const App = (): JSX.Element => {
   const [searchParams] = useSearchParams();
 
   return (
-    <div class="relative flex bg-white dark:bg-solid-darkbg dark:text-white text-black h-screen overflow-hidden text-slate-900 dark:text-slate-50 font-sans flex-col">
+    <div class="relative flex bg-white dark:bg-solid-darkbg dark:text-white text-black h-screen text-slate-900 dark:text-slate-50 font-sans flex-col overflow-auto">
       <Header
         dark={dark()}
         toggleDark={() => {
@@ -47,7 +47,6 @@ export const App = (): JSX.Element => {
           setDark(toggledValue);
           localStorage.setItem('dark', String(toggledValue));
         }}
-        tabs={[]}
       />
 
       <Routes>

@@ -33,7 +33,7 @@ export const Home = () => {
 
   const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
   const [resourceRepls] = createResource<Repls, string>(
-    () => params.user || '',
+    () => params.user || context.user()?.display,
     async (user) => {
       if (!user && !context.token) return { total: 0, list: [] };
       let output = await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
@@ -51,14 +51,14 @@ export const Home = () => {
   };
 
   return (
-    <div class="bg-brand-other h-full m-8">
+    <div class="m-8">
       <button
         class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
         onClick={async () => {
           const result = await fetch(`${API}/repl`, {
             method: 'POST',
             headers: {
-              authorization: `Bearer ${context.token}`,
+              'authorization': `Bearer ${context.token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -66,7 +66,7 @@ export const Home = () => {
               public: true,
               labels: [],
               version: '1.0',
-              files: defaultTabs.map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') })),
+              files: defaultTabs.map((x) => ({ name: x.name, content: x.source.split('\n') })),
             }),
           });
           const { id } = await result.json();
@@ -116,12 +116,12 @@ export const Home = () => {
                   <td>
                     <Icon
                       path={repl.public ? eye : eyeOff}
-                      class="w-6 inline m-2 ml-0"
+                      class="w-6 inline m-2 ml-0 cursor-pointer"
                       onClick={async () => {
                         fetch(`${API}/repl/${repl.id}`, {
                           method: 'PUT',
                           headers: {
-                            authorization: `Bearer ${context.token}`,
+                            'authorization': `Bearer ${context.token}`,
                             'Content-Type': 'application/json',
                           },
                           body: JSON.stringify({

@@ -4,6 +4,7 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
 import {
+  batch,
   createEffect,
   createResource,
   createSignal,
@@ -57,32 +58,38 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
   const params = useParams();
   const context = useAppContext()!;
 
+  let loaded = false;
+
   const [tabs, setTabs] = createTabList([]);
+  context.setTabs(tabs);
   const [current, setCurrent] = createSignal<string>();
   const [resource, { mutate }] = createResource<APIRepl, string>(params.repl, async (repl) => {
     let output: APIRepl = await fetch(`${API}/repl/${repl}`, {
-      headers: { authorization: `Bearer ${context.token}` },
+      headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
     }).then((r) => r.json());
 
-    setCurrent(output.files[0].name);
-    setTabs(
-      output.files.map((x) => {
-        let dot = x.name.lastIndexOf('.');
-        return { name: x.name.slice(0, dot), type: x.name.slice(dot + 1), source: x.content.join('\n') };
-      }),
-    );
+    batch(() => {
+      setTabs(
+        output.files.map((x) => {
+          return { name: x.name, source: x.content.join('\n') };
+        }),
+      );
+      setCurrent(output.files[0].name);
+    });
+    loaded = true;
+
     return output;
   });
 
-  const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: `${x.name}.${x.type}`, content: x.source.split('\n') }));
+  const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: x.name, content: x.source.split('\n') }));
   const updateRepl = debounce(() => {
     const repl = resource.latest;
-    if (!repl) return;
+    if (!repl || !context.token || context.user()?.display != params.user) return;
     const files = tabMapper(tabs());
     fetch(`${API}/repl/${params.repl}`, {
       method: 'PUT',
       headers: {
-        authorization: `Bearer ${context.token}`,
+        'authorization': `Bearer ${context.token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -95,11 +102,9 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
     });
   }, 1000);
 
-  let firstRun = true;
   createEffect(() => {
     tabMapper(tabs()); // use the latest value on debounce, and just throw this value away (but use it to track)
-    if (firstRun) firstRun = false;
-    else updateRepl();
+    if (loaded) updateRepl();
   });
 
   return (
@@ -142,7 +147,7 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
             fetch(`${API}/repl/${params.repl}`, {
               method: 'PUT',
               headers: {
-                authorization: `Bearer ${context.token}`,
+                'authorization': `Bearer ${context.token}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({

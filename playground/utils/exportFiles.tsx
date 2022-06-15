@@ -45,7 +45,7 @@ const packageJSON = JSON.stringify(
       'solid-js': pkg.dependencies['solid-js'],
     },
     devDependencies: {
-      vite: pkg.devDependencies['vite'],
+      'vite': pkg.devDependencies['vite'],
       'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'],
     },
   },
@@ -81,12 +81,8 @@ export async function exportToZip(tabs: Tab[]): Promise<void> {
   zip.file('package.json', packageJSON);
   zip.file('vite.config.ts', viteConfigFile);
   zip.file('tsconfig.json', tsConfig);
-
-  // project src
-  const src = zip.folder('src')!;
-
   for (const tab of tabs) {
-    src.file(`${tab.name}.${tab.type}`, tab.source);
+    zip.file(tab.name, tab.source);
   }
 
   const blob = await zip.generateAsync({ type: 'blob' });

@@ -17,7 +17,6 @@ export type Repl = Component<{
 
 export interface Tab {
   name: string;
-  type: string;
   source: string;
 }
 

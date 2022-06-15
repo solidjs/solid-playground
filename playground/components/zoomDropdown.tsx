@@ -87,11 +87,10 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
     >
       <button
         type="button"
-        class="flex flex-row space-x-2 items-center w-full md:px-1 px-2 py-2 focus:ring-1 rounded opacity-80 hover:opacity-100"
+        class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
         classList={{
+          'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.showMenu,
           'bg-gray-300 dark:text-black': open() && props.showMenu,
-          'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black focus:outline-none focus:highlight-none active:highlight-none focus:ring-0 active:outline-none':
-            props.showMenu,
         }}
         title="Scale editor to make text larger or smaller"
         ref={btnEl}
@@ -101,9 +100,12 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       </button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="absolute transform -translate-x-1/2 bg-white dark:bg-solid-darkbg rounded shadow-md border-2 border-slate-200 dark:border-neutral-800 p-6 w-min z-10"
+          class="absolute bg-white dark:bg-solid-darkbg rounded shadow-md border-2 border-slate-200 dark:border-neutral-800 p-6 w-min z-10"
           classList={{
             'left-1/4': props.showMenu,
+          }}
+          style={{
+            transform: 'translateX(calc(2rem - 100%))',
           }}
         >
           <div class="flex">

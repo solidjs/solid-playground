@@ -98,7 +98,7 @@ async function compile(
   tabsOutput = {};
   tabsLookup.clear();
   for (const tab of tabs) {
-    tabsLookup.set(`./${tab.name}.${tab.type}`, tab);
+    tabsLookup.set(`./${tab.name}`, tab);
   }
 
   try {

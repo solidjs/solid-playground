@@ -9,13 +9,12 @@ export const createTabList = (initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => v
     sourceSignals = {};
 
     return tabs.map((tab) => {
-      const id = `${tab.name}.${tab.type}`;
+      const id = tab.name;
       sourceSignals[id] = oldSignals[id] || createSignal(tab.source);
       if (oldSignals[id]) oldSignals[id][1](tab.source);
 
       return {
         name: tab.name,
-        type: tab.type,
         get source() {
           return sourceSignals[id][0]();
         },

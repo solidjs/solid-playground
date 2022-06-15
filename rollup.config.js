@@ -174,7 +174,7 @@ rollup({
     replace({
       'process.env.BABEL_TYPES_8_BREAKING': 'true',
       'process.env.NODE_DEBUG': 'false',
-      preventAssignment: true,
+      'preventAssignment': true,
     }),
     babel({
       extensions: extensions,

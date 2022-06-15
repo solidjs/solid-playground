@@ -13,12 +13,9 @@ export const Preview: Component<Props> = (props) => {
   const CODE_UPDATE = 'CODE_UPDATE';
 
   createEffect(() => {
-    // HACK: This helps prevent unnecessary updates
-    const isNotDom = internal.code.includes('getNextElement') || internal.code.includes('getHydrationKey');
-
     const isEmpty = !internal.code;
 
-    if (isNotDom || isEmpty || !isIframeReady()) return;
+    if (isEmpty || !isIframeReady()) return;
 
     latestCode = internal.code.replace('render(', 'window.dispose = render(');
 
@@ -202,24 +199,20 @@ export const Preview: Component<Props> = (props) => {
   });
 
   return (
-    <div
-      class={`grid relative ${internal.class}`}
+    <iframe
+      title="Solid REPL"
+      class={`overflow-auto p-0 dark:bg-other block ${internal.class}`}
+      style={styleScale()}
+      ref={iframe}
+      src={src}
       {...external}
-      style={`grid-template-rows: 1fr auto; ${styleScale()}`}
-    >
-      <iframe
-        title="Solid REPL"
-        class="overflow-auto p-0 w-full h-full dark:bg-other block"
-        ref={iframe}
-        src={src}
-        // @ts-ignore
-        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-      ></iframe>
-    </div>
+      // @ts-ignore
+      sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+    ></iframe>
   );
 };
 
-type Props = JSX.HTMLAttributes<HTMLDivElement> & {
+type Props = JSX.HTMLAttributes<HTMLIFrameElement> & {
   code: string;
   reloadSignal: boolean;
   devtools: boolean;

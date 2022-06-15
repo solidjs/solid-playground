@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { refresh, terminal } from 'solid-heroicons/outline';
 import { unwrap, createStore } from 'solid-js/store';
@@ -7,13 +7,14 @@ import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
 import { GridResizer } from './gridResizer';
 import { Error } from './error';
-
-import type { Tab } from '../';
-import type { Repl as ReplProps } from '../../types/types';
 import { debounce } from '@solid-primitives/scheduled';
+import { createMediaQuery } from '@solid-primitives/media';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
+
+import type { Tab } from '../';
+import type { Repl as ReplProps } from '../../types/types';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -23,10 +24,7 @@ const compileMode = {
 
 type ValueOf<T> = T[keyof T];
 
-const id = (tab: Tab) => `${tab.name}.${tab.type}`;
-
 const Repl: ReplProps = (props) => {
-  // this is bad style don't do this
   const { compiler, formatter } = props;
   let now: number;
 
@@ -49,8 +47,8 @@ const Repl: ReplProps = (props) => {
 
   const actions = {
     resetError: () => setStore('error', ''),
-    setCurrentTab: (current: string) => {
-      const idx = props.tabs.findIndex((tab) => id(tab) === current);
+    setCurrentTab(current: string) {
+      const idx = props.tabs.findIndex((tab) => tab.name === current);
       if (idx < 0) return;
       props.setCurrent(current);
     },
@@ -58,7 +56,7 @@ const Repl: ReplProps = (props) => {
       setStore({ compiled, isCompiling: false, compiledTabs: tabs });
     },
     setTabName(id1: string, name: string) {
-      const idx = props.tabs.findIndex((tab) => id(tab) === id1);
+      const idx = props.tabs.findIndex((tab) => tab.name === id1);
       if (idx < 0) return;
 
       const tabs = props.tabs;
@@ -66,49 +64,30 @@ const Repl: ReplProps = (props) => {
       batch(() => {
         props.setTabs(tabs);
         if (props.current === id1) {
-          props.setCurrent(id(tabs[idx]));
-        }
-      });
-    },
-    setTabType(id1: string, type: string) {
-      const idx = props.tabs.findIndex((tab) => id(tab) === id1);
-      if (idx < 0) return;
-
-      const tabs = props.tabs;
-      tabs[idx] = { ...tabs[idx], type };
-      batch(() => {
-        props.setTabs(tabs);
-        if (props.current === id1) {
-          props.setCurrent(id(tabs[idx]));
+          props.setCurrent(tabs[idx].name);
         }
       });
     },
     removeTab(id1: string) {
       const tabs = props.tabs;
-      const idx = tabs.findIndex((tab) => id(tab) === id1);
+      const idx = tabs.findIndex((tab) => tab.name === id1);
       const tab = tabs[idx];
 
       if (!tab) return;
 
-      const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}.${tab.type}?`);
+      const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}?`);
       if (!confirmDeletion) return;
 
       batch(() => {
         props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
         // We want to redirect to another tab if we are deleting the current one
         if (props.current === id1) {
-          props.setCurrent(id(tabs[idx - 1]));
+          props.setCurrent(tabs[idx - 1].name);
         }
       });
     },
-    getCurrentSource() {
-      const idx = props.tabs.findIndex((tab) => id(tab) === props.current);
-      if (idx < 0) return;
-
-      return props.tabs[idx].source;
-    },
     setCurrentSource(source: string) {
-      const idx = props.tabs.findIndex((tab) => id(tab) === props.current);
+      const idx = props.tabs.findIndex((tab) => tab.name === props.current);
       if (idx < 0) return;
 
       const tabs = props.tabs;
@@ -116,25 +95,18 @@ const Repl: ReplProps = (props) => {
     },
     addTab() {
       const newTab = {
-        name: `tab${props.tabs.length}`,
-        type: 'tsx',
+        name: `tab${props.tabs.length}.tsx`,
         source: '',
       };
       batch(() => {
         props.setTabs(props.tabs.concat(newTab));
-        props.setCurrent(id(newTab));
+        props.setCurrent(newTab.name);
       });
     },
   };
 
   const [edit, setEdit] = createSignal(-1);
-  const [showPreview, setShowPreview] = createSignal(true);
-
-  /**
-   * If we show the preview of the code, we want it to be DOM
-   * to be able to render into the iframe.
-   */
-  createEffect(() => showPreview() && setStore('mode', 'DOM'));
+  const [outputTab, setOutputTab] = createSignal(0);
 
   compiler.addEventListener('message', ({ data }) => {
     const { event } = data;
@@ -185,61 +157,33 @@ const Repl: ReplProps = (props) => {
    */
   const handleDocChange = (source: string) => {
     actions.setCurrentSource(source);
-    setStore({ error: '' });
   };
 
-  /**
-   * Upcomming 2 blocks before the slice of view is used for horizontal and vertical resizers.
-   * This first block controls the horizontal resizer.
-   */
-  const adjustPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
-    if (percentage < lowerBound) {
-      return lowerBound;
-    } else if (percentage > upperBound) {
-      return upperBound;
-    } else {
-      return percentage;
-    }
+  const clampPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
+    return Math.min(Math.max(percentage, lowerBound), upperBound);
   };
 
-  const [horizontalResizer, setHorizontalResizer] = createSignal<HTMLElement>();
+  let grid: HTMLDivElement;
+  let resizer: HTMLElement;
   const [left, setLeft] = createSignal(1.25);
 
-  const changeLeft = (clientX: number, _clientY: number) => {
-    // Adjust the reading according to the width of the resizable panes
-    const clientXAdjusted = clientX - horizontalResizer()!.offsetWidth / 2;
-    const widthAdjusted = document.body.offsetWidth - horizontalResizer()!.offsetWidth;
+  const isLarge = createMediaQuery('(min-width: 768px)');
+  const isHorizontal = () => props.isHorizontal || isLarge();
 
-    const percentage = clientXAdjusted / (widthAdjusted / 2);
-    const percentageAdjusted = adjustPercentage(percentage, 0.5, 1.5);
+  const changeLeft = (clientX: number, clientY: number) => {
+    let position: number;
+    let size: number;
+    if (isHorizontal()) {
+      position = clientX - grid.offsetLeft - resizer.offsetWidth / 2;
+      size = grid.offsetWidth - resizer.offsetWidth;
+    } else {
+      position = clientY - grid.offsetTop - resizer.offsetHeight / 2;
+      size = grid.offsetHeight - resizer.offsetHeight;
+    }
+    const percentage = position / size;
+    const percentageAdjusted = clampPercentage(percentage * 2, 0.5, 1.5);
 
     setLeft(percentageAdjusted);
-  };
-
-  /**
-   * This second block controls the vertical resizer.
-   */
-  const [grid, setGrid] = createSignal<HTMLElement>();
-  const [fileTabs, setFileTabs] = createSignal<HTMLElement>();
-  const [resultTabs, setResultTabs] = createSignal<HTMLElement>();
-  const [verticalResizer, setVerticalResizer] = createSignal<HTMLElement>();
-  const [top, setTop] = createSignal(1);
-
-  const changeTop = (_clientX: number, clientY: number) => {
-    // Adjust the reading according to the height of the resizable panes
-    const headerSize = document.body.offsetHeight - grid()!.offsetHeight;
-    const clientYAdjusted = clientY - headerSize - fileTabs()!.offsetHeight - verticalResizer()!.offsetHeight / 2;
-    const heightAdjusted =
-      document.body.offsetHeight -
-      headerSize -
-      fileTabs()!.offsetHeight -
-      verticalResizer()!.offsetHeight -
-      resultTabs()!.offsetHeight;
-
-    const percentage = clientYAdjusted / (heightAdjusted / 2);
-    const percentageAdjusted = adjustPercentage(percentage, 0.5, 1.5);
-
-    setTop(percentageAdjusted);
   };
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
@@ -250,76 +194,59 @@ const Repl: ReplProps = (props) => {
   return (
     <div
       ref={(el) => {
-        setGrid(el);
+        grid = el;
         if (props.ref) {
           (props.ref as (el: HTMLDivElement) => void)(el);
         }
       }}
-      class="grid h-full bg-white dark:bg-solid-darkbg dark:text-white text-black font-sans overflow-hidden"
+      class="grid h-full min-h-0 bg-white dark:bg-solid-darkbg dark:text-white text-black font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
-        wrapper: !props.isHorizontal,
+        'wrapper': !props.isHorizontal,
       }}
       style={{
         '--left': `${left()}fr`,
         '--right': `${2 - left()}fr`,
-        '--top': `${top()}fr`,
-        '--bottom': `${2 - top()}fr`,
       }}
     >
-      <nav class="row-start-1 flex items-center">
-        <TabList ref={(el) => setFileTabs(el)} class="flex-1">
+      <div class="h-full flex flex-col">
+        <TabList>
           <For each={props.tabs}>
             {(tab, index) => (
-              <TabItem active={props.current === id(tab)} class="mr-2">
+              <TabItem active={props.current === tab.name} class="mr-2">
                 <button
                   type="button"
-                  onClick={() => actions.setCurrentTab(id(tab))}
+                  onClick={() => actions.setCurrentTab(tab.name)}
                   onDblClick={() => {
-                    if (index() <= 0) return;
                     setEdit(index());
-                    tabRefs.get(id(tab))?.focus();
+                    tabRefs.get(tab.name)?.focus();
                   }}
-                  class="cursor-pointer focus:outline-none -mb-0.5 py-2 px-3"
+                  class="cursor-pointer -mb-0.5 py-2 px-3"
                 >
                   <span
-                    ref={(el) => tabRefs.set(id(tab), el)}
-                    contentEditable={props.current === id(tab) && edit() >= 0}
-                    // onBlur={(e) => {
-                    //   setEdit(-1);
-                    //   actions.setTabName(tab.id, e.currentTarget.textContent!);
-                    // }}
+                    ref={(el) => tabRefs.set(tab.name, el)}
+                    contentEditable={edit() == index()}
+                    onBlur={(e) => {
+                      setEdit(-1);
+                      actions.setTabName(tab.name, e.currentTarget.textContent!);
+                    }}
                     onKeyDown={(e) => {
                       if (e.code === 'Space') e.preventDefault();
                       if (e.code !== 'Enter') return;
                       setEdit(-1);
-                      actions.setTabName(id(tab), e.currentTarget.textContent!);
+                      actions.setTabName(tab.name, e.currentTarget.textContent!);
                     }}
-                    class="outline-none"
                   >
                     {tab.name}
                   </span>
-                  <Show when={props.current === id(tab) && edit() >= 0} fallback={<span>.{tab.type}</span>}>
-                    <select
-                      class="dark:bg-gray-700 bg-none p-0"
-                      value={tab.type}
-                      onBlur={(e) => {
-                        setEdit(-1);
-                        actions.setTabType(id(tab), e.currentTarget.value);
-                      }}
-                    >
-                      <option value="tsx">.tsx</option>
-                      <option value="css">.css</option>
-                    </select>
-                  </Show>
                 </button>
 
                 <Show when={index() > 0}>
                   <button
                     type="button"
-                    class="border-0 cursor-pointer focus:outline-none -mb-0.5"
+                    class="border-0 cursor-pointer -mb-0.5"
                     onClick={() => {
-                      actions.removeTab(id(tab));
+                      actions.removeTab(tab.name);
                     }}
                   >
                     <span class="sr-only">Delete this tab</span>
@@ -333,7 +260,7 @@ const Repl: ReplProps = (props) => {
           </For>
 
           <li class="inline-flex items-center m-0 border-b-2 border-transparent">
-            <button type="button" class="focus:outline-none" onClick={actions.addTab} title="Add a new tab">
+            <button type="button" onClick={actions.addTab} title="Add a new tab">
               <span class="sr-only">Add a new tab</span>
               <svg
                 viewBox="0 0 24 24"
@@ -357,61 +284,18 @@ const Repl: ReplProps = (props) => {
             </label>
           </TabItem>
         </TabList>
-      </nav>
 
-      <TabList
-        ref={(el) => setResultTabs(el)}
-        class={`row-start-4 border-slate-200 ${
-          props.isHorizontal ? '' : 'md:row-start-1 md:col-start-3 md:border-t-0'
-        }`}
-      >
-        <TabItem>
-          <button
-            type="button"
-            title="Refresh the page"
-            class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25 active:animate-spin"
-            onClick={[reload, true]}
-            disabled={!showPreview()}
-          >
-            <span class="sr-only">Refresh the page</span>
-            <Icon path={refresh} class="h-5" />
-          </button>
-        </TabItem>
-        <TabItem>
-          <button
-            type="button"
-            title="Open the devtools"
-            class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
-            onClick={() => setDevtoolsOpen(!devtoolsOpen())}
-            disabled={!showPreview()}
-          >
-            <span class="sr-only">Open the devtools</span>
-            <Icon path={terminal} class="h-5" />
-          </button>
-        </TabItem>
-        <TabItem class="flex-1" active={showPreview()}>
-          <button type="button" class="w-full focus:outline-none -mb-0.5 py-2 px-3" onClick={[setShowPreview, true]}>
-            Result
-          </button>
-        </TabItem>
-        <TabItem class="flex-1" active={!showPreview()}>
-          <button type="button" class="w-full focus:outline-none -mb-0.5 py-2 px-3" onClick={[setShowPreview, false]}>
-            Output
-          </button>
-        </TabItem>
-      </TabList>
-
-      <div class="h-full row-start-2 flex flex-col overflow-hidden">
-        <MonacoTabs tabs={props.tabs} compiled={store.compiledTabs[`./${props.current}`] || ''} folder={props.id} />
+        <MonacoTabs
+          tabs={props.tabs}
+          compiled={props.current ? store.compiledTabs[`./${props.current}`] : ''}
+          folder={props.id}
+        />
 
         <Show when={props.current}>
           {(current) => (
             <Editor
               url={`file:///${props.id}/${current}`}
               onDocChange={handleDocChange}
-              class="flex-1 overflow-auto focus:outline-none"
-              styles={{ backgroundColor: '#F8FAFC' }}
-              canFormat
               formatter={formatter}
               isDark={props.dark}
               withMinimap={false}
@@ -427,94 +311,120 @@ const Repl: ReplProps = (props) => {
         />
       </div>
 
-      <GridResizer
-        ref={(el) => setVerticalResizer(el)}
-        isHorizontal={props.isHorizontal}
-        direction="vertical"
-        class="row-start-3"
-        onResize={changeTop}
-      />
+      <GridResizer ref={(el) => (resizer = el)} isHorizontal={isHorizontal()} onResize={changeLeft} />
 
-      <GridResizer
-        ref={(el) => setHorizontalResizer(el)}
-        isHorizontal={props.isHorizontal}
-        direction="horizontal"
-        class="row-start-1 row-end-3 col-start-2"
-        onResize={changeLeft}
-      />
+      <div class="h-full flex flex-col">
+        <TabList>
+          <TabItem>
+            <button
+              type="button"
+              title="Refresh the page"
+              class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25 active:animate-spin"
+              onClick={[reload, true]}
+              disabled={outputTab() != 0}
+            >
+              <span class="sr-only">Refresh the page</span>
+              <Icon path={refresh} class="h-5" />
+            </button>
+          </TabItem>
+          <TabItem>
+            <button
+              type="button"
+              title="Open the devtools"
+              class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
+              onClick={() => setDevtoolsOpen(!devtoolsOpen())}
+              disabled={outputTab() != 0}
+            >
+              <span class="sr-only">Open the devtools</span>
+              <Icon path={terminal} class="h-5" />
+            </button>
+          </TabItem>
+          <TabItem class="flex-1" active={outputTab() == 0}>
+            <button type="button" class="w-full -mb-0.5 py-2" onClick={[setOutputTab, 0]}>
+              Result
+            </button>
+          </TabItem>
+          <TabItem class="flex-1" active={outputTab() == 1}>
+            <button
+              type="button"
+              class="w-full -mb-0.5 py-2"
+              onClick={() => {
+                setOutputTab(1);
+                setStore('mode', 'DOM');
+              }}
+            >
+              Output
+            </button>
+          </TabItem>
+        </TabList>
 
-      <Show
-        when={!showPreview()}
-        fallback={
-          <Preview
-            reloadSignal={reloadSignal()}
-            devtools={devtoolsOpen()}
-            isDark={props.dark}
-            code={store.compiled}
-            class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'}`}
-          />
-        }
-      >
-        <section
-          class="h-full max-h-screen grid focus:outline-none row-start-5 relative divide-y-2 divide-slate-200 dark:divide-neutral-800"
-          classList={{ 'md:row-start-2': !props.isHorizontal }}
-          style="grid-template-rows: minmax(0, 1fr) auto"
-        >
-          <Editor
-            url={`file:///${props.id}/output_dont_import.tsx`}
-            class="h-full focus:outline-none"
-            styles={{ backgroundColor: '#fff' }}
-            isDark={props.dark}
-            disabled
-            withMinimap={false}
-          />
+        <Switch>
+          <Match when={outputTab() == 0}>
+            <Preview
+              reloadSignal={reloadSignal()}
+              devtools={devtoolsOpen()}
+              isDark={props.dark}
+              code={store.compiled}
+              class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'}`}
+            />
+          </Match>
+          <Match when={outputTab() == 1}>
+            <section class="h-full relative divide-y-2 divide-slate-200 dark:divide-neutral-800">
+              <Editor
+                url={`file:///${props.id}/output_dont_import.tsx`}
+                isDark={props.dark}
+                disabled
+                withMinimap={false}
+              />
 
-          <div class="p-5">
-            <label class="font-semibold text-sm uppercase">Compile mode</label>
+              <div class="p-5">
+                <label class="font-semibold text-sm uppercase">Compile mode</label>
 
-            <div class="mt-1 space-y-1 text-sm">
-              <label class="block mr-auto cursor-pointer space-x-2">
-                <input
-                  checked={store.mode === 'DOM'}
-                  value="DOM"
-                  class="text-brand-default"
-                  onChange={(e) => setStore('mode', e.currentTarget.value as any)}
-                  type="radio"
-                  name="dom"
-                  id="dom"
-                />
-                <span>Client side rendering</span>
-              </label>
+                <div class="mt-1 space-y-1 text-sm">
+                  <label class="block mr-auto cursor-pointer space-x-2">
+                    <input
+                      checked={store.mode === 'DOM'}
+                      value="DOM"
+                      class="text-brand-default"
+                      onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                      type="radio"
+                      name="dom"
+                      id="dom"
+                    />
+                    <span>Client side rendering</span>
+                  </label>
 
-              <label class="block mr-auto cursor-pointer space-x-2">
-                <input
-                  checked={store.mode === 'SSR'}
-                  value="SSR"
-                  class="text-brand-default"
-                  onChange={(e) => setStore('mode', e.currentTarget.value as any)}
-                  type="radio"
-                  name="dom"
-                  id="dom"
-                />
-                <span>Server side rendering</span>
-              </label>
+                  <label class="block mr-auto cursor-pointer space-x-2">
+                    <input
+                      checked={store.mode === 'SSR'}
+                      value="SSR"
+                      class="text-brand-default"
+                      onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                      type="radio"
+                      name="dom"
+                      id="dom"
+                    />
+                    <span>Server side rendering</span>
+                  </label>
 
-              <label class="block mr-auto cursor-pointer space-x-2">
-                <input
-                  checked={store.mode === 'HYDRATABLE'}
-                  value="HYDRATABLE"
-                  class="text-brand-default"
-                  onChange={(e) => setStore('mode', e.currentTarget.value as any)}
-                  type="radio"
-                  name="dom"
-                  id="dom"
-                />
-                <span>Client side rendering with hydration</span>
-              </label>
-            </div>
-          </div>
-        </section>
-      </Show>
+                  <label class="block mr-auto cursor-pointer space-x-2">
+                    <input
+                      checked={store.mode === 'HYDRATABLE'}
+                      value="HYDRATABLE"
+                      class="text-brand-default"
+                      onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                      type="radio"
+                      name="dom"
+                      id="dom"
+                    />
+                    <span>Client side rendering with hydration</span>
+                  </label>
+                </div>
+              </div>
+            </section>
+          </Match>
+        </Switch>
+      </div>
     </div>
   );
 };

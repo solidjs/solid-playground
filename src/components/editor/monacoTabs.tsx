@@ -12,18 +12,19 @@ const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> =
   const model = editor.createModel('', 'typescript', fileUri);
 
   createEffect(() => {
-    model.setValue(props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9][0-9.\-a-z]+)/g, ''));
+    model.setValue(props.compiled);
   });
   onCleanup(() => model.dispose());
 
   keyedMap<Tab>({
-    by: (tab) => `${tab.name}.${tab.type}`,
+    by: (tab) => tab.name,
     get each() {
       return props.tabs;
     },
     children: (tab) => {
-      const uri = Uri.parse(`file:///${props.folder}/${tab().name}.${tab().type}`);
-      const model = editor.createModel(tab().source, tab().type === 'tsx' ? 'typescript' : 'css', uri);
+      const uri = Uri.parse(`file:///${props.folder}/${tab().name}`);
+
+      const model = editor.createModel(tab().source, undefined, uri);
 
       let first = true;
       createEffect(() => {
