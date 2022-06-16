@@ -26,40 +26,39 @@ function uid(str: string) {
  *
  * Note: Passing in the Solid Version for later use
  */
-function virtual({ solidOptions = {} }: { solidOptions: unknown }): Plugin {
-  return {
-    name: 'repl-plugin',
+const replPlugin: Plugin = {
+  name: 'repl-plugin',
 
-    async resolveId(importee: string) {
-      // This is a tab being imported
-      if (importee.startsWith('.') && importee.endsWith('.css')) return importee;
-      if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
+  async resolveId(importee: string) {
+    // This is a tab being imported
+    if (importee.startsWith('.') && importee.endsWith('.css')) return importee;
+    if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
 
-      // External URL
-      if (importee.includes('://')) {
-        return {
-          id: importee,
-          external: true,
-        };
-      }
-
-      // NPM module via ESM CDN
+    // External URL
+    if (importee.includes('://')) {
       return {
-        id: `${CDN_URL}/${importee}`,
+        id: importee,
         external: true,
       };
-    },
+    }
 
-    async load(id: string) {
-      return tabsLookup.get(id)?.source;
-    },
+    // NPM module via ESM CDN
+    return {
+      id: `${CDN_URL}/${importee}`,
+      external: true,
+    };
+  },
 
-    async transform(code: string, filename: string) {
-      if (/\.css$/.test(filename)) {
-        const id = uid(filename);
+  async load(id: string) {
+    return tabsLookup.get(id)?.source;
+  },
 
-        return {
-          code: dd`
+  async transform(code: string, filename: string) {
+    if (/\.css$/.test(filename)) {
+      const id = uid(filename);
+
+      return {
+        code: dd`
             (() => {
               let stylesheet = document.getElementById('${id}');
               if (!stylesheet) {
@@ -72,28 +71,26 @@ function virtual({ solidOptions = {} }: { solidOptions: unknown }): Plugin {
               stylesheet.appendChild(styles)
             })()
           `,
-        };
-      }
+      };
+    }
 
-      // Compile solid code
-      if (/\.(j|t)sx$/.test(filename)) {
-        let transformed = transform(code, {
-          presets: [
-            [babelPresetSolid, solidOptions],
-            ['typescript', { onlyRemoveTypeImports: true }],
-          ],
-          filename,
-        });
-        tabsOutput[filename] = transformed.code;
-        return transformed;
-      }
-    },
-  };
-}
+    // Compile solid code
+    if (/\.(j|t)sx$/.test(filename)) {
+      let transformed = transform(code, {
+        presets: [
+          [babelPresetSolid, { generate: 'dom', hydratable: false }],
+          ['typescript', { onlyRemoveTypeImports: true }],
+        ],
+        filename,
+      });
+      tabsOutput[filename] = transformed.code;
+      return transformed;
+    }
+  },
+};
 
 async function compile(
   tabs: Tab[],
-  solidOptions = {},
 ): Promise<{ event: 'RESULT' } & ({ compiled: string; tabs: { [key: string]: string } } | { error: string })> {
   tabsOutput = {};
   tabsLookup.clear();
@@ -104,7 +101,7 @@ async function compile(
   try {
     const compiler = await rollup({
       input: `./${tabs[0].name}`,
-      plugins: [virtual({ solidOptions })],
+      plugins: [replPlugin],
     });
 
     const {
@@ -118,12 +115,23 @@ async function compile(
 }
 
 self.addEventListener('message', async ({ data }) => {
-  const { event, tabs, compileOpts } = data;
+  const { event, tabs, tab, compileOpts } = data;
 
   switch (event) {
-    case 'COMPILE':
-      // @ts-ignore
-      self.postMessage(await compile(tabs, compileOpts));
+    case 'ROLLUP':
+      self.postMessage(await compile(tabs));
+      break;
+    case 'BABEL':
+      self.postMessage({
+        event: 'RESULT',
+        compiled: await transform(tab.source, {
+          presets: [
+            [babelPresetSolid, compileOpts],
+            ['typescript', { onlyRemoveTypeImports: true }],
+          ],
+          filename: tab.name,
+        }).code,
+      });
       break;
   }
 });

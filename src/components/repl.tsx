@@ -1,19 +1,18 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { refresh, terminal } from 'solid-heroicons/outline';
-import { unwrap, createStore } from 'solid-js/store';
+import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem } from './tab/item';
 import { TabList } from './tab/list';
 import { GridResizer } from './gridResizer';
 import { Error } from './error';
-import { debounce } from '@solid-primitives/scheduled';
+import { throttle } from '@solid-primitives/scheduled';
 import { createMediaQuery } from '@solid-primitives/media';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 
-import type { Tab } from '../';
 import type { Repl as ReplProps } from '../../types/types';
 
 const compileMode = {
@@ -22,88 +21,69 @@ const compileMode = {
   HYDRATABLE: { generate: 'dom', hydratable: true },
 } as const;
 
-type ValueOf<T> = T[keyof T];
-
 const Repl: ReplProps = (props) => {
   const { compiler, formatter } = props;
   let now: number;
 
   const tabRefs = new Map<string, HTMLSpanElement>();
 
-  const [store, setStore] = createStore({
-    error: '',
-    compiled: '',
-    compiledTabs: props.current
-      ? {
-          [`./${props.current}`]: '',
-        }
-      : {},
-    mode: 'DOM' as keyof typeof compileMode,
-    isCompiling: false,
-    get compileMode(): ValueOf<typeof compileMode> {
-      return compileMode[this.mode];
-    },
-  });
+  const [error, setError] = createSignal('');
+  const [compiled, setCompiled] = createSignal('');
+  const [mode, setMode] = createSignal<typeof compileMode[keyof typeof compileMode]>(compileMode.SSR);
 
-  const actions = {
-    resetError: () => setStore('error', ''),
-    setCurrentTab(current: string) {
-      const idx = props.tabs.findIndex((tab) => tab.name === current);
-      if (idx < 0) return;
-      props.setCurrent(current);
-    },
-    setCompiled(compiled: string, tabs: Record<string, string>) {
-      setStore({ compiled, isCompiling: false, compiledTabs: tabs });
-    },
-    setTabName(id1: string, name: string) {
-      const idx = props.tabs.findIndex((tab) => tab.name === id1);
-      if (idx < 0) return;
+  function setCurrentTab(current: string) {
+    const idx = props.tabs.findIndex((tab) => tab.name === current);
+    if (idx < 0) return;
+    props.setCurrent(current);
+  }
+  function setTabName(id1: string, name: string) {
+    const idx = props.tabs.findIndex((tab) => tab.name === id1);
+    if (idx < 0) return;
 
-      const tabs = props.tabs;
-      tabs[idx] = { ...tabs[idx], name };
-      batch(() => {
-        props.setTabs(tabs);
-        if (props.current === id1) {
-          props.setCurrent(tabs[idx].name);
-        }
-      });
-    },
-    removeTab(id1: string) {
-      const tabs = props.tabs;
-      const idx = tabs.findIndex((tab) => tab.name === id1);
-      const tab = tabs[idx];
+    const tabs = props.tabs;
+    tabs[idx] = { ...tabs[idx], name };
+    batch(() => {
+      props.setTabs(tabs);
+      if (props.current === id1) {
+        props.setCurrent(tabs[idx].name);
+      }
+    });
+  }
+  function removeTab(id1: string) {
+    const tabs = props.tabs;
+    const idx = tabs.findIndex((tab) => tab.name === id1);
+    const tab = tabs[idx];
 
-      if (!tab) return;
+    if (!tab) return;
 
-      const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}?`);
-      if (!confirmDeletion) return;
+    const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}?`);
+    if (!confirmDeletion) return;
 
-      batch(() => {
-        props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
-        // We want to redirect to another tab if we are deleting the current one
-        if (props.current === id1) {
-          props.setCurrent(tabs[idx - 1].name);
-        }
-      });
-    },
-    setCurrentSource(source: string) {
-      const idx = props.tabs.findIndex((tab) => tab.name === props.current);
-      if (idx < 0) return;
+    batch(() => {
+      props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
+      // We want to redirect to another tab if we are deleting the current one
+      if (props.current === id1) {
+        props.setCurrent(tabs[idx - 1].name);
+      }
+    });
+  }
+  function setCurrentSource(source: string) {
+    const idx = props.tabs.findIndex((tab) => tab.name === props.current);
+    if (idx < 0) return;
 
-      const tabs = props.tabs;
-      tabs[idx].source = source;
-    },
-    addTab() {
-      const newTab = {
-        name: `tab${props.tabs.length}.tsx`,
-        source: '',
-      };
-      batch(() => {
-        props.setTabs(props.tabs.concat(newTab));
-        props.setCurrent(newTab.name);
-      });
-    },
-  };
+    const tabs = props.tabs;
+    tabs[idx].source = source;
+  }
+  function addTab() {
+    const newTab = {
+      name: `tab${props.tabs.length}.tsx`,
+      source: '',
+    };
+    batch(() => {
+      props.setTabs(props.tabs.concat(newTab));
+      props.setCurrent(newTab.name);
+    });
+  }
 
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
@@ -112,12 +92,11 @@ const Repl: ReplProps = (props) => {
     const { event } = data;
 
     if (event === 'RESULT') {
-      const { compiled, tabs, error } = data;
+      const { compiled, error } = data;
 
-      if (error) return setStore({ error });
-      if (!compiled) return;
+      if (error) return setError(error);
 
-      actions.setCompiled(compiled, tabs);
+      setCompiled(compiled);
 
       console.log(`Compilation took: ${performance.now() - now}ms`);
     }
@@ -128,17 +107,10 @@ const Repl: ReplProps = (props) => {
    * it takes ~15ms to compile with the web worker...
    * Also, real time feedback can be stressful
    */
-  const applyCompilation = debounce((tabs: Tab[], compileOpts: Record<string, any>) => {
-    if (!tabs.length) return;
-
-    setStore('isCompiling', true);
+  const applyCompilation = throttle((message: any) => {
     now = performance.now();
 
-    compiler.postMessage({
-      event: 'COMPILE',
-      tabs,
-      compileOpts,
-    });
+    compiler.postMessage(message);
   }, 250);
 
   /**
@@ -147,17 +119,19 @@ const Repl: ReplProps = (props) => {
    */
   createEffect(() => {
     for (const tab of props.tabs) tab.source;
-    applyCompilation(unwrap(props.tabs), unwrap(compileMode[store.mode]));
+    applyCompilation(
+      outputTab() == 0
+        ? {
+            event: 'ROLLUP',
+            tabs: unwrap(props.tabs),
+          }
+        : {
+            event: 'BABEL',
+            tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
+            compileOpts: mode(),
+          },
+    );
   });
-
-  /**
-   * This sync the editor state with the current selected tab.
-   *
-   * @param source {string} - The source code from the editor
-   */
-  const handleDocChange = (source: string) => {
-    actions.setCurrentSource(source);
-  };
 
   const clampPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
     return Math.min(Math.max(percentage, lowerBound), upperBound);
@@ -188,7 +162,6 @@ const Repl: ReplProps = (props) => {
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
-
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
   return (
@@ -216,7 +189,7 @@ const Repl: ReplProps = (props) => {
               <TabItem active={props.current === tab.name} class="mr-2">
                 <button
                   type="button"
-                  onClick={() => actions.setCurrentTab(tab.name)}
+                  onClick={() => setCurrentTab(tab.name)}
                   onDblClick={() => {
                     setEdit(index());
                     tabRefs.get(tab.name)?.focus();
@@ -228,13 +201,13 @@ const Repl: ReplProps = (props) => {
                     contentEditable={edit() == index()}
                     onBlur={(e) => {
                       setEdit(-1);
-                      actions.setTabName(tab.name, e.currentTarget.textContent!);
+                      setTabName(tab.name, e.currentTarget.textContent!);
                     }}
                     onKeyDown={(e) => {
                       if (e.code === 'Space') e.preventDefault();
                       if (e.code !== 'Enter') return;
                       setEdit(-1);
-                      actions.setTabName(tab.name, e.currentTarget.textContent!);
+                      setTabName(tab.name, e.currentTarget.textContent!);
                     }}
                   >
                     {tab.name}
@@ -246,7 +219,7 @@ const Repl: ReplProps = (props) => {
                     type="button"
                     class="border-0 cursor-pointer -mb-0.5"
                     onClick={() => {
-                      actions.removeTab(tab.name);
+                      removeTab(tab.name);
                     }}
                   >
                     <span class="sr-only">Delete this tab</span>
@@ -260,7 +233,7 @@ const Repl: ReplProps = (props) => {
           </For>
 
           <li class="inline-flex items-center m-0 border-b-2 border-transparent">
-            <button type="button" onClick={actions.addTab} title="Add a new tab">
+            <button type="button" onClick={addTab} title="Add a new tab">
               <span class="sr-only">Add a new tab</span>
               <svg
                 viewBox="0 0 24 24"
@@ -285,17 +258,13 @@ const Repl: ReplProps = (props) => {
           </TabItem>
         </TabList>
 
-        <MonacoTabs
-          tabs={props.tabs}
-          compiled={props.current ? store.compiledTabs[`./${props.current}`] : ''}
-          folder={props.id}
-        />
+        <MonacoTabs tabs={props.tabs} compiled={compiled()} folder={props.id} />
 
         <Show when={props.current}>
           {(current) => (
             <Editor
               url={`file:///${props.id}/${current}`}
-              onDocChange={handleDocChange}
+              onDocChange={setCurrentSource}
               formatter={formatter}
               isDark={props.dark}
               withMinimap={false}
@@ -305,10 +274,9 @@ const Repl: ReplProps = (props) => {
           )}
         </Show>
 
-        <Show
-          when={displayErrors() && store.error}
-          children={<Error onDismiss={actions.resetError} message={store.error} />}
-        />
+        <Show when={displayErrors() && error()}>
+          <Error onDismiss={() => setError('')} message={error()} />
+        </Show>
       </div>
 
       <GridResizer ref={(el) => (resizer = el)} isHorizontal={isHorizontal()} onResize={changeLeft} />
@@ -350,7 +318,7 @@ const Repl: ReplProps = (props) => {
               class="w-full -mb-0.5 py-2"
               onClick={() => {
                 setOutputTab(1);
-                setStore('mode', 'DOM');
+                setMode(compileMode.DOM);
               }}
             >
               Output
@@ -364,12 +332,12 @@ const Repl: ReplProps = (props) => {
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
               isDark={props.dark}
-              code={store.compiled}
+              code={compiled()}
               class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'}`}
             />
           </Match>
           <Match when={outputTab() == 1}>
-            <section class="h-full relative divide-y-2 divide-slate-200 dark:divide-neutral-800">
+            <section class="h-full flex flex-col relative divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
                 url={`file:///${props.id}/output_dont_import.tsx`}
                 isDark={props.dark}
@@ -383,10 +351,10 @@ const Repl: ReplProps = (props) => {
                 <div class="mt-1 space-y-1 text-sm">
                   <label class="block mr-auto cursor-pointer space-x-2">
                     <input
-                      checked={store.mode === 'DOM'}
+                      checked={mode() === compileMode.DOM}
                       value="DOM"
                       class="text-brand-default"
-                      onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                      onChange={[setMode, compileMode.DOM]}
                       type="radio"
                       name="dom"
                       id="dom"
@@ -396,10 +364,10 @@ const Repl: ReplProps = (props) => {
 
                   <label class="block mr-auto cursor-pointer space-x-2">
                     <input
-                      checked={store.mode === 'SSR'}
+                      checked={mode() === compileMode.SSR}
                       value="SSR"
                       class="text-brand-default"
-                      onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                      onChange={[setMode, compileMode.SSR]}
                       type="radio"
                       name="dom"
                       id="dom"
@@ -409,10 +377,10 @@ const Repl: ReplProps = (props) => {
 
                   <label class="block mr-auto cursor-pointer space-x-2">
                     <input
-                      checked={store.mode === 'HYDRATABLE'}
+                      checked={mode() === compileMode.HYDRATABLE}
                       value="HYDRATABLE"
                       class="text-brand-default"
-                      onChange={(e) => setStore('mode', e.currentTarget.value as any)}
+                      onChange={[setMode, compileMode.HYDRATABLE]}
                       type="radio"
                       name="dom"
                       id="dom"
