@@ -29,7 +29,7 @@ const Repl: ReplProps = (props) => {
 
   const [error, setError] = createSignal('');
   const [compiled, setCompiled] = createSignal('');
-  const [mode, setMode] = createSignal<typeof compileMode[keyof typeof compileMode]>(compileMode.SSR);
+  const [mode, setMode] = createSignal<typeof compileMode[keyof typeof compileMode]>(compileMode.DOM);
 
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
