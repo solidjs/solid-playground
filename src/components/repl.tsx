@@ -36,22 +36,22 @@ const Repl: ReplProps = (props) => {
     if (idx < 0) return;
     props.setCurrent(current);
   }
-  function setTabName(id1: string, name: string) {
-    const idx = props.tabs.findIndex((tab) => tab.name === id1);
+  function setTabName(name: string, newName: string) {
+    const idx = props.tabs.findIndex((tab) => tab.name === name);
     if (idx < 0) return;
 
     const tabs = props.tabs;
-    tabs[idx] = { ...tabs[idx], name };
+    tabs[idx] = { ...tabs[idx], name: newName };
     batch(() => {
       props.setTabs(tabs);
-      if (props.current === id1) {
-        props.setCurrent(tabs[idx].name);
+      if (props.current === name) {
+        props.setCurrent(newName);
       }
     });
   }
-  function removeTab(id1: string) {
+  function removeTab(name: string) {
     const tabs = props.tabs;
-    const idx = tabs.findIndex((tab) => tab.name === id1);
+    const idx = tabs.findIndex((tab) => tab.name === name);
     const tab = tabs[idx];
 
     if (!tab) return;
@@ -62,7 +62,7 @@ const Repl: ReplProps = (props) => {
     batch(() => {
       props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
       // We want to redirect to another tab if we are deleting the current one
-      if (props.current === id1) {
+      if (props.current === name) {
         props.setCurrent(tabs[idx - 1].name);
       }
     });

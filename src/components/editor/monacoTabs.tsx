@@ -1,40 +1,31 @@
-import { Component, createEffect, onCleanup } from 'solid-js';
+import { Component, createEffect, on, onCleanup } from 'solid-js';
 import type { Tab } from '../..';
 import { Uri, editor } from 'monaco-editor';
-import { keyedMap } from '../../utils/keyedMap';
+import { KeyedMap } from '../../utils/keyedMap';
 
 const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {
-  const fileUri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
+  const syncTab = (name: string, source: () => string) => {
+    const uri = Uri.parse(`file:///${props.folder}/${name}`);
+    const model = editor.createModel(source(), undefined, uri);
 
-  const oldModel = editor.getModels().find((model) => model.uri.path === fileUri.path);
-  if (oldModel) oldModel.dispose();
+    let first = true;
+    createEffect(
+      on(source, (mysource) => {
+        if (first) return (first = false);
+        if (model.getValue() !== mysource) model.setValue(mysource);
+      }),
+    );
+    onCleanup(() => model.dispose());
+  };
 
-  const model = editor.createModel('', 'typescript', fileUri);
+  syncTab('output_dont_import.tsx', () => props.compiled);
 
-  createEffect(() => {
-    model.setValue(props.compiled);
-  });
-  onCleanup(() => model.dispose());
-
-  keyedMap<Tab>({
-    by: (tab) => tab.name,
-    get each() {
-      return props.tabs;
-    },
-    children: (tab) => {
-      const uri = Uri.parse(`file:///${props.folder}/${tab().name}`);
-
-      const model = editor.createModel(tab().source, undefined, uri);
-
-      let first = true;
-      createEffect(() => {
-        const source = tab().source;
-        if (!first && model.getValue() !== source) model.setValue(source);
-        else first = false;
-      });
-      onCleanup(() => model.dispose());
-    },
-  });
-  return <></>;
+  return (
+    <KeyedMap by={(tab) => tab.name} each={props.tabs}>
+      {(tab) => {
+        syncTab(tab().name, () => tab().source);
+      }}
+    </KeyedMap>
+  );
 };
 export default MonacoTabs;

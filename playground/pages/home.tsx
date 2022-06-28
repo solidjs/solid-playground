@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
-import { createResource, For, Suspense } from 'solid-js';
+import { createResource, For, Show, Suspense } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
@@ -55,6 +55,21 @@ export const Home = () => {
       <button
         class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
         onClick={async () => {
+          if (!params.user && !context.user()?.display) {
+            let id = Math.floor(Date.now() / 1000).toString();
+            localStorage.setItem(
+              id,
+              JSON.stringify({
+                title: 'Counter Example',
+                public: true,
+                labels: [],
+                version: '1.0',
+                files: defaultTabs.map((x) => ({ name: x.name, content: x.source.split('\n') })),
+              }),
+            );
+            navigate(`/local/${id}`);
+            return;
+          }
           const result = await fetch(`${API}/repl`, {
             method: 'POST',
             headers: {
@@ -73,7 +88,8 @@ export const Home = () => {
           navigate(`/${context.user()?.display}/${id}`);
         }}
       >
-        <Icon path={plus} class="w-8" /> Create new REPL
+        <Icon path={plus} class="w-8" />{' '}
+        {params.user || context.user()?.display ? 'Create new REPL' : 'Create Anonymous REPL'}
       </button>
 
       <table class="w-128 mx-auto my-8">
@@ -106,56 +122,67 @@ export const Home = () => {
               </tr>
             }
           >
-            <For each={get(repls.list)}>
-              {(repl, i) => (
+            <Show
+              when={params.user || context.user()?.display}
+              fallback={
                 <tr>
-                  <td>
-                    <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
-                  </td>
-                  <td>{new Date(repl.created_at).toLocaleString()}</td>
-                  <td>
-                    <Icon
-                      path={repl.public ? eye : eyeOff}
-                      class="w-6 inline m-2 ml-0 cursor-pointer"
-                      onClick={async () => {
-                        fetch(`${API}/repl/${repl.id}`, {
-                          method: 'PUT',
-                          headers: {
-                            'authorization': `Bearer ${context.token}`,
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            ...repl,
-                            public: !repl.public,
-                          }),
-                        });
-                        setRepls(
-                          produce((x) => {
-                            x!.list[i()].public = !repl.public;
-                          }),
-                        );
-                      }}
-                    />
-                    <Icon
-                      path={x}
-                      class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
-                      onClick={async () => {
-                        fetch(`${API}/repl/${repl.id}`, {
-                          method: 'DELETE',
-                          headers: {
-                            authorization: `Bearer ${context.token}`,
-                          },
-                        });
-                        setRepls({
-                          total: repls.total - 1,
-                          list: repls.list.filter((x) => x.id !== repl.id),
-                        });
-                      }}
-                    />
+                  <td colspan="3" class="text-center">
+                    Not logged in. Please login to see your repls.
                   </td>
                 </tr>
-              )}
-            </For>
+              }
+            >
+              <For each={get(repls.list)}>
+                {(repl, i) => (
+                  <tr>
+                    <td>
+                      <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
+                    </td>
+                    <td>{new Date(repl.created_at).toLocaleString()}</td>
+                    <td>
+                      <Icon
+                        path={repl.public ? eye : eyeOff}
+                        class="w-6 inline m-2 ml-0 cursor-pointer"
+                        onClick={async () => {
+                          fetch(`${API}/repl/${repl.id}`, {
+                            method: 'PUT',
+                            headers: {
+                              'authorization': `Bearer ${context.token}`,
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              ...repl,
+                              public: !repl.public,
+                            }),
+                          });
+                          setRepls(
+                            produce((x) => {
+                              x!.list[i()].public = !repl.public;
+                            }),
+                          );
+                        }}
+                      />
+                      <Icon
+                        path={x}
+                        class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
+                        onClick={async () => {
+                          fetch(`${API}/repl/${repl.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                              authorization: `Bearer ${context.token}`,
+                            },
+                          });
+                          setRepls({
+                            total: repls.total - 1,
+                            list: repls.list.filter((x) => x.id !== repl.id),
+                          });
+                        }}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </For>
+            </Show>
           </Suspense>
         </tbody>
       </table>

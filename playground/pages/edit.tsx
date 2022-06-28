@@ -64,9 +64,14 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
   context.setTabs(tabs);
   const [current, setCurrent] = createSignal<string>();
   const [resource, { mutate }] = createResource<APIRepl, string>(params.repl, async (repl) => {
-    let output: APIRepl = await fetch(`${API}/repl/${repl}`, {
-      headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-    }).then((r) => r.json());
+    let output: APIRepl;
+    if (params.user == 'local') {
+      output = JSON.parse(localStorage.getItem(repl)!);
+    } else {
+      output = await fetch(`${API}/repl/${repl}`, {
+        headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
+      }).then((r) => r.json());
+    }
 
     batch(() => {
       setTabs(
@@ -84,8 +89,22 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
   const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: x.name, content: x.source.split('\n') }));
   const updateRepl = debounce(() => {
     const repl = resource.latest;
-    if (!repl || !context.token || context.user()?.display != params.user) return;
+    if (!repl) return;
     const files = tabMapper(tabs());
+    if (params.user == 'local') {
+      localStorage.setItem(
+        params.repl,
+        JSON.stringify({
+          title: repl.title,
+          version: repl.version,
+          public: repl.public,
+          labels: repl.labels,
+          files,
+        }),
+      );
+      return;
+    }
+    if (!context.token || context.user()?.display != params.user) return;
     fetch(`${API}/repl/${params.repl}`, {
       method: 'PUT',
       headers: {
@@ -104,6 +123,7 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
 
   createEffect(() => {
     tabMapper(tabs()); // use the latest value on debounce, and just throw this value away (but use it to track)
+    resource();
     if (loaded) updateRepl();
   });
 
@@ -142,22 +162,6 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
           value={resource()?.title || ''}
           onChange={(e) => {
             mutate((x) => x && { ...x, title: e.currentTarget.value });
-            const repl = resource.latest!;
-            const files = tabMapper(tabs());
-            fetch(`${API}/repl/${params.repl}`, {
-              method: 'PUT',
-              headers: {
-                'authorization': `Bearer ${context.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: e.currentTarget.value,
-                version: repl.version,
-                public: repl.public,
-                labels: repl.labels,
-                files: files,
-              }),
-            });
           }}
         />
       </RenderHeader>

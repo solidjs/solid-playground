@@ -4,7 +4,7 @@ import { onCleanup, createEffect, createSignal, untrack, createRoot, Signal } fr
 // This version is designed to call a function on creation and onCleanup on removal
 // for a certain keying function (the by parameter)
 // this does not return any values, and is designed as more of a hook
-export const keyedMap = <T>(props: { by: (a: T) => string; children: (a: () => T) => void; each: T[] }): void => {
+export const KeyedMap = <T>(props: { by: (a: T) => string; children: (a: () => T) => void; each: T[] }) => {
   const key = props.by;
   const mapFn = props.children;
   const disposers = new Map<string, () => void>();
@@ -13,7 +13,7 @@ export const keyedMap = <T>(props: { by: (a: T) => string; children: (a: () => T
     for (const disposer of disposers.values()) disposer();
   });
 
-  return createEffect(() => {
+  createEffect(() => {
     const list = props.each || [];
     const newNodes = new Map<string, Signal<T>>();
     return untrack(() => {
@@ -40,4 +40,6 @@ export const keyedMap = <T>(props: { by: (a: T) => string; children: (a: () => T
       prev = newNodes;
     });
   });
+
+  return undefined;
 };
