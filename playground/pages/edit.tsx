@@ -51,7 +51,7 @@ const RenderHeader: ParentComponent = (props) => {
   return <></>;
 };
 
-export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
+export const Edit = (props: { horizontal: boolean }) => {
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
 
@@ -87,39 +87,42 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
   });
 
   const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: x.name, content: x.source.split('\n') }));
-  const updateRepl = debounce(() => {
-    const repl = resource.latest;
-    if (!repl) return;
-    const files = tabMapper(tabs());
-    if (params.user == 'local') {
-      localStorage.setItem(
-        params.repl,
-        JSON.stringify({
+  const updateRepl = debounce(
+    () => {
+      const repl = resource.latest;
+      if (!repl) return;
+      const files = tabMapper(tabs());
+      if (params.user == 'local') {
+        localStorage.setItem(
+          params.repl,
+          JSON.stringify({
+            title: repl.title,
+            version: repl.version,
+            public: repl.public,
+            labels: repl.labels,
+            files,
+          }),
+        );
+        return;
+      }
+      if (!context.token || context.user()?.display != params.user) return;
+      fetch(`${API}/repl/${params.repl}`, {
+        method: 'PUT',
+        headers: {
+          'authorization': `Bearer ${context.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           title: repl.title,
           version: repl.version,
           public: repl.public,
           labels: repl.labels,
           files,
         }),
-      );
-      return;
-    }
-    if (!context.token || context.user()?.display != params.user) return;
-    fetch(`${API}/repl/${params.repl}`, {
-      method: 'PUT',
-      headers: {
-        'authorization': `Bearer ${context.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: repl.title,
-        version: repl.version,
-        public: repl.public,
-        labels: repl.labels,
-        files,
-      }),
-    });
-  }, 1000);
+      });
+    },
+    params.user == 'local' ? 10 : 1000,
+  );
 
   createEffect(() => {
     tabMapper(tabs()); // use the latest value on debounce, and just throw this value away (but use it to track)
@@ -149,7 +152,7 @@ export const Edit = (props: { dark: boolean; horizontal: boolean }) => {
         compiler={compiler}
         formatter={formatter}
         isHorizontal={props.horizontal}
-        dark={props.dark}
+        dark={context.dark()}
         tabs={tabs()}
         setTabs={setTabs}
         current={current()}

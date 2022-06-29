@@ -1,19 +1,49 @@
 import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
 import { Component, onCleanup, createSignal, Show } from 'solid-js';
-import { download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
+import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
+import { compressToURL } from '@amoutonbrady/lz-string';
+
 import logo from '../assets/logo.svg?url';
 
-export const Header: Component<{
-  dark: boolean;
-  toggleDark: () => void;
-}> = (props) => {
+export const Header: Component = () => {
+  const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const [showMenu, setShowMenu] = createSignal(false);
   let menuBtnEl!: HTMLButtonElement;
+
+  function shareLink() {
+    let url = new URL(location.origin);
+    url.hash = compressToURL(JSON.stringify(context.tabs()));
+    console.log('Shareable url:', url.href);
+
+    fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` })
+      .then((response) => {
+        if (response.status >= 400) {
+          throw new Error(response.statusText);
+        }
+
+        return response.text();
+      })
+      .then((hash) => {
+        const tinyUrl = new URL(location.origin);
+        tinyUrl.searchParams.set('hash', hash);
+
+        navigator.clipboard.writeText(tinyUrl.toString()).then(() => {
+          setCopy(true);
+          setTimeout(setCopy, 750, false);
+        });
+      })
+      .catch(() => {
+        navigator.clipboard.writeText(url.href).then(() => {
+          setCopy(true);
+          setTimeout(setCopy, 750, false);
+        });
+      });
+  }
 
   window.addEventListener('resize', closeMobileMenu);
   onCleanup(() => {
@@ -53,17 +83,17 @@ export const Header: Component<{
           >
             <button
               type="button"
-              onClick={props.toggleDark}
+              onClick={context.toggleDark}
               class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
               classList={{
                 'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
               }}
               title="Toggle dark mode"
             >
-              <Show when={props.dark} fallback={<Icon path={moon} class="h-6" />}>
+              <Show when={context.dark()} fallback={<Icon path={moon} class="h-6" />}>
                 <Icon path={sun} class="h-6" />
               </Show>
-              <span class="text-xs md:sr-only">{props.dark ? 'Light' : 'Dark'} mode</span>
+              <span class="text-xs md:sr-only">{context.dark() ? 'Light' : 'Dark'} mode</span>
             </button>
 
             <Show when={context.tabs()}>
@@ -82,6 +112,21 @@ export const Header: Component<{
             </Show>
 
             <ZoomDropdown showMenu={showMenu()} />
+
+            <button
+              type="button"
+              onClick={shareLink}
+              class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded"
+              classList={{
+                'opacity-80 hover:opacity-100': !copy(),
+                'text-green-100': copy() && !showMenu(),
+                'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+              }}
+              title="Share with a minified link"
+            >
+              <Icon class="h-6" path={copy() ? link : share} />
+              <span class="text-xs md:sr-only">{copy() ? 'Copied to clipboard' : 'Share'}</span>
+            </button>
           </div>
         </Dismiss>
         <button

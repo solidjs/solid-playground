@@ -1,10 +1,19 @@
-import { useNavigate, useParams } from 'solid-app-router';
+import { useLocation, useNavigate, useParams } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
-import { createResource, For, Show, Suspense } from 'solid-js';
+import { createEffect, createResource, createSignal, For, Show, Suspense, untrack } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
+import { decompressFromURL } from '@amoutonbrady/lz-string';
+
+function parseHash<T>(hash: string, fallback: T): T {
+  try {
+    return JSON.parse(decompressFromURL(hash)!);
+  } catch {
+    return fallback;
+  }
+}
 
 export interface ReplFile {
   name: string;
@@ -26,10 +35,44 @@ interface Repls {
   list: APIRepl[];
 }
 
+const createLocalList = () => {
+  const [localList, setLocalList] = createSignal<string[]>(JSON.parse(localStorage.getItem('repls') || '[]'));
+  return [
+    localList,
+    (el: string[]) => {
+      localStorage.setItem('repls', JSON.stringify(el));
+      setLocalList(el);
+    },
+  ] as const;
+};
+
 export const Home = () => {
   const params = useParams();
   const context = useAppContext()!;
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [localList, setLocalList] = createLocalList();
+  createEffect(() => {
+    if (!location.hash) return;
+    const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
+    let id = Math.floor(Date.now() / 1000).toString();
+    localStorage.setItem(
+      id,
+      JSON.stringify({
+        title: 'Unknown Repl',
+        public: true,
+        labels: [],
+        version: '1.0',
+        files: initialTabs.map((x) => ({
+          name: x.name + ((x as any).type ? `.${(x as any).type}` : ''),
+          content: x.source.split('\n'),
+        })),
+      }),
+    );
+    setLocalList([id, ...untrack(localList)]);
+    navigate(`/local/${id}`);
+  });
 
   const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
   const [resourceRepls] = createResource<Repls, string>(
@@ -67,6 +110,7 @@ export const Home = () => {
                 files: defaultTabs.map((x) => ({ name: x.name, content: x.source.split('\n') })),
               }),
             );
+            setLocalList([id, ...localList()]);
             navigate(`/local/${id}`);
             return;
           }
@@ -92,7 +136,8 @@ export const Home = () => {
         {params.user || context.user()?.display ? 'Create new REPL' : 'Create Anonymous REPL'}
       </button>
 
-      <table class="w-128 mx-auto my-8">
+      <h1 class="text-center text-3xl mb-4 mt-16">{params.user || 'My'} Repls</h1>
+      <table class="w-128 mx-auto">
         <thead>
           <tr class="border-b border-neutral-600">
             <td>Title</td>
@@ -125,11 +170,33 @@ export const Home = () => {
             <Show
               when={params.user || context.user()?.display}
               fallback={
-                <tr>
-                  <td colspan="3" class="text-center">
-                    Not logged in. Please login to see your repls.
-                  </td>
-                </tr>
+                <For each={localList()}>
+                  {(id) => {
+                    let repl = JSON.parse(localStorage.getItem(id)!);
+
+                    return (
+                      <tr>
+                        <td>
+                          <a href={`/local/${id}`}>{repl.title}</a>
+                        </td>
+                        <td>{new Date(+id * 1000).toLocaleString()}</td>
+                        <td>
+                          <span title="Can't make local repl public, open the repl and click share link instead">
+                            <Icon path={eyeOff} class="w-6 inline m-2 ml-0 cursor-not-allowed" />
+                          </span>
+                          <Icon
+                            path={x}
+                            class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
+                            onClick={() => {
+                              localStorage.removeItem(id);
+                              setLocalList(localList().filter((x) => x !== id));
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  }}
+                </For>
               }
             >
               <For each={get(repls.list)}>

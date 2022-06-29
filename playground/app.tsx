@@ -1,10 +1,9 @@
-import { Show, createEffect, createSignal, JSX, on } from 'solid-js';
+import { Show, createSignal, JSX, on } from 'solid-js';
 import { Routes, Route, useSearchParams } from 'solid-app-router';
 import { eventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { Header } from './components/header';
 import { useZoom } from '../src/hooks/useZoom';
-import { isDarkTheme } from './utils/isDarkTheme';
 import { Edit } from './pages/edit';
 import { Home } from './pages/home';
 import { Login } from './pages/login';
@@ -18,9 +17,6 @@ export const App = (): JSX.Element => {
    */
   const [newUpdate, setNewUpdate] = createSignal(eventBus() != undefined);
   on(eventBus, () => setNewUpdate(true));
-
-  const [dark, setDark] = createSignal(isDarkTheme());
-  createEffect(() => document.body.classList.toggle('dark', dark()));
 
   const { zoomState, updateZoom } = useZoom();
   document.addEventListener('keydown', (e) => {
