@@ -1,48 +1,26 @@
 import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
-import { Component, onCleanup, createSignal, Show } from 'solid-js';
+import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
-import { compressToURL } from '@amoutonbrady/lz-string';
 
 import logo from '../assets/logo.svg?url';
 
-export const Header: Component = () => {
+export const Header: ParentComponent<{ fork?: () => void; share: () => Promise<string> }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const [showMenu, setShowMenu] = createSignal(false);
   let menuBtnEl!: HTMLButtonElement;
 
   function shareLink() {
-    let url = new URL(location.origin);
-    url.hash = compressToURL(JSON.stringify(context.tabs()));
-    console.log('Shareable url:', url.href);
-
-    fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` })
-      .then((response) => {
-        if (response.status >= 400) {
-          throw new Error(response.statusText);
-        }
-
-        return response.text();
-      })
-      .then((hash) => {
-        const tinyUrl = new URL(location.origin);
-        tinyUrl.searchParams.set('hash', hash);
-
-        navigator.clipboard.writeText(tinyUrl.toString()).then(() => {
-          setCopy(true);
-          setTimeout(setCopy, 750, false);
-        });
-      })
-      .catch(() => {
-        navigator.clipboard.writeText(url.href).then(() => {
-          setCopy(true);
-          setTimeout(setCopy, 750, false);
-        });
+    props.share().then((url) => {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopy(true);
+        setTimeout(setCopy, 750, false);
       });
+    });
   }
 
   window.addEventListener('resize', closeMobileMenu);
@@ -61,9 +39,11 @@ export const Header: Component = () => {
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
         <div id="project-name">
-          <span class="inline-block -mb-1">
-            Solid<b>JS</b> Playground
-          </span>
+          {props.children || (
+            <span class="inline-block">
+              Solid<b>JS</b> Playground
+            </span>
+          )}
         </div>
       </h1>
       <div class="flex items-center gap-3 mr-2">
@@ -149,7 +129,7 @@ export const Header: Component = () => {
             when={context.user()?.avatar}
             fallback={
               <a
-                class="mx-1 -mb-1"
+                class="mx-1 bg-solid-default py-2 px-3 rounded text-lg"
                 href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`}
                 rel="external"
               >

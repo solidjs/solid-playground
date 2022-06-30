@@ -118,6 +118,7 @@ const Repl: ReplProps = (props) => {
    * every tab source changes.
    */
   createEffect(() => {
+    if (!props.tabs.length) return;
     for (const tab of props.tabs) tab.source;
     applyCompilation(
       outputTab() == 0
