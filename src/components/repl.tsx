@@ -73,6 +73,7 @@ const Repl: ReplProps = (props) => {
 
     const tabs = props.tabs;
     tabs[idx].source = source;
+    compile();
   }
   function addTab() {
     const newTab = {
@@ -95,6 +96,7 @@ const Repl: ReplProps = (props) => {
       const { compiled, error } = data;
 
       if (error) return setError(error);
+      else setError('');
 
       setCompiled(compiled);
 
@@ -113,13 +115,7 @@ const Repl: ReplProps = (props) => {
     compiler.postMessage(message);
   }, 250);
 
-  /**
-   * The heart of the playground. This recompile on
-   * every tab source changes.
-   */
-  createEffect(() => {
-    if (!props.tabs.length) return;
-    for (const tab of props.tabs) tab.source;
+  const compile = () => {
     applyCompilation(
       outputTab() == 0
         ? {
@@ -132,6 +128,15 @@ const Repl: ReplProps = (props) => {
             compileOpts: mode(),
           },
     );
+  };
+
+  /**
+   * The heart of the playground. This recompile on
+   * every tab source changes.
+   */
+  createEffect(() => {
+    if (!props.tabs.length) return;
+    compile();
   });
 
   const clampPercentage = (percentage: number, lowerBound: number, upperBound: number) => {

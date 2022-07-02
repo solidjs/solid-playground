@@ -114,6 +114,20 @@ async function compile(
   }
 }
 
+async function babel(tab: Tab, compileOpts: any) {
+  try {
+    const { code } = await transform(tab.source, {
+      presets: [
+        [babelPresetSolid, compileOpts],
+        ['typescript', { onlyRemoveTypeImports: true }],
+      ],
+      filename: tab.name,
+    });
+    return { event: 'RESULT', compiled: code };
+  } catch (e) {
+    return { event: 'RESULT', error: (e as Error).message };
+  }
+}
 self.addEventListener('message', async ({ data }) => {
   const { event, tabs, tab, compileOpts } = data;
 
@@ -122,16 +136,7 @@ self.addEventListener('message', async ({ data }) => {
       self.postMessage(await compile(tabs));
       break;
     case 'BABEL':
-      self.postMessage({
-        event: 'RESULT',
-        compiled: await transform(tab.source, {
-          presets: [
-            [babelPresetSolid, compileOpts],
-            ['typescript', { onlyRemoveTypeImports: true }],
-          ],
-          filename: tab.name,
-        }).code,
-      });
+      self.postMessage(await babel(tab, compileOpts));
       break;
   }
 });

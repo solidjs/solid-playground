@@ -20,17 +20,4 @@ export interface Tab {
   source: string;
 }
 
-interface PlaygroundFile {
-  name?: string;
-  description?: string;
-  files: {
-    name: string;
-    type?: 'tsx' | 'css';
-    content: string | string[];
-  }[];
-}
-
-export function processImport({ files }: PlaygroundFile): Tab[];
-export function createTabList(initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void];
-
 export declare const defaultTabs: Tab[];

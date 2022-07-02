@@ -3,11 +3,11 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
-import { batch, createEffect, createResource, createSignal, lazy, Suspense } from 'solid-js';
-import { useParams } from 'solid-app-router';
+import { batch, createResource, createSignal, lazy, Show, Suspense } from 'solid-js';
+import { useMatch, useNavigate, useParams } from 'solid-app-router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
-import { createTabList, defaultTabs, Tab } from '../../src';
+import { defaultTabs, Tab } from '../../src';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { compressToURL } from '@amoutonbrady/lz-string';
@@ -28,136 +28,185 @@ const Repl = lazy(() => import('../../src/components/repl'));
   },
 };
 
-export const Edit = (props: { horizontal: boolean; scratchpad?: boolean }) => {
+interface InternalTab extends Tab {
+  _source: string;
+}
+export const Edit = (props: { horizontal: boolean }) => {
+  const scratchpad = useMatch(() => '/scratchpad');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
 
   const params = useParams();
   const context = useAppContext()!;
+  const navigate = useNavigate();
 
-  let loaded = false;
+  let disableFetch: true | undefined;
 
-  const [tabs, setTabs] = createTabList([]);
-  context.setTabs(tabs);
-  const [current, setCurrent] = createSignal<string>();
-  const [resource, { mutate }] = createResource<APIRepl, string>(async () => {
-    const repl = params.repl;
+  let readonly = () => !scratchpad() && context.user()?.display != params.user;
 
-    let output: APIRepl;
-    if (props.scratchpad) {
-      const scratchpad = localStorage.getItem('scratchpad');
-      if (!scratchpad) {
-        output = {
-          id: 'scratchpad',
-          title: 'Scratchpad',
-          public: true,
-          version: '1.0',
-          labels: [],
-          size: 0,
-          created_at: new Date().toISOString(),
-          files: defaultTabs.map((x) => ({
-            name: x.name,
-            content: x.source.split('\n'),
-          })),
-        };
-        localStorage.setItem('scratchpad', JSON.stringify(output));
-      } else {
-        output = JSON.parse(scratchpad);
-      }
-    } else {
-      output = await fetch(`${API}/repl/${repl}`, {
-        headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-      }).then((r) => r.json());
-    }
-
-    batch(() => {
-      setTabs(
-        output.files.map((x) => {
-          return { name: x.name, source: x.content.join('\n') };
-        }),
-      );
-      setCurrent(output.files[0].name);
+  const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
+    toMap.map((tab) => {
+      if ((tab as InternalTab)._source) return tab as InternalTab;
+      return {
+        name: tab.name,
+        _source: tab.source,
+        get source() {
+          return this._source;
+        },
+        set source(source: string) {
+          this._source = source;
+          if (readonly()) {
+            const myScratchpad = localStorage.getItem('scratchpad');
+            let output: APIRepl;
+            if (!myScratchpad) {
+              output = {
+                id: 'scratchpad',
+                title: resource.latest?.title + ' - Forked',
+                public: true,
+                version: '1.0',
+                labels: [],
+                size: 0,
+                created_at: new Date().toISOString(),
+                files: tabs()!.map((x) => ({
+                  name: x.name,
+                  content: x.source.split('\n'),
+                })),
+              };
+            } else {
+              output = JSON.parse(myScratchpad);
+              output.files = tabs()!.map((x) => ({
+                name: x.name,
+                content: x.source.split('\n'),
+              }));
+            }
+            localStorage.setItem('scratchpad', JSON.stringify(output));
+            disableFetch = true;
+            navigate('/scratchpad');
+          } else {
+            updateRepl();
+          }
+        },
+      };
     });
-    loaded = true;
 
-    return output;
-  });
+  const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
+  const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
+  context.setTabs(tabs);
 
-  const tabMapper = (tabs: Tab[]) => tabs.map((x) => ({ name: x.name, content: x.source.split('\n') }));
+  const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
+  const [resource, { mutate }] = createResource<APIRepl, { repl: string; scratchpad: boolean }>(
+    () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
+    async ({ repl, scratchpad }) => {
+      if (disableFetch) {
+        disableFetch = undefined;
+        return resource.latest;
+      }
+
+      let output: APIRepl;
+      if (scratchpad) {
+        const myScratchpad = localStorage.getItem('scratchpad');
+        if (!myScratchpad) {
+          output = {
+            id: 'scratchpad',
+            title: 'Scratchpad',
+            public: true,
+            version: '1.0',
+            labels: [],
+            size: 0,
+            created_at: new Date().toISOString(),
+            files: defaultTabs.map((x) => ({
+              name: x.name,
+              content: x.source.split('\n'),
+            })),
+          };
+          localStorage.setItem('scratchpad', JSON.stringify(output));
+        } else {
+          output = JSON.parse(myScratchpad);
+        }
+      } else {
+        output = await fetch(`${API}/repl/${repl}`, {
+          headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
+        }).then((r) => r.json());
+      }
+
+      console.log('refetched');
+
+      batch(() => {
+        setTabs(
+          output.files.map((x) => {
+            return { name: x.name, source: x.content.join('\n') };
+          }),
+        );
+        setCurrent(output.files[0].name);
+      });
+
+      return output;
+    },
+  );
+
   const updateRepl = debounce(
     () => {
       const repl = resource.latest;
       if (!repl) return;
 
-      const files = tabMapper(tabs());
-      if (props.scratchpad) {
+      const files = tabs().map((x) => ({ name: x.name, content: x.source.split('\n') }));
+
+      if (scratchpad()) {
         localStorage.setItem('scratchpad', JSON.stringify({ ...repl, files }));
-        return;
+      } else if (context.token && context.user()?.display == params.user) {
+        fetch(`${API}/repl/${params.repl}`, {
+          method: 'PUT',
+          headers: {
+            'authorization': `Bearer ${context.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: repl.title,
+            version: repl.version,
+            public: repl.public,
+            labels: repl.labels,
+            files,
+          }),
+        });
       }
-
-      if (!context.token || context.user()?.display != params.user) return;
-      fetch(`${API}/repl/${params.repl}`, {
-        method: 'PUT',
-        headers: {
-          'authorization': `Bearer ${context.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: repl.title,
-          version: repl.version,
-          public: repl.public,
-          labels: repl.labels,
-          files,
-        }),
-      });
     },
-    params.user == 'local' ? 10 : 1000,
+    !!scratchpad() ? 10 : 1000,
   );
-
-  createEffect(() => {
-    tabMapper(tabs()); // use the latest value on debounce, and just throw this value away (but use it to track)
-    resource();
-    if (loaded) updateRepl();
-  });
 
   return (
     <>
       <Header
         fork={() => {}}
-        share={() => {
-          if (props.scratchpad) {
+        share={async () => {
+          if (scratchpad()) {
             let url = new URL(location.origin);
             url.hash = compressToURL(JSON.stringify(context.tabs()));
             console.log('Shareable url:', url.href);
 
-            return fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` })
-              .then((response) => {
-                if (response.status >= 400) {
-                  throw new Error(response.statusText);
-                }
-
-                return response.text();
-              })
-              .then((hash) => {
-                const tinyUrl = new URL(location.origin);
-                tinyUrl.searchParams.set('hash', hash);
-
-                return tinyUrl.toString();
-              })
-              .catch(() => {
-                return url.href;
-              });
+            try {
+              const response = await fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` });
+              if (response.status >= 400) {
+                throw new Error(response.statusText);
+              }
+              const hash = await response.text();
+              const tinyUrl = new URL(location.origin);
+              tinyUrl.searchParams.set('hash', hash);
+              return tinyUrl.toString();
+            } catch {
+              return url.href;
+            }
           } else {
-            return Promise.resolve(location.href);
+            return location.href;
           }
         }}
       >
-        {resource()?.title && (
+        {resource() && (
           <input
             class="bg-transparent"
             value={resource()?.title}
             onChange={(e) => {
               mutate((x) => x && { ...x, title: e.currentTarget.value });
+              updateRepl();
             }}
           />
         )}
@@ -179,17 +228,19 @@ export const Edit = (props: { horizontal: boolean; scratchpad?: boolean }) => {
           </svg>
         }
       >
-        <Repl
-          compiler={compiler}
-          formatter={formatter}
-          isHorizontal={props.horizontal}
-          dark={context.dark()}
-          tabs={tabs()}
-          setTabs={setTabs}
-          current={current()}
-          setCurrent={setCurrent}
-          id="repl"
-        />
+        <Show when={resource()}>
+          <Repl
+            compiler={compiler}
+            formatter={formatter}
+            isHorizontal={props.horizontal}
+            dark={context.dark()}
+            tabs={tabs()}
+            setTabs={setTabs}
+            current={current()}
+            setCurrent={setCurrent}
+            id={'repl'}
+          />
+        </Show>
       </Suspense>
     </>
   );

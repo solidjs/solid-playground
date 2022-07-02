@@ -1,8 +1,6 @@
 import './assets/main.css';
 import 'virtual:windi.css';
 
-export { processImport } from './utils/processImport';
-export { createTabList } from './utils/createTabList';
 import type { Tab } from '../types/types';
 export type { Tab };
 

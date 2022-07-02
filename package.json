@@ -45,13 +45,13 @@
     "register-service-worker": "^1.7.2",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-import-css": "^3.0.3",
-    "rollup-plugin-windicss": "^1.8.5",
+    "rollup-plugin-windicss": "^1.8.6",
     "solid-app-router": "^0.4.1",
     "typescript": "^4.7.4",
     "vite": "^2.9.13",
     "vite-plugin-solid": "^2.2.6",
-    "vite-plugin-windicss": "^1.8.5",
-    "windicss": "^3.5.5",
+    "vite-plugin-windicss": "^1.8.6",
+    "windicss": "^3.5.6",
     "workbox-cli": "^6.5.3"
   },
   "dependencies": {

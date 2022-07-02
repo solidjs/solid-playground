@@ -1,31 +1,41 @@
-import { Component, createEffect, on, onCleanup } from 'solid-js';
+import { Component, createEffect, onCleanup, untrack } from 'solid-js';
 import type { Tab } from '../..';
 import { Uri, editor } from 'monaco-editor';
-import { KeyedMap } from '../../utils/keyedMap';
 
 const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {
-  const syncTab = (name: string, source: () => string) => {
-    const uri = Uri.parse(`file:///${props.folder}/${name}`);
-    const model = editor.createModel(source(), undefined, uri);
-
-    let first = true;
-    createEffect(
-      on(source, (mysource) => {
-        if (first) return (first = false);
-        if (model.getValue() !== mysource) model.setValue(mysource);
-      }),
-    );
+  createEffect(() => {
+    const uri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
+    const model = editor.createModel('', 'typescript', uri);
+    createEffect(() => model.setValue(props.compiled));
     onCleanup(() => model.dispose());
-  };
+  });
 
-  syncTab('output_dont_import.tsx', () => props.compiled);
+  const key = (tab: Tab) => `file:///${props.folder}/${tab.name}`;
+  let currentTabs = new Map<string, editor.ITextModel>();
+  createEffect(() => {
+    const newTabs = new Map<string, editor.ITextModel>();
+    for (const tab of props.tabs) {
+      const keyValue = key(tab);
+      const lookup = currentTabs.get(keyValue);
+      const source = untrack(() => tab.source);
+      if (!lookup) {
+        const uri = Uri.parse(keyValue);
+        newTabs.set(keyValue, editor.createModel(source, undefined, uri));
+      } else {
+        lookup.setValue(source);
+        newTabs.set(keyValue, lookup);
+      }
+    }
 
-  return (
-    <KeyedMap by={(tab) => tab.name} each={props.tabs}>
-      {(tab) => {
-        syncTab(tab().name, () => tab().source);
-      }}
-    </KeyedMap>
-  );
+    for (const [old, model] of currentTabs) {
+      if (!newTabs.has(old)) model.dispose();
+    }
+    currentTabs = newTabs;
+  });
+  onCleanup(() => {
+    for (const model of currentTabs.values()) model.dispose();
+  });
+
+  return <></>;
 };
 export default MonacoTabs;

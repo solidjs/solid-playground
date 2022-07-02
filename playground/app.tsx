@@ -36,8 +36,10 @@ export const App = (): JSX.Element => {
   return (
     <div class="relative flex bg-white dark:bg-solid-darkbg dark:text-white text-black h-screen text-slate-900 dark:text-slate-50 font-sans flex-col overflow-auto">
       <Routes>
-        <Route path="/scratchpad" element={<Edit horizontal={searchParams.isHorizontal != undefined} scratchpad />} />
-        <Route path="/:user/:repl" element={<Edit horizontal={searchParams.isHorizontal != undefined} />} />
+        <Route
+          path={['/:user/:repl', '/scratchpad']}
+          element={<Edit horizontal={searchParams.isHorizontal != undefined} />}
+        />
         <Route path="/:user" element={<Home />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
