@@ -107,18 +107,11 @@ export const Edit = (props: { horizontal: boolean }) => {
         const myScratchpad = localStorage.getItem('scratchpad');
         if (!myScratchpad) {
           output = {
-            id: 'scratchpad',
-            title: 'Scratchpad',
-            public: true,
-            version: '1.0',
-            labels: [],
-            size: 0,
-            created_at: new Date().toISOString(),
             files: defaultTabs.map((x) => ({
               name: x.name,
               content: x.source.split('\n'),
             })),
-          };
+          } as APIRepl;
           localStorage.setItem('scratchpad', JSON.stringify(output));
         } else {
           output = JSON.parse(myScratchpad);
@@ -128,8 +121,6 @@ export const Edit = (props: { horizontal: boolean }) => {
           headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
         }).then((r) => r.json());
       }
-
-      console.log('refetched');
 
       batch(() => {
         setTabs(
@@ -152,7 +143,7 @@ export const Edit = (props: { horizontal: boolean }) => {
       const files = tabs().map((x) => ({ name: x.name, content: x.source.split('\n') }));
 
       if (scratchpad()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ ...repl, files }));
+        localStorage.setItem('scratchpad', JSON.stringify({ files }));
       } else if (context.token && context.user()?.display == params.user) {
         fetch(`${API}/repl/${params.repl}`, {
           method: 'PUT',
@@ -200,7 +191,7 @@ export const Edit = (props: { horizontal: boolean }) => {
           }
         }}
       >
-        {resource() && (
+        {resource()?.title && (
           <input
             class="bg-transparent"
             value={resource()?.title}
