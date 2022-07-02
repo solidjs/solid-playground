@@ -1,8 +1,5 @@
 import { Show, onCleanup, createEffect, createSignal, JSX } from 'solid-js';
 
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import type { editor as mEditor } from 'monaco-editor';
 
 import pkg from '../package.json';
@@ -13,22 +10,26 @@ import { Header } from './components/header';
 import { parseHash } from './utils/parseHash';
 import { isValidUrl } from './utils/isValidUrl';
 
-import CompilerWorker from '../src/workers/compiler?worker';
-import FormatterWorker from '../src/workers/formatter?worker';
 import useZoom from '../src/hooks/useZoom';
 import { isDarkTheme } from './utils/isDarkTheme';
 import { exportToJSON } from './utils/exportFiles';
+
+const createWorker = (path: string) => {
+  return new Worker(
+    new URL(path, import.meta.url), {type: 'module'}
+  )
+}
 
 (window as any).MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
     switch (label) {
       case 'css':
-        return new cssWorker();
+        return createWorker('monaco-editor/esm/vs/language/css/css.worker');
       case 'typescript':
       case 'javascript':
-        return new tsWorker();
+        return createWorker('monaco-editor/esm/vs/language/typescript/ts.worker');
       default:
-        return new editorWorker();
+        return createWorker('monaco-editor/esm/vs/editor/editor.worker');
     }
   },
 };
@@ -47,8 +48,8 @@ export const App = (): JSX.Element => {
   eventBus.on('sw-update', () => setNewUpdate(true));
   onCleanup(() => eventBus.all.clear());
 
-  const compiler = new CompilerWorker();
-  const formatter = new FormatterWorker();
+  const compiler = createWorker('../src/workers/compiler');
+  const formatter = createWorker('../src/workers/formatter');
 
   const url = new URL(location.href);
   const initialTabs = parseHash(url.hash && url.hash.slice(1), defaultTabs) || defaultTabs;
