@@ -114,7 +114,7 @@ export const Home = () => {
         }}
       />
       <div class="m-8">
-        <Show when={!params.user}>
+        <Show when={!params.user} fallback={<h1 class="text-center text-3xl mb-4">{`${params.user}'s`} Repls</h1>}>
           <div class="flex flex-col align-middle mb-16">
             <button
               class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
@@ -147,8 +147,6 @@ export const Home = () => {
             </p>
           </div>
         </Show>
-
-        <h1 class="text-center text-3xl mb-4">{params.user ? `${params.user}'s` : 'My'} Repls</h1>
         <table class="w-200 max-w-full mx-auto">
           <thead>
             <tr class="border-b border-neutral-600">
