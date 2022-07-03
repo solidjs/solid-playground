@@ -12,20 +12,27 @@ const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> =
 
   const key = (tab: Tab) => `file:///${props.folder}/${tab.name}`;
   let currentTabs = new Map<string, editor.ITextModel>();
+  let syncing = false;
   createEffect(() => {
     const newTabs = new Map<string, editor.ITextModel>();
+    syncing = true;
     for (const tab of props.tabs) {
       const keyValue = key(tab);
       const lookup = currentTabs.get(keyValue);
       const source = untrack(() => tab.source);
       if (!lookup) {
         const uri = Uri.parse(keyValue);
-        newTabs.set(keyValue, editor.createModel(source, undefined, uri));
+        const model = editor.createModel(source, undefined, uri);
+        newTabs.set(keyValue, model);
+        model.onDidChangeContent(() => {
+          if (!syncing) tab.source = model.getValue();
+        });
       } else {
         lookup.setValue(source);
         newTabs.set(keyValue, lookup);
       }
     }
+    syncing = false;
 
     for (const [old, model] of currentTabs) {
       if (!newTabs.has(old)) model.dispose();

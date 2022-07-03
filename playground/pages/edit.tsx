@@ -55,36 +55,7 @@ export const Edit = (props: { horizontal: boolean }) => {
         },
         set source(source: string) {
           this._source = source;
-          if (readonly()) {
-            const myScratchpad = localStorage.getItem('scratchpad');
-            let output: APIRepl;
-            if (!myScratchpad) {
-              output = {
-                id: 'scratchpad',
-                title: resource.latest?.title + ' - Forked',
-                public: true,
-                version: '1.0',
-                labels: [],
-                size: 0,
-                created_at: new Date().toISOString(),
-                files: tabs()!.map((x) => ({
-                  name: x.name,
-                  content: x.source.split('\n'),
-                })),
-              };
-            } else {
-              output = JSON.parse(myScratchpad);
-              output.files = tabs()!.map((x) => ({
-                name: x.name,
-                content: x.source.split('\n'),
-              }));
-            }
-            localStorage.setItem('scratchpad', JSON.stringify(output));
-            disableFetch = true;
-            navigate('/scratchpad');
-          } else {
-            updateRepl();
-          }
+          updateRepl();
         },
       };
     });
@@ -137,6 +108,21 @@ export const Edit = (props: { horizontal: boolean }) => {
 
   const updateRepl = debounce(
     () => {
+      if (readonly()) {
+        localStorage.setItem(
+          'scratchpad',
+          JSON.stringify({
+            files: tabs()!.map((x) => ({
+              name: x.name,
+              content: x.source.split('\n'),
+            })),
+          }),
+        );
+        disableFetch = true;
+        navigate('/scratchpad');
+        return;
+      }
+
       const repl = resource.latest;
       if (!repl) return;
 

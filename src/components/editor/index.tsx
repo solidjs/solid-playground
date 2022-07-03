@@ -4,10 +4,6 @@ import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
 
 interface Props {
-  classList?: {
-    [k: string]: boolean | undefined;
-  };
-  class?: string;
   url: string;
   disabled?: true;
   isDark?: boolean;
@@ -15,7 +11,6 @@ interface Props {
   formatter?: Worker;
   displayErrors?: boolean;
   onDocChange?: (code: string) => unknown;
-  ref?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
 }
 
 const Editor: Component<Props> = (props) => {
@@ -76,8 +71,6 @@ const Editor: Component<Props> = (props) => {
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
     });
-
-    props.ref?.(editor);
   };
 
   // Initialize Monaco
@@ -105,7 +98,7 @@ const Editor: Component<Props> = (props) => {
     });
   });
 
-  return <div class={`p-0 h-full min-h-0 ${props.class || ''}`} classList={props.classList} ref={parent} />;
+  return <div class="p-0 h-full min-h-0" ref={parent} />;
 };
 
 export default Editor;

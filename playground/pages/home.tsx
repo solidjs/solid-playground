@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'solid-app-router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
-import { createEffect, createResource, For, Suspense } from 'solid-js';
+import { createEffect, createResource, For, Show, Suspense } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
@@ -68,20 +68,21 @@ export const Home = () => {
   const location = useLocation();
 
   createEffect(() => {
-    if (!location.hash && context.token) return;
-
-    const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
-
-    localStorage.setItem(
-      'scratchpad',
-      JSON.stringify({
-        files: initialTabs.map((x) => ({
-          name: x.name + ((x as any).type ? `.${(x as any).type}` : ''),
-          content: x.source.split('\n'),
-        })),
-      }),
-    );
-    navigate(`/scratchpad`);
+    if (location.hash) {
+      const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
+      localStorage.setItem(
+        'scratchpad',
+        JSON.stringify({
+          files: initialTabs.map((x) => ({
+            name: x.name + ((x as any).type ? `.${(x as any).type}` : ''),
+            content: x.source.split('\n'),
+          })),
+        }),
+      );
+      navigate(`/scratchpad`);
+    } else if (!context.token && !params.user) {
+      navigate(`/scratchpad`);
+    }
   });
 
   const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
@@ -113,39 +114,41 @@ export const Home = () => {
         }}
       />
       <div class="m-8">
-        <div class="flex flex-col align-middle">
-          <button
-            class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
-            onClick={async () => {
-              const result = await fetch(`${API}/repl`, {
-                method: 'POST',
-                headers: {
-                  'authorization': `Bearer ${context.token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  title: 'Counter Example',
-                  public: true,
-                  labels: [],
-                  version: '1.0',
-                  files: defaultTabs.map((x) => ({ name: x.name, content: x.source.split('\n') })),
-                }),
-              });
-              const { id } = await result.json();
-              navigate(`/${context.user()?.display}/${id}`);
-            }}
-          >
-            <Icon path={plus} class="w-8" /> Create new REPL
-          </button>
-          <p class="text-center text-gray-300 text-sm">
-            Or{' '}
-            <a href="/scratchpad" class="hover:underline">
-              open my scratchpad
-            </a>
-          </p>
-        </div>
+        <Show when={!params.user}>
+          <div class="flex flex-col align-middle mb-16">
+            <button
+              class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
+              onClick={async () => {
+                const result = await fetch(`${API}/repl`, {
+                  method: 'POST',
+                  headers: {
+                    'authorization': `Bearer ${context.token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    title: 'Counter Example',
+                    public: true,
+                    labels: [],
+                    version: '1.0',
+                    files: defaultTabs.map((x) => ({ name: x.name, content: x.source.split('\n') })),
+                  }),
+                });
+                const { id } = await result.json();
+                navigate(`/${context.user()?.display}/${id}`);
+              }}
+            >
+              <Icon path={plus} class="w-8" /> Create new REPL
+            </button>
+            <p class="text-center text-gray-300 text-sm">
+              Or{' '}
+              <a href="/scratchpad" class="hover:underline">
+                open my scratchpad
+              </a>
+            </p>
+          </div>
+        </Show>
 
-        <h1 class="text-center text-3xl mb-4 mt-16">{params.user || 'My'} Repls</h1>
+        <h1 class="text-center text-3xl mb-4">{params.user ? `${params.user}'s` : 'My'} Repls</h1>
         <table class="w-200 max-w-full mx-auto">
           <thead>
             <tr class="border-b border-neutral-600">

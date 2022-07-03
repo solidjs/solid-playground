@@ -67,14 +67,6 @@ const Repl: ReplProps = (props) => {
       }
     });
   }
-  function setCurrentSource(source: string) {
-    const idx = props.tabs.findIndex((tab) => tab.name === props.current);
-    if (idx < 0) return;
-
-    const tabs = props.tabs;
-    tabs[idx].source = source;
-    compile();
-  }
   function addTab() {
     const newTab = {
       name: `tab${props.tabs.length}.tsx`,
@@ -270,7 +262,7 @@ const Repl: ReplProps = (props) => {
           {(current) => (
             <Editor
               url={`file:///${props.id}/${current}`}
-              onDocChange={setCurrentSource}
+              onDocChange={() => compile()}
               formatter={formatter}
               isDark={props.dark}
               withMinimap={false}
