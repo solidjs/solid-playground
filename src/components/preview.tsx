@@ -1,9 +1,8 @@
-import { Component, createEffect, createSignal, splitProps, JSX, onMount, onCleanup } from 'solid-js';
+import { Component, createEffect, createSignal, onMount, onCleanup } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
-  const [internal, external] = splitProps(props, ['code', 'isDark', 'class', 'reloadSignal', 'devtools']);
 
   let iframe!: HTMLIFrameElement;
 
@@ -13,11 +12,10 @@ export const Preview: Component<Props> = (props) => {
   const CODE_UPDATE = 'CODE_UPDATE';
 
   createEffect(() => {
-    const isEmpty = !internal.code;
+    if (!props.code) return;
+    if (!isIframeReady()) return;
 
-    if (isEmpty || !isIframeReady()) return;
-
-    latestCode = internal.code.replace('render(', 'window.dispose = render(');
+    latestCode = props.code.replace('render(', 'window.dispose = render(');
 
     const blob = new Blob([latestCode], {
       type: 'text/javascript',
@@ -29,20 +27,17 @@ export const Preview: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    if (!iframe) return;
-    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: internal.devtools }, '*');
+    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
   });
 
   const setDarkMode = () => {
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    doc?.body!.classList.toggle('dark', internal.isDark);
-    iframe.contentWindow!.postMessage({ event: 'THEME', value: internal.isDark }, '*');
+    const doc = iframe.contentDocument!.body;
+    doc.classList.toggle('dark', props.isDark);
+    iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   };
 
   createEffect(() => {
-    if (iframe && isIframeReady()) {
-      setDarkMode();
-    }
+    if (isIframeReady()) setDarkMode();
   });
 
   const html = `
@@ -112,7 +107,7 @@ export const Preview: Component<Props> = (props) => {
             tool: ["console", "network", "resources", "elements"],
             defaults: {
               displaySize: 40,
-              theme: "${internal.isDark ? 'Dark' : 'Light'}"
+              theme: "${props.isDark ? 'Dark' : 'Light'}"
             }
           });
           eruda.add(erudaDom);
@@ -122,7 +117,7 @@ export const Preview: Component<Props> = (props) => {
             href: '${location.origin}/eruda.css'
           });
           eruda._shadowRoot.appendChild(style);
-          if (${internal.devtools}) eruda.show();
+          ${props.devtools ? 'eruda.show();' : ''}
         </script>
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
@@ -175,7 +170,7 @@ export const Preview: Component<Props> = (props) => {
 
   createEffect(() => {
     // Bail early on first mount or we are already reloading
-    if (!internal.reloadSignal) return;
+    if (!props.reloadSignal) return;
 
     // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
@@ -191,28 +186,29 @@ export const Preview: Component<Props> = (props) => {
   };
 
   onMount(() => {
-    iframe.addEventListener('load', () => {
-      setIframeReady(true);
-
-      setDarkMode();
-    });
+    iframe.addEventListener('load', () => setIframeReady(true));
   });
 
   return (
-    <iframe
-      title="Solid REPL"
-      class={`overflow-auto p-0 dark:bg-other block ${internal.class}`}
-      style={styleScale()}
-      ref={iframe}
-      src={src}
-      {...external}
-      // @ts-ignore
-      sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-    ></iframe>
+    <div class="h-full w-full relative">
+      <iframe
+        title="Solid REPL"
+        class="overflow-auto p-0 dark:bg-other block h-full w-full bg-white row-start-5"
+        classList={props.classList}
+        style={styleScale()}
+        ref={iframe}
+        src={src}
+        // @ts-ignore
+        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+      ></iframe>
+    </div>
   );
 };
 
-type Props = JSX.HTMLAttributes<HTMLIFrameElement> & {
+type Props = {
+  classList?: {
+    [k: string]: boolean | undefined;
+  };
   code: string;
   reloadSignal: boolean;
   devtools: boolean;

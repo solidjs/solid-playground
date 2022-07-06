@@ -4,11 +4,9 @@ import { Portal } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
 import { x } from 'solid-heroicons/outline';
 
-interface Props {
+export const Update: Component<{
   onDismiss: (...args: unknown[]) => unknown;
-}
-
-export const Update: Component<Props> = (props) => {
+}> = (props) => {
   const mount = document.getElementById('update');
 
   return (

@@ -23,8 +23,6 @@ function uid(str: string) {
  * This is a custom rollup plugin to handle tabs as a
  * virtual file system and replacing every non-URL import with an
  * ESM CDN import.
- *
- * Note: Passing in the Solid Version for later use
  */
 const replPlugin: Plugin = {
   name: 'repl-plugin',
@@ -59,18 +57,18 @@ const replPlugin: Plugin = {
 
       return {
         code: dd`
-            (() => {
-              let stylesheet = document.getElementById('${id}');
-              if (!stylesheet) {
-                stylesheet = document.createElement('style')
-                stylesheet.setAttribute('id', ${id})
-                document.head.appendChild(stylesheet)
-              }
-              const styles = document.createTextNode(\`${code}\`)
-              stylesheet.innerHTML = ''
-              stylesheet.appendChild(styles)
-            })()
-          `,
+          (() => {
+            let stylesheet = document.getElementById('${id}');
+            if (!stylesheet) {
+              stylesheet = document.createElement('style')
+              stylesheet.setAttribute('id', ${id})
+              document.head.appendChild(stylesheet)
+            }
+            const styles = document.createTextNode(\`${code}\`)
+            stylesheet.innerHTML = ''
+            stylesheet.appendChild(styles)
+          })()
+        `,
       };
     }
 
@@ -89,55 +87,50 @@ const replPlugin: Plugin = {
   },
 };
 
-async function compile(
-  tabs: Tab[],
-): Promise<{ event: 'RESULT' } & ({ compiled: string; tabs: { [key: string]: string } } | { error: string })> {
+async function compile(tabs: Tab[]) {
   tabsOutput = {};
   tabsLookup.clear();
   for (const tab of tabs) {
     tabsLookup.set(`./${tab.name}`, tab);
   }
 
-  try {
-    const compiler = await rollup({
-      input: `./${tabs[0].name}`,
-      plugins: [replPlugin],
-    });
+  const compiler = await rollup({
+    input: `./${tabs[0].name}`,
+    plugins: [replPlugin],
+  });
 
-    const {
-      output: [{ code }],
-    } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
+  const {
+    output: [{ code }],
+  } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
-    return { event: 'RESULT', compiled: code as string, tabs: tabsOutput };
-  } catch (e) {
-    return { event: 'RESULT', error: (e as Error).message };
-  }
+  return { event: 'ROLLUP', compiled: code as string, tabs: tabsOutput };
 }
 
 async function babel(tab: Tab, compileOpts: any) {
-  try {
-    const { code } = await transform(tab.source, {
-      presets: [
-        [babelPresetSolid, compileOpts],
-        ['typescript', { onlyRemoveTypeImports: true }],
-      ],
-      filename: tab.name,
-    });
-    return { event: 'RESULT', compiled: code };
-  } catch (e) {
-    return { event: 'RESULT', error: (e as Error).message };
-  }
+  const { code } = await transform(tab.source, {
+    presets: [
+      [babelPresetSolid, compileOpts],
+      ['typescript', { onlyRemoveTypeImports: true }],
+    ],
+    filename: tab.name,
+  });
+  return { event: 'BABEL', compiled: code };
 }
+
 self.addEventListener('message', async ({ data }) => {
   const { event, tabs, tab, compileOpts } = data;
 
-  switch (event) {
-    case 'ROLLUP':
-      self.postMessage(await compile(tabs));
-      break;
-    case 'BABEL':
-      self.postMessage(await babel(tab, compileOpts));
-      break;
+  try {
+    switch (event) {
+      case 'ROLLUP':
+        self.postMessage(await compile(tabs));
+        break;
+      case 'BABEL':
+        self.postMessage(await babel(tab, compileOpts));
+        break;
+    }
+  } catch (e) {
+    return { event: 'ERROR', error: (e as Error).message };
   }
 });
 

@@ -3,7 +3,7 @@ import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
 
-interface Props {
+const Editor: Component<{
   url: string;
   disabled?: true;
   isDark?: boolean;
@@ -11,9 +11,7 @@ interface Props {
   formatter?: Worker;
   displayErrors?: boolean;
   onDocChange?: (code: string) => unknown;
-}
-
-const Editor: Component<Props> = (props) => {
+}> = (props) => {
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
 
@@ -30,22 +28,16 @@ const Editor: Component<Props> = (props) => {
           pos: editor.getPosition(),
         });
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           props.formatter!.addEventListener(
             'message',
-            ({ data: { event, code } }) => {
-              switch (event) {
-                case 'RESULT':
-                  resolve([
-                    {
-                      range: model.getFullModelRange(),
-                      text: code,
-                    },
-                  ]);
-                  break;
-                default:
-                  reject();
-              }
+            ({ data: { code } }) => {
+              resolve([
+                {
+                  range: model.getFullModelRange(),
+                  text: code,
+                },
+              ]);
             },
             { once: true },
           );

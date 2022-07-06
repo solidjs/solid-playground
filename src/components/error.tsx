@@ -3,11 +3,6 @@ import { Component, createEffect, createSignal } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { chevronDown, chevronRight } from 'solid-heroicons/solid';
 
-interface Props {
-  onDismiss: (...args: unknown[]) => unknown;
-  message: string;
-}
-
 function doSomethingWithError(message: string) {
   const [firstLine, setFirstLine] = createSignal('');
   const [stackTrace, setStackTrace] = createSignal('');
@@ -21,7 +16,10 @@ function doSomethingWithError(message: string) {
   return [firstLine, stackTrace] as const;
 }
 
-export const Error: Component<Props> = (props) => {
+export const Error: Component<{
+  onDismiss: (...args: unknown[]) => unknown;
+  message: string;
+}> = (props) => {
   const [firstLine, stackTrace] = doSomethingWithError(props.message);
   const [isOpen, setIsOpen] = createSignal(false);
 

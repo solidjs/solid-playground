@@ -82,18 +82,14 @@ const Repl: ReplProps = (props) => {
   const [outputTab, setOutputTab] = createSignal(0);
 
   compiler.addEventListener('message', ({ data }) => {
-    const { event } = data;
+    const { compiled, error } = data;
 
-    if (event === 'RESULT') {
-      const { compiled, error } = data;
+    if (error) return setError(error);
+    else setError('');
 
-      if (error) return setError(error);
-      else setError('');
+    setCompiled(compiled);
 
-      setCompiled(compiled);
-
-      console.log(`Compilation took: ${performance.now() - now}ms`);
-    }
+    console.log(`Compilation took: ${performance.now() - now}ms`);
   });
 
   /**
@@ -135,8 +131,8 @@ const Repl: ReplProps = (props) => {
     return Math.min(Math.max(percentage, lowerBound), upperBound);
   };
 
-  let grid: HTMLDivElement;
-  let resizer: HTMLElement;
+  let grid!: HTMLDivElement;
+  let resizer!: HTMLDivElement;
   const [left, setLeft] = createSignal(1.25);
 
   const isLarge = createMediaQuery('(min-width: 768px)');
@@ -164,12 +160,7 @@ const Repl: ReplProps = (props) => {
 
   return (
     <div
-      ref={(el) => {
-        grid = el;
-        if (props.ref) {
-          (props.ref as (el: HTMLDivElement) => void)(el);
-        }
-      }}
+      ref={grid}
       class="grid h-full min-h-0 bg-white dark:bg-solid-darkbg dark:text-white text-black font-sans"
       classList={{
         'wrapper--forced': props.isHorizontal,
@@ -185,37 +176,34 @@ const Repl: ReplProps = (props) => {
           <For each={props.tabs}>
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
-                <button
-                  type="button"
+                <div
+                  ref={(el) => tabRefs.set(tab.name, el)}
+                  class="cursor-pointer select-none py-2 px-3 border border-solid border-transparent rounded transition focus:border-blue-600 focus:outline-none"
+                  contentEditable={edit() == index()}
+                  onBlur={(e) => {
+                    setEdit(-1);
+                    setTabName(tab.name, e.currentTarget.textContent!);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.code === 'Space') e.preventDefault();
+                    if (e.code !== 'Enter') return;
+                    setEdit(-1);
+                    setTabName(tab.name, e.currentTarget.textContent!);
+                  }}
                   onClick={() => setCurrentTab(tab.name)}
-                  onDblClick={() => {
+                  onDblClick={(e) => {
+                    e.preventDefault();
                     setEdit(index());
                     tabRefs.get(tab.name)?.focus();
                   }}
-                  class="cursor-pointer -mb-0.5 py-2 px-3"
                 >
-                  <span
-                    ref={(el) => tabRefs.set(tab.name, el)}
-                    contentEditable={edit() == index()}
-                    onBlur={(e) => {
-                      setEdit(-1);
-                      setTabName(tab.name, e.currentTarget.textContent!);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.code === 'Space') e.preventDefault();
-                      if (e.code !== 'Enter') return;
-                      setEdit(-1);
-                      setTabName(tab.name, e.currentTarget.textContent!);
-                    }}
-                  >
-                    {tab.name}
-                  </span>
-                </button>
+                  {tab.name}
+                </div>
 
                 <Show when={index() > 0}>
                   <button
                     type="button"
-                    class="border-0 cursor-pointer -mb-0.5"
+                    class="cursor-pointer"
                     onClick={() => {
                       removeTab(tab.name);
                     }}
@@ -277,7 +265,7 @@ const Repl: ReplProps = (props) => {
         </Show>
       </div>
 
-      <GridResizer ref={(el) => (resizer = el)} isHorizontal={isHorizontal()} onResize={changeLeft} />
+      <GridResizer ref={resizer} isHorizontal={isHorizontal()} onResize={changeLeft} />
 
       <div class="h-full flex flex-col">
         <TabList>
@@ -331,7 +319,9 @@ const Repl: ReplProps = (props) => {
               devtools={devtoolsOpen()}
               isDark={props.dark}
               code={compiled()}
-              class={`h-full w-full bg-white row-start-5 ${props.isHorizontal ? '' : 'md:row-start-2'}`}
+              classList={{
+                'md:row-start-2': !props.isHorizontal,
+              }}
             />
           </Match>
           <Match when={outputTab() == 1}>

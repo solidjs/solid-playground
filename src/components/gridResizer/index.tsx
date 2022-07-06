@@ -2,13 +2,12 @@ import { Component, createSignal, createEffect, onCleanup } from 'solid-js';
 import { throttle } from '@solid-primitives/scheduled';
 import { Dot } from './dot';
 
-interface GridResizerProps {
-  ref: (el: HTMLDivElement) => void;
+type SolidRef = (el: HTMLDivElement) => void;
+export const GridResizer: Component<{
+  ref: HTMLDivElement | SolidRef;
   isHorizontal: boolean;
   onResize: (clientX: number, clientY: number) => void;
-}
-
-export const GridResizer: Component<GridResizerProps> = (props) => {
+}> = (props) => {
   const [isDragging, setIsDragging] = createSignal(false);
 
   const onResizeStart = () => setIsDragging(true);
@@ -24,7 +23,7 @@ export const GridResizer: Component<GridResizerProps> = (props) => {
   }, 10);
 
   const setRef = (el: HTMLDivElement) => {
-    props.ref(el);
+    (props.ref as SolidRef)(el);
 
     el.addEventListener('mousedown', onResizeStart);
     el.addEventListener('touchstart', onResizeStart);

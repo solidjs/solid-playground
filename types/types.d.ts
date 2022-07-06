@@ -11,8 +11,7 @@ export type Repl = Component<{
   setTabs: (tab: Tab[]) => void;
   current: string | undefined;
   setCurrent: (tabId: string) => void;
-  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
-  ref?: HTMLDivElement | ((el: HTMLDivElement) => void);
+  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => void;
 }>;
 
 export interface Tab {
