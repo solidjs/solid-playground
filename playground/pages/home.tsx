@@ -115,9 +115,9 @@ export const Home = () => {
       />
       <div class="m-8">
         <Show when={!params.user} fallback={<h1 class="text-center text-3xl mb-4">{`${params.user}'s`} Repls</h1>}>
-          <div class="flex flex-col align-middle mb-16">
+          <div class="flex flex-col align-middle mb-8">
             <button
-              class="bg-solid-lightgray shadow-md dark:bg-solid-darkLighterBg rounded-xl p-4 text-3xl flex mx-auto"
+              class="bg-solid-lightgray shadow-md dark:bg-neutral-800 border border-gray-600 rounded-xl p-3 text-xl flex mx-auto justify-center items-center"
               onClick={async () => {
                 const result = await fetch(`${API}/repl`, {
                   method: 'POST',
@@ -137,11 +137,11 @@ export const Home = () => {
                 navigate(`/${context.user()?.display}/${id}`);
               }}
             >
-              <Icon path={plus} class="w-8" /> Create new REPL
+              <Icon path={plus} class="w-6" /> Create new REPL
             </button>
-            <p class="text-center text-gray-300 text-sm">
-              Or{' '}
-              <a href="/scratchpad" class="hover:underline">
+            <p class="text-center text-gray-800 dark:text-gray-300 text-sm pt-1">
+              or{' '}
+              <a href="/scratchpad" class="hover:underline text-solid-medium dark:text-solid-darkdefault">
                 open my scratchpad
               </a>
             </p>
@@ -149,13 +149,14 @@ export const Home = () => {
         </Show>
         <table class="w-200 max-w-full mx-auto">
           <thead>
-            <tr class="border-b border-neutral-600">
-              <td class="w-6/10">Title</td>
-              <td class="w-32">Edited</td>
-              <td class="text-right w-20">Options</td>
+            <tr class="border-b border-neutral-600 font-medium">
+              <th class="pb-2 w-6/10 text-left">Title</th>
+              <th class="pb-2 w-32 text-left">Edited</th>
+              <th class="pb-2 w-20 text-right">Options</th>
             </tr>
           </thead>
           <tbody>
+            <tr class="h-1" aria-hidden />
             <Suspense
               fallback={
                 <tr>
