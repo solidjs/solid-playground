@@ -1,14 +1,18 @@
 import { register } from 'register-service-worker';
-import { eventBus } from './eventBus';
+import { createSignal } from 'solid-js';
 
-export function registerServiceWorker(): void {
+const [eventBus, setEventBus] = createSignal();
+
+function registerServiceWorker(): void {
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
       register('/sw.js', {
         updated(registration) {
-          eventBus.emit('sw-update', registration);
+          setEventBus(registration);
         },
       });
     });
   }
 }
+
+export { eventBus, registerServiceWorker };

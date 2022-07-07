@@ -162,18 +162,15 @@ div#eruda-elements .eruda-styles .eruda-style-wrapper .eruda-style-rules {
 }
 #eruda-elements .eruda-bottom-bar .eruda-icon-refresh:before {
   content: 'Refresh' !important;
-  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma,
-    sans-serif;
+  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma, sans-serif;
 }
 #eruda-elements .eruda-bottom-bar .eruda-icon-eye:before {
   content: 'Toggle highlight' !important;
-  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma,
-    sans-serif;
+  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma, sans-serif;
 }
 #eruda-elements .eruda-bottom-bar .eruda-icon-reset:before {
   content: 'Reset to root' !important;
-  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma,
-    sans-serif;
+  font-family: '.SFNSDisplay-Regular', 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Tahoma, sans-serif;
 }
 .luna-notification-item {
   padding: 8px !important;
