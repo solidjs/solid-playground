@@ -60,7 +60,7 @@
     "@babel/standalone": "^7.18.7",
     "@solid-primitives/media": "^2.0.0",
     "@solid-primitives/scheduled": "^1.0.0",
-    "babel-preset-solid": "1.4.5",
+    "babel-preset-solid": "1.4.6",
     "dedent": "^0.7.0",
     "jszip": "^3.10.0",
     "monaco-editor-textmate": "^3.0.0",
@@ -70,7 +70,7 @@
     "rollup": "^2.75.7",
     "solid-dismiss": "^1.2.1",
     "solid-heroicons": "^2.0.3",
-    "solid-js": "1.4.5",
+    "solid-js": "1.4.6",
     "y-webrtc": "^10.2.3",
     "yjs": "^13.5.39"
   }

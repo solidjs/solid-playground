@@ -6,7 +6,7 @@ interface AppContextType {
   token: string;
   user: Resource<{ display: string; avatar: string } | undefined>;
   tabs: Accessor<Tab[] | undefined>;
-  setTabs: (x: Accessor<Tab[] | undefined>) => void;
+  setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
   dark: Accessor<boolean>;
   toggleDark: () => void;
 }
@@ -40,8 +40,7 @@ export const AppContextProvider: ParentComponent = (props) => {
   const [dark, setDark] = createSignal(isDarkTheme());
   document.body.classList.toggle('dark', dark());
 
-  let [hasTabs, setHasTabs] = createSignal(false);
-  let tabs: Accessor<Tab[] | undefined>;
+  let [tabsGetter, setTabs] = createSignal<Accessor<Tab[] | undefined>>();
   return (
     <AppContext.Provider
       value={{
@@ -54,12 +53,12 @@ export const AppContextProvider: ParentComponent = (props) => {
         },
         user,
         tabs() {
-          if (!hasTabs()) return undefined;
+          const tabs = tabsGetter();
+          if (!tabs) return undefined;
           return tabs();
         },
         setTabs(x) {
-          tabs = x;
-          setHasTabs(true);
+          setTabs(() => x);
         },
         dark,
         toggleDark() {

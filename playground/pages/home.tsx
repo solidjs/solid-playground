@@ -109,7 +109,7 @@ export const Home = () => {
       <Header
         share={async () => {
           const url = new URL(document.location.origin);
-          url.pathname = context.user.latest!.display;
+          url.pathname = params.user || context.user.latest!.display;
           return url.toString();
         }}
       />
@@ -151,8 +151,10 @@ export const Home = () => {
           <thead>
             <tr class="border-b border-neutral-600 font-medium">
               <th class="pb-2 w-6/10 text-left">Title</th>
-              <th class="pb-2 w-32 text-left">Edited</th>
-              <th class="pb-2 w-20 text-right">Options</th>
+              <th class="pb-2 w-32 text-left last:text-right">Edited</th>
+              <Show when={!params.user}>
+                <th class="pb-2 w-20 text-right">Options</th>
+              </Show>
             </tr>
           </thead>
           <tbody>
@@ -184,47 +186,51 @@ export const Home = () => {
                     <td>
                       <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
                     </td>
-                    <td>{timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}</td>
-                    <td class="text-right">
-                      <Icon
-                        path={repl.public ? eye : eyeOff}
-                        class="w-6 inline m-2 ml-0 cursor-pointer"
-                        onClick={async () => {
-                          fetch(`${API}/repl/${repl.id}`, {
-                            method: 'PUT',
-                            headers: {
-                              'authorization': `Bearer ${context.token}`,
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              ...repl,
-                              public: !repl.public,
-                            }),
-                          });
-                          setRepls(
-                            produce((x) => {
-                              x!.list[i()].public = !repl.public;
-                            }),
-                          );
-                        }}
-                      />
-                      <Icon
-                        path={x}
-                        class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
-                        onClick={async () => {
-                          fetch(`${API}/repl/${repl.id}`, {
-                            method: 'DELETE',
-                            headers: {
-                              authorization: `Bearer ${context.token}`,
-                            },
-                          });
-                          setRepls({
-                            total: repls.total - 1,
-                            list: repls.list.filter((x) => x.id !== repl.id),
-                          });
-                        }}
-                      />
+                    <td class="last:text-right">
+                      {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}
                     </td>
+                    <Show when={!params.user}>
+                      <td class="text-right">
+                        <Icon
+                          path={repl.public ? eye : eyeOff}
+                          class="w-6 inline m-2 ml-0 cursor-pointer"
+                          onClick={async () => {
+                            fetch(`${API}/repl/${repl.id}`, {
+                              method: 'PUT',
+                              headers: {
+                                'authorization': `Bearer ${context.token}`,
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                ...repl,
+                                public: !repl.public,
+                              }),
+                            });
+                            setRepls(
+                              produce((x) => {
+                                x!.list[i()].public = !repl.public;
+                              }),
+                            );
+                          }}
+                        />
+                        <Icon
+                          path={x}
+                          class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
+                          onClick={async () => {
+                            fetch(`${API}/repl/${repl.id}`, {
+                              method: 'DELETE',
+                              headers: {
+                                authorization: `Bearer ${context.token}`,
+                              },
+                            });
+                            setRepls({
+                              total: repls.total - 1,
+                              list: repls.list.filter((x) => x.id !== repl.id),
+                            });
+                          }}
+                        />
+                      </td>
+                    </Show>
                   </tr>
                 )}
               </For>

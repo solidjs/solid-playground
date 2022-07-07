@@ -3,7 +3,7 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
-import { batch, createResource, createSignal, lazy, Show, Suspense } from 'solid-js';
+import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useMatch, useNavigate, useParams } from 'solid-app-router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
@@ -63,6 +63,7 @@ export const Edit = (props: { horizontal: boolean }) => {
   const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
   const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
   context.setTabs(tabs);
+  onCleanup(() => context.setTabs(undefined));
 
   const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
   const [resource, { mutate }] = createResource<APIRepl, { repl: string; scratchpad: boolean }>(
