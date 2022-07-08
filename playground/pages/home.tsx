@@ -86,9 +86,9 @@ export const Home = () => {
   });
 
   const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
-  const [resourceRepls] = createResource<Repls, string>(
-    () => params.user || context.user()?.display,
-    async (user) => {
+  const [resourceRepls] = createResource<Repls, { user: string }>(
+    () => ({ user: params.user }),
+    async ({ user }) => {
       if (!user && !context.token) return { total: 0, list: [] };
       let output = await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
         headers: {
@@ -161,7 +161,7 @@ export const Home = () => {
             <tr class="h-1" aria-hidden />
             <Suspense
               fallback={
-                <tr>
+                <tr class="h-10">
                   <td colspan="3" class="text-center">
                     <svg
                       class="animate-spin h-8 w-8 text-white mx-auto mt-8"
@@ -183,14 +183,14 @@ export const Home = () => {
               <For each={get(repls.list)}>
                 {(repl, i) => (
                   <tr>
-                    <td>
+                    <td class="p-0">
                       <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
                     </td>
-                    <td class="last:text-right">
+                    <td class="p-0 last:text-right">
                       {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}
                     </td>
                     <Show when={!params.user}>
-                      <td class="text-right">
+                      <td class="p-0 text-right">
                         <Icon
                           path={repl.public ? eye : eyeOff}
                           class="w-6 inline m-2 ml-0 cursor-pointer"
