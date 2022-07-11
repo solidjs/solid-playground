@@ -2,6 +2,7 @@ import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
+import type { Repl } from '../../../types/types';
 
 const Editor: Component<{
   url: string;
@@ -10,7 +11,8 @@ const Editor: Component<{
   withMinimap?: boolean;
   formatter?: Worker;
   displayErrors?: boolean;
-  onDocChange?: (code: string) => unknown;
+  onDocChange?: (code: string) => void;
+  onEditorReady?: Parameters<Repl>[0]['onEditorReady'];
 }> = (props) => {
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
@@ -46,7 +48,8 @@ const Editor: Component<{
     });
   }
 
-  const setupEditor = () => {
+  // Initialize Monaco
+  onMount(() => {
     editor = mEditor.create(parent, {
       model: null,
       automaticLayout: true,
@@ -63,10 +66,7 @@ const Editor: Component<{
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
     });
-  };
-
-  // Initialize Monaco
-  onMount(() => setupEditor());
+  });
   onCleanup(() => editor?.dispose());
 
   createEffect(() => {
@@ -88,6 +88,10 @@ const Editor: Component<{
       noSemanticValidation: !props.displayErrors,
       noSyntaxValidation: !props.displayErrors,
     });
+  });
+
+  onMount(() => {
+    props.onEditorReady?.(editor, { Uri, editor: mEditor });
   });
 
   return <div class="p-0 h-full min-h-0" ref={parent} />;

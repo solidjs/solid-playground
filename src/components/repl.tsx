@@ -246,17 +246,15 @@ const Repl: ReplProps = (props) => {
         <MonacoTabs tabs={props.tabs} compiled={compiled()} folder={props.id} />
 
         <Show when={props.current}>
-          {(current) => (
-            <Editor
-              url={`file:///${props.id}/${current}`}
-              onDocChange={() => compile()}
-              formatter={formatter}
-              isDark={props.dark}
-              withMinimap={false}
-              ref={props.onEditorReady}
-              displayErrors={displayErrors()}
-            />
-          )}
+          <Editor
+            url={`file:///${props.id}/${props.current}`}
+            onDocChange={() => compile()}
+            formatter={formatter}
+            isDark={props.dark}
+            withMinimap={false}
+            onEditorReady={props.onEditorReady}
+            displayErrors={displayErrors()}
+          />
         </Show>
 
         <Show when={displayErrors() && error()}>

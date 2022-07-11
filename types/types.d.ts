@@ -1,5 +1,5 @@
 import { Component } from 'solid-js';
-import { editor as mEditor } from 'monaco-editor';
+import { editor as mEditor, Uri } from 'monaco-editor';
 
 export type Repl = Component<{
   compiler: Worker;
@@ -11,7 +11,7 @@ export type Repl = Component<{
   setTabs: (tab: Tab[]) => void;
   current: string | undefined;
   setCurrent: (tabId: string) => void;
-  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => void;
+  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor, monaco: { Uri: typeof Uri; editor: typeof mEditor }) => void;
 }>;
 
 export interface Tab {
