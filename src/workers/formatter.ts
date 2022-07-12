@@ -15,9 +15,8 @@ self.addEventListener('message', async ({ data }) => {
 
   switch (event) {
     case 'FORMAT':
-      // @ts-ignore
       self.postMessage({
-        event: 'RESULT',
+        event: 'FORMAT',
         code: await format(code),
       });
       break;

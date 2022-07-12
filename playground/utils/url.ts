@@ -1,3 +1,5 @@
+import { decompressFromURL as decompress } from '@amoutonbrady/lz-string';
+
 /**
  * Validate that a string is a valid URL
  *
@@ -9,5 +11,13 @@ export function isValidUrl(url: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+export function parseHash<T>(hash: string): T | undefined {
+  try {
+    return JSON.parse(decompress(hash)!);
+  } catch {
+    return;
   }
 }

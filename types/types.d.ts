@@ -1,40 +1,38 @@
-import { Component } from 'solid-js';
-import { editor as mEditor } from 'monaco-editor';
-
-export declare const Repl: Component<{
-  compiler: Worker;
-  formatter?: Worker;
-  isHorizontal: boolean;
-  interactive: boolean;
-  editableTabs: boolean;
-  dark: boolean;
-  tabs: Tab[];
-  id: string;
-  version?: string;
-  setTabs: (tab: Tab[]) => void;
-  current: string;
-  setCurrent: (tabId: string) => void;
-  onEditorReady?: (editor: mEditor.IStandaloneCodeEditor) => unknown;
-  ref?: HTMLDivElement | ((el: HTMLDivElement) => void);
-}>;
-
-export interface Tab {
-  name: string;
-  type: string;
-  source: string;
-}
-
-interface PlaygroundFile {
-  name?: string;
-  description?: string;
-  files: {
+declare module 'solid-repl' {
+  export interface Tab {
     name: string;
-    type?: 'tsx' | 'css';
-    content: string | string[];
-  }[];
+    source: string;
+  }
+
+  export const defaultTabs: Tab[];
 }
 
-export function processImport({ files }: PlaygroundFile): Tab[];
-export function createTabList(initialTabs: Tab[]): [() => Tab[], (t: Tab[]) => void];
+declare module 'solid-repl/lib/repl' {
+  export type Repl = import('solid-js').Component<{
+    compiler: Worker;
+    formatter?: Worker;
+    isHorizontal: boolean;
+    dark: boolean;
+    tabs: Tab[];
+    id: string;
+    setTabs: (tab: Tab[]) => void;
+    current: string | undefined;
+    setCurrent: (tabId: string) => void;
+    onEditorReady?: (
+      editor: import('monaco-editor').editor.IStandaloneCodeEditor,
+      monaco: {
+        Uri: typeof import('monaco-editor').Uri;
+        editor: typeof import('monaco-editor').editor;
+      },
+    ) => void;
+  }>;
+  const Repl: Repl;
+  export default Repl;
+}
 
-export declare const defaultTabs: Tab[];
+interface Window {
+  MonacoEnvironment: {
+    getWorker: (_moduleId: unknown, label: string) => Worker;
+    onigasm: string;
+  };
+}

@@ -13,7 +13,7 @@ import replace from '@rollup/plugin-replace';
 import WindiCSS from 'rollup-plugin-windicss';
 import commonjs from '@rollup/plugin-commonjs';
 import { renameSync, ensureDirSync } from 'fs-extra';
-import { basename, join, extname, resolve } from 'path';
+import { basename, join, extname, resolve, relative, dirname } from 'path';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { createReadStream, createWriteStream, readFileSync } from 'fs';
 
@@ -94,9 +94,7 @@ const preppy = {
 
             // this extracts the artificial tag id from the comment and the possibly renamed variable
             // name from the variable via two capture groups
-            .map((replacementAndVariable) =>
-              replacementAndVariable.match(/^\s*?\/\*([^*]*)\*\/\s*?(\S*)$/),
-            )
+            .map((replacementAndVariable) => replacementAndVariable.match(/^\s*?\/\*([^*]*)\*\/\s*?(\S*)$/))
             .filter(Boolean)
             .forEach(([usedEntry, tagId, updatedName]) => replacements.set(tagId, updatedName));
 
@@ -112,7 +110,7 @@ const preppy = {
 };
 
 rollup({
-  input: ['src/index.ts', 'src/workers/compiler.ts', 'src/workers/formatter.ts'],
+  input: ['src/index.ts', 'src/workers/compiler.ts', 'src/workers/formatter.ts', 'src/components/repl.tsx'],
   external: ['solid-js', 'solid-js/web', 'solid-js/store', 'monaco-editor'],
   acornInjectPlugins: [jsx()],
   plugins: [
@@ -124,10 +122,15 @@ rollup({
           return;
         }
 
-        return `export default ${JSON.stringify(readFileSync(id.slice(1, -4)).toString())};`;
+        return `export default ${JSON.stringify(readFileSync(id.slice(0, -4)).toString())};`;
       },
-      resolveId(source) {
+      resolveId(source, importer) {
         if (source.endsWith('?raw')) {
+          if (source.startsWith('./')) {
+            return resolve(dirname(importer), source);
+          } else if (source.startsWith('/')) {
+            return resolve(source.slice(1));
+          }
           return source;
         }
 
@@ -145,22 +148,21 @@ rollup({
         if (!id.endsWith('?url')) {
           return null;
         }
-        let base64 = true; // ideally, we wouldn't have to do this, but current end user bundlers can't handle non base64
+        let base64 = false; // ideally, we wouldn't have to do this, but current end user bundlers can't handle non base64
 
         let url = id.slice(0, -4);
         if (base64) {
           const mimetype = mime.getType(url);
 
-          return readFile(url).then(
-            (x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`,
-          );
+          return readFile(url).then((x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`);
         } else {
           const ext = extname(url);
           const name = basename(url, ext);
 
           copies[url] = `./${name}${ext}`;
 
-          return `export default "${copies[url]}"`;
+          return `import ${name}urlImport from "${copies[url]}?url";
+export default ${name}urlImport`;
         }
       },
       async generateBundle(outputOptions) {
@@ -178,7 +180,7 @@ rollup({
     replace({
       'process.env.BABEL_TYPES_8_BREAKING': 'true',
       'process.env.NODE_DEBUG': 'false',
-      preventAssignment: true,
+      'preventAssignment': true,
     }),
     babel({
       extensions: extensions,
@@ -192,11 +194,10 @@ rollup({
     preppy,
   ],
 }).then((builder) => {
-  builder
-    .write({ dir: 'lib', chunkFileNames: (info) => (info.isEntry ? '[name].jsx' : '[name].js') })
-    .then(() => {
-      const basePath = cwd();
+  builder.write({ dir: 'lib', chunkFileNames: (info) => (info.isEntry ? '[name].jsx' : '[name].js') }).then(() => {
+    const basePath = cwd();
 
-      renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
-    });
+    renameSync(resolve(basePath, 'lib/index.js'), resolve(basePath, 'lib/index.jsx'));
+    renameSync(resolve(basePath, 'lib/repl.js'), resolve(basePath, 'lib/repl.jsx'));
+  });
 });

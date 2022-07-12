@@ -1,15 +1,8 @@
-import { Component, createEffect, createSignal, splitProps, JSX, onMount } from 'solid-js';
-import useZoom from '../hooks/useZoom';
+import { Component, createEffect, createSignal, onMount, onCleanup } from 'solid-js';
+import { useZoom } from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
-  const [internal, external] = splitProps(props, [
-    'code',
-    'isDark',
-    'class',
-    'reloadSignal',
-    'devtools',
-  ]);
 
   let iframe!: HTMLIFrameElement;
 
@@ -19,33 +12,32 @@ export const Preview: Component<Props> = (props) => {
   const CODE_UPDATE = 'CODE_UPDATE';
 
   createEffect(() => {
-    // HACK: This helps prevent unnecessary updates
-    const isNotDom =
-      internal.code.includes('getNextElement') || internal.code.includes('getHydrationKey');
+    if (!props.code) return;
+    if (!isIframeReady()) return;
 
-    const isEmpty = !internal.code;
+    latestCode = props.code.replace('render(', 'window.dispose = render(');
 
-    if (isNotDom || isEmpty || !isIframeReady()) return;
+    const blob = new Blob([latestCode], {
+      type: 'text/javascript',
+    });
+    const src = URL.createObjectURL(blob);
+    onCleanup(() => URL.revokeObjectURL(src));
 
-    latestCode = internal.code.replace('render(', 'window.dispose = render(');
-    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, code: latestCode }, '*');
+    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, value: src }, '*');
   });
 
   createEffect(() => {
-    if (!iframe) return;
-    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', open: internal.devtools }, '*');
+    if (isIframeReady()) iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
   });
 
   const setDarkMode = () => {
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    doc?.body!.classList.toggle('dark', internal.isDark);
-    iframe.contentWindow!.postMessage({ event: 'THEME', dark: internal.isDark }, '*');
+    const doc = iframe.contentDocument!.documentElement;
+    doc.classList.toggle('dark', props.isDark);
+    iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   };
 
   createEffect(() => {
-    if (iframe && isIframeReady()) {
-      setDarkMode();
-    }
+    if (isIframeReady()) setDarkMode();
   });
 
   const html = `
@@ -55,10 +47,6 @@ export const Preview: Component<Props> = (props) => {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <!-- Ressource hints -->
-        <link rel="dns-prefetch" href="//unpkg.com">
-        <link href="https://unpkg.com" rel="preconnect" crossorigin>
-        <link rel="preload" href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" as="style">
         <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
 
         <style>
@@ -77,8 +65,12 @@ export const Preview: Component<Props> = (props) => {
             max-width: 100%;
           }
 
-          .dark {
+          .dark body {
             color: #e5e7eb;
+          }
+
+          .dark {
+            color-scheme: dark;
           }
 
           input, button, select, textarea {
@@ -115,51 +107,44 @@ export const Preview: Component<Props> = (props) => {
             tool: ["console", "network", "resources", "elements"],
             defaults: {
               displaySize: 40,
-              theme: "${internal.isDark ? 'Dark' : 'Light'}"
             }
           });
           eruda.add(erudaDom);
           eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
           const style = Object.assign(document.createElement('link'), {
             rel: 'stylesheet',
-            href: '/eruda.css'
+            href: '${location.origin}/eruda.css'
           });
           eruda._shadowRoot.appendChild(style);
-          if (${internal.devtools}) eruda.show();
         </script>
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
             try {
-              const { event, code } = data;
+              const { event, value } = data;
 
               if (event === 'DEVTOOLS') {
-                if (data.open) eruda.show();
+                if (value) eruda.show();
                 else eruda.hide();
               } else if (event === 'THEME') {
-                eruda._devTools.config.set('theme', data.dark ? 'Dark' : 'Light');
-                eruda._$el[0].style.colorScheme = data.dark ? 'dark' : 'light';
-              }
-              if (event !== 'CODE_UPDATE') return;
+                eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
+                eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
+              } else if (event === 'CODE_UPDATE') {
+                window?.dispose?.();
+                window.dispose = undefined;
 
-              window?.dispose?.();
-              window.dispose = undefined;
-
-              let app = document.getElementById('app');
-              if (app) {
-                app.remove();
+                let app = document.getElementById('app');
+                if (app) app.remove();
                 app = document.createElement('div');
                 app.id = 'app';
                 document.body.prepend(app);
+
+                console.clear();
+
+                await import(value);
+    
+                const load = document.getElementById('load');
+                if (load) load.remove();
               }
-
-              console.clear();
-
-              const encodedCode = encodeURIComponent(code);
-              const dataUri = 'data:text/javascript;charset=utf-8,' + encodedCode;
-              await import(dataUri);
-  
-              const load = document.getElementById('load');
-              if (code && load) load.remove();
             } catch (e) {
               console.error(e)
             }
@@ -167,7 +152,7 @@ export const Preview: Component<Props> = (props) => {
         </script>
       </head>
       
-      <body class="dark">
+      <body>
         <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>
@@ -175,14 +160,19 @@ export const Preview: Component<Props> = (props) => {
       </body>
     </html>
   `;
+  const blob = new Blob([html], {
+    type: 'text/html',
+  });
+  const src = URL.createObjectURL(blob);
+  onCleanup(() => URL.revokeObjectURL(src));
 
   createEffect(() => {
     // Bail early on first mount or we are already reloading
-    if (!internal.reloadSignal) return;
+    if (!props.reloadSignal) return;
 
     // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
-    iframe.srcdoc = html;
+    iframe.src = src;
   });
 
   const styleScale = () => {
@@ -194,24 +184,18 @@ export const Preview: Component<Props> = (props) => {
   };
 
   onMount(() => {
-    iframe.srcdoc = html;
-    iframe.addEventListener('load', () => {
-      setIframeReady(true);
-
-      setDarkMode();
-    });
+    iframe.addEventListener('load', () => setIframeReady(true));
   });
 
   return (
-    <div
-      class={`grid relative ${internal.class}`}
-      {...external}
-      style={`grid-template-rows: 1fr auto; ${styleScale()}`}
-    >
+    <div class="h-full w-full relative">
       <iframe
         title="Solid REPL"
-        class="overflow-auto p-0 w-full h-full dark:bg-other block"
+        class="overflow-auto p-0 dark:bg-other block h-full w-full bg-white row-start-5"
+        classList={props.classList}
+        style={styleScale()}
         ref={iframe}
+        src={src}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       ></iframe>
@@ -219,7 +203,10 @@ export const Preview: Component<Props> = (props) => {
   );
 };
 
-type Props = JSX.HTMLAttributes<HTMLDivElement> & {
+type Props = {
+  classList?: {
+    [k: string]: boolean | undefined;
+  };
   code: string;
   reloadSignal: boolean;
   devtools: boolean;

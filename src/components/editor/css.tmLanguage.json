@@ -87,11 +87,7 @@
           },
           "end": "(?!\\G)",
           "name": "meta.at-rule.font-face.css",
-          "patterns": [
-            { "include": "#comment-block" },
-            { "include": "#escapes" },
-            { "include": "#rule-list" }
-          ]
+          "patterns": [{ "include": "#comment-block" }, { "include": "#escapes" }, { "include": "#rule-list" }]
         },
         {
           "begin": "(?i)(@)page(?=[\\s:{]|/\\*|$)",
