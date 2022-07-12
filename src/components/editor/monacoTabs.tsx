@@ -1,5 +1,5 @@
 import { Component, createEffect, onCleanup, untrack } from 'solid-js';
-import type { Tab } from '../..';
+import type { Tab } from 'solid-repl';
 import { Uri, editor } from 'monaco-editor';
 
 const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {

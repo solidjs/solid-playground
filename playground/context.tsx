@@ -1,5 +1,5 @@
 import { Accessor, createContext, createResource, createSignal, ParentComponent, Resource, useContext } from 'solid-js';
-import type { Tab } from '../src';
+import type { Tab } from 'solid-repl';
 import { isDarkTheme } from './utils/isDarkTheme';
 
 interface AppContextType {

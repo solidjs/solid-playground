@@ -12,7 +12,7 @@ import { createMediaQuery } from '@solid-primitives/media';
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 
-import type { Repl as ReplProps } from '../../types/types';
+import type { Repl as ReplProps } from 'solid-repl/lib/repl';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -35,17 +35,12 @@ const Repl: ReplProps = (props) => {
     if (idx < 0) return;
     props.setCurrent(current);
   }
-  function setTabName(name: string, newName: string) {
-    const idx = props.tabs.findIndex((tab) => tab.name === name);
-    if (idx < 0) return;
-
+  function setCurrentName(newName: string) {
     const tabs = props.tabs;
-    tabs[idx] = { ...tabs[idx], name: newName };
+    tabs.find((tab) => tab.name === props.current).name = newName;
     batch(() => {
       props.setTabs(tabs);
-      if (props.current === name) {
-        props.setCurrent(newName);
-      }
+      props.setCurrent(newName);
     });
   }
   function removeTab(name: string) {
@@ -135,17 +130,20 @@ const Repl: ReplProps = (props) => {
   const [left, setLeft] = createSignal(1.25);
 
   const isLarge = createMediaQuery('(min-width: 768px)');
-  const isHorizontal = () => props.isHorizontal || isLarge();
+  const isHorizontal = () => props.isHorizontal || !isLarge();
 
   const changeLeft = (clientX: number, clientY: number) => {
     let position: number;
     let size: number;
+
+    const rect = grid.getBoundingClientRect();
+
     if (isHorizontal()) {
-      position = clientX - grid.offsetLeft - resizer.offsetWidth / 2;
-      size = grid.offsetWidth - resizer.offsetWidth;
-    } else {
-      position = clientY - grid.offsetTop - resizer.offsetHeight / 2;
+      position = clientY - rect.top - resizer.offsetHeight / 2;
       size = grid.offsetHeight - resizer.offsetHeight;
+    } else {
+      position = clientX - rect.left - resizer.offsetWidth / 2;
+      size = grid.offsetWidth - resizer.offsetWidth;
     }
     const percentage = position / size;
     const percentageAdjusted = clampPercentage(percentage * 2, 0.5, 1.5);
@@ -181,13 +179,13 @@ const Repl: ReplProps = (props) => {
                   contentEditable={edit() == index()}
                   onBlur={(e) => {
                     setEdit(-1);
-                    setTabName(tab.name, e.currentTarget.textContent!);
+                    setCurrentName(e.currentTarget.textContent!);
                   }}
                   onKeyDown={(e) => {
                     if (e.code === 'Space') e.preventDefault();
                     if (e.code !== 'Enter') return;
                     setEdit(-1);
-                    setTabName(tab.name, e.currentTarget.textContent!);
+                    setCurrentName(e.currentTarget.textContent!);
                   }}
                   onClick={() => setCurrentTab(tab.name)}
                   onDblClick={(e) => {

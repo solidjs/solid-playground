@@ -4,7 +4,6 @@ import vsLight from './vs_light_good.json';
 import { loadWASM } from 'onigasm';
 import { Registry } from 'monaco-textmate';
 import { wireTmGrammars } from 'monaco-editor-textmate';
-import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import typescriptReactTM from './TypeScriptReact.tmLanguage.json';
 import cssTM from './css.tmLanguage.json';
 import sPackageJson from '/node_modules/solid-js/package.json?raw';
@@ -74,7 +73,7 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
   allowNonTsExtensions: true,
 });
 
-const loadingWasm = loadWASM(onigasm);
+let loadingWasm: Promise<void>;
 
 const registry = new Registry({
   async getGrammarDefinition(scopeName) {
@@ -87,6 +86,7 @@ const registry = new Registry({
 
 const grammars = new Map();
 grammars.set('typescript', 'source.tsx');
+grammars.set('javascript', 'source.tsx');
 grammars.set('css', 'source.css');
 
 // monaco's built-in themes aren't powereful enough to handle TM tokens
@@ -102,6 +102,7 @@ languages.setLanguageConfiguration = (languageId: string, configuration: languag
 };
 
 export async function liftOff(): Promise<void> {
+  if (!loadingWasm) loadingWasm = loadWASM(window.MonacoEnvironment.onigasm);
   await loadingWasm;
 
   // wireTmGrammars only cares about the language part, but asks for all of monaco

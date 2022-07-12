@@ -55,16 +55,16 @@ export const GridResizer: Component<{
       classList={{
         'bg-brand-default dark:bg-brand-default': isDragging(),
         'bg-slate-50 dark:bg-solid-darkbg/70': !isDragging(),
-        'flex-col cursor-col-resize border-l-2 border-r-2': props.isHorizontal,
-        'flex-row cursor-row-resize border-t-2 border-b-2': !props.isHorizontal,
+        'flex-col cursor-col-resize border-l-2 border-r-2': !props.isHorizontal,
+        'flex-row cursor-row-resize border-t-2 border-b-2': props.isHorizontal,
       }}
     >
       <div
         classList={{
           'fixed inset-0 z-10': isDragging(),
           'hidden': !isDragging(),
-          'cursor-col-resize': props.isHorizontal,
-          'cursor-row-resize': !props.isHorizontal,
+          'cursor-col-resize': !props.isHorizontal,
+          'cursor-row-resize': props.isHorizontal,
         }}
       />
       <Dot isDragging={isDragging()} />

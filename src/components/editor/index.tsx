@@ -2,7 +2,7 @@ import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
-import type { Repl } from '../../../types/types';
+import type { Repl } from 'solid-repl/lib/repl';
 
 const Editor: Component<{
   url: string;

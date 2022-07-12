@@ -1,8 +1,7 @@
 import './assets/main.css';
 import 'virtual:windi.css';
 
-import type { Tab } from '../types/types';
-export type { Tab };
+import type { Tab } from 'solid-repl';
 
 import indexTSX from './defaultFiles/index.tsx?raw';
 

@@ -13,7 +13,7 @@ import replace from '@rollup/plugin-replace';
 import WindiCSS from 'rollup-plugin-windicss';
 import commonjs from '@rollup/plugin-commonjs';
 import { renameSync, ensureDirSync } from 'fs-extra';
-import { basename, join, extname, resolve } from 'path';
+import { basename, join, extname, resolve, relative, dirname } from 'path';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { createReadStream, createWriteStream, readFileSync } from 'fs';
 
@@ -122,10 +122,15 @@ rollup({
           return;
         }
 
-        return `export default ${JSON.stringify(readFileSync(id.slice(1, -4)).toString())};`;
+        return `export default ${JSON.stringify(readFileSync(id.slice(0, -4)).toString())};`;
       },
-      resolveId(source) {
+      resolveId(source, importer) {
         if (source.endsWith('?raw')) {
+          if (source.startsWith('./')) {
+            return resolve(dirname(importer), source);
+          } else if (source.startsWith('/')) {
+            return resolve(source.slice(1));
+          }
           return source;
         }
 
@@ -156,7 +161,8 @@ rollup({
 
           copies[url] = `./${name}${ext}`;
 
-          return `export default "${copies[url]}"`;
+          return `import ${name}urlImport from "${copies[url]}?url";
+export default ${name}urlImport`;
         }
       },
       async generateBundle(outputOptions) {

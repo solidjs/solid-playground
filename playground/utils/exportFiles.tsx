@@ -1,5 +1,5 @@
 import pkg from '../../package.json';
-import type { Tab } from '../../src';
+import type { Tab } from 'solid-repl';
 import dedent from 'dedent';
 
 const viteConfigFile = dedent`

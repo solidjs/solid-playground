@@ -27,11 +27,11 @@ export const Preview: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
+    if (isIframeReady()) iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
   });
 
   const setDarkMode = () => {
-    const doc = iframe.contentDocument!.body;
+    const doc = iframe.contentDocument!.documentElement;
     doc.classList.toggle('dark', props.isDark);
     iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   };
@@ -47,10 +47,6 @@ export const Preview: Component<Props> = (props) => {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <!-- Ressource hints -->
-        <link rel="dns-prefetch" href="https://unpkg.com">
-        <link href="https://unpkg.com" rel="preconnect" crossorigin>
-        <link rel="preload" href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" as="style">
         <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
 
         <style>
@@ -69,8 +65,12 @@ export const Preview: Component<Props> = (props) => {
             max-width: 100%;
           }
 
-          .dark {
+          .dark body {
             color: #e5e7eb;
+          }
+
+          .dark {
+            color-scheme: dark;
           }
 
           input, button, select, textarea {
@@ -107,7 +107,6 @@ export const Preview: Component<Props> = (props) => {
             tool: ["console", "network", "resources", "elements"],
             defaults: {
               displaySize: 40,
-              theme: "${props.isDark ? 'Dark' : 'Light'}"
             }
           });
           eruda.add(erudaDom);
@@ -117,7 +116,6 @@ export const Preview: Component<Props> = (props) => {
             href: '${location.origin}/eruda.css'
           });
           eruda._shadowRoot.appendChild(style);
-          ${props.devtools ? 'eruda.show();' : ''}
         </script>
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
@@ -154,7 +152,7 @@ export const Preview: Component<Props> = (props) => {
         </script>
       </head>
       
-      <body class="dark">
+      <body>
         <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>

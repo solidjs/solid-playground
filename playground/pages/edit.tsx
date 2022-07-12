@@ -3,18 +3,20 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
+import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useMatch, useNavigate, useParams } from 'solid-app-router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
-import { defaultTabs, Tab } from '../../src';
+import { defaultTabs } from '../../src';
+import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { compressToURL } from '@amoutonbrady/lz-string';
 
 const Repl = lazy(() => import('../../src/components/repl'));
 
-(window as any).MonacoEnvironment = {
+window.MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
     switch (label) {
       case 'css':
@@ -26,6 +28,7 @@ const Repl = lazy(() => import('../../src/components/repl'));
         return new editorWorker();
     }
   },
+  onigasm,
 };
 
 interface InternalTab extends Tab {

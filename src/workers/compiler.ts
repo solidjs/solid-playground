@@ -1,4 +1,4 @@
-import type { Tab } from '../';
+import type { Tab } from 'solid-repl';
 
 import { transform } from '@babel/standalone';
 // @ts-ignore
