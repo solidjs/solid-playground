@@ -162,6 +162,7 @@ const Repl: ReplProps = (props) => {
       classList={{
         'wrapper--forced': props.isHorizontal,
         'wrapper': !props.isHorizontal,
+        'dark': props.dark,
       }}
       style={{
         '--left': `${left()}fr`,
