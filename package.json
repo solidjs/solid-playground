@@ -69,5 +69,10 @@
     "solid-dismiss": "^1.2.1",
     "solid-heroicons": "^2.0.3",
     "solid-js": "1.4.7"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "monaco-editor@0.33.0": "patches/monaco-editor@0.33.0.patch"
+    }
   }
 }
