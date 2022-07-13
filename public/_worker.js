@@ -13,18 +13,12 @@ const corsHeaders = {
 
 export default {
   async fetch(request, env) {
-    try {
-      if (request.method === 'OPTIONS') {
-        return handleOptions(request);
-      } else if (request.method === 'PUT') {
-        return handleCreateUrl(request, env);
-      } else if (request.method === 'GET') {
-        return handleRetrieveUrl(request, env);
-      } else {
-        return new Response('Unsupported method', { status: 401 });
-      }
-    } catch {
-      return new Response('Internal Error', { status: 500 });
+    if (request.method === 'PUT') {
+      return handleCreateUrl(request, env);
+    } else if (request.method === 'GET') {
+      return handleRetrieveUrl(request, env);
+    } else {
+      return new Response('Unsupported method', { status: 401 });
     }
   },
 };
