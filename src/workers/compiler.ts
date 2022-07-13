@@ -126,7 +126,7 @@ self.addEventListener('message', async ({ data }) => {
         break;
     }
   } catch (e) {
-    return { event: 'ERROR', error: (e as Error).message };
+    self.postMessage({ event: 'ERROR', error: (e as Error).message });
   }
 });
 

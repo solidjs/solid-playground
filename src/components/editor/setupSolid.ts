@@ -1,4 +1,4 @@
-import { Uri, languages, editor } from 'monaco-editor';
+import { languages, editor } from 'monaco-editor';
 import vsDark from './vs_dark_good.json';
 import vsLight from './vs_light_good.json';
 import { loadWASM } from 'onigasm';
@@ -33,7 +33,8 @@ import sStore from '/node_modules/solid-js/store/types/store.d.ts?raw';
 
 // Tell monaco about the file from solid-js
 function cm(source: string, path: string) {
-  editor.createModel(source, 'typescript', Uri.parse(`file:///node_modules/solid-js/${path}`));
+  languages.typescript.typescriptDefaults.addExtraLib(source, `file:///node_modules/solid-js/${path}`);
+  languages.typescript.javascriptDefaults.addExtraLib(source, `file:///node_modules/solid-js/${path}`);
 }
 
 cm(sPackageJson, 'package.json');
@@ -61,9 +62,7 @@ cm(sMutable, 'store/types/mutable.d.ts');
 cm(sServer, 'store/types/server.d.ts');
 cm(sStore, 'store/types/store.d.ts');
 
-languages.typescript.typescriptDefaults.setEagerModelSync(true);
-
-languages.typescript.typescriptDefaults.setCompilerOptions({
+const compilerOptions: languages.typescript.CompilerOptions = {
   strict: true,
   target: languages.typescript.ScriptTarget.ESNext,
   module: languages.typescript.ModuleKind.ESNext,
@@ -71,7 +70,10 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
   jsx: languages.typescript.JsxEmit.Preserve,
   jsxImportSource: 'solid-js',
   allowNonTsExtensions: true,
-});
+};
+
+languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
+languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
 
 let loadingWasm: Promise<void>;
 

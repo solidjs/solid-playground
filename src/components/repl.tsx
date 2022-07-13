@@ -86,7 +86,7 @@ const Repl: ReplProps = (props) => {
   compiler.addEventListener('message', ({ data }) => {
     const { event, compiled, error } = data;
 
-    if (error) return setError(error);
+    if (event === 'ERROR') return setError(error);
     else setError('');
 
     if (event === 'ROLLUP') {
