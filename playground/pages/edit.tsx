@@ -33,6 +33,7 @@ window.MonacoEnvironment = {
 
 interface InternalTab extends Tab {
   _source: string;
+  _name: string;
 }
 export const Edit = (props: { horizontal: boolean }) => {
   const scratchpad = useMatch(() => '/scratchpad');
@@ -49,9 +50,16 @@ export const Edit = (props: { horizontal: boolean }) => {
 
   const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
     toMap.map((tab) => {
-      if ((tab as InternalTab)._source) return tab as InternalTab;
+      if ('_source' in tab) return tab;
       return {
-        name: tab.name,
+        _name: tab.name,
+        get name() {
+          return this._name;
+        },
+        set name(name: string) {
+          this._name = name;
+          updateRepl();
+        },
         _source: tab.source,
         get source() {
           return this._source;

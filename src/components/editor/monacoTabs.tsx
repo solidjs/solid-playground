@@ -2,14 +2,7 @@ import { Component, createEffect, onCleanup, untrack } from 'solid-js';
 import type { Tab } from 'solid-repl';
 import { Uri, editor } from 'monaco-editor';
 
-const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {
-  createEffect(() => {
-    const uri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
-    const model = editor.createModel('', 'typescript', uri);
-    createEffect(() => model.setValue(props.compiled));
-    onCleanup(() => model.dispose());
-  });
-
+const MonacoTabs: Component<{ folder: string; tabs: Tab[] }> = (props) => {
   const key = (tab: Tab) => `file:///${props.folder}/${tab.name}`;
   let currentTabs = new Map<string, editor.ITextModel>();
   let syncing = false;

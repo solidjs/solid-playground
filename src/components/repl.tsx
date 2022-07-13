@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { refresh, terminal } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
@@ -8,6 +8,7 @@ import { GridResizer } from './gridResizer';
 import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
 import { createMediaQuery } from '@solid-primitives/media';
+import { editor, Uri } from 'monaco-editor';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
@@ -39,7 +40,7 @@ const Repl: ReplProps = (props) => {
     const tabs = props.tabs;
     tabs.find((tab) => tab.name === props.current).name = newName;
     batch(() => {
-      props.setTabs(tabs);
+      props.setTabs([...tabs]);
       props.setCurrent(newName);
     });
   }
@@ -75,13 +76,24 @@ const Repl: ReplProps = (props) => {
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
 
+  let model: editor.ITextModel;
+  createEffect(() => {
+    const uri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
+    model = editor.createModel('', 'typescript', uri);
+    onCleanup(() => model.dispose());
+  });
+
   compiler.addEventListener('message', ({ data }) => {
-    const { compiled, error } = data;
+    const { event, compiled, error } = data;
 
     if (error) return setError(error);
     else setError('');
 
-    setCompiled(compiled);
+    if (event === 'ROLLUP') {
+      setCompiled(compiled);
+    } else {
+      model.setValue(compiled);
+    }
 
     console.log(`Compilation took: ${performance.now() - now}ms`);
   });
@@ -242,7 +254,7 @@ const Repl: ReplProps = (props) => {
           </TabItem>
         </TabList>
 
-        <MonacoTabs tabs={props.tabs} compiled={compiled()} folder={props.id} />
+        <MonacoTabs tabs={props.tabs} folder={props.id} />
 
         <Show when={props.current}>
           <Editor

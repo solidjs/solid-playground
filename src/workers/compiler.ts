@@ -11,7 +11,6 @@ import type { Plugin } from 'rollup';
 const CDN_URL = 'https://cdn.skypack.dev';
 
 const tabsLookup = new Map<string, Tab>();
-let tabsOutput: { [key: string]: string } = {};
 
 function uid(str: string) {
   return Array.from(str)
@@ -30,7 +29,7 @@ const replPlugin: Plugin = {
   async resolveId(importee: string) {
     // This is a tab being imported
     if (importee.startsWith('.') && importee.endsWith('.css')) return importee;
-    if (importee.startsWith('.')) return importee.replace('.tsx', '') + '.tsx';
+    if (importee.startsWith('.')) return importee;
 
     // External URL
     if (importee.includes('://')) {
@@ -73,29 +72,26 @@ const replPlugin: Plugin = {
     }
 
     // Compile solid code
-    if (/\.(j|t)sx$/.test(filename)) {
+    else if (filename.startsWith('.')) {
       let transformed = transform(code, {
         presets: [
           [babelPresetSolid, { generate: 'dom', hydratable: false }],
           ['typescript', { onlyRemoveTypeImports: true }],
         ],
-        filename,
+        filename: filename + '.tsx',
       });
-      tabsOutput[filename] = transformed.code;
       return transformed;
     }
   },
 };
 
 async function compile(tabs: Tab[]) {
-  tabsOutput = {};
-  tabsLookup.clear();
   for (const tab of tabs) {
-    tabsLookup.set(`./${tab.name}`, tab);
+    tabsLookup.set(`./${tab.name.replace(/.(tsx|jsx)$/, '')}`, tab);
   }
 
   const compiler = await rollup({
-    input: `./${tabs[0].name}`,
+    input: `./${tabs[0].name.replace(/.(tsx|jsx)$/, '')}`,
     plugins: [replPlugin],
   });
 
@@ -103,7 +99,7 @@ async function compile(tabs: Tab[]) {
     output: [{ code }],
   } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
-  return { event: 'ROLLUP', compiled: code as string, tabs: tabsOutput };
+  return { event: 'ROLLUP', compiled: code as string };
 }
 
 async function babel(tab: Tab, compileOpts: any) {
