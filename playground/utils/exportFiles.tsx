@@ -152,7 +152,7 @@ export async function exportToZip(tabs: Tab[], imports: string[]): Promise<void>
 
   // basic structure
   zip.file('index.html', indexHTML(tabs));
-  zip.file('package.json', packageJSON(imports));
+  zip.file('package.json', await packageJSON(imports));
   zip.file('vite.config.ts', viteConfigFile);
   zip.file('tsconfig.json', tsConfig);
   for (const tab of tabs) {
