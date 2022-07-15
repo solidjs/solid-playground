@@ -162,9 +162,20 @@ export const Edit = (props: { horizontal: boolean }) => {
     !!scratchpad() ? 10 : 1000,
   );
 
+  compiler.addEventListener('message', ({ data }) => {
+    const { event, imports, error } = data;
+
+    if (error) return console.error(error);
+
+    if (event === 'IMPORTS') {
+      console.log(imports);
+    }
+  });
+
   return (
     <>
       <Header
+        compiler={compiler}
         fork={() => {}}
         share={async () => {
           if (scratchpad()) {

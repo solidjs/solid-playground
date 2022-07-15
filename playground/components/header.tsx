@@ -1,6 +1,7 @@
 import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
-import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
+import { unwrap } from 'solid-js/store';
+import { onCleanup, onMount, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
@@ -8,7 +9,11 @@ import { API, useAppContext } from '../context';
 
 import logo from '../assets/logo.svg?url';
 
-export const Header: ParentComponent<{ fork?: () => void; share: () => Promise<string> }> = (props) => {
+export const Header: ParentComponent<{
+    compiler: Worker;
+    fork?: () => void;
+    share: () => Promise<string>
+}> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const [showMenu, setShowMenu] = createSignal(false);
@@ -31,6 +36,14 @@ export const Header: ParentComponent<{ fork?: () => void; share: () => Promise<s
   function closeMobileMenu() {
     setShowMenu(false);
   }
+
+  onMount(() => {
+    props.compiler.addEventListener('message', ({ data }) => {
+      const { event, imports } = data;
+
+      if (event === 'IMPORTS') exportToZip(context.tabs()!, imports)
+    });
+  })
 
   return (
     <header class="sticky top-0 z-10 bg-white dark:bg-solid-darkbg p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px">
@@ -79,7 +92,12 @@ export const Header: ParentComponent<{ fork?: () => void; share: () => Promise<s
             <Show when={context.tabs()}>
               <button
                 type="button"
-                onClick={() => exportToZip(context.tabs()!)}
+                onClick={() => {
+                  props.compiler.postMessage({
+                      event: 'IMPORTS',
+                      tabs: unwrap(context.tabs()),
+                  })
+                }}
                 class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
                 classList={{
                   'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
