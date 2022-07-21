@@ -1,14 +1,21 @@
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Regular.woff') format('woff');
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Bold.woff') format('woff');
-  font-weight: bold;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Gordita';
+  src: url('/Gordita-Medium.woff') format('woff');
+  font-weight: 500;
   font-style: normal;
 }
 
@@ -16,33 +23,21 @@ div[contenteditable='true']:focus {
   outline: none !important;
 }
 
+.dark {
+  color-scheme: dark;
+}
+
 .wrapper,
 .wrapper--forced {
-  --top: minmax(0, 1fr);
-  --bottom: minmax(0, 1fr);
-
-  grid-template-rows: auto minmax(0, var(--top)) 12px auto minmax(0, var(--bottom));
-  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, var(--left)) 12px minmax(0, var(--right));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 @screen md {
   .wrapper {
-    --left: minmax(0, 1fr);
-    --right: minmax(0, 1fr);
-
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     grid-template-columns: minmax(0, var(--left)) 12px minmax(0, var(--right));
   }
-}
-
-.tabs {
-  @apply relative;
-}
-
-.tabs::after {
-  content: '';
-  height: 2px;
-  @apply absolute w-full left-0 bottom-0 bg-slate-200 dark:bg-slate-700 z-0;
 }
 
 textarea.monaco-mouse-cursor-text:focus {

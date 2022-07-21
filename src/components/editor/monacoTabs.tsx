@@ -1,45 +1,45 @@
-import { Component, createEffect, onCleanup } from 'solid-js';
-import type { Tab } from '../..';
-import { Uri, editor } from 'monaco-editor';
-import { keyedMap } from '../../utils/keyedMap';
+import { Component, createEffect, onCleanup, untrack } from 'solid-js';
+import type { Tab } from 'solid-repl';
+import { Uri, editor, IDisposable } from 'monaco-editor';
 
-const MonacoTabs: Component<{ folder: string; tabs: Tab[]; compiled: string }> = (props) => {
-  const fileUri = Uri.parse(`file:///${props.folder}/output_dont_import.tsx`);
-
-  const oldModel = editor.getModels().find((model) => model.uri.path === fileUri.path);
-  if (oldModel) oldModel.dispose();
-
-  const model = editor.createModel('', 'typescript', fileUri);
-
+const MonacoTabs: Component<{ folder: string; tabs: Tab[] }> = (props) => {
+  const key = (tab: Tab) => `file:///${props.folder}/${tab.name}`;
+  let currentTabs = new Map<string, { model: editor.ITextModel; watcher: IDisposable }>();
+  let syncing = false;
   createEffect(() => {
-    model.setValue(
-      props.compiled.replace(/(https:\/\/cdn.skypack.dev\/)|(@[0-9][0-9.\-a-z]+)/g, ''),
-    );
-  });
-  onCleanup(() => model.dispose());
+    const newTabs = new Map<string, { model: editor.ITextModel; watcher: IDisposable }>();
+    syncing = true;
+    for (const tab of props.tabs) {
+      const keyValue = key(tab);
+      const lookup = currentTabs.get(keyValue);
+      const source = untrack(() => tab.source);
+      if (!lookup) {
+        const uri = Uri.parse(keyValue);
+        const model = editor.createModel(source, undefined, uri);
+        const watcher = model.onDidChangeContent(() => {
+          if (!syncing) tab.source = model.getValue();
+        });
+        newTabs.set(keyValue, { model, watcher });
+      } else {
+        lookup.model.setValue(source);
+        lookup.watcher.dispose();
+        lookup.watcher = lookup.model.onDidChangeContent(() => {
+          if (!syncing) tab.source = lookup.model.getValue();
+        });
+        newTabs.set(keyValue, lookup);
+      }
+    }
+    syncing = false;
 
-  keyedMap<Tab>({
-    by: (tab) => `${tab.name}.${tab.type}`,
-    get each() {
-      return props.tabs;
-    },
-    children: (tab) => {
-      const uri = Uri.parse(`file:///${props.folder}/${tab().name}.${tab().type}`);
-      const model = editor.createModel(
-        tab().source,
-        tab().type === 'tsx' ? 'typescript' : 'css',
-        uri,
-      );
-
-      let first = true;
-      createEffect(() => {
-        const source = tab().source;
-        if (!first && model.getValue() !== source) model.setValue(source);
-        else first = false;
-      });
-      onCleanup(() => model.dispose());
-    },
+    for (const [old, lookup] of currentTabs) {
+      if (!newTabs.has(old)) lookup.model.dispose();
+    }
+    currentTabs = newTabs;
   });
+  onCleanup(() => {
+    for (const lookup of currentTabs.values()) lookup.model.dispose();
+  });
+
   return <></>;
 };
 export default MonacoTabs;

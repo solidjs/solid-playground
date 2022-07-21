@@ -1,10 +1,9 @@
-import { Uri, languages, editor } from 'monaco-editor';
+import { languages, editor } from 'monaco-editor';
 import vsDark from './vs_dark_good.json';
 import vsLight from './vs_light_good.json';
 import { loadWASM } from 'onigasm';
 import { Registry } from 'monaco-textmate';
 import { wireTmGrammars } from 'monaco-editor-textmate';
-import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import typescriptReactTM from './TypeScriptReact.tmLanguage.json';
 import cssTM from './css.tmLanguage.json';
 import sPackageJson from '/node_modules/solid-js/package.json?raw';
@@ -34,7 +33,8 @@ import sStore from '/node_modules/solid-js/store/types/store.d.ts?raw';
 
 // Tell monaco about the file from solid-js
 function cm(source: string, path: string) {
-  editor.createModel(source, 'typescript', Uri.parse(`file:///node_modules/solid-js/${path}`));
+  languages.typescript.typescriptDefaults.addExtraLib(source, `file:///node_modules/solid-js/${path}`);
+  languages.typescript.javascriptDefaults.addExtraLib(source, `file:///node_modules/solid-js/${path}`);
 }
 
 cm(sPackageJson, 'package.json');
@@ -62,9 +62,7 @@ cm(sMutable, 'store/types/mutable.d.ts');
 cm(sServer, 'store/types/server.d.ts');
 cm(sStore, 'store/types/store.d.ts');
 
-languages.typescript.typescriptDefaults.setEagerModelSync(true);
-
-languages.typescript.typescriptDefaults.setCompilerOptions({
+const compilerOptions: languages.typescript.CompilerOptions = {
   strict: true,
   target: languages.typescript.ScriptTarget.ESNext,
   module: languages.typescript.ModuleKind.ESNext,
@@ -72,9 +70,12 @@ languages.typescript.typescriptDefaults.setCompilerOptions({
   jsx: languages.typescript.JsxEmit.Preserve,
   jsxImportSource: 'solid-js',
   allowNonTsExtensions: true,
-});
+};
 
-const loadingWasm = loadWASM(onigasm);
+languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
+languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
+
+let loadingWasm: Promise<void>;
 
 const registry = new Registry({
   async getGrammarDefinition(scopeName) {
@@ -87,6 +88,7 @@ const registry = new Registry({
 
 const grammars = new Map();
 grammars.set('typescript', 'source.tsx');
+grammars.set('javascript', 'source.tsx');
 grammars.set('css', 'source.css');
 
 // monaco's built-in themes aren't powereful enough to handle TM tokens
@@ -96,15 +98,13 @@ editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
 
 const hookLanguages = languages.setLanguageConfiguration;
 
-languages.setLanguageConfiguration = (
-  languageId: string,
-  configuration: languages.LanguageConfiguration,
-) => {
+languages.setLanguageConfiguration = (languageId: string, configuration: languages.LanguageConfiguration) => {
   liftOff();
   return hookLanguages(languageId, configuration);
 };
 
 export async function liftOff(): Promise<void> {
+  if (!loadingWasm) loadingWasm = loadWASM(window.MonacoEnvironment.onigasm);
   await loadingWasm;
 
   // wireTmGrammars only cares about the language part, but asks for all of monaco
