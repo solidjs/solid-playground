@@ -40,6 +40,73 @@ export const Preview: Component<Props> = (props) => {
     if (isIframeReady()) setDarkMode();
   });
 
+  let devtools = `
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
+    <script type="module">
+      eruda.init({
+        tool: ["console", "network", "resources", "elements"],
+        defaults: {
+          displaySize: 40,
+        }
+      });
+      eruda.add(erudaDom);
+      eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
+      const style = Object.assign(document.createElement('link'), {
+        rel: 'stylesheet',
+        href: '${location.origin}/eruda.css'
+      });
+      eruda._shadowRoot.appendChild(style);
+      window.addEventListener('message', async ({ data }) => {
+        try {
+          const { event, value } = data;
+
+          if (event === 'DEVTOOLS') {
+            if (value) eruda.show();
+            else eruda.hide();
+          } else if (event === 'THEME') {
+            eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
+            eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      });
+    </script>`;
+
+  const ua = navigator.userAgent.toLowerCase();
+  const isChrome = /(?!chrom.*opr)chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/.test(ua);
+
+  if (isChrome) {
+    devtools = `
+      <script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
+      <script>
+        let bodyHeight;
+        window.addEventListener('message', async ({ data }) => {
+          try {
+            const { event, value } = data;
+
+            if (event === 'DEVTOOLS') {
+              const iframe = document.querySelector('.__chobitsu-hide__ iframe')
+              if (value) {
+                iframe.parentElement.style.display = 'block';
+                if (bodyHeight) {
+                  document.body.style.height = bodyHeight + 'px';
+                }
+              } else {
+                iframe.parentElement.style.display = 'none';
+                bodyHeight = document.body.style.height;
+                document.body.style.height = 'auto';
+              }
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        });
+      </script>
+    `;
+  }
+
   const html = `
     <!doctype html>
     <html>
@@ -99,36 +166,13 @@ export const Preview: Component<Props> = (props) => {
             border-color: #666;
           }
 		    </style>
-
-        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-        <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
-        <script type="module">
-          eruda.init({
-            tool: ["console", "network", "resources", "elements"],
-            defaults: {
-              displaySize: 40,
-            }
-          });
-          eruda.add(erudaDom);
-          eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
-          const style = Object.assign(document.createElement('link'), {
-            rel: 'stylesheet',
-            href: '${location.origin}/eruda.css'
-          });
-          eruda._shadowRoot.appendChild(style);
-        </script>
+        ${devtools}
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
             try {
               const { event, value } = data;
 
-              if (event === 'DEVTOOLS') {
-                if (value) eruda.show();
-                else eruda.hide();
-              } else if (event === 'THEME') {
-                eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
-                eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
-              } else if (event === 'CODE_UPDATE') {
+              if (event === 'CODE_UPDATE') {
                 window?.dispose?.();
                 window.dispose = undefined;
 
