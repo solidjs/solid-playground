@@ -1,4 +1,4 @@
-import { Navigate, useSearchParams } from 'solid-app-router';
+import { Navigate, useSearchParams } from '@solidjs/router';
 import { useAppContext } from '../context';
 
 export const Login = () => {
