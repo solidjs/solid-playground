@@ -13,7 +13,7 @@ import replace from '@rollup/plugin-replace';
 import WindiCSS from 'rollup-plugin-windicss';
 import commonjs from '@rollup/plugin-commonjs';
 import { renameSync, ensureDirSync } from 'fs-extra';
-import { basename, join, extname, resolve, relative, dirname } from 'path';
+import { basename, join, extname, resolve, dirname } from 'path';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { createReadStream, createWriteStream, readFileSync } from 'fs';
 

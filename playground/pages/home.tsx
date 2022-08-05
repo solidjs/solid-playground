@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from 'solid-app-router';
+import { useLocation, useNavigate, useParams } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
 import { createEffect, createResource, For, Show, Suspense } from 'solid-js';
