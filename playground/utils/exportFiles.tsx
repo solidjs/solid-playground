@@ -88,7 +88,7 @@ export async function exportToZip(tabs: Tab[]): Promise<void> {
   const blob = await zip.generateAsync({ type: 'blob' });
   const url = URL.createObjectURL(blob);
 
-  const anchor = (<a href={url} target="_blank" rel="noopener" download />) as HTMLElement;
+  const anchor = (<a href={url} target="_blank" rel="noopener" download="solid-playground-poject" />) as HTMLElement;
   document.body.prepend(anchor);
   anchor.click();
   anchor.remove();
