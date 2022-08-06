@@ -1,7 +1,12 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl';
 import dedent from 'dedent';
-import { CDN_URL } from '../../src/workers/compiler';
+import { CDN_URL as MAKE_CDN_URL } from '../../src/workers/compiler';
+
+enum CDN_URL {
+  domain = 'https://esm.sh/',
+  mode = '?dev',
+}
 
 const viteConfigFile = dedent`
 import { defineConfig } from "vite";
@@ -57,8 +62,8 @@ const indexHTML = (tabs: Tab[]) => dedent`
  * import si written as name@version, or otherwhise as [name, '']
  */
  function extractNameAndVersionFromImportPath(importPath: string): string[] {
-    const withoutCDN = importPath.startsWith(CDN_URL)
-      ? importPath.split(`${CDN_URL}/`)[1]
+    const withoutCDN = importPath.startsWith(CDN_URL.domain)
+      ? importPath.split(CDN_URL.domain)[1]?.split(CDN_URL.mode)[0]
       : importPath
     const withoutCDNSplitted = withoutCDN.split('/')
 
@@ -79,23 +84,18 @@ const indexHTML = (tabs: Tab[]) => dedent`
   }
 
 /**
- * This function sends a request to skypack in order to get
+ * This function sends a request to esm.sh in order to get
  * the latest version of a pkg, which will be included in
- * the initial comment in skypack's response
+ * the URL to which esm.sh automatically redirects
  */
   function getLatestVersion(pkgName: string): Promise<string[]> {
-    return fetch(`${CDN_URL}/${pkgName}`)
-      .then(res => res.text())
-      .then(data => {
-        const pkgFound = '/*\n * Skypack CDN - ' + pkgName + '@'
-        const withPkgError = '/*\n * [Package Error] "' + pkgName + '@v'
-
-        if (data.startsWith(pkgFound)) return [pkgName, data.split(pkgFound)[1].split('\n')[0]]
-        // sometmes skypack cannot compile certains packages, but will still give us the vesion
-        if (data.startsWith(withPkgError)) return [pkgName, data.split(withPkgError)[1].split('"')[0]]
-
-        return [pkgName, 'latest']
-      })
+    return fetch(MAKE_CDN_URL(pkgName))
+      .then(res =>
+        extractNameAndVersionFromImportPath(res.url)[1].length ?
+          extractNameAndVersionFromImportPath(res.url)
+        :
+          [pkgName, 'latest']
+      )
       .catch(() => [pkgName, 'latest'])
   }
 /**
