@@ -8,7 +8,7 @@ import { rollup } from 'rollup/dist/es/rollup.browser.js';
 import dd from 'dedent';
 import type { Plugin } from 'rollup';
 
-export const CDN_URL = 'https://cdn.skypack.dev';
+const CDN_URL = (importee: string) => `https://esm.sh/${importee}?dev`;
 
 const tabsLookup = new Map<string, Tab>();
 
@@ -41,7 +41,7 @@ const replPlugin: Plugin = {
 
     // NPM module via ESM CDN
     return {
-      id: `${CDN_URL}/${importee}`,
+      id: CDN_URL(importee),
       external: true,
     };
   },

@@ -5,7 +5,7 @@ import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useMatch, useNavigate, useParams } from 'solid-app-router';
+import { useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from '../../src';

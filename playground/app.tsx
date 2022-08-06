@@ -1,5 +1,5 @@
 import { Show, createSignal, JSX, on } from 'solid-js';
-import { Routes, Route, useSearchParams } from 'solid-app-router';
+import { Routes, Route, useSearchParams } from '@solidjs/router';
 import { eventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from '../src/hooks/useZoom';

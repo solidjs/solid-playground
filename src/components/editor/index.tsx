@@ -1,5 +1,5 @@
 import { Component, createEffect, onMount, onCleanup } from 'solid-js';
-import { Uri, languages, editor as mEditor } from 'monaco-editor';
+import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
 import type { Repl } from 'solid-repl/lib/repl';
@@ -61,6 +61,11 @@ const Editor: Component<{
       minimap: {
         enabled: props.withMinimap,
       },
+    });
+
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
+      editor?.getAction('editor.action.formatDocument').run();
+      editor?.focus();
     });
 
     editor.onDidChangeModelContent(() => {
