@@ -22,11 +22,11 @@
     "tsc": "tsc"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.9",
+    "@babel/core": "^7.18.10",
     "@babel/plugin-syntax-jsx": "^7.18.6",
-    "@babel/types": "^7.18.9",
+    "@babel/types": "^7.18.10",
     "@rollup/plugin-babel": "^5.3.1",
-    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
@@ -40,7 +40,7 @@
     "fs-extra": "^10.1.0",
     "jiti": "^1.14.0",
     "mime": "^3.0.0",
-    "monaco-editor": "~0.33.0",
+    "monaco-editor": "~0.34.0",
     "register-service-worker": "^1.7.2",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-import-css": "^3.0.3",
@@ -55,12 +55,12 @@
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
     "@babel/preset-typescript": "^7.18.6",
-    "@babel/standalone": "^7.18.9",
+    "@babel/standalone": "^7.18.12",
     "@solid-primitives/media": "^2.0.1",
     "@solid-primitives/scheduled": "^1.0.0",
     "babel-preset-solid": "1.4.8",
     "dedent": "^0.7.0",
-    "jszip": "^3.10.0",
+    "jszip": "^3.10.1",
     "monaco-editor-textmate": "^3.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
@@ -72,7 +72,7 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "monaco-editor@0.33.0": "patches/monaco-editor@0.33.0.patch"
+      "monaco-editor@0.34.0": "patches/monaco-editor@0.34.0.patch"
     }
   }
 }
