@@ -8,7 +8,7 @@ import { rollup } from 'rollup/dist/es/rollup.browser.js';
 import dd from 'dedent';
 import type { Plugin } from 'rollup';
 
-const CDN_URL = (importee: string) => `https://esm.sh/${importee}?dev`;
+export const CDN_URL = (importee: string) => `https://esm.sh/${importee}?dev`;
 
 const tabsLookup = new Map<string, Tab>();
 
@@ -98,13 +98,12 @@ async function compile(tabs: Tab[], event: string) {
   const {
     output: [{ code, imports }],
   } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
-  return {
-    event,
-    ...(event === 'ROLLUP'
-      ? { compiled: code as string }
-      : { imports }
-    )
-  };
+
+  if (event === 'ROLLUP') {
+    return { event, compiled: code };
+  } else {
+    return { event, imports };
+  }
 }
 
 async function babel(tab: Tab, compileOpts: any) {
@@ -122,12 +121,10 @@ self.addEventListener('message', async ({ data }) => {
   const { event, tabs, tab, compileOpts } = data;
 
   try {
-    switch (event) {
-      case 'BABEL':
-        self.postMessage(await babel(tab, compileOpts));
-        break;
-      default:
-        self.postMessage(await compile(tabs, event));
+    if (event === 'BABEL') {
+      self.postMessage(await babel(tab, compileOpts));
+    } else {
+      self.postMessage(await compile(tabs, event));
     }
   } catch (e) {
     self.postMessage({ event: 'ERROR', error: (e as Error).message });

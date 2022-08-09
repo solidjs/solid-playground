@@ -61,86 +61,81 @@ const indexHTML = (tabs: Tab[]) => dedent`
  * package, returning an array [name, version], in case the
  * import si written as name@version, or otherwhise as [name, '']
  */
- function extractNameAndVersionFromImportPath(importPath: string): string[] {
-    const withoutCDN = importPath.startsWith(CDN_URL.domain)
-      ? importPath.split(CDN_URL.domain)[1]?.split(CDN_URL.mode)[0]
-      : importPath
-    const withoutCDNSplitted = withoutCDN.split('/')
+function extractNameAndVersionFromImportPath(importPath: string): string[] {
+  const withoutCDN = importPath.startsWith(CDN_URL.domain)
+    ? importPath.split(CDN_URL.domain)[1]?.split(CDN_URL.mode)[0]
+    : importPath;
+  const withoutCDNSplitted = withoutCDN.split('/');
 
-    const rawName = withoutCDN.startsWith('@')
-      ? `${withoutCDNSplitted[0]}/${withoutCDNSplitted[1]}`
-      : withoutCDNSplitted[0]
-    const rawNameSplitted = rawName.split('@')
+  const rawName = withoutCDN.startsWith('@')
+    ? `${withoutCDNSplitted[0]}/${withoutCDNSplitted[1]}`
+    : withoutCDNSplitted[0];
+  const rawNameSplitted = rawName.split('@');
 
-    const name = rawName.startsWith('@')
-      ? `@${rawNameSplitted[1]}`
-      : rawNameSplitted[0]
+  const name = rawName.startsWith('@') ? `@${rawNameSplitted[1]}` : rawNameSplitted[0];
 
-    const version = name.startsWith('@')
-      ? (rawNameSplitted[2] ?? '')
-      : (rawNameSplitted[1] ?? '')
+  const version = name.startsWith('@') ? rawNameSplitted[2] ?? '' : rawNameSplitted[1] ?? '';
 
-    return [name, version]
-  }
+  return [name, version];
+}
 
 /**
  * This function sends a request to esm.sh in order to get
  * the latest version of a pkg, which will be included in
  * the URL to which esm.sh automatically redirects
  */
-  function getLatestVersion(pkgName: string): Promise<string[]> {
-    return fetch(MAKE_CDN_URL(pkgName))
-      .then(res =>
-        extractNameAndVersionFromImportPath(res.url)[1].length ?
-          extractNameAndVersionFromImportPath(res.url)
-        :
-          [pkgName, 'latest']
-      )
-      .catch(() => [pkgName, 'latest'])
-  }
+function getLatestVersion(pkgName: string): Promise<string[]> {
+  return fetch(MAKE_CDN_URL(pkgName))
+    .then((res) =>
+      extractNameAndVersionFromImportPath(res.url)[1].length
+        ? extractNameAndVersionFromImportPath(res.url)
+        : [pkgName, 'latest'],
+    )
+    .catch(() => [pkgName, 'latest']);
+}
 /**
  * This function will calculate the dependencies of the
  * package.json by using the imports list provided by rollup,
  * and then generating the package.json itself, for the exoport
  */
-  async function packageJSON(imports: string[]): Promise<string> {
-    const versionRequests: Promise<string[]>[] = []
+async function packageJSON(imports: string[]): Promise<string> {
+  const versionRequests: Promise<string[]>[] = [];
 
-    const depsFirstDraft = ([...new Set(imports)] as string[]).reduce((acc, importPath): Record<string, string> => {
-      const [name, version]: string[] = extractNameAndVersionFromImportPath(importPath)
+  const depsFirstDraft = ([...new Set(imports)] as string[]).reduce((acc, importPath): Record<string, string> => {
+    const [name, version]: string[] = extractNameAndVersionFromImportPath(importPath);
 
-      if (acc[name]) return acc
+    if (acc[name]) return acc;
 
-      if (!version) versionRequests.push(getLatestVersion(name))
+    if (!version) versionRequests.push(getLatestVersion(name));
 
-      acc[name] = version
-      return acc
-    }, {} as Record<string, string>)
+    acc[name] = version;
+    return acc;
+  }, {} as Record<string, string>);
 
-    const deps = await Promise.all(versionRequests).then(values =>
-      values.reduce((acc, value) => {
-        const [name, version] = value
-        acc[name] = version
-        return acc
-      }, depsFirstDraft)
-    )
+  const deps = await Promise.all(versionRequests).then((values) =>
+    values.reduce((acc, value) => {
+      const [name, version] = value;
+      acc[name] = version;
+      return acc;
+    }, depsFirstDraft),
+  );
 
-    return JSON.stringify(
-      {
-        scripts: {
+  return JSON.stringify(
+    {
+      scripts: {
         start: 'vite',
         build: 'vite build',
-        },
-        dependencies: deps,
-        devDependencies: {
+      },
+      dependencies: deps,
+      devDependencies: {
         'vite': pkg.devDependencies['vite'],
         'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'],
-        },
       },
-      null,
-      2,
-    );
-  }
+    },
+    null,
+    2,
+  );
+}
 
 /**
  * This function will convert the tabs of the playground

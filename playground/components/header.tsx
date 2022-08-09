@@ -10,9 +10,9 @@ import { API, useAppContext } from '../context';
 import logo from '../assets/logo.svg?url';
 
 export const Header: ParentComponent<{
-    compiler: Worker;
-    fork?: () => void;
-    share: () => Promise<string>
+  compiler?: Worker;
+  fork?: () => void;
+  share: () => Promise<string>;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
@@ -38,12 +38,12 @@ export const Header: ParentComponent<{
   }
 
   onMount(() => {
-    props.compiler.addEventListener('message', ({ data }) => {
+    props.compiler?.addEventListener('message', ({ data }) => {
       const { event, imports } = data;
 
-      if (event === 'IMPORTS') exportToZip(context.tabs()!, imports)
+      if (event === 'IMPORTS') exportToZip(context.tabs()!, imports);
     });
-  })
+  });
 
   return (
     <header class="sticky top-0 z-10 bg-white dark:bg-solid-darkbg p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px">
@@ -93,10 +93,10 @@ export const Header: ParentComponent<{
               <button
                 type="button"
                 onClick={() => {
-                  props.compiler.postMessage({
-                      event: 'IMPORTS',
-                      tabs: unwrap(context.tabs()),
-                  })
+                  props.compiler?.postMessage({
+                    event: 'IMPORTS',
+                    tabs: unwrap(context.tabs()),
+                  });
                 }}
                 class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
                 classList={{

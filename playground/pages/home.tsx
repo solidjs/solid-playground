@@ -1,12 +1,13 @@
 import { useLocation, useNavigate, useParams } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
-import { createEffect, createResource, For, Show, Suspense } from 'solid-js';
+import { createEffect, createResource, createSignal, For, Show, Suspense } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import { defaultTabs } from '../../src';
 import { API, useAppContext } from '../context';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { Header } from '../components/header';
+import { timeAgo } from '../utils/date';
 
 function parseHash<T>(hash: string, fallback: T): T {
   try {
@@ -35,31 +36,6 @@ interface Repls {
   total: number;
   list: APIRepl[];
 }
-
-const formatter = new Intl.RelativeTimeFormat('en');
-const timeAgo = (ms: number): string => {
-  const sec = Math.round(ms / 1000);
-  const min = Math.round(sec / 60);
-  const hr = Math.round(min / 60);
-  const day = Math.round(hr / 24);
-  const month = Math.round(day / 30);
-  const year = Math.round(month / 12);
-  if (sec < 10) {
-    return 'just now';
-  } else if (sec < 45) {
-    return formatter.format(-sec, 'second');
-  } else if (sec < 90 || min < 45) {
-    return formatter.format(-min, 'minute');
-  } else if (min < 90 || hr < 24) {
-    return formatter.format(-hr, 'hour');
-  } else if (hr < 36 || day < 30) {
-    return formatter.format(-day, 'day');
-  } else if (month < 18) {
-    return formatter.format(-month, 'month');
-  } else {
-    return formatter.format(-year, 'year');
-  }
-};
 
 export const Home = () => {
   const params = useParams();
@@ -103,6 +79,8 @@ export const Home = () => {
     resourceRepls();
     return x;
   };
+
+  const [open, setOpen] = createSignal<string>();
 
   return (
     <>
@@ -216,17 +194,8 @@ export const Home = () => {
                         <Icon
                           path={x}
                           class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
-                          onClick={async () => {
-                            fetch(`${API}/repl/${repl.id}`, {
-                              method: 'DELETE',
-                              headers: {
-                                authorization: `Bearer ${context.token}`,
-                              },
-                            });
-                            setRepls({
-                              total: repls.total - 1,
-                              list: repls.list.filter((x) => x.id !== repl.id),
-                            });
+                          onClick={() => {
+                            setOpen(repl.id);
                           }}
                         />
                       </td>
@@ -238,6 +207,48 @@ export const Home = () => {
           </tbody>
         </table>
       </div>
+      <Show when={!!open()}>
+        <div
+          class="fixed z-10 top-0 left-0 w-full h-full flex justify-center items-center bg-gray-500/50"
+          onClick={(e) => {
+            if (e.target !== e.currentTarget) return;
+            setOpen(undefined);
+          }}
+          role="presentation"
+        >
+          <div
+            class="bg-white dark:bg-solid-darkbg dark:text-white p-4 rounded-lg shadow w-96"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+          >
+            <p>Are you sure you want to delete that?</p>
+            <div class="flex justify-end gap-2 mt-2">
+              <button
+                class="py-1 px-2 rounded border"
+                onclick={() => {
+                  fetch(`${API}/repl/${open()}`, {
+                    method: 'DELETE',
+                    headers: {
+                      authorization: `Bearer ${context.token}`,
+                    },
+                  });
+                  setRepls({
+                    total: repls.total - 1,
+                    list: repls.list.filter((x) => x.id !== open()),
+                  });
+                  setOpen(undefined);
+                }}
+              >
+                Yes
+              </button>
+              <button class="py-1 px-2 rounded border" onClick={() => setOpen(undefined)}>
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      </Show>
     </>
   );
 };

@@ -40,46 +40,11 @@ export const Preview: Component<Props> = (props) => {
     if (isIframeReady()) setDarkMode();
   });
 
-  let devtools = `
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
-    <script type="module">
-      eruda.init({
-        tool: ["console", "network", "resources", "elements"],
-        defaults: {
-          displaySize: 40,
-        }
-      });
-      eruda.add(erudaDom);
-      eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
-      const style = Object.assign(document.createElement('link'), {
-        rel: 'stylesheet',
-        href: '${location.origin}/eruda.css'
-      });
-      eruda._shadowRoot.appendChild(style);
-      window.addEventListener('message', async ({ data }) => {
-        try {
-          const { event, value } = data;
-
-          if (event === 'DEVTOOLS') {
-            if (value) eruda.show();
-            else eruda.hide();
-          } else if (event === 'THEME') {
-            eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
-            eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      });
-    </script>`;
-
   const ua = navigator.userAgent.toLowerCase();
   const isChrome = /(?!chrom.*opr)chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/.test(ua);
 
-  if (isChrome) {
-    devtools = `
-      <script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
+  let devtools = isChrome
+    ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
       <script>
         let bodyHeight;
         window.addEventListener('message', async ({ data }) => {
@@ -103,9 +68,39 @@ export const Preview: Component<Props> = (props) => {
             console.error(e)
           }
         });
-      </script>
-    `;
-  }
+      </script>`
+    : `<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+      <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
+      <script type="module">
+        eruda.init({
+          tool: ["console", "network", "resources", "elements"],
+          defaults: {
+            displaySize: 40,
+          }
+        });
+        eruda.add(erudaDom);
+        eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
+        const style = Object.assign(document.createElement('link'), {
+          rel: 'stylesheet',
+          href: '${location.origin}/eruda.css'
+        });
+        eruda._shadowRoot.appendChild(style);
+        window.addEventListener('message', async ({ data }) => {
+          try {
+            const { event, value } = data;
+
+            if (event === 'DEVTOOLS') {
+              if (value) eruda.show();
+              else eruda.hide();
+            } else if (event === 'THEME') {
+              eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
+              eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        });
+      </script>`;
 
   const html = `
     <!doctype html>
@@ -169,29 +164,26 @@ export const Preview: Component<Props> = (props) => {
         ${devtools}
         <script type="module" id="setup">
           window.addEventListener('message', async ({ data }) => {
-            try {
-              const { event, value } = data;
+            const { event, value } = data;
 
-              if (event === 'CODE_UPDATE') {
-                window?.dispose?.();
-                window.dispose = undefined;
+            if (event !== 'CODE_UPDATE') return;
 
-                let app = document.getElementById('app');
-                if (app) app.remove();
-                app = document.createElement('div');
-                app.id = 'app';
-                document.body.prepend(app);
+            window.dispose?.();
+            window.dispose = undefined;
 
-                console.clear();
+            document.getElementById('app').innerHTML = "";
 
-                await import(value);
-    
-                const load = document.getElementById('load');
-                if (load) load.remove();
-              }
-            } catch (e) {
-              console.error(e)
-            }
+            console.clear();
+
+            document.getElementById('appsrc')?.remove();
+            const script = document.createElement('script');
+            script.src = value;
+            script.id = 'appsrc';
+            script.type = 'module';
+            document.body.appendChild(script);
+
+            const load = document.getElementById('load');
+            if (load) load.remove();
           })
         </script>
       </head>
@@ -201,9 +193,9 @@ export const Preview: Component<Props> = (props) => {
           <p style="font-size: 1.5rem">Loading the playground...</p>
         </div>
         <div id="app"></div>
+        <script id="appsrc" type="module"></script>
       </body>
-    </html>
-  `;
+    </html>`;
   const blob = new Blob([html], {
     type: 'text/html',
   });
