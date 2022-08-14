@@ -18,7 +18,7 @@ const AppContext = createContext<AppContextType>();
 export const API = 'https://api.solidjs.com';
 
 export const AppContextProvider: ParentComponent = (props) => {
-  let token = localStorage.getItem('token') || '';
+  const [token, setToken] = createSignal(localStorage.getItem('token') || '');
   const [user] = createResource(token, async (token) => {
     if (!token)
       return {
@@ -45,10 +45,10 @@ export const AppContextProvider: ParentComponent = (props) => {
     <AppContext.Provider
       value={{
         get token() {
-          return token;
+          return token();
         },
         set token(x) {
-          token = x;
+          setToken(x);
           localStorage.setItem('token', x);
         },
         user,

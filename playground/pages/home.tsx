@@ -44,7 +44,9 @@ export const Home = () => {
   const location = useLocation();
 
   createEffect(() => {
-    if (location.hash) {
+    if (location.query.hash) {
+      navigate(`/anonymous/${location.query.hash}`);
+    } else if (location.hash) {
       const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
       localStorage.setItem(
         'scratchpad',

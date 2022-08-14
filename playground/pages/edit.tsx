@@ -10,7 +10,7 @@ import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from '../../src';
 import type { Tab } from 'solid-repl';
-import type { APIRepl } from './home';
+import type { APIRepl, ReplFile } from './home';
 import { Header } from '../components/header';
 import { compressToURL } from '@amoutonbrady/lz-string';
 
@@ -102,7 +102,15 @@ export const Edit = (props: { horizontal: boolean }) => {
       } else {
         output = await fetch(`${API}/repl/${repl}`, {
           headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-        }).then((r) => r.json());
+        })
+          .then((r) => r.json())
+          .then((r) => ({
+            ...r,
+            files: r.files.map((x: ReplFile) => ({
+              name: x.name + ((x as any).type ? `.${(x as any).type}` : ''),
+              content: typeof x.content == 'string' ? (x.content as string).split('\n') : x.content,
+            })),
+          }));
       }
 
       batch(() => {

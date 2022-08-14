@@ -91,7 +91,7 @@ const Repl: ReplProps = (props) => {
 
     if (event === 'ROLLUP') {
       setCompiled(compiled);
-    } else {
+    } else if (event === 'BABEL') {
       model.setValue(compiled);
     }
 

@@ -37,12 +37,10 @@ export const Header: ParentComponent<{
     setShowMenu(false);
   }
 
-  onMount(() => {
-    props.compiler?.addEventListener('message', ({ data }) => {
-      const { event, imports } = data;
+  props.compiler?.addEventListener('message', ({ data }) => {
+    const { event, imports } = data;
 
-      if (event === 'IMPORTS') exportToZip(context.tabs()!, imports);
-    });
+    if (event === 'IMPORTS') exportToZip(context.tabs()!, imports);
   });
 
   return (
