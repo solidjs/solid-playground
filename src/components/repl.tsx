@@ -241,10 +241,9 @@ const Repl: ReplProps = (props) => {
             </button>
           </li>
           <TabItem class="ml-auto justify-self-end">
-            <label for="display-errors" class="space-x-2 px-3 py-2 cursor-pointer">
+            <label class="space-x-2 px-3 py-2 cursor-pointer">
               <input
                 type="checkbox"
-                id="display-errors"
                 name="display-errors"
                 checked={displayErrors()}
                 onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
@@ -353,7 +352,6 @@ const Repl: ReplProps = (props) => {
                       onChange={[setMode, compileMode.DOM]}
                       type="radio"
                       name="dom"
-                      id="dom"
                     />
                     <span>Client side rendering</span>
                   </label>
@@ -366,7 +364,6 @@ const Repl: ReplProps = (props) => {
                       onChange={[setMode, compileMode.SSR]}
                       type="radio"
                       name="dom"
-                      id="dom"
                     />
                     <span>Server side rendering</span>
                   </label>
@@ -379,7 +376,6 @@ const Repl: ReplProps = (props) => {
                       onChange={[setMode, compileMode.HYDRATABLE]}
                       type="radio"
                       name="dom"
-                      id="dom"
                     />
                     <span>Client side rendering with hydration</span>
                   </label>

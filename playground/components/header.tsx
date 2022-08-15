@@ -1,7 +1,7 @@
 import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
-import { onCleanup, onMount, createSignal, Show, ParentComponent } from 'solid-js';
+import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
@@ -17,7 +17,9 @@ export const Header: ParentComponent<{
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const [showMenu, setShowMenu] = createSignal(false);
+  const [showProfile, setShowProfile] = createSignal(false);
   let menuBtnEl!: HTMLButtonElement;
+  let profileBtn!: HTMLButtonElement;
 
   function shareLink() {
     props.share().then((url) => {
@@ -49,7 +51,7 @@ export const Header: ParentComponent<{
         <a href="/">
           <img src={logo} alt="solid-js logo" class="w-8" />
         </a>
-        <div id="project-name">
+        <div>
           {props.children || (
             <span class="inline-block">
               Solid<b>JS</b> Playground
@@ -127,7 +129,6 @@ export const Header: ParentComponent<{
         </Dismiss>
         <button
           type="button"
-          id="menu-btn"
           classList={{
             'border-white border': showMenu(),
           }}
@@ -140,12 +141,12 @@ export const Header: ParentComponent<{
           </Show>
           <span class="sr-only">Show menu</span>
         </button>
-        <div class="leading-snug cursor-pointer">
+        <div class="leading-snug cursor-pointer h-8 relative">
           <Show
             when={context.user()?.avatar}
             fallback={
               <a
-                class="mx-1 bg-solid-default py-2 px-3 rounded text-lg"
+                class="mx-1 bg-solid-default py-2 px-3 rounded text-lg text-slate-50"
                 href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`}
                 rel="external"
               >
@@ -153,11 +154,22 @@ export const Header: ParentComponent<{
               </a>
             }
           >
-            {(x) => (
-              <a href="/">
-                <img crossOrigin="anonymous" src={x} class="w-8 h-8 rounded-full" />
-              </a>
-            )}
+            <button ref={profileBtn}>
+              <img crossOrigin="anonymous" src={context.user()?.avatar} class="w-8 h-8 rounded-full" />
+            </button>
+            <Dismiss menuButton={() => profileBtn} open={showProfile} setOpen={setShowProfile}>
+              <div class="items-center flex absolute shadow-md flex-col justify-center bg-white dark:bg-solid-darkbg right-0">
+                <a class="px-2 py-2 hover:bg-gray-300 dark:hover:bg-gray-800" href="/">
+                  {context.user()?.display}
+                </a>
+                <button
+                  onClick={() => (context.token = '')}
+                  class="px-2 py-2 text-left hover:bg-gray-300 dark:hover:bg-gray-800 text-xs w-full"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </Dismiss>
           </Show>
         </div>
       </div>

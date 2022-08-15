@@ -162,7 +162,7 @@ export const Preview: Component<Props> = (props) => {
           }
 		    </style>
         ${devtools}
-        <script type="module" id="setup">
+        <script type="module">
           window.addEventListener('message', async ({ data }) => {
             const { event, value } = data;
 
