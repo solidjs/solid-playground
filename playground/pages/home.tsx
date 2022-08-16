@@ -19,7 +19,7 @@ function parseHash<T>(hash: string, fallback: T): T {
 
 export interface ReplFile {
   name: string;
-  content: string[];
+  content: string;
 }
 export interface APIRepl {
   id: string;
@@ -52,8 +52,8 @@ export const Home = () => {
         'scratchpad',
         JSON.stringify({
           files: initialTabs.map((x) => ({
-            name: x.name + ((x as any).type ? `.${(x as any).type}` : ''),
-            content: x.source.split('\n'),
+            name: x.name,
+            content: x.source,
           })),
         }),
       );
@@ -110,9 +110,13 @@ export const Home = () => {
                     public: true,
                     labels: [],
                     version: '1.0',
-                    files: defaultTabs.map((x) => ({ name: x.name, content: x.source.split('\n') })),
+                    files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
                   }),
                 });
+                if (!result.ok) {
+                  alert('Failed to create repl');
+                  throw new Error(result.statusText);
+                }
                 const { id } = await result.json();
                 navigate(`/${context.user()?.display}/${id}`);
               }}

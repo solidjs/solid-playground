@@ -10,7 +10,7 @@ import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from '../../src';
 import type { Tab } from 'solid-repl';
-import type { APIRepl, ReplFile } from './home';
+import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { compressToURL } from '@amoutonbrady/lz-string';
 
@@ -92,7 +92,7 @@ export const Edit = (props: { horizontal: boolean }) => {
           output = {
             files: defaultTabs.map((x) => ({
               name: x.name,
-              content: x.source.split('\n'),
+              content: x.source,
             })),
           } as APIRepl;
           localStorage.setItem('scratchpad', JSON.stringify(output));
@@ -102,21 +102,13 @@ export const Edit = (props: { horizontal: boolean }) => {
       } else {
         output = await fetch(`${API}/repl/${repl}`, {
           headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-        })
-          .then((r) => r.json())
-          .then((r) => ({
-            ...r,
-            files: r.files.map((x: ReplFile) => ({
-              name: x.name + ((x as any).type ? `.${(x as any).type}` : ''),
-              content: typeof x.content == 'string' ? (x.content as string).split('\n') : x.content,
-            })),
-          }));
+        }).then((r) => r.json());
       }
 
       batch(() => {
         setTabs(
           output.files.map((x) => {
-            return { name: x.name, source: x.content.join('\n') };
+            return { name: x.name, source: x.content };
           }),
         );
         setCurrent(output.files[0].name);
@@ -128,29 +120,21 @@ export const Edit = (props: { horizontal: boolean }) => {
 
   const updateRepl = debounce(
     () => {
+      const files = tabs().map((x) => ({ name: x.name, content: x.source }));
+
       if (readonly()) {
-        localStorage.setItem(
-          'scratchpad',
-          JSON.stringify({
-            files: tabs()!.map((x) => ({
-              name: x.name,
-              content: x.source.split('\n'),
-            })),
-          }),
-        );
+        localStorage.setItem('scratchpad', JSON.stringify({ files }));
         disableFetch = true;
         navigate('/scratchpad');
         return;
+      } else if (scratchpad()) {
+        localStorage.setItem('scratchpad', JSON.stringify({ files }));
       }
 
       const repl = resource.latest;
       if (!repl) return;
 
-      const files = tabs().map((x) => ({ name: x.name, content: x.source.split('\n') }));
-
-      if (scratchpad()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
-      } else if (context.token && context.user()?.display == params.user) {
+      if (context.token && context.user()?.display == params.user) {
         fetch(`${API}/repl/${params.repl}`, {
           method: 'PUT',
           headers: {
