@@ -168,8 +168,8 @@ export const Home = () => {
                 {(repl, i) => (
                   <tr
                     class="hover:bg-gray-400/10"
-                    onclick={() => {
-                      navigate(`${params.user || context.user()?.display}/${repl.id}`);
+                    onclick={(e) => {
+                      if (e.target.tagName !== 'A') e.currentTarget.querySelector('a')!.click();
                     }}
                   >
                     <td class="p-1">
