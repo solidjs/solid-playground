@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, onMount, onCleanup } from 'solid-js';
+import { Component, createEffect, createSignal, onCleanup } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
@@ -8,42 +8,36 @@ export const Preview: Component<Props> = (props) => {
 
   const [isIframeReady, setIframeReady] = createSignal(false);
 
-  let latestCode: string;
-  const CODE_UPDATE = 'CODE_UPDATE';
-
   createEffect(() => {
     if (!props.code) return;
     if (!isIframeReady()) return;
 
-    latestCode = props.code.replace('render(', 'window.dispose = render(');
-
-    const blob = new Blob([latestCode], {
+    const blob = new Blob([props.code], {
       type: 'text/javascript',
     });
     const src = URL.createObjectURL(blob);
     onCleanup(() => URL.revokeObjectURL(src));
 
-    iframe.contentWindow!.postMessage({ event: CODE_UPDATE, value: src }, '*');
+    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: src }, '*');
   });
 
   createEffect(() => {
-    if (isIframeReady()) iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
+    if (!isIframeReady()) return;
+
+    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
   });
 
-  const setDarkMode = () => {
-    const doc = iframe.contentDocument!.documentElement;
-    doc.classList.toggle('dark', props.isDark);
+  createEffect(() => {
+    if (!isIframeReady()) return;
+
+    iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
     iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
-  };
-
-  createEffect(() => {
-    if (isIframeReady()) setDarkMode();
   });
 
   const ua = navigator.userAgent.toLowerCase();
   const isChrome = /(?!chrom.*opr)chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/.test(ua);
 
-  let devtools = isChrome
+  const devtools = isChrome
     ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
       <script>
         let bodyHeight;
@@ -104,7 +98,7 @@ export const Preview: Component<Props> = (props) => {
 
   const html = `
     <!doctype html>
-    <html>
+    <html${props.isDark ? ' class="dark"' : ''}>
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -219,10 +213,6 @@ export const Preview: Component<Props> = (props) => {
     }); transform-origin: 0 0;`;
   };
 
-  onMount(() => {
-    iframe.addEventListener('load', () => setIframeReady(true));
-  });
-
   return (
     <div class="h-full w-full relative">
       <iframe
@@ -232,6 +222,7 @@ export const Preview: Component<Props> = (props) => {
         style={styleScale()}
         ref={iframe}
         src={src}
+        onload={[setIframeReady, true]}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       ></iframe>
