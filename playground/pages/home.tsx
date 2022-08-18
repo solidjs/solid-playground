@@ -134,10 +134,10 @@ export const Home = () => {
         <table class="w-200 max-w-full mx-auto">
           <thead>
             <tr class="border-b border-neutral-600 font-medium">
-              <th class="pb-2 w-6/10 text-left">Title</th>
-              <th class="pb-2 w-32 text-left last:text-right">Edited</th>
+              <th class="p-1 w-1/2 text-left">Title</th>
+              <th class="p-1 w-32 text-left last:text-right">Edited</th>
               <Show when={!params.user}>
-                <th class="pb-2 w-20 text-right">Options</th>
+                <th class="p-1 w-20 text-right">Options</th>
               </Show>
             </tr>
           </thead>
@@ -166,19 +166,25 @@ export const Home = () => {
             >
               <For each={get(repls.list)}>
                 {(repl, i) => (
-                  <tr>
-                    <td class="p-0">
+                  <tr
+                    class="hover:bg-gray-400/10"
+                    onclick={() => {
+                      navigate(`${params.user || context.user()?.display}/${repl.id}`);
+                    }}
+                  >
+                    <td class="p-1">
                       <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
                     </td>
-                    <td class="p-0 last:text-right">
+                    <td class="p-1 last:text-right">
                       {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}
                     </td>
                     <Show when={!params.user}>
-                      <td class="p-0 text-right">
+                      <td class="p-1 pr-0 text-right space-x-1">
                         <Icon
                           path={repl.public ? eye : eyeOff}
-                          class="w-6 inline m-2 ml-0 cursor-pointer"
-                          onClick={async () => {
+                          class="w-6 inline cursor-pointer"
+                          onClick={async (e) => {
+                            e.stopPropagation();
                             fetch(`${API}/repl/${repl.id}`, {
                               method: 'PUT',
                               headers: {
@@ -199,8 +205,9 @@ export const Home = () => {
                         />
                         <Icon
                           path={x}
-                          class="w-6 inline m-2 mr-0 text-red-700 cursor-pointer"
-                          onClick={() => {
+                          class="w-6 inline text-red-700 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setOpen(repl.id);
                           }}
                         />
