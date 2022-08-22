@@ -186,13 +186,12 @@ export const Home = () => {
                           onClick={async (e) => {
                             e.stopPropagation();
                             fetch(`${API}/repl/${repl.id}`, {
-                              method: 'PUT',
+                              method: 'PATCH',
                               headers: {
                                 'authorization': `Bearer ${context.token}`,
                                 'Content-Type': 'application/json',
                               },
                               body: JSON.stringify({
-                                ...repl,
                                 public: !repl.public,
                               }),
                             });
