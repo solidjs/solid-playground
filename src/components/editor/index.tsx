@@ -1,8 +1,10 @@
-import { Component, createEffect, onMount, onCleanup } from 'solid-js';
+import { Component, createEffect, onMount, onCleanup, on } from 'solid-js';
 import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
 import type { Repl } from 'solid-repl/lib/repl';
+import type { LinterWorkerPayload, LinterWorkerResponse } from '../../workers/linter';
+import { throttle } from '@solid-primitives/scheduled';
 
 const Editor: Component<{
   url: string;
@@ -10,7 +12,9 @@ const Editor: Component<{
   isDark?: boolean;
   withMinimap?: boolean;
   formatter?: Worker;
+  linter?: Worker;
   displayErrors?: boolean;
+  displayLintMessages?: boolean;
   onDocChange?: (code: string) => void;
   onEditorReady?: Parameters<Repl>[0]['onEditorReady'];
 }> = (props) => {
@@ -47,6 +51,33 @@ const Editor: Component<{
       },
     });
   }
+  if (props.linter) {
+    const listener = ({ data }: MessageEvent<LinterWorkerResponse>) => {
+      if (props.displayLintMessages) {
+        const { event } = data;
+        if (event === 'LINT') {
+          const m = model();
+          m && mEditor.setModelMarkers(m, 'eslint', data.markers);
+        } else if (event === 'FIX') {
+          const m = model();
+          m && mEditor.setModelMarkers(m, 'eslint', data.markers);
+          data.fixed && model()?.setValue(data.output);
+        }
+      }
+    };
+    props.linter.addEventListener('message', listener);
+    onCleanup(() => props.linter?.removeEventListener('message', listener));
+  }
+
+  const runLinter = throttle((code: string) => {
+    if (props.linter && props.displayLintMessages) {
+      const payload: LinterWorkerPayload = {
+        event: 'LINT',
+        code,
+      };
+      props.linter.postMessage(payload);
+    }
+  }, 250);
 
   // Initialize Monaco
   onMount(() => {
@@ -63,13 +94,39 @@ const Editor: Component<{
       },
     });
 
+    if (props.linter) {
+      editor.addAction({
+        id: 'eslint.executeAutofix',
+        label: 'Fix all auto-fixable problems',
+        contextMenuGroupId: '1_modification',
+        contextMenuOrder: 3.5,
+        run: (ed) => {
+          const code = ed.getValue();
+          if (code) {
+            const payload: LinterWorkerPayload = {
+              event: 'FIX',
+              code,
+            };
+            props.linter?.postMessage(payload);
+          }
+        },
+      });
+    }
+
     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
-      editor?.getAction('editor.action.formatDocument').run();
-      editor?.focus();
+      if (editor) {
+        // auto-format
+        editor.getAction('editor.action.formatDocument')?.run();
+        // auto-fix problems
+        props.displayLintMessages && editor.getAction('eslint.executeAutofix')?.run();
+        editor.focus();
+      }
     });
 
     editor.onDidChangeModelContent(() => {
-      props.onDocChange?.(editor.getValue());
+      const code = editor.getValue();
+      props.onDocChange?.(code);
+      runLinter(code);
     });
   });
   onCleanup(() => editor?.dispose());
@@ -94,6 +151,22 @@ const Editor: Component<{
       noSyntaxValidation: !props.displayErrors,
     });
   });
+
+  createEffect(
+    on(
+      () => props.displayLintMessages,
+      () => {
+        if (props.displayLintMessages) {
+          // run on mount and when displayLintMessages is turned on
+          runLinter(editor.getValue());
+        } else {
+          // reset eslint markers when displayLintMessages is turned off
+          const m = model();
+          m && mEditor.setModelMarkers(m, 'eslint', []);
+        }
+      },
+    ),
+  );
 
   onMount(() => {
     props.onEditorReady?.(editor, { Uri, editor: mEditor });

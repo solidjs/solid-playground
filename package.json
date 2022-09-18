@@ -60,6 +60,7 @@
     "@solid-primitives/scheduled": "^1.0.0",
     "babel-preset-solid": "1.4.8",
     "dedent": "^0.7.0",
+    "eslint-solid-standalone": "^0.1.5",
     "jszip": "^3.10.1",
     "monaco-editor-textmate": "^3.0.0",
     "monaco-textmate": "^3.0.1",

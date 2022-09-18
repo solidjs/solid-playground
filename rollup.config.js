@@ -110,7 +110,13 @@ const preppy = {
 };
 
 rollup({
-  input: ['src/index.ts', 'src/workers/compiler.ts', 'src/workers/formatter.ts', 'src/components/repl.tsx'],
+  input: [
+    'src/index.ts',
+    'src/workers/compiler.ts',
+    'src/workers/formatter.ts',
+    'src/workers/linter.ts',
+    'src/components/repl.tsx',
+  ],
   external: ['solid-js', 'solid-js/web', 'solid-js/store', 'monaco-editor'],
   acornInjectPlugins: [jsx()],
   plugins: [

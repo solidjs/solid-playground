@@ -1,56 +1,64 @@
-import { verify, verifyAndFix, pluginVersion, eslintVersion, plugin } from 'eslint-solid-standalone';
+import { verify, verifyAndFix } from 'eslint-solid-standalone';
 import type { Linter } from 'eslint-solid-standalone';
-import type { Tab } from 'solid-repl';
+import type { editor } from 'monaco-editor';
 
 type RuleSeverityOverrides = Parameters<typeof verify>[1];
-interface Payload {
-  data:
-    | {
-        event: 'LINT' | 'FIX';
-        tab: Tab;
-        ruleSeverityOverrides?: RuleSeverityOverrides;
-      }
-    | {
-        event: 'META';
-      };
+export interface LinterWorkerPayload {
+  event: 'LINT' | 'FIX';
+  code: string;
+  ruleSeverityOverrides?: RuleSeverityOverrides;
 }
 
-self.addEventListener('message', async ({ data }: Payload) => {
+const messagesToMarkers = (messages: Array<Linter.LintMessage>): Array<editor.IMarkerData> => {
+  if (messages.some((m) => m.fatal)) return []; // no need for any extra highlights on parse errors
+  return messages.map((m) => ({
+    startLineNumber: m.line,
+    endLineNumber: m.endLine ?? m.line,
+    startColumn: m.column,
+    endColumn: m.endColumn ?? m.column,
+    message: `${m.message}\neslint(${m.ruleId})`,
+    severity: m.severity === 2 ? 8 /* error */ : 4 /* warning */,
+  }));
+};
+
+async function lintResponse(code: string, ruleSeverityOverrides?: RuleSeverityOverrides) {
+  return {
+    event: 'LINT' as const,
+    markers: messagesToMarkers(await verify(code, ruleSeverityOverrides)),
+  };
+}
+
+async function fixResponse(code: string, ruleSeverityOverrides?: RuleSeverityOverrides) {
+  const fixReport = await verifyAndFix(code, ruleSeverityOverrides);
+  return {
+    event: 'FIX' as const,
+    markers: messagesToMarkers(fixReport.messages),
+    output: fixReport.output,
+    fixed: fixReport.fixed,
+  };
+}
+
+function errorResponse(e: any) {
+  return { event: 'ERROR' as const, error: (e as Error).message };
+}
+
+self.addEventListener('message', async ({ data }: MessageEvent<LinterWorkerPayload>) => {
   const { event } = data;
   try {
     if (event === 'LINT') {
-      const { tab, ruleSeverityOverrides } = data;
-      self.postMessage({
-        event: 'LINT',
-        lintMessages: await verify(tab.source, ruleSeverityOverrides),
-      });
+      const { code, ruleSeverityOverrides } = data;
+      self.postMessage(await lintResponse(code, ruleSeverityOverrides));
     } else if (event === 'FIX') {
-      const { tab, ruleSeverityOverrides } = data;
-      self.postMessage({
-        event: 'FIX',
-        fixReport: await verifyAndFix(tab.source, ruleSeverityOverrides),
-      });
-    } else if (event === 'META') {
-      self.postMessage({
-        event: 'META',
-        pluginVersion,
-        eslintVersion,
-        // send the prebuilt configs as maps of rule names to 0 | 1 | 2
-        // map over objects to simplify any complex options, eslint-solid-standalone only accepts
-        // severity changes
-        configs: Object.keys(plugin.configs!).reduce((configs, key) => {
-          configs[key] = Object.keys(plugin.configs![key]).reduce((config, rule) => {
-            const ruleConfig = plugin.configs![key].rules![rule];
-            config[rule] = Array.isArray(ruleConfig)
-              ? (ruleConfig[0] as Linter.Severity)
-              : (ruleConfig as Linter.Severity);
-            return config;
-          }, {} as Record<string, Linter.Severity>);
-          return configs;
-        }, {} as Record<string, Record<string, Linter.Severity>>),
-      });
+      const { code, ruleSeverityOverrides } = data;
+      self.postMessage(await fixResponse(code, ruleSeverityOverrides));
     }
   } catch (e) {
-    self.postMessage({ event: 'ERROR', error: (e as Error).message });
+    console.error(e);
+    self.postMessage(errorResponse(e));
   }
 });
+
+type LintResponse = Awaited<ReturnType<typeof lintResponse>>;
+type FixResponse = Awaited<ReturnType<typeof fixResponse>>;
+type ErrorResponse = ReturnType<typeof errorResponse>;
+export type LinterWorkerResponse = LintResponse | FixResponse | ErrorResponse;

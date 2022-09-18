@@ -3,6 +3,7 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
+import LinterWorker from '../../src/workers/linter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useMatch, useNavigate, useParams } from '@solidjs/router';
@@ -39,6 +40,7 @@ export const Edit = (props: { horizontal: boolean }) => {
   const scratchpad = useMatch(() => '/scratchpad');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
+  const linter = new LinterWorker();
 
   const params = useParams();
   const context = useAppContext()!;
@@ -214,6 +216,7 @@ export const Edit = (props: { horizontal: boolean }) => {
           <Repl
             compiler={compiler}
             formatter={formatter}
+            linter={linter}
             isHorizontal={props.horizontal}
             dark={context.dark()}
             tabs={tabs()}

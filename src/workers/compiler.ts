@@ -123,7 +123,7 @@ self.addEventListener('message', async ({ data }) => {
   try {
     if (event === 'BABEL') {
       self.postMessage(await babel(tab, compileOpts));
-    } else {
+    } else if (event === 'ROLLUP') {
       self.postMessage(await compile(tabs, event));
     }
   } catch (e) {
