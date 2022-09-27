@@ -65,6 +65,7 @@
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
     "prettier": "^2.7.1",
+    "resolve.exports": "^1.1.0",
     "rollup": "^2.78.1",
     "solid-dismiss": "^1.2.1",
     "solid-heroicons": "^2.0.3",

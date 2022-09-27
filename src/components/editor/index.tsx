@@ -1,8 +1,9 @@
 import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
-import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
 import type { Repl } from 'solid-repl/lib/repl';
+import loadDefinitions from './loadDefinitions';
+import setupMonaco from './setupMonaco';
 
 const Editor: Component<{
   url: string;
@@ -70,13 +71,14 @@ const Editor: Component<{
 
     editor.onDidChangeModelContent(() => {
       props.onDocChange?.(editor.getValue());
+      loadDefinitions(editor.getValue());
     });
   });
   onCleanup(() => editor?.dispose());
 
   createEffect(() => {
     editor.setModel(model());
-    liftOff();
+    setupMonaco();
   });
 
   createEffect(() => {
