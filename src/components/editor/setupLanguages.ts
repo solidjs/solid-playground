@@ -1,11 +1,8 @@
 import { Registry } from 'monaco-textmate';
 import { wireTmGrammars } from 'monaco-editor-textmate';
 import * as monaco from 'monaco-editor';
-import cssDefinition from './languages/css.json?url';
-import javascriptDefinition from './languages/javascript.json?url';
-import jsxDefinition from './languages/jsx.json?url';
-import typescriptDefinition from './languages/typescript.json?url';
-import tsxDefinition from './languages/tsx.json?url';
+import cssDefinition from './languages/css.tmLanguage.json?url';
+import tsxDefinition from './languages/TypeScriptReact.tmLanguage.json?url';
 
 const grammars = new Map();
 grammars.set('css', 'source.css');
@@ -31,27 +28,20 @@ function createRegistry(): Registry {
     getGrammarDefinition: async (scopeName) => {
       console.log(scopeName);
       switch (inverseGrammars[scopeName]) {
-        case 'css': return {
-          format: 'json',
-          content: await (await fetch(cssDefinition)).text(),
-        };
-        case 'jsx': return {
-          format: 'json',
-          content: await (await fetch(jsxDefinition)).text(),
-        };
-        case 'typescript': return {
-          format: 'json',
-          content: await (await fetch(typescriptDefinition)).text(),
-        };
-        case 'tsx': return {
-          format: 'json',
-          content: await (await fetch(tsxDefinition)).text(),
-        };
+        case 'css':
+          return {
+            format: 'json',
+            content: await (await fetch(cssDefinition)).text(),
+          };
+        case 'jsx':
+        case 'typescript':
         case 'javascript':
-        default: return {
-          format: 'json',
-          content: await (await fetch(javascriptDefinition)).text(),
-        };
+        case 'tsx':
+        default:
+          return {
+            format: 'json',
+            content: await (await fetch(tsxDefinition)).text(),
+          };
       }
     },
   });
