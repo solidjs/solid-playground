@@ -38,6 +38,7 @@ specifiers:
   onigasm: ^2.2.5
   prettier: ^2.7.1
   register-service-worker: ^1.7.2
+  resolve.exports: ^1.1.0
   rollup: ^2.78.1
   rollup-plugin-delete: ^2.0.0
   rollup-plugin-import-css: ^3.0.3
@@ -65,9 +66,10 @@ dependencies:
   monaco-textmate: 3.0.1_onigasm@2.2.5
   onigasm: 2.2.5
   prettier: 2.7.1
+  resolve.exports: 1.1.0
   rollup: 2.78.1
   solid-dismiss: 1.2.1_solid-js@1.4.8
-  solid-heroicons: 2.0.3
+  solid-heroicons: 2.0.3_solid-js@1.4.8
   solid-js: 1.4.8
 
 devDependencies:
@@ -3864,6 +3866,11 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /resolve.exports/1.1.0:
+    resolution: {integrity: sha512-J1l+Zxxp4XK3LUDZ9m60LRJF/mAe4z6a4xyabPHk7pvK5t35dACV32iIjJDFeWZFfZlO29w6SZ67knR0tHzJtQ==}
+    engines: {node: '>=10'}
+    dev: false
+
   /resolve/1.22.1:
     resolution: {integrity: sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==}
     hasBin: true
@@ -4040,8 +4047,10 @@ packages:
       solid-js: 1.4.8
     dev: false
 
-  /solid-heroicons/2.0.3:
+  /solid-heroicons/2.0.3_solid-js@1.4.8:
     resolution: {integrity: sha512-sHlEaCaFFD8s/RDWTlmfIC/5dUPOtRB/UqOTpXQLq/BUZ94jWS58CANwONBclxwKFFGu6iasaP5zN4iYqORlVg==}
+    peerDependencies:
+      solid-js: '>= ^1.2.5'
     dependencies:
       solid-js: 1.4.8
     dev: false
