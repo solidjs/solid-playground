@@ -152,21 +152,16 @@ const Editor: Component<{
     });
   });
 
-  createEffect(
-    on(
-      () => props.displayLintMessages,
-      () => {
-        if (props.displayLintMessages) {
-          // run on mount and when displayLintMessages is turned on
-          runLinter(editor.getValue());
-        } else {
-          // reset eslint markers when displayLintMessages is turned off
-          const m = model();
-          m && mEditor.setModelMarkers(m, 'eslint', []);
-        }
-      },
-    ),
-  );
+  createEffect(() => {
+    if (props.displayLintMessages) {
+      // run on mount and when displayLintMessages is turned on
+      runLinter(editor.getValue());
+    } else {
+      // reset eslint markers when displayLintMessages is turned off
+      const m = model();
+      m && mEditor.setModelMarkers(m, 'eslint', []);
+    }
+  });
 
   onMount(() => {
     props.onEditorReady?.(editor, { Uri, editor: mEditor });
