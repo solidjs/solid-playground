@@ -10,7 +10,8 @@ declare module 'solid-repl' {
 declare module 'solid-repl/lib/repl' {
   export type Repl = import('solid-js').Component<{
     compiler: Worker;
-    formatter?: Worker;
+    formatter: Worker;
+    linter: Worker;
     isHorizontal: boolean;
     dark: boolean;
     tabs: Tab[];

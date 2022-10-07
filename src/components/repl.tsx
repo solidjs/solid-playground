@@ -22,7 +22,7 @@ const compileMode = {
 } as const;
 
 const Repl: ReplProps = (props) => {
-  const { compiler, formatter } = props;
+  const { compiler, formatter, linter } = props;
   let now: number;
 
   const tabRefs = new Map<string, HTMLSpanElement>();
@@ -166,6 +166,7 @@ const Repl: ReplProps = (props) => {
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
   const [displayErrors, setDisplayErrors] = createSignal(true);
+  const [displayLintMessages, setDisplayLintMessages] = createSignal(true);
 
   return (
     <div
@@ -251,6 +252,17 @@ const Repl: ReplProps = (props) => {
               <span>Display Errors</span>
             </label>
           </TabItem>
+          <TabItem class="justify-self-end">
+            <label class="space-x-2 px-3 py-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="run-linter"
+                checked={displayLintMessages()}
+                onChange={(event) => setDisplayLintMessages(event.currentTarget.checked)}
+              />
+              <span>Run Linter</span>
+            </label>
+          </TabItem>
         </TabList>
 
         <MonacoTabs tabs={props.tabs} folder={props.id} />
@@ -260,10 +272,12 @@ const Repl: ReplProps = (props) => {
             url={`file:///${props.id}/${props.current}`}
             onDocChange={() => compile()}
             formatter={formatter}
+            linter={linter}
             isDark={props.dark}
             withMinimap={false}
             onEditorReady={props.onEditorReady}
             displayErrors={displayErrors()}
+            displayLintMessages={displayLintMessages()}
           />
         </Show>
 
