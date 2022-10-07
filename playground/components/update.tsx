@@ -2,7 +2,7 @@ import type { Component } from 'solid-js';
 import { Portal } from 'solid-js/web';
 
 import { Icon } from 'solid-heroicons';
-import { x } from 'solid-heroicons/outline';
+import { xMark } from 'solid-heroicons/outline';
 
 export const Update: Component<{
   onDismiss: (...args: unknown[]) => unknown;
@@ -13,7 +13,7 @@ export const Update: Component<{
     <Portal mount={mount!}>
       <div class="bg-blue-200 text-brand-default border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
         <button title="close" onClick={props.onDismiss} class="absolute top-1 right-1 hover:text-blue-900">
-          <Icon path={x} class="h-6" />
+          <Icon path={xMark} class="h-6" />
         </button>
         <p class="font-semibold">There's a new update available.</p>
         <p class="mt-2">Refresh your browser or click the button below to get the latest update of the REPL.</p>

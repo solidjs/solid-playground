@@ -1,5 +1,5 @@
 import { Icon } from 'solid-heroicons';
-import { zoomIn } from 'solid-heroicons/outline';
+import { magnifyingGlassPlus } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
 import { Component, createSignal, createEffect } from 'solid-js';
 import { useZoom } from '../../src/hooks/useZoom';
@@ -95,7 +95,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         title="Scale editor to make text larger or smaller"
         ref={btnEl}
       >
-        <Icon class="h-6" path={zoomIn} />
+        <Icon class="h-6" path={magnifyingGlassPlus} />
         <span class="text-xs md:sr-only">Scale Editor</span>
       </button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>

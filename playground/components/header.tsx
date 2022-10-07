@@ -2,7 +2,7 @@ import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
-import { share, link, download, xCircle, menu, moon, sun } from 'solid-heroicons/outline';
+import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
@@ -104,7 +104,7 @@ export const Header: ParentComponent<{
                 }}
                 title="Export to Zip"
               >
-                <Icon path={download} class="h-6" style={{ margin: '0' }} />
+                <Icon path={arrowDownTray} class="h-6" style={{ margin: '0' }} />
                 <span class="text-xs md:sr-only">Export to Zip</span>
               </button>
             </Show>
@@ -136,7 +136,7 @@ export const Header: ParentComponent<{
           title="Mobile Menu Button"
           ref={menuBtnEl}
         >
-          <Show when={showMenu()} fallback={<Icon path={menu} class="h-6 w-6" />}>
+          <Show when={showMenu()} fallback={<Icon path={bars_3} class="h-6 w-6" />}>
             <Icon path={xCircle} class="h-[22px] w-[22px]" /* adjusted to account for border */ />
           </Show>
           <span class="sr-only">Show menu</span>

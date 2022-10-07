@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
-import { eye, eyeOff, plus, x } from 'solid-heroicons/outline';
+import { eye, eyeSlash, plus, xMark } from 'solid-heroicons/outline';
 import { createEffect, createResource, createSignal, For, Show, Suspense } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import { defaultTabs } from '../../src';
@@ -181,7 +181,7 @@ export const Home = () => {
                     <Show when={!params.user}>
                       <td class="p-1 pr-0 text-right space-x-1">
                         <Icon
-                          path={repl.public ? eye : eyeOff}
+                          path={repl.public ? eye : eyeSlash}
                           class="w-6 inline cursor-pointer"
                           onClick={async (e) => {
                             e.stopPropagation();
@@ -203,7 +203,7 @@ export const Home = () => {
                           }}
                         />
                         <Icon
-                          path={x}
+                          path={xMark}
                           class="w-6 inline text-red-700 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();

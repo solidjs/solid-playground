@@ -1,4 +1,4 @@
-import { Component, createEffect, onMount, onCleanup, on } from 'solid-js';
+import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
@@ -14,7 +14,6 @@ const Editor: Component<{
   formatter?: Worker;
   linter?: Worker;
   displayErrors?: boolean;
-  displayLintMessages?: boolean;
   onDocChange?: (code: string) => void;
   onEditorReady?: Parameters<Repl>[0]['onEditorReady'];
 }> = (props) => {
@@ -53,7 +52,7 @@ const Editor: Component<{
   }
   if (props.linter) {
     const listener = ({ data }: MessageEvent<LinterWorkerResponse>) => {
-      if (props.displayLintMessages) {
+      if (props.displayErrors) {
         const { event } = data;
         if (event === 'LINT') {
           const m = model();
@@ -70,7 +69,7 @@ const Editor: Component<{
   }
 
   const runLinter = throttle((code: string) => {
-    if (props.linter && props.displayLintMessages) {
+    if (props.linter && props.displayErrors) {
       const payload: LinterWorkerPayload = {
         event: 'LINT',
         code,
@@ -118,7 +117,7 @@ const Editor: Component<{
         // auto-format
         editor.getAction('editor.action.formatDocument')?.run();
         // auto-fix problems
-        props.displayLintMessages && editor.getAction('eslint.executeAutofix')?.run();
+        props.displayErrors && editor.getAction('eslint.executeAutofix')?.run();
         editor.focus();
       }
     });
@@ -153,7 +152,7 @@ const Editor: Component<{
   });
 
   createEffect(() => {
-    if (props.displayLintMessages) {
+    if (props.displayErrors) {
       // run on mount and when displayLintMessages is turned on
       runLinter(editor.getValue());
     } else {

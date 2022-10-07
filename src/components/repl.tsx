@@ -1,6 +1,6 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { refresh, terminal } from 'solid-heroicons/outline';
+import { arrowPath, commandLine } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -166,7 +166,6 @@ const Repl: ReplProps = (props) => {
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
   const [displayErrors, setDisplayErrors] = createSignal(true);
-  const [displayLintMessages, setDisplayLintMessages] = createSignal(true);
 
   return (
     <div
@@ -252,17 +251,6 @@ const Repl: ReplProps = (props) => {
               <span>Display Errors</span>
             </label>
           </TabItem>
-          <TabItem class="justify-self-end">
-            <label class="space-x-2 px-3 py-2 cursor-pointer">
-              <input
-                type="checkbox"
-                name="run-linter"
-                checked={displayLintMessages()}
-                onChange={(event) => setDisplayLintMessages(event.currentTarget.checked)}
-              />
-              <span>Run Linter</span>
-            </label>
-          </TabItem>
         </TabList>
 
         <MonacoTabs tabs={props.tabs} folder={props.id} />
@@ -277,7 +265,6 @@ const Repl: ReplProps = (props) => {
             withMinimap={false}
             onEditorReady={props.onEditorReady}
             displayErrors={displayErrors()}
-            displayLintMessages={displayLintMessages()}
           />
         </Show>
 
@@ -299,7 +286,7 @@ const Repl: ReplProps = (props) => {
               disabled={outputTab() != 0}
             >
               <span class="sr-only">Refresh the page</span>
-              <Icon path={refresh} class="h-5" />
+              <Icon path={arrowPath} class="h-5" />
             </button>
           </TabItem>
           <TabItem>
@@ -311,7 +298,7 @@ const Repl: ReplProps = (props) => {
               disabled={outputTab() != 0}
             >
               <span class="sr-only">Open the devtools</span>
-              <Icon path={terminal} class="h-5" />
+              <Icon path={commandLine} class="h-5" />
             </button>
           </TabItem>
           <TabItem class="flex-1" active={outputTab() == 0}>

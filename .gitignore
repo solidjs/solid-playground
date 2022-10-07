@@ -1,11 +1,5 @@
 node_modules
 dist
 lib
-.parcel-cache
-.env
-
-.yarn*
-yarn.lock
-package-lock.json
-
 .DS_Store
+package-lock.json
