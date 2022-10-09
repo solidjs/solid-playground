@@ -13,7 +13,6 @@ import { defaultTabs } from '../../src';
 import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
-import { compressToURL } from '@amoutonbrady/lz-string';
 
 const Repl = lazy(() => import('../../src/components/repl'));
 
@@ -48,7 +47,7 @@ export const Edit = (props: { horizontal: boolean }) => {
 
   let disableFetch: true | undefined;
 
-  let readonly = () => !scratchpad() && context.user()?.display != params.user;
+  let readonly = () => !scratchpad() && context.user()?.display != params.user && !localStorage.getItem(params.repl);
 
   const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
     toMap.map((tab) => {
@@ -136,14 +135,15 @@ export const Edit = (props: { horizontal: boolean }) => {
       const repl = resource.latest;
       if (!repl) return;
 
-      if (context.token && context.user()?.display == params.user) {
+      if ((context.token && context.user()?.display == params.user) || localStorage.getItem(params.repl)) {
         fetch(`${API}/repl/${params.repl}`, {
           method: 'PUT',
           headers: {
-            'authorization': `Bearer ${context.token}`,
+            'authorization': context.token ? `Bearer ${context.token}` : '',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            ...(localStorage.getItem(params.repl) ? { write_token: localStorage.getItem(params.repl) } : {}),
             title: repl.title,
             version: repl.version,
             public: repl.public,
@@ -163,22 +163,48 @@ export const Edit = (props: { horizontal: boolean }) => {
         fork={() => {}}
         share={async () => {
           if (scratchpad()) {
-            let url = new URL(location.origin);
-            url.hash = compressToURL(JSON.stringify(context.tabs()));
-            console.log('Shareable url:', url.href);
-
-            try {
-              const response = await fetch('/', { method: 'PUT', body: `{"url":"${url.href}"}` });
-              if (response.status >= 400) {
-                throw new Error(response.statusText);
-              }
-              const hash = await response.text();
-              const tinyUrl = new URL(location.origin);
-              tinyUrl.searchParams.set('hash', hash);
-              return tinyUrl.toString();
-            } catch {
-              return url.href;
+            const newRepl = {
+              title: context.user()?.display ? `${context.user()!.display}'s Scratchpad` : 'Anonymous Scratchpad',
+              public: true,
+              labels: [],
+              version: '1.0',
+              files: tabs().map((x) => ({ name: x.name, content: x.source })),
+            };
+            const response = await fetch(`${API}/repl`, {
+              method: 'POST',
+              headers: {
+                'authorization': context.token ? `Bearer ${context.token}` : '',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(newRepl),
+            });
+            if (response.status >= 400) {
+              throw new Error(response.statusText);
             }
+            const { id, write_token } = await response.json();
+            if (write_token) {
+              localStorage.setItem(id, write_token);
+              const repls = localStorage.getItem('repls');
+              if (repls) {
+                localStorage.setItem('repls', JSON.stringify([...JSON.parse(repls), id]));
+              } else {
+                localStorage.setItem('repls', JSON.stringify([id]));
+              }
+            }
+            mutate(() => ({
+              id,
+              title: newRepl.title,
+              labels: newRepl.labels,
+              files: newRepl.files,
+              version: newRepl.version,
+              public: newRepl.public,
+              size: 0,
+              created_at: '',
+            }));
+            const url = `/${context.user()?.display || 'anonymous'}/${id}`;
+            disableFetch = true;
+            navigate(url);
+            return `${window.location.origin}${url}`;
           } else {
             return location.href;
           }
