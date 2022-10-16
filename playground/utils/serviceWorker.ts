@@ -7,12 +7,12 @@ function registerServiceWorker(): void {
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
       register('/sw.js', {
-        updated(registration) {
-          setEventBus(registration);
+        updated() {
+          setEventBus(true);
         },
       });
     });
   }
 }
 
-export { eventBus, registerServiceWorker };
+export { eventBus, setEventBus, registerServiceWorker };

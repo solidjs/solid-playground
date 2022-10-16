@@ -1,6 +1,6 @@
-import { Show, createSignal, JSX, on } from 'solid-js';
+import { Show, JSX } from 'solid-js';
 import { Routes, Route, useSearchParams } from '@solidjs/router';
-import { eventBus } from './utils/serviceWorker';
+import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from '../src/hooks/useZoom';
 import { Edit } from './pages/edit';
@@ -14,9 +14,6 @@ export const App = (): JSX.Element => {
    * via an EventBus initiated in the service worker and
    * the couple line above.
    */
-  const [newUpdate, setNewUpdate] = createSignal(eventBus() != undefined);
-  on(eventBus, () => setNewUpdate(true));
-
   const { zoomState, updateZoom } = useZoom();
   document.addEventListener('keydown', (e) => {
     if (!zoomState.overrideNative) return;
@@ -45,7 +42,7 @@ export const App = (): JSX.Element => {
         <Route path="/login" element={<Login />} />
       </Routes>
 
-      <Show when={newUpdate()} children={<Update onDismiss={() => setNewUpdate(false)} />} />
+      <Show when={eventBus()} children={<Update onDismiss={() => setEventBus(false)} />} />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import Dismiss from 'solid-dismiss';
+import { A } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
@@ -48,9 +49,9 @@ export const Header: ParentComponent<{
   return (
     <header class="sticky top-0 z-10 bg-white dark:bg-solid-darkbg p-1 flex text-sm justify-between items-center border-slate-200 dark:border-neutral-800 border-b-2px">
       <h1 class="flex items-center space-x-4 uppercase leading-0 tracking-widest pl-1">
-        <a href="/">
+        <A href="/">
           <img src={logo} alt="solid-js logo" class="w-8" />
-        </a>
+        </A>
         <div>
           {props.children || (
             <span class="inline-block">

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from '@solidjs/router';
+import { A, useLocation, useNavigate, useParams } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeSlash, plus, xMark } from 'solid-heroicons/outline';
 import { createEffect, createResource, createSignal, For, Show, Suspense } from 'solid-js';
@@ -125,9 +125,9 @@ export const Home = () => {
             </button>
             <p class="text-center text-gray-800 dark:text-gray-300 text-sm pt-1">
               or{' '}
-              <a href="/scratchpad" class="hover:underline text-solid-medium dark:text-solid-darkdefault">
+              <A href="/scratchpad" class="hover:underline text-solid-medium dark:text-solid-darkdefault">
                 open my scratchpad
-              </a>
+              </A>
             </p>
           </div>
         </Show>
@@ -173,7 +173,7 @@ export const Home = () => {
                     }}
                   >
                     <td class="p-1">
-                      <a href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</a>
+                      <A href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</A>
                     </td>
                     <td class="p-1 last:text-right">
                       {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}

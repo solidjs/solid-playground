@@ -16,7 +16,8 @@
   "types": "types/types.d.ts",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && workbox generateSW workbox-config.js",
+    "build": "vite build",
+    "preview": "vite preview",
     "build:lib": "jiti rollup.config.js",
     "format": "prettier -w .",
     "tsc": "tsc"
@@ -34,7 +35,6 @@
     "@types/babel__standalone": "^7.1.4",
     "@types/dedent": "^0.7.0",
     "@types/fs-extra": "^9.0.13",
-    "@types/workbox-sw": "^4.3.2",
     "acorn-jsx": "^5.3.2",
     "assert": "^2.0.0",
     "fs-extra": "^10.1.0",
@@ -49,8 +49,7 @@
     "vite": "^3.1.6",
     "vite-plugin-solid": "^2.3.9",
     "vite-plugin-windicss": "^1.8.8",
-    "windicss": "^3.5.6",
-    "workbox-cli": "^6.5.4"
+    "windicss": "^3.5.6"
   },
   "dependencies": {
     "@amoutonbrady/lz-string": "^0.0.1",
