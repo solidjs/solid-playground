@@ -47,12 +47,12 @@ export const Header: ParentComponent<{
   });
 
   return (
-    <header class="sticky top-0 z-10 bg-white dark:bg-solid-darkbg p-1 flex text-sm items-center border-slate-200 gap-x-4 px-2 dark:border-neutral-800 border-b-2px">
+    <header class="dark:bg-solid-darkbg border-b-2px sticky top-0 z-10 flex items-center gap-x-4 border-slate-200 bg-white p-1 px-2 text-sm dark:border-neutral-800">
       <A href="/">
         <img src={logo} alt="solid-js logo" class="w-8" />
       </A>
       {props.children || (
-        <h1 class="uppercase leading-0 tracking-widest">
+        <h1 class="leading-0 uppercase tracking-widest">
           Solid<b>JS</b> Playground
         </h1>
       )}
@@ -62,7 +62,7 @@ export const Header: ParentComponent<{
           'shadow-md flex flex-col justify-center bg-white dark:bg-solid-darkbg': showMenu(),
           'hidden': !showMenu(),
         }}
-        class="md:items-center md:space-x-2 md:flex md:flex-row ml-auto"
+        class="ml-auto md:flex md:flex-row md:items-center md:space-x-2"
         menuButton={() => menuBtnEl}
         open={showMenu}
         setOpen={setShowMenu}
@@ -71,7 +71,7 @@ export const Header: ParentComponent<{
         <button
           type="button"
           onClick={context.toggleDark}
-          class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
+          class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
           classList={{
             'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
           }}
@@ -92,7 +92,7 @@ export const Header: ParentComponent<{
                 tabs: unwrap(context.tabs()),
               });
             }}
-            class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
+            class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
             classList={{
               'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
             }}
@@ -108,7 +108,7 @@ export const Header: ParentComponent<{
         <button
           type="button"
           onClick={shareLink}
-          class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded"
+          class="flex flex-row items-center space-x-2 rounded px-2 py-2 md:px-1"
           classList={{
             'opacity-80 hover:opacity-100': !copy(),
             'text-green-100': copy() && !showMenu(),
@@ -125,7 +125,7 @@ export const Header: ParentComponent<{
         classList={{
           'border-white border': showMenu(),
         }}
-        class="px-3 py-2 rounded opacity-80 hover:opacity-100 visible relative md:hidden ml-auto"
+        class="visible relative ml-auto rounded px-3 py-2 opacity-80 hover:opacity-100 md:hidden"
         title="Mobile Menu Button"
         ref={menuBtnEl}
       >
@@ -134,12 +134,12 @@ export const Header: ParentComponent<{
         </Show>
         <span class="sr-only">Show menu</span>
       </button>
-      <div class="leading-snug cursor-pointer h-8 relative">
+      <div class="relative h-8 cursor-pointer leading-snug">
         <Show
           when={context.user()?.avatar}
           fallback={
             <a
-              class="mx-1 bg-solid-default py-2 px-3 rounded text-lg text-slate-50"
+              class="bg-solid-default mx-1 rounded py-2 px-3 text-lg text-slate-50"
               href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`}
               rel="external"
             >
@@ -148,16 +148,16 @@ export const Header: ParentComponent<{
           }
         >
           <button ref={profileBtn}>
-            <img crossOrigin="anonymous" src={context.user()?.avatar} class="w-8 h-8 rounded-full" />
+            <img crossOrigin="anonymous" src={context.user()?.avatar} class="h-8 w-8 rounded-full" />
           </button>
           <Dismiss menuButton={() => profileBtn} open={showProfile} setOpen={setShowProfile}>
-            <div class="items-center flex absolute shadow-md flex-col justify-center bg-white dark:bg-solid-darkbg right-0">
+            <div class="dark:bg-solid-darkbg absolute right-0 flex flex-col items-center justify-center bg-white shadow-md">
               <a class="px-2 py-2 hover:bg-gray-300 dark:hover:bg-gray-800" href="/">
                 {context.user()?.display}
               </a>
               <button
                 onClick={() => (context.token = '')}
-                class="px-2 py-2 text-left hover:bg-gray-300 dark:hover:bg-gray-800 text-xs w-full"
+                class="w-full px-2 py-2 text-left text-xs hover:bg-gray-300 dark:hover:bg-gray-800"
               >
                 Sign Out
               </button>

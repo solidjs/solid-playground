@@ -170,7 +170,7 @@ const Repl: ReplProps = (props) => {
   return (
     <div
       ref={grid}
-      class="grid h-full min-h-0 bg-white dark:bg-solid-darkbg dark:text-white text-black font-sans"
+      class="dark:bg-solid-darkbg grid h-full min-h-0 bg-white font-sans text-black dark:text-white"
       classList={{
         'wrapper--forced': props.isHorizontal,
         'wrapper': !props.isHorizontal,
@@ -181,14 +181,14 @@ const Repl: ReplProps = (props) => {
         '--right': `${2 - left()}fr`,
       }}
     >
-      <div class="h-full flex flex-col">
+      <div class="flex h-full flex-col">
         <TabList>
           <For each={props.tabs}>
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
                   ref={(el) => tabRefs.set(tab.name, el)}
-                  class="cursor-pointer select-none py-2 px-3 border border-solid border-transparent rounded transition focus:border-blue-600 focus:outline-none"
+                  class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
                   contentEditable={edit() == index()}
                   onBlur={(e) => {
                     setEdit(-1);
@@ -228,20 +228,20 @@ const Repl: ReplProps = (props) => {
             )}
           </For>
 
-          <li class="inline-flex items-center m-0 border-b-2 border-transparent">
+          <li class="m-0 inline-flex items-center border-b-2 border-transparent">
             <button type="button" onClick={addTab} title="Add a new tab">
               <span class="sr-only">Add a new tab</span>
               <svg
                 viewBox="0 0 24 24"
                 style="stroke: currentColor; fill: none;"
-                class="h-5 text-brand-default dark:text-slate-50"
+                class="text-brand-default h-5 dark:text-slate-50"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </button>
           </li>
           <TabItem class="ml-auto justify-self-end">
-            <label class="space-x-2 px-3 py-2 cursor-pointer">
+            <label class="cursor-pointer space-x-2 px-3 py-2">
               <input
                 type="checkbox"
                 name="display-errors"
@@ -275,13 +275,13 @@ const Repl: ReplProps = (props) => {
 
       <GridResizer ref={resizer} isHorizontal={isHorizontal()} onResize={changeLeft} />
 
-      <div class="h-full flex flex-col">
+      <div class="flex h-full flex-col">
         <TabList>
           <TabItem>
             <button
               type="button"
               title="Refresh the page"
-              class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25 active:animate-spin"
+              class="py-2 px-3 active:animate-spin disabled:cursor-not-allowed disabled:opacity-25"
               onClick={[reload, true]}
               disabled={outputTab() != 0}
             >
@@ -302,14 +302,14 @@ const Repl: ReplProps = (props) => {
             </button>
           </TabItem>
           <TabItem class="flex-1" active={outputTab() == 0}>
-            <button type="button" class="w-full -mb-0.5 py-2" onClick={[setOutputTab, 0]}>
+            <button type="button" class="-mb-0.5 w-full py-2" onClick={[setOutputTab, 0]}>
               Result
             </button>
           </TabItem>
           <TabItem class="flex-1" active={outputTab() == 1}>
             <button
               type="button"
-              class="w-full -mb-0.5 py-2"
+              class="-mb-0.5 w-full py-2"
               onClick={() => {
                 setOutputTab(1);
                 setMode(compileMode.DOM);
@@ -333,7 +333,7 @@ const Repl: ReplProps = (props) => {
             />
           </Match>
           <Match when={outputTab() == 1}>
-            <section class="h-full flex flex-col relative divide-y-2 divide-slate-200 dark:divide-neutral-800">
+            <section class="relative flex h-full flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
                 url={`file:///${props.id}/output_dont_import.tsx`}
                 isDark={props.dark}
@@ -342,10 +342,10 @@ const Repl: ReplProps = (props) => {
               />
 
               <div class="p-5">
-                <label class="font-semibold text-sm uppercase">Compile mode</label>
+                <label class="text-sm font-semibold uppercase">Compile mode</label>
 
                 <div class="mt-1 space-y-1 text-sm">
-                  <label class="block mr-auto cursor-pointer space-x-2">
+                  <label class="mr-auto block cursor-pointer space-x-2">
                     <input
                       checked={mode() === compileMode.DOM}
                       value="DOM"
@@ -357,7 +357,7 @@ const Repl: ReplProps = (props) => {
                     <span>Client side rendering</span>
                   </label>
 
-                  <label class="block mr-auto cursor-pointer space-x-2">
+                  <label class="mr-auto block cursor-pointer space-x-2">
                     <input
                       checked={mode() === compileMode.SSR}
                       value="SSR"
@@ -369,7 +369,7 @@ const Repl: ReplProps = (props) => {
                     <span>Server side rendering</span>
                   </label>
 
-                  <label class="block mr-auto cursor-pointer space-x-2">
+                  <label class="mr-auto block cursor-pointer space-x-2">
                     <input
                       checked={mode() === compileMode.HYDRATABLE}
                       value="HYDRATABLE"

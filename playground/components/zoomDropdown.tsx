@@ -87,7 +87,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
     >
       <button
         type="button"
-        class="flex flex-row space-x-2 items-center md:px-1 px-2 py-2 rounded opacity-80 hover:opacity-100"
+        class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
         classList={{
           'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.showMenu,
           'bg-gray-300 dark:text-black': open() && props.showMenu,
@@ -100,7 +100,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       </button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="absolute bg-white dark:bg-solid-darkbg rounded shadow-md border-2 border-slate-200 dark:border-neutral-800 p-6 w-min z-10"
+          class="dark:bg-solid-darkbg absolute z-10 w-min rounded border-2 border-slate-200 bg-white p-6 shadow-md dark:border-neutral-800"
           classList={{
             'left-1/4': props.showMenu,
           }}
@@ -110,24 +110,24 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         >
           <div class="flex">
             <button
-              class="px-3 py-1 rounded-l text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
+              class="border-1 rounded-l px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
               aria-label="decrease font size"
               onClick={() => updateZoom('decrease')}
             >
               -
             </button>
-            <div class="px-3 py-1 text-sm text-center w-20 uppercase tracking-wide border-1 dark:border-gray-700">
+            <div class="border-1 w-20 px-3 py-1 text-center text-sm uppercase tracking-wide dark:border-gray-700">
               {zoomState.zoom}%
             </div>
             <button
-              class="px-3 py-1 rounded-r text-sm uppercase tracking-wide mr-4 hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
+              class="border-1 mr-4 rounded-r px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
               aria-label="increase font size"
               onClick={() => updateZoom('increase')}
             >
               +
             </button>
             <button
-              class="px-3 py-1 rounded  text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700 border-1 dark:border-gray-700"
+              class="border-1 rounded px-3  py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
               aria-label="reset font size"
               onClick={() => updateZoom('reset')}
             >
@@ -135,7 +135,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             </button>
           </div>
           <div class="mt-10">
-            <label class="block my-3 cursor-pointer dark:text-white">
+            <label class="my-3 block cursor-pointer dark:text-white">
               <input
                 type="checkbox"
                 class="mr-4 cursor-pointer"
@@ -144,7 +144,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               />
               Override browser zoom keyboard shortcut
             </label>
-            <label class="block my-3 cursor-pointer dark:text-white">
+            <label class="my-3 block cursor-pointer dark:text-white">
               <input
                 type="checkbox"
                 class="mr-4 cursor-pointer"

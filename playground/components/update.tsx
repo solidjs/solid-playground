@@ -11,7 +11,7 @@ export const Update: Component<{
 
   return (
     <Portal mount={mount!}>
-      <div class="bg-blue-200 text-brand-default border border-blue-400 rounded shadow px-6 py-4 z-10 max-w-sm">
+      <div class="text-brand-default z-10 max-w-sm rounded border border-blue-400 bg-blue-200 px-6 py-4 shadow">
         <button title="close" onClick={props.onDismiss} class="absolute top-1 right-1 hover:text-blue-900">
           <Icon path={xMark} class="h-6" />
         </button>
@@ -19,7 +19,7 @@ export const Update: Component<{
         <p class="mt-2">Refresh your browser or click the button below to get the latest update of the REPL.</p>
         <button
           onClick={() => location.reload()}
-          class="bg-blue-800 text-blue-200 px-3 py-1 rounded mt-4 text-sm uppercase tracking-wide hover:bg-blue-900"
+          class="mt-4 rounded bg-blue-800 px-3 py-1 text-sm uppercase tracking-wide text-blue-200 hover:bg-blue-900"
         >
           Refresh
         </button>

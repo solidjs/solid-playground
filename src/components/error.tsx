@@ -25,7 +25,7 @@ export const Error: Component<{
 
   return (
     <details
-      class="bg-red-200 text-red-800 p-2 border-t-2 border-red-300"
+      class="border-t-2 border-red-300 bg-red-200 p-2 text-red-800"
       onToggle={(event) => setIsOpen(event.currentTarget.open)}
     >
       <summary class="flex cursor-pointer">

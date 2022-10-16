@@ -6,7 +6,7 @@ export const TabItem: ParentComponent<{
 }> = (props) => {
   return (
     <li
-      class={`relative inline-flex text-sm font-sans transition leading-snug items-center bg-slate-500 bg-opacity-0 hover:bg-opacity-5 overflow-hidden border-brand-default dark:border-gray-200 border-b-2 ${
+      class={`border-brand-default relative inline-flex items-center overflow-hidden border-b-2 bg-slate-500 bg-opacity-0 font-sans text-sm leading-snug transition hover:bg-opacity-5 dark:border-gray-200 ${
         props.class || ''
       }`}
       classList={{
@@ -20,5 +20,5 @@ export const TabItem: ParentComponent<{
 };
 
 export const TabList: ParentComponent = (props) => {
-  return <ul class="flex tabs flex-wrap items-center list-none m-0">{props.children}</ul>;
+  return <ul class="tabs m-0 flex list-none flex-wrap items-center">{props.children}</ul>;
 };

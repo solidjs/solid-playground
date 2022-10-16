@@ -212,7 +212,7 @@ export const Edit = (props: { horizontal: boolean }) => {
       >
         {resource()?.title && (
           <input
-            class="bg-transparent w-96 shrink px-3 py-1.5 border border-solid border-transparent rounded transition focus:border-blue-600 focus:outline-none"
+            class="w-96 shrink rounded border border-solid border-transparent bg-transparent px-3 py-1.5 transition focus:border-blue-600 focus:outline-none"
             value={resource()?.title}
             onChange={(e) => {
               mutate((x) => x && { ...x, title: e.currentTarget.value });
@@ -224,7 +224,7 @@ export const Edit = (props: { horizontal: boolean }) => {
       <Suspense
         fallback={
           <svg
-            class="animate-spin h-12 w-12 text-white m-auto"
+            class="m-auto h-12 w-12 animate-spin text-white"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

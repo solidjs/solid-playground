@@ -214,10 +214,10 @@ export const Preview: Component<Props> = (props) => {
   };
 
   return (
-    <div class="h-full w-full relative">
+    <div class="relative h-full w-full">
       <iframe
         title="Solid REPL"
-        class="overflow-auto p-0 dark:bg-other block h-full w-full bg-white row-start-5"
+        class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
         classList={props.classList}
         style={styleScale()}
         ref={iframe}

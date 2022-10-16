@@ -94,10 +94,10 @@ export const Home = () => {
         }}
       />
       <div class="m-8">
-        <Show when={!params.user} fallback={<h1 class="text-center text-3xl mb-4">{`${params.user}'s`} Repls</h1>}>
-          <div class="flex flex-col align-middle mb-8">
+        <Show when={!params.user} fallback={<h1 class="mb-4 text-center text-3xl">{`${params.user}'s`} Repls</h1>}>
+          <div class="mb-8 flex flex-col align-middle">
             <button
-              class="bg-solid-lightgray shadow-md dark:bg-neutral-800 border border-gray-600 rounded-xl p-3 text-xl flex mx-auto justify-center items-center"
+              class="bg-solid-lightgray mx-auto flex items-center justify-center rounded-xl border border-gray-600 p-3 text-xl shadow-md dark:bg-neutral-800"
               onClick={async () => {
                 const result = await fetch(`${API}/repl`, {
                   method: 'POST',
@@ -123,21 +123,21 @@ export const Home = () => {
             >
               <Icon path={plus} class="w-6" /> Create new REPL
             </button>
-            <p class="text-center text-gray-800 dark:text-gray-300 text-sm pt-1">
+            <p class="pt-1 text-center text-sm text-gray-800 dark:text-gray-300">
               or{' '}
-              <A href="/scratchpad" class="hover:underline text-solid-medium dark:text-solid-darkdefault">
+              <A href="/scratchpad" class="text-solid-medium dark:text-solid-darkdefault hover:underline">
                 open my scratchpad
               </A>
             </p>
           </div>
         </Show>
-        <table class="w-200 max-w-full mx-auto">
+        <table class="w-200 mx-auto max-w-full">
           <thead>
             <tr class="border-b border-neutral-600 font-medium">
-              <th class="p-1 w-1/2 text-left">Title</th>
-              <th class="p-1 w-32 text-left last:text-right">Edited</th>
+              <th class="w-1/2 p-1 text-left">Title</th>
+              <th class="w-32 p-1 text-left last:text-right">Edited</th>
               <Show when={!params.user}>
-                <th class="p-1 w-20 text-right">Options</th>
+                <th class="w-20 p-1 text-right">Options</th>
               </Show>
             </tr>
           </thead>
@@ -148,7 +148,7 @@ export const Home = () => {
                 <tr class="h-10">
                   <td colspan="3" class="text-center">
                     <svg
-                      class="animate-spin h-8 w-8 text-white mx-auto mt-8"
+                      class="mx-auto mt-8 h-8 w-8 animate-spin text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -179,10 +179,10 @@ export const Home = () => {
                       {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}
                     </td>
                     <Show when={!params.user}>
-                      <td class="p-1 pr-0 text-right space-x-1">
+                      <td class="space-x-1 p-1 pr-0 text-right">
                         <Icon
                           path={repl.public ? eye : eyeSlash}
-                          class="w-6 inline cursor-pointer"
+                          class="inline w-6 cursor-pointer"
                           onClick={async (e) => {
                             e.stopPropagation();
                             fetch(`${API}/repl/${repl.id}`, {
@@ -204,7 +204,7 @@ export const Home = () => {
                         />
                         <Icon
                           path={xMark}
-                          class="w-6 inline text-red-700 cursor-pointer"
+                          class="inline w-6 cursor-pointer text-red-700"
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpen(repl.id);
@@ -221,7 +221,7 @@ export const Home = () => {
       </div>
       <Show when={!!open()}>
         <div
-          class="fixed z-10 top-0 left-0 w-full h-full flex justify-center items-center bg-gray-500/50"
+          class="fixed top-0 left-0 z-10 flex h-full w-full items-center justify-center bg-gray-500/50"
           onClick={(e) => {
             if (e.target !== e.currentTarget) return;
             setOpen(undefined);
@@ -229,15 +229,15 @@ export const Home = () => {
           role="presentation"
         >
           <div
-            class="bg-white dark:bg-solid-darkbg dark:text-white p-4 rounded-lg shadow w-96"
+            class="dark:bg-solid-darkbg w-96 rounded-lg bg-white p-4 shadow dark:text-white"
             role="dialog"
             aria-modal="true"
             tabindex="-1"
           >
             <p>Are you sure you want to delete that?</p>
-            <div class="flex justify-end gap-2 mt-2">
+            <div class="mt-2 flex justify-end gap-2">
               <button
-                class="py-1 px-2 rounded border"
+                class="rounded border py-1 px-2"
                 onclick={() => {
                   fetch(`${API}/repl/${open()}`, {
                     method: 'DELETE',
@@ -254,7 +254,7 @@ export const Home = () => {
               >
                 Yes
               </button>
-              <button class="py-1 px-2 rounded border" onClick={() => setOpen(undefined)}>
+              <button class="rounded border py-1 px-2" onClick={() => setOpen(undefined)}>
                 No
               </button>
             </div>

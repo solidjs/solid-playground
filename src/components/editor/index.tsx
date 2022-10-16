@@ -166,7 +166,7 @@ const Editor: Component<{
     props.onEditorReady?.(editor, { Uri, editor: mEditor });
   });
 
-  return <div class="p-0 h-full min-h-0" ref={parent} />;
+  return <div class="h-full min-h-0 p-0" ref={parent} />;
 };
 
 export default Editor;
