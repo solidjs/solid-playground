@@ -212,7 +212,7 @@ export const Edit = (props: { horizontal: boolean }) => {
       >
         {resource()?.title && (
           <input
-            class="bg-transparent px-3 py-1.5 border border-solid border-transparent rounded transition focus:border-blue-600 focus:outline-none"
+            class="bg-transparent w-96 shrink px-3 py-1.5 border border-solid border-transparent rounded transition focus:border-blue-600 focus:outline-none"
             value={resource()?.title}
             onChange={(e) => {
               mutate((x) => x && { ...x, title: e.currentTarget.value });
