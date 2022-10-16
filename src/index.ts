@@ -1,5 +1,6 @@
+import 'virtual:uno.css';
 import './assets/main.css';
-import 'virtual:windi.css';
+import '@unocss/reset/tailwind.css';
 
 import type { Tab } from 'solid-repl';
 

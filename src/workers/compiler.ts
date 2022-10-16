@@ -4,9 +4,8 @@ import { transform } from '@babel/standalone';
 // @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
 // @ts-ignore
-import { rollup } from 'rollup/dist/es/rollup.browser.js';
+import { rollup, Plugin } from '@rollup/browser';
 import dd from 'dedent';
-import type { Plugin } from 'rollup';
 
 export const CDN_URL = (importee: string) => `https://esm.sh/${importee}?dev`;
 

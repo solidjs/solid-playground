@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import WindiCSS from 'vite-plugin-windicss';
+import UnoCSS from 'unocss/vite';
 
 export default defineConfig((env) => ({
-  plugins: [solidPlugin(), WindiCSS()],
+  plugins: [solidPlugin(), UnoCSS()],
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',

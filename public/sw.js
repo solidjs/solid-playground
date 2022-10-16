@@ -4,7 +4,7 @@ async function fetchAndCacheIfOk(event, stale) {
   try {
     const response = await fetch(event.request);
 
-    if (response.ok && event.request.method === 'GET') {
+    if (response.ok) {
       const responseClone = response.clone();
       const cache = await caches.open(cacheName);
       await cache.put(event.request, responseClone);
@@ -30,7 +30,11 @@ async function fetchWithCache(event) {
 }
 
 function handleFetch(event) {
-  if (event.request.headers.get('cache-control') !== 'no-cache') {
+  if (
+    event.request.headers.get('cache-control') !== 'no-cache' &&
+    event.request.method === 'GET' &&
+    event.request.url.startsWith(self.location.origin)
+  ) {
     event.respondWith(fetchWithCache(event));
   }
 }

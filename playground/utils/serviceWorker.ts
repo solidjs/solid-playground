@@ -10,6 +10,13 @@ function registerServiceWorker(): void {
         updated() {
           setEventBus(true);
         },
+        ready(sw) {
+          sw.addEventListener('message', (event) => {
+            if (event.type == 'cache') {
+              setEventBus(true);
+            }
+          });
+        },
       });
     });
   }

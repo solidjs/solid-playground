@@ -1,21 +1,19 @@
-import mime from 'mime';
 import jsx from 'acorn-jsx';
 import { cwd } from 'process';
 import { rollup } from 'rollup';
 import { walk } from 'estree-walker';
 import del from 'rollup-plugin-delete';
-import { readFile } from 'fs/promises';
 import MagicString from 'magic-string';
 import json from '@rollup/plugin-json';
 import css from 'rollup-plugin-import-css';
 import { babel } from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
-import WindiCSS from 'rollup-plugin-windicss';
 import commonjs from '@rollup/plugin-commonjs';
 import { renameSync, ensureDirSync } from 'fs-extra';
 import { basename, join, extname, resolve, dirname } from 'path';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { createReadStream, createWriteStream, readFileSync } from 'fs';
+import Unocss from 'unocss/vite';
 
 const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.d.ts'];
 const copies = Object.create(null);
@@ -145,7 +143,6 @@ rollup({
     },
     nodeResolve({ extensions, exportConditions: ['solid'], preferBuiltins: false }),
     json(),
-    ...WindiCSS(),
     css(),
     commonjs(),
     {
@@ -154,22 +151,16 @@ rollup({
         if (!id.endsWith('?url')) {
           return null;
         }
-        let base64 = false; // ideally, we wouldn't have to do this, but current end user bundlers can't handle non base64
 
         let url = id.slice(0, -4);
-        if (base64) {
-          const mimetype = mime.getType(url);
 
-          return readFile(url).then((x) => `export default "data:${mimetype};base64,${x.toString('base64')}"`);
-        } else {
-          const ext = extname(url);
-          const name = basename(url, ext);
+        const ext = extname(url);
+        const name = basename(url, ext);
 
-          copies[url] = `./${name}${ext}`;
+        copies[url] = `./${name}${ext}`;
 
-          return `import ${name}urlImport from "${copies[url]}?url";
+        return `import ${name}urlImport from "${copies[url]}?url";
 export default ${name}urlImport`;
-        }
       },
       async generateBundle(outputOptions) {
         const base = outputOptions.dir;
@@ -188,6 +179,7 @@ export default ${name}urlImport`;
       'process.env.NODE_DEBUG': 'false',
       'preventAssignment': true,
     }),
+    Unocss(),
     babel({
       extensions: extensions,
       babelHelpers: 'bundled',
