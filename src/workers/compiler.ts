@@ -100,7 +100,9 @@ async function compile(tabs: Tab[], event: string) {
 
   if (event === 'ROLLUP') {
     return { event, compiled: code.replace('render(', 'window.dispose = render(') };
-  } else {
+  } 
+  
+  if (event === 'IMPORTS') {
     return { event, imports };
   }
 }
@@ -122,7 +124,7 @@ self.addEventListener('message', async ({ data }) => {
   try {
     if (event === 'BABEL') {
       self.postMessage(await babel(tab, compileOpts));
-    } else if (event === 'ROLLUP') {
+    } else if (event === 'ROLLUP' || event === 'IMPORTS') {
       self.postMessage(await compile(tabs, event));
     }
   } catch (e) {
