@@ -4,8 +4,6 @@ import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from '../src/hooks/useZoom';
 import { Edit } from './pages/edit';
-import { Home } from './pages/home';
-import { Login } from './pages/login';
 
 export const App = (): JSX.Element => {
   /**
@@ -33,15 +31,8 @@ export const App = (): JSX.Element => {
   return (
     <div class="dark:bg-solid-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
       <Routes>
-        <Route
-          path={['/:user/:repl', '/scratchpad']}
-          element={<Edit horizontal={searchParams.isHorizontal != undefined} />}
-        />
-        <Route path="/:user" element={<Home />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route path={['/:user/:repl', '/']} element={<Edit horizontal={searchParams.isHorizontal != undefined} />} />
       </Routes>
-
       <Show when={eventBus()} children={<Update onDismiss={() => setEventBus(false)} />} />
     </div>
   );
