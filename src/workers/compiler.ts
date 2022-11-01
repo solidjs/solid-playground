@@ -100,8 +100,8 @@ async function compile(tabs: Tab[], event: string) {
 
   if (event === 'ROLLUP') {
     return { event, compiled: code.replace('render(', 'window.dispose = render(') };
-  } 
-  
+  }
+
   if (event === 'IMPORTS') {
     return { event, imports };
   }
