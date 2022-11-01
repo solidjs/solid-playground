@@ -6,7 +6,7 @@ import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
-import { API, useAppContext } from '../context';
+import { useAppContext } from '../context';
 
 import logo from '../assets/logo.svg?url';
 
@@ -18,9 +18,7 @@ export const Header: ParentComponent<{
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const [showMenu, setShowMenu] = createSignal(false);
-  const [showProfile, setShowProfile] = createSignal(false);
   let menuBtnEl!: HTMLButtonElement;
-  let profileBtn!: HTMLButtonElement;
 
   function shareLink() {
     props.share().then((url) => {
@@ -149,37 +147,6 @@ export const Header: ParentComponent<{
         </Show>
         <span class="sr-only">Show menu</span>
       </button>
-      <div class="relative h-8 cursor-pointer leading-snug">
-        <Show
-          when={context.user()?.avatar}
-          fallback={
-            <a
-              class="bg-solid-default mx-1 rounded px-3 py-2 text-lg text-slate-50"
-              href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`}
-              rel="external"
-            >
-              Login
-            </a>
-          }
-        >
-          <button ref={profileBtn}>
-            <img crossOrigin="anonymous" src={context.user()?.avatar} class="h-8 w-8 rounded-full" />
-          </button>
-          <Dismiss menuButton={() => profileBtn} open={showProfile} setOpen={setShowProfile}>
-            <div class="dark:bg-solid-darkbg absolute right-0 flex flex-col items-center justify-center bg-white shadow-md">
-              <a class="px-2 py-2 hover:bg-gray-300 dark:hover:bg-gray-800" href="/">
-                {context.user()?.display}
-              </a>
-              <button
-                onClick={() => (context.token = '')}
-                class="w-full px-2 py-2 text-left text-xs hover:bg-gray-300 dark:hover:bg-gray-800"
-              >
-                Sign Out
-              </button>
-            </div>
-          </Dismiss>
-        </Show>
-      </div>
     </header>
   );
 };
