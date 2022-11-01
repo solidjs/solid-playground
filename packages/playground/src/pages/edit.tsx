@@ -7,13 +7,28 @@ import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from 'solid-repl/src';
 import type { Tab } from 'solid-repl';
-import type { APIRepl } from './home';
 import { Header } from '../components/header';
+
+export interface ReplFile {
+  name: string;
+  content: string;
+}
+export interface APIRepl {
+  id: string;
+  title: string;
+  labels: string[];
+  files: ReplFile[];
+  version: string;
+  public: boolean;
+  size: number;
+  created_at: string;
+  updated_at?: string;
+}
 
 const Repl = lazy(() => import('../components/setupSolid'));
 
@@ -40,7 +55,6 @@ interface InternalTab extends Tab {
 }
 export const Edit = () => {
   const [searchParams] = useSearchParams();
-  const scratchpad = useMatch(() => '/scratchpad');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
   const linter = new LinterWorker();
@@ -50,8 +64,6 @@ export const Edit = () => {
   const navigate = useNavigate();
 
   let disableFetch: true | undefined;
-
-  let readonly = () => !scratchpad() && context.user()?.display != params.user && !localStorage.getItem(params.repl);
 
   const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
     toMap.map((tab) => {
@@ -82,16 +94,19 @@ export const Edit = () => {
   onCleanup(() => context.setTabs(undefined));
 
   const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
-  const [resource, { mutate }] = createResource<APIRepl, { repl: string; scratchpad: boolean }>(
-    () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
-    async ({ repl, scratchpad }): Promise<APIRepl> => {
+  const [resource, { mutate }] = createResource<APIRepl, { repl: string }>(
+    () => ({ repl: params.repl }),
+    async ({ repl }): Promise<APIRepl> => {
       if (disableFetch) {
         disableFetch = undefined;
         if (resource.latest) return resource.latest;
       }
 
       let output: APIRepl;
-      if (scratchpad) {
+
+      if (repl) {
+        output = await fetch(`${API}/repl/${repl}`).then((r) => r.json());
+      } else {
         const myScratchpad = localStorage.getItem('scratchpad');
         if (!myScratchpad) {
           output = {
@@ -104,10 +119,6 @@ export const Edit = () => {
         } else {
           output = JSON.parse(myScratchpad);
         }
-      } else {
-        output = await fetch(`${API}/repl/${repl}`, {
-          headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-        }).then((r) => r.json());
       }
 
       batch(() => {
@@ -129,109 +140,51 @@ export const Edit = () => {
       setCurrent(defaultTabs[0].name);
     });
   };
+  const updateRepl = debounce(() => {
+    const files = tabs().map((x) => ({ name: x.name, content: x.source }));
 
-  const updateRepl = debounce(
-    () => {
-      const files = tabs().map((x) => ({ name: x.name, content: x.source }));
-
-      if (readonly()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
-        disableFetch = true;
-        navigate('/scratchpad');
-        return;
-      } else if (scratchpad()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
-      }
-
-      const repl = resource.latest;
-      if (!repl) return;
-
-      if ((context.token && context.user()?.display == params.user) || localStorage.getItem(params.repl)) {
-        fetch(`${API}/repl/${params.repl}`, {
-          method: 'PUT',
-          headers: {
-            'authorization': context.token ? `Bearer ${context.token}` : '',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...(localStorage.getItem(params.repl) ? { write_token: localStorage.getItem(params.repl) } : {}),
-            title: repl.title,
-            version: repl.version,
-            public: repl.public,
-            labels: repl.labels,
-            files,
-          }),
-        });
-      }
-    },
-    !!scratchpad() ? 10 : 1000,
-  );
-
+    localStorage.setItem('scratchpad', JSON.stringify({ files }));
+  }, 10);
   return (
     <>
       <Header
         compiler={compiler}
         fork={() => {}}
         share={async () => {
-          if (scratchpad()) {
-            const newRepl = {
-              title: context.user()?.display ? `${context.user()!.display}'s Scratchpad` : 'Anonymous Scratchpad',
-              public: true,
-              labels: [],
-              version: '1.0',
-              files: tabs().map((x) => ({ name: x.name, content: x.source })),
-            };
-            const response = await fetch(`${API}/repl`, {
-              method: 'POST',
-              headers: {
-                'authorization': context.token ? `Bearer ${context.token}` : '',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(newRepl),
-            });
-            if (response.status >= 400) {
-              throw new Error(response.statusText);
-            }
-            const { id, write_token } = await response.json();
-            if (write_token) {
-              localStorage.setItem(id, write_token);
-              const repls = localStorage.getItem('repls');
-              if (repls) {
-                localStorage.setItem('repls', JSON.stringify([...JSON.parse(repls), id]));
-              } else {
-                localStorage.setItem('repls', JSON.stringify([id]));
-              }
-            }
-            mutate(() => ({
-              id,
-              title: newRepl.title,
-              labels: newRepl.labels,
-              files: newRepl.files,
-              version: newRepl.version,
-              public: newRepl.public,
-              size: 0,
-              created_at: '',
-            }));
-            const url = `/${context.user()?.display || 'anonymous'}/${id}`;
-            disableFetch = true;
-            navigate(url);
-            return `${window.location.origin}${url}`;
-          } else {
-            return location.href;
+          const newRepl = {
+            title: 'Anonymous Scratchpad',
+            public: true,
+            labels: [],
+            version: '1.0',
+            files: tabs().map((x) => ({ name: x.name, content: x.source })),
+          };
+          const response = await fetch(`${API}/repl`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newRepl),
+          });
+          if (response.status >= 400) {
+            throw new Error(response.statusText);
           }
+          const { id } = await response.json();
+          mutate(() => ({
+            id,
+            title: newRepl.title,
+            labels: newRepl.labels,
+            files: newRepl.files,
+            version: newRepl.version,
+            public: newRepl.public,
+            size: 0,
+            created_at: '',
+          }));
+          const url = `/anonymous/${id}`;
+          disableFetch = true;
+          navigate(url);
+          return `${window.location.origin}${url}`;
         }}
-      >
-        {resource()?.title && (
-          <input
-            class="w-96 shrink rounded border border-solid border-transparent bg-transparent px-3 py-1.5 transition focus:border-blue-600 focus:outline-none"
-            value={resource()?.title}
-            onChange={(e) => {
-              mutate((x) => x && { ...x, title: e.currentTarget.value });
-              updateRepl();
-            }}
-          />
-        )}
-      </Header>
+      />
       <Suspense
         fallback={
           <svg
