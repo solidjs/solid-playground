@@ -1,5 +1,5 @@
 import { Show, JSX, Suspense } from 'solid-js';
-import { Router, Route } from '@solidjs/router';
+import { Router, Route, Navigate } from '@solidjs/router';
 import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from 'solid-repl/src/hooks/useZoom';
@@ -27,6 +27,8 @@ export const App = (): JSX.Element => {
     }
   });
 
+  const searchParams = new URLSearchParams(window.location.search);
+
   return (
     <div class="dark:bg-solid-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
       <Router
@@ -40,6 +42,9 @@ export const App = (): JSX.Element => {
       </Router>
 
       <Show when={eventBus()} children={<Update onDismiss={() => setEventBus(false)} />} />
+      <Show when={searchParams.has("hash")}>
+        <Navigate href={`/anonymous/${searchParams.get("hash")}`} />
+      </Show>
     </div>
   );
 };
