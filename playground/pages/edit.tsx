@@ -101,7 +101,9 @@ export const Edit = (props: { horizontal: boolean }) => {
       let output: APIRepl;
 
       if (repl) {
-        output = await fetch(`${API}/repl/${repl}`).then((r) => r.json());
+        const data = await fetch(`${API}/repl/${repl}`);
+        output = await data.json();
+        navigate(`/anonymous/${output.id}`);
       } else {
         const myScratchpad = localStorage.getItem('scratchpad');
         if (!myScratchpad) {
