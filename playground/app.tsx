@@ -1,5 +1,5 @@
 import { Show, JSX } from 'solid-js';
-import { Routes, Route, useSearchParams } from '@solidjs/router';
+import { Routes, Route, useSearchParams, Navigate } from '@solidjs/router';
 import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from '../src/hooks/useZoom';
@@ -34,6 +34,9 @@ export const App = (): JSX.Element => {
         <Route path={['/:user/:repl', '/']} element={<Edit horizontal={searchParams.isHorizontal != undefined} />} />
       </Routes>
       <Show when={eventBus()} children={<Update onDismiss={() => setEventBus(false)} />} />
+      <Show when={searchParams.hash}>
+        <Navigate href={`/anonymous/${searchParams.hash}`} />
+      </Show>
     </div>
   );
 };
