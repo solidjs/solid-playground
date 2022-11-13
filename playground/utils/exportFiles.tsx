@@ -51,7 +51,7 @@ const indexHTML = (tabs: Tab[]) => dedent`
   <body>
     <div id="app"></div>
 
-    <script type="module" src="./src/${tabs[0].name}.tsx"></script>
+    <script type="module" src="./src/${tabs[0].name}"></script>
   </body>
 </html>
 `;
