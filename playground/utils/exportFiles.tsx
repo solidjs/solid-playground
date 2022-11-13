@@ -150,8 +150,10 @@ export async function exportToZip(tabs: Tab[], imports: string[]): Promise<void>
   zip.file('package.json', await packageJSON(imports));
   zip.file('vite.config.ts', viteConfigFile);
   zip.file('tsconfig.json', tsConfig);
+  zip.folder("src");
+
   for (const tab of tabs) {
-    zip.file(tab.name, tab.source);
+    zip.file(`src/${tab.name}`, tab.source);
   }
 
   const blob = await zip.generateAsync({ type: 'blob' });
