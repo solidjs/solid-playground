@@ -165,7 +165,22 @@ const Repl: ReplProps = (props) => {
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
+  const [solidDevtoolsOpen, setSolidDevtoolsOpen] = createSignal(false);
   const [displayErrors, setDisplayErrors] = createSignal(true);
+
+  // TODO We need to reload the iframe when solid devtools are toggled
+  // only allow for one devtools open at a time
+  function toggleDevtools(type: 'browser' | 'solid') {
+    batch(() => {
+      if (type === 'browser') {
+        setDevtoolsOpen((v) => !v);
+        setSolidDevtoolsOpen(false);
+      } else {
+        setSolidDevtoolsOpen((v) => !v);
+        setDevtoolsOpen(false);
+      }
+    });
+  }
 
   return (
     <div
@@ -294,7 +309,7 @@ const Repl: ReplProps = (props) => {
               type="button"
               title="Open the devtools"
               class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
-              onClick={() => setDevtoolsOpen(!devtoolsOpen())}
+              onClick={() => toggleDevtools('browser')}
               disabled={outputTab() != 0}
             >
               <span class="sr-only">Open the devtools</span>
@@ -318,6 +333,17 @@ const Repl: ReplProps = (props) => {
               Output
             </button>
           </TabItem>
+          <TabItem class="flex-1" active={solidDevtoolsOpen()}>
+            <button
+              type="button"
+              title="Open solid devtools"
+              class="-mb-0.5 w-full py-2"
+              onClick={() => toggleDevtools('solid')}
+              disabled={outputTab() != 0}
+            >
+              Solid
+            </button>
+          </TabItem>
         </TabList>
 
         <Switch>
@@ -325,6 +351,7 @@ const Repl: ReplProps = (props) => {
             <Preview
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
+              solidDevtools={solidDevtoolsOpen()}
               isDark={props.dark}
               code={compiled()}
               classList={{
