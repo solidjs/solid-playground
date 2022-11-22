@@ -10,10 +10,12 @@ export const Preview: Component<Props> = (props) => {
   const [isIframeReady, setIframeReady] = createSignal(false);
 
   if (!isServer) {
-    const selectedPanel = localStorage.getItem('panel-selectedTab');
-    if (!selectedPanel) {
-      localStorage.setItem('panel-selectedTab', '"console"');
-    }
+    try {
+      const selectedPanel = localStorage.getItem('panel-selectedTab');
+      if (!selectedPanel) {
+        localStorage.setItem('panel-selectedTab', '"console"');
+      }
+    } catch (err) {}
   }
 
   createEffect(() => {
