@@ -193,7 +193,7 @@ export const Preview: Component<{
         </script>
         <script type="module">
           import { enableRootsAutoattach, useDebugger, createInternalRoot, unobserveAllRoots } from "https://esm.sh/@solid-devtools/debugger?dev" 
-          import { DevtoolsOverlay } from "https://esm.sh/@solid-devtools/overlay?dev"
+          import { attachDevtoolsOverlay } from "https://esm.sh/@solid-devtools/overlay?dev"
           // ? how to sync it with the version used on the playground?
           import { createSignal, createEffect } from "https://esm.sh/solid-js?dev"
 
@@ -219,7 +219,7 @@ export const Preview: Component<{
           createInternalRoot(() => {
             createEffect(() => {
               if (enabled()) {
-                DevtoolsOverlay({ alwaysOpen: true, noPadding: true })
+                attachDevtoolsOverlay({ alwaysOpen: true, noPadding: true })
                 setTimeout(debug.triggerUpdate, 1000)
               } else {
                 unobserveAllRoots()

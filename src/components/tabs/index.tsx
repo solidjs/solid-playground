@@ -20,5 +20,5 @@ export const TabItem: ParentComponent<{
 };
 
 export const TabList: ParentComponent = (props) => {
-  return <ul class="tabs m-0 flex list-none flex-wrap items-center">{props.children}</ul>;
+  return <ul class="tabs m-0 flex list-none flex-wrap items-stretch">{props.children}</ul>;
 };
