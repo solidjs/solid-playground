@@ -1,4 +1,5 @@
 import { Component, createEffect, createSignal, onCleanup } from 'solid-js';
+import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 
 export const Preview: Component<Props> = (props) => {
@@ -7,6 +8,15 @@ export const Preview: Component<Props> = (props) => {
   let iframe!: HTMLIFrameElement;
 
   const [isIframeReady, setIframeReady] = createSignal(false);
+
+  if (!isServer) {
+    try {
+      const selectedPanel = localStorage.getItem('panel-selectedTab');
+      if (!selectedPanel) {
+        localStorage.setItem('panel-selectedTab', '"console"');
+      }
+    } catch (err) {}
+  }
 
   createEffect(() => {
     if (!props.code) return;
