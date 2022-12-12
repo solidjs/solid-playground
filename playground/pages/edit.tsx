@@ -137,11 +137,19 @@ export const Edit = (props: { horizontal: boolean }) => {
 
     localStorage.setItem('scratchpad', JSON.stringify({ files }));
   }, 10);
+
   return (
     <>
       <Header
         compiler={compiler}
         fork={() => {}}
+        reset={() => {
+          batch(() => {
+            setTabs(defaultTabs);
+            setCurrent(defaultTabs[0].name);
+          });
+          updateRepl();
+        }}
         share={async () => {
           const newRepl = {
             title: 'Anonymous Scratchpad',

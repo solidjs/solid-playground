@@ -13,6 +13,7 @@ import logo from '../assets/logo.svg?url';
 export const Header: ParentComponent<{
   compiler?: Worker;
   fork?: () => void;
+  reset?: () => void;
   share: () => Promise<string>;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
@@ -82,6 +83,19 @@ export const Header: ParentComponent<{
         </button>
 
         <Show when={context.tabs()}>
+          <button
+            type="button"
+            onClick={props.reset}
+            class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
+            classList={{
+              'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+            }}
+            title="Reset"
+          >
+            <Icon path={xCircle} class="h-6" />
+            <span class="text-xs md:sr-only">Reset</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {
