@@ -1,8 +1,18 @@
 import { Component, createEffect, createSignal, onCleanup } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
+import { isChromium } from '@solid-primitives/platform';
 
-export const Preview: Component<Props> = (props) => {
+export const Preview: Component<{
+  classList?: {
+    [k: string]: boolean | undefined;
+  };
+  code: string;
+  reloadSignal: boolean;
+  devtools: boolean;
+  solidDevtools: boolean;
+  isDark: boolean;
+}> = (props) => {
   const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
@@ -34,21 +44,22 @@ export const Preview: Component<Props> = (props) => {
   createEffect(() => {
     if (!isIframeReady()) return;
 
-    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
+    createEffect(() => {
+      iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
+    });
+
+    createEffect(() => {
+      iframe.contentWindow!.postMessage({ event: 'SOLID_DEVTOOLS', value: props.solidDevtools }, '*');
+    });
+
+    createEffect(() => {
+      iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
+      iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
+    });
   });
 
-  createEffect(() => {
-    if (!isIframeReady()) return;
-
-    iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
-    iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
-  });
-
-  const ua = navigator.userAgent.toLowerCase();
-  const isChrome = /(?!chrom.*opr)chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/.test(ua);
-
-  const devtools = isChrome
-    ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
+  const devtools = isChromium
+    ? /* html */ `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
       <script>
         let bodyHeight;
         window.addEventListener('message', async ({ data }) => {
@@ -73,7 +84,7 @@ export const Preview: Component<Props> = (props) => {
           }
         });
       </script>`
-    : `<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    : /* html */ `<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
       <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
       <script type="module">
         eruda.init({
@@ -106,7 +117,7 @@ export const Preview: Component<Props> = (props) => {
         });
       </script>`;
 
-  const html = `
+  const html = /* html */ `
     <!doctype html>
     <html${props.isDark ? ' class="dark"' : ''}>
       <head>
@@ -190,6 +201,42 @@ export const Preview: Component<Props> = (props) => {
             if (load) load.remove();
           })
         </script>
+        <script type="module">
+          import { enableRootsAutoattach, useDebugger, createInternalRoot, unobserveAllRoots } from "https://esm.sh/@solid-devtools/debugger?dev" 
+          import { attachDevtoolsOverlay } from "https://esm.sh/@solid-devtools/overlay?dev"
+          // ? how to sync it with the version used on the playground?
+          import { createSignal, createEffect } from "https://esm.sh/solid-js?dev"
+
+          // ? how to only enable it when the devtools are open? (refresh the page on toggle)
+          enableRootsAutoattach()
+          
+          const debug = useDebugger()
+          const [enabled, setEnabled] = createSignal(false)
+          debug.setUserEnabledSignal(enabled)
+          
+          window.addEventListener('message', async ({ data }) => {
+            // for some reason this is neccessary — on the first run the debugger doesn't reach computations
+            if (data.event === 'CODE_UPDATE') {
+              unobserveAllRoots()
+              return enabled() && setTimeout(debug.triggerUpdate, 1000)
+            }
+
+            if (data.event === 'SOLID_DEVTOOLS') {
+              return setEnabled(data.value)
+            }
+          })
+
+          createInternalRoot(() => {
+            createEffect(() => {
+              if (enabled()) {
+                attachDevtoolsOverlay({ alwaysOpen: true, noPadding: true })
+                setTimeout(debug.triggerUpdate, 1000)
+              } else {
+                unobserveAllRoots()
+              }
+            })
+          })
+        </script>
       </head>
       
       <body>
@@ -200,6 +247,7 @@ export const Preview: Component<Props> = (props) => {
         <script id="appsrc" type="module"></script>
       </body>
     </html>`;
+
   const blob = new Blob([html], {
     type: 'text/html',
   });
@@ -238,14 +286,4 @@ export const Preview: Component<Props> = (props) => {
       ></iframe>
     </div>
   );
-};
-
-type Props = {
-  classList?: {
-    [k: string]: boolean | undefined;
-  };
-  code: string;
-  reloadSignal: boolean;
-  devtools: boolean;
-  isDark: boolean;
 };

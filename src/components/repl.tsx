@@ -9,6 +9,7 @@ import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
 import { createMediaQuery } from '@solid-primitives/media';
 import { editor, Uri } from 'monaco-editor';
+import { SolidMonoIcon } from './solidMonoIcon';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
@@ -165,7 +166,22 @@ const Repl: ReplProps = (props) => {
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
+  const [solidDevtoolsOpen, setSolidDevtoolsOpen] = createSignal(false);
   const [displayErrors, setDisplayErrors] = createSignal(true);
+
+  // TODO We need to reload the iframe when solid devtools are toggled
+  // only allow for one devtools open at a time
+  function toggleDevtools(type: 'browser' | 'solid') {
+    batch(() => {
+      if (type === 'browser') {
+        setDevtoolsOpen((v) => !v);
+        setSolidDevtoolsOpen(false);
+      } else {
+        setSolidDevtoolsOpen((v) => !v);
+        setDevtoolsOpen(false);
+      }
+    });
+  }
 
   return (
     <div
@@ -281,7 +297,7 @@ const Repl: ReplProps = (props) => {
             <button
               type="button"
               title="Refresh the page"
-              class="py-2 px-3 active:animate-spin disabled:cursor-not-allowed disabled:opacity-25"
+              class="px-3 active:animate-spin disabled:cursor-not-allowed disabled:opacity-25"
               onClick={[reload, true]}
               disabled={outputTab() != 0}
             >
@@ -289,16 +305,28 @@ const Repl: ReplProps = (props) => {
               <Icon path={arrowPath} class="h-5" />
             </button>
           </TabItem>
-          <TabItem>
+          <TabItem active={outputTab() == 0 && devtoolsOpen()}>
             <button
               type="button"
               title="Open the devtools"
-              class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
-              onClick={() => setDevtoolsOpen(!devtoolsOpen())}
+              class="px-3 disabled:cursor-not-allowed disabled:opacity-25"
+              onClick={() => toggleDevtools('browser')}
               disabled={outputTab() != 0}
             >
               <span class="sr-only">Open the devtools</span>
               <Icon path={commandLine} class="h-5" />
+            </button>
+          </TabItem>
+          <TabItem active={outputTab() == 0 && solidDevtoolsOpen()}>
+            <button
+              type="button"
+              title="Open solid devtools"
+              class="px-3 disabled:cursor-not-allowed disabled:opacity-25"
+              onClick={() => toggleDevtools('solid')}
+              disabled={outputTab() != 0}
+            >
+              <span class="sr-only">Open Solid Devtools</span>
+              <SolidMonoIcon class="h-5" />
             </button>
           </TabItem>
           <TabItem class="flex-1" active={outputTab() == 0}>
@@ -325,6 +353,7 @@ const Repl: ReplProps = (props) => {
             <Preview
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
+              solidDevtools={solidDevtoolsOpen()}
               isDark={props.dark}
               code={compiled()}
               classList={{
