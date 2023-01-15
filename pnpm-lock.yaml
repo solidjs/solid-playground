@@ -30,7 +30,7 @@ specifiers:
   assert: ^2.0.0
   babel-preset-solid: 1.5.7
   dedent: ^0.7.0
-  eslint-solid-standalone: ^0.1.5
+  eslint-solid-standalone: ^0.9.3
   fs-extra: ^10.1.0
   jiti: ^1.16.0
   jszip: ^3.10.1
@@ -63,7 +63,7 @@ dependencies:
   '@unocss/reset': 0.45.29
   babel-preset-solid: 1.5.7_@babel+core@7.19.3
   dedent: 0.7.0
-  eslint-solid-standalone: 0.1.5_typescript@4.8.4
+  eslint-solid-standalone: 0.9.3_typescript@4.8.4
   jszip: 3.10.1
   monaco-editor-textmate: 4.0.0_ss6lrp45w75rkjvqfs3bsfnncy
   monaco-textmate: 3.0.1_onigasm@2.2.5
@@ -656,8 +656,8 @@ packages:
     resolution: {integrity: sha512-EGlKlgMhnLt/cM4DbUSafFdrkeJoC9Mvnj0PUCU7tFmTjMjNRT957kXCx0wYm3JuEq4o4ZsS5vG+NlkM2DMd2A==}
     dev: true
 
-  /@types/eslint/8.4.6:
-    resolution: {integrity: sha512-/fqTbjxyFUaYNO7VcW5g+4npmqVACz1bB7RTHYuLj+PRjw9hrCwrUXVQFpChUS0JsyEFvMZ7U/PfmvWgxJhI9g==}
+  /@types/eslint/8.4.10:
+    resolution: {integrity: sha512-Sl/HOqN8NKPmhWo2VBEPm0nvHnu2LL3v9vKo8MEq0EtbJ4eVzGPl41VNPvn5E1i5poMk4/XD8UriLHpJvEP/Nw==}
     dependencies:
       '@types/estree': 1.0.0
       '@types/json-schema': 7.0.11
@@ -1384,12 +1384,12 @@ packages:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
 
-  /eslint-solid-standalone/0.1.5_typescript@4.8.4:
-    resolution: {integrity: sha512-fa/xkbVgeqhhJKCsl6oe3321/+YytjX5Kal8RBR++iXkKn5m4FEXzf+Ed4XtIT36zHLCAm4lhIEVderbspLgtw==}
+  /eslint-solid-standalone/0.9.3_typescript@4.8.4:
+    resolution: {integrity: sha512-VzzakDhrJrqt1dFi+JLVUqs8UIKUOeY14EBP75PiYmTZ2caagGMCnKkMDNLzKD5h3GI8PA7UquUdMQCGzEAeeQ==}
     peerDependencies:
       typescript: ^4.0.0
     dependencies:
-      '@types/eslint': 8.4.6
+      '@types/eslint': 8.4.10
       typescript: 4.8.4
     dev: false
 
