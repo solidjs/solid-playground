@@ -11,7 +11,7 @@ There are 3 modes available:
 
 - DOM: The classic SPA generation mechanism
 - SSR: The server side generation mechanism
-- HYDRATATION: The client side generation for hydratation
+- HYDRATION: The client side generation for hydration
 
 ## Getting up and running
 
@@ -43,5 +43,5 @@ $ pnpm run build
 - [Windi CSS](https://windicss.org/): The CSS framework
 - [vite](https://vitejs.dev/): The module bundler
 - [workbox](https://developers.google.com/web/tools/workbox): The service worker generator
-- [pnpm](https://pnpm.js.org/)
-- [lz-string](https://github.com/pieroxy/lz-string): The string compression algorith used to share REPL
+- [pnpm](https://pnpm.js.org/): The package manager
+- [lz-string](https://github.com/pieroxy/lz-string): The string compression algorithm used to share REPL
