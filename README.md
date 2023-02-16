@@ -26,7 +26,7 @@ $ git clone https://github.com/solidjs/solid-playground
 # cd into the project and install the dependencies
 $ cd solid-playground && pnpm i
 
-# Start the dev server, the address is available at http://localhost:3000
+# Start the dev server, the address is available at http://localhost:5173
 $ pnpm run dev
 
 # Build the project
