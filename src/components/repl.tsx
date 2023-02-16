@@ -14,6 +14,7 @@ import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import indexTSX from '../defaultFiles/index.tsx?raw';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
+import { trash } from 'solid-heroicons/solid';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -248,8 +249,9 @@ const Repl: ReplProps = (props) => {
             </button>
           </li>
           <TabItem class="ml-auto justify-self-end">
-            <button class="cursor-pointer space-x-2 px-3 py-2" onclick={resetTabs}>
-              <span>Reset Editor</span>
+            <button class="cursor-pointer space-x-2 px-2 py-2 active:animate-ping" onclick={resetTabs}>
+              <Icon path={trash} class="h-5" />
+              <span class="sr-only">Reset Editor</span>
             </button>
           </TabItem>
           <TabItem class="justify-self-end">
