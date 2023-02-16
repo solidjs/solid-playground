@@ -12,7 +12,7 @@ import { editor, Uri } from 'monaco-editor';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
-
+import indexTSX from '../defaultFiles/index.tsx?raw';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
 
 const compileMode = {
@@ -72,7 +72,14 @@ const Repl: ReplProps = (props) => {
       props.setCurrent(newTab.name);
     });
   }
-
+  function resetTabs() {
+    const confirmReset = confirm('Are you sure you want to reset the editor?');
+    if (!confirmReset) return;
+    batch(() => {
+      props.setTabs([{ name: 'main.tsx', source: indexTSX }]);
+      props.setCurrent('main.tsx');
+    });
+  }
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
 
@@ -241,6 +248,11 @@ const Repl: ReplProps = (props) => {
             </button>
           </li>
           <TabItem class="ml-auto justify-self-end">
+            <button class="cursor-pointer space-x-2 px-3 py-2" onclick={resetTabs}>
+              <span>Reset Editor</span>
+            </button>
+          </TabItem>
+          <TabItem class="justify-self-end">
             <label class="cursor-pointer space-x-2 px-3 py-2">
               <input
                 type="checkbox"
