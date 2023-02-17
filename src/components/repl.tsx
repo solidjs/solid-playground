@@ -1,6 +1,7 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { arrowPath, commandLine } from 'solid-heroicons/outline';
+import { trash } from 'solid-heroicons/solid';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -14,7 +15,6 @@ import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import indexTSX from '../defaultFiles/index.tsx?raw';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
-import { trash } from 'solid-heroicons/solid';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -306,12 +306,12 @@ const Repl: ReplProps = (props) => {
           <TabItem>
             <button
               type="button"
-              title="Open the devtools"
+              title={`${devtoolsOpen() ? 'Close' : 'Open'} the devtools`}
               class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
               onClick={() => setDevtoolsOpen(!devtoolsOpen())}
               disabled={outputTab() != 0}
             >
-              <span class="sr-only">Open the devtools</span>
+              <span class="sr-only">{devtoolsOpen() ? 'Close' : 'Open'} the devtools</span>
               <Icon path={commandLine} class="h-5" />
             </button>
           </TabItem>
