@@ -295,7 +295,7 @@ const Repl: ReplProps = (props) => {
             <button
               type="button"
               title="Refresh the page"
-              class="py-2 px-3 active:animate-spin disabled:cursor-not-allowed disabled:opacity-25"
+              class="py-2 px-3 active:animate-spin disabled:animate-none disabled:cursor-not-allowed disabled:opacity-25"
               onClick={[reload, true]}
               disabled={outputTab() != 0}
             >
