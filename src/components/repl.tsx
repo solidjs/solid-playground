@@ -261,7 +261,7 @@ const Repl: ReplProps = (props) => {
                 checked={displayErrors()}
                 onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
               />
-              <span>Display Errors</span>
+              <span class="select-none">Display Errors</span>
             </label>
           </TabItem>
         </TabList>
