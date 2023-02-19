@@ -1,7 +1,6 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { arrowPath, commandLine } from 'solid-heroicons/outline';
-import { trash } from 'solid-heroicons/solid';
+import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -249,7 +248,7 @@ const Repl: ReplProps = (props) => {
             </button>
           </li>
           <TabItem class="ml-auto justify-self-end">
-            <button class="cursor-pointer space-x-2 px-2 py-2 active:animate-ping" onclick={resetTabs}>
+            <button class="cursor-pointer space-x-2 px-2 py-2" onclick={resetTabs}>
               <Icon path={trash} class="h-5" />
               <span class="sr-only">Reset Editor</span>
             </button>
