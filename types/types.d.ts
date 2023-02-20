@@ -13,7 +13,6 @@ declare module 'solid-repl/lib/repl' {
     formatter: Worker;
     linter: Worker;
     isHorizontal: boolean;
-    outputTab: number;
     dark: boolean;
     tabs: Tab[];
     id: string;

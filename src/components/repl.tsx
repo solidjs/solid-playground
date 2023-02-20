@@ -81,7 +81,7 @@ const Repl: ReplProps = (props) => {
     });
   }
   const [edit, setEdit] = createSignal(-1);
-  const [outputTab, setOutputTab] = createSignal(props.outputTab);
+  const [outputTab, setOutputTab] = createSignal(0);
 
   let model: editor.ITextModel;
   createEffect(() => {
