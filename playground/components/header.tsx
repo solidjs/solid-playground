@@ -3,7 +3,17 @@ import { A } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
-import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
+import {
+  share,
+  link,
+  arrowDownTray,
+  xCircle,
+  bars_3,
+  moon,
+  sun,
+  archiveBox,
+  archiveBoxXMark,
+} from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
@@ -82,7 +92,22 @@ export const Header: ParentComponent<{
           </Show>
           <span class="text-xs md:sr-only">{context.dark() ? 'Light' : 'Dark'} mode</span>
         </button>
-
+        <button
+          type="button"
+          onClick={() => {
+            context.updateStoreOutputTab(!context.storeOutputTab());
+          }}
+          class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
+          classList={{
+            'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+          }}
+          title={`${context.storeOutputTab() ? 'Store' : "Don't store"} output tab`}
+        >
+          <Show when={context.storeOutputTab()} fallback={<Icon path={archiveBoxXMark} class="h-6" />}>
+            <Icon path={archiveBox} class="h-6" />
+          </Show>
+          <span class="text-xs md:sr-only">{context.storeOutputTab() ? 'Storing' : 'Not storing'} output tab</span>
+        </button>
         <Show when={context.tabs()}>
           <button
             type="button"

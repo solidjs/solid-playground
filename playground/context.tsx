@@ -1,5 +1,6 @@
 import { Accessor, createContext, createResource, createSignal, ParentComponent, Resource, useContext } from 'solid-js';
 import type { Tab } from 'solid-repl';
+import { getDefaultOutput, setDefaultOutput, getStoreOutputTab, setStoreOutputTabLocal } from './utils/defaultTab';
 import { isDarkTheme } from './utils/isDarkTheme';
 
 interface AppContextType {
@@ -9,6 +10,10 @@ interface AppContextType {
   setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
   dark: Accessor<boolean>;
   toggleDark: () => void;
+  outputTab: Accessor<number>;
+  updateOutputTab: (x: number) => void;
+  storeOutputTab: Accessor<boolean>;
+  updateStoreOutputTab: (x: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType>();
@@ -41,6 +46,8 @@ export const AppContextProvider: ParentComponent = (props) => {
   document.body.classList.toggle('dark', dark());
 
   let [tabsGetter, setTabs] = createSignal<Accessor<Tab[] | undefined>>();
+  const [outputTab, setOutputTab] = createSignal(getDefaultOutput());
+  const [storeOutputTab, setStoreOutputTab] = createSignal(getStoreOutputTab());
   return (
     <AppContext.Provider
       value={{
@@ -66,6 +73,17 @@ export const AppContextProvider: ParentComponent = (props) => {
           document.body.classList.toggle('dark', x);
           setDark(x);
           localStorage.setItem('dark', String(x));
+        },
+        outputTab,
+        updateOutputTab(x: number) {
+          setOutputTab(x);
+          setDefaultOutput(x);
+        },
+        storeOutputTab,
+        updateStoreOutputTab(x: boolean) {
+          setStoreOutputTab(x);
+          setStoreOutputTabLocal(x);
+          return;
         },
       }}
     >

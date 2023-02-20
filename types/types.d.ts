@@ -26,6 +26,8 @@ declare module 'solid-repl/lib/repl' {
         editor: typeof import('monaco-editor').editor;
       },
     ) => void;
+    outputTab: number;
+    updateOutputTab: (x) => void;
   }>;
   const Repl: Repl;
   export default Repl;

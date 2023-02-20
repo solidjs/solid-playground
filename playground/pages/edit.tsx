@@ -75,6 +75,7 @@ export const Edit = (props: { horizontal: boolean }) => {
   const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
   const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
   context.setTabs(tabs);
+
   onCleanup(() => context.setTabs(undefined));
 
   const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
@@ -249,6 +250,8 @@ export const Edit = (props: { horizontal: boolean }) => {
             setTabs={setTabs}
             current={current()}
             setCurrent={setCurrent}
+            outputTab={context.outputTab()}
+            updateOutputTab={context.updateOutputTab}
             id={'repl'}
           />
         </Show>
