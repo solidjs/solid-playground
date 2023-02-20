@@ -35,7 +35,7 @@ interface InternalTab extends Tab {
   _source: string;
   _name: string;
 }
-export const Edit = (props: { horizontal: boolean }) => {
+export const Edit = (props: { horizontal: boolean; outputTab: number }) => {
   const scratchpad = useMatch(() => '/scratchpad');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
@@ -244,6 +244,7 @@ export const Edit = (props: { horizontal: boolean }) => {
             formatter={formatter}
             linter={linter}
             isHorizontal={props.horizontal}
+            outputTab={props.outputTab}
             dark={context.dark()}
             tabs={tabs()}
             setTabs={setTabs}
