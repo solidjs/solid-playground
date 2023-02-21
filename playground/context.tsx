@@ -46,8 +46,9 @@ export const AppContextProvider: ParentComponent = (props) => {
   document.body.classList.toggle('dark', dark());
 
   let [tabsGetter, setTabs] = createSignal<Accessor<Tab[] | undefined>>();
-  const [outputTab, setOutputTab] = createSignal(getDefaultOutput());
+  const isStoringOutputTab = getStoreOutputTab();
   const [storeOutputTab, setStoreOutputTab] = createSignal(getStoreOutputTab());
+  const [outputTab, setOutputTab] = createSignal(isStoringOutputTab ? getDefaultOutput() : 0);
   return (
     <AppContext.Provider
       value={{

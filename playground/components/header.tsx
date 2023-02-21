@@ -101,7 +101,7 @@ export const Header: ParentComponent<{
           classList={{
             'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
           }}
-          title={`${context.storeOutputTab() ? 'Store' : "Don't store"} output tab`}
+          title={`${context.storeOutputTab() ? 'Storing' : 'Not storing'} output tab`}
         >
           <Show when={context.storeOutputTab()} fallback={<Icon path={archiveBoxXMark} class="h-6" />}>
             <Icon path={archiveBox} class="h-6" />
