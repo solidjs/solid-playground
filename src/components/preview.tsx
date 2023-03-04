@@ -44,10 +44,8 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   });
 
-  const ua = navigator.userAgent.toLowerCase();
-  const isChrome = /(?!chrom.*opr)chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/.test(ua);
-
-  const devtools = isChrome
+  const isChromium = (window as any).chrome !== undefined;
+  const devtools = isChromium
     ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
       <script>
         let bodyHeight;
