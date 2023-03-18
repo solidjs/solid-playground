@@ -25,7 +25,7 @@ const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
 
-  const tabRefs = new Map<string, HTMLSpanElement>();
+  const tabRefs : HTMLDivElement[] = [];
 
   const [error, setError] = createSignal('');
   const [compiled, setCompiled] = createSignal('');
@@ -194,24 +194,29 @@ const Repl: ReplProps = (props) => {
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
-                  ref={(el) => tabRefs.set(tab.name, el)}
+                  ref={(el) => tabRefs[index()] = el}
                   class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
                   contentEditable={edit() == index()}
                   onBlur={(e) => {
                     setEdit(-1);
-                    setCurrentName(e.currentTarget.textContent!);
+                    if (e.currentTarget.textContent) {
+                      setCurrentName(e.currentTarget.textContent);
+                    } else {
+                      e.currentTarget.textContent = tab.name;
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (e.code === 'Space') e.preventDefault();
-                    if (e.code !== 'Enter') return;
-                    setEdit(-1);
-                    setCurrentName(e.currentTarget.textContent!);
+                    if (e.code !== 'Enter' && e.code !== 'Escape') return;
+                    e.currentTarget.blur();
                   }}
                   onClick={() => setCurrentTab(tab.name)}
                   onDblClick={(e) => {
                     e.preventDefault();
                     setEdit(index());
-                    tabRefs.get(tab.name)?.focus();
+                    tabRefs[index()]?.focus();
+                    // Fix for FireFox when editing the same tab twice
+                    window.getSelection()?.setPosition(e.target, 0);
                   }}
                 >
                   {tab.name}
