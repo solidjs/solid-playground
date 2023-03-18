@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, onCleanup } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
-
+import { isGecko, isChromium } from '@solid-primitives/platform';
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
@@ -44,9 +44,9 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   });
 
-  const isChromium = (window as any).chrome !== undefined;
-  const devtools = isChromium
-    ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
+  const devtools =
+    isChromium || isGecko
+      ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
       <script>
         let bodyHeight;
         window.addEventListener('message', async ({ data }) => {
@@ -71,7 +71,7 @@ export const Preview: Component<Props> = (props) => {
           }
         });
       </script>`
-    : `<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+      : `<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
       <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
       <script type="module">
         eruda.init({
