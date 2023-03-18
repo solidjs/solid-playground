@@ -248,7 +248,7 @@ const Repl: ReplProps = (props) => {
             </button>
           </li>
           <TabItem class="ml-auto justify-self-end">
-            <button class="cursor-pointer space-x-2 px-2 py-2" onclick={resetTabs}>
+            <button class="cursor-pointer space-x-2 px-2 py-2" onclick={resetTabs} title="Reset Editor">
               <Icon path={trash} class="h-5" />
               <span class="sr-only">Reset Editor</span>
             </button>
