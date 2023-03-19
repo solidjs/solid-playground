@@ -16,7 +16,7 @@ function uid(str: string) {
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
-
+let importMap: any = {};
 /**
  * This is a custom rollup plugin to handle tabs as a
  * virtual file system and replacing every non-URL import with an
@@ -37,10 +37,11 @@ const replPlugin: Plugin = {
         external: true,
       };
     }
-
+    const cdn_url = CDN_URL(importee);
+    importMap[importee] = cdn_url;
     // NPM module via ESM CDN
     return {
-      id: CDN_URL(importee),
+      id: cdn_url,
       external: true,
     };
   },
@@ -88,7 +89,7 @@ async function compile(tabs: Tab[], event: string) {
   for (const tab of tabs) {
     tabsLookup.set(`./${tab.name.replace(/.(tsx|jsx)$/, '')}`, tab);
   }
-
+  importMap = {};
   const compiler = await rollup({
     input: `./${tabs[0].name.replace(/.(tsx|jsx)$/, '')}`,
     plugins: [replPlugin],
@@ -99,7 +100,7 @@ async function compile(tabs: Tab[], event: string) {
   } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
   if (event === 'ROLLUP') {
-    return { event, compiled: code.replace('render(', 'window.dispose = render(') };
+    return { event, compiled: code.replace('render(', 'window.dispose = render('), importMap };
   }
 
   if (event === 'IMPORTS') {

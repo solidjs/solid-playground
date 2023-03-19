@@ -93,6 +93,10 @@ const Editor: Component<{
       },
     });
 
+    createEffect(() => {
+      const disabled = props.disabled == true ? true : false;
+      editor.updateOptions({ readOnly: disabled });
+    });
     if (props.linter) {
       editor.addAction({
         id: 'eslint.executeAutofix',

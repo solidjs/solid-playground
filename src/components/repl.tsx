@@ -83,23 +83,29 @@ const Repl: ReplProps = (props) => {
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
 
-  let model: editor.ITextModel;
+  let outputModel: editor.ITextModel;
+  let importMapModel: editor.ITextModel;
   createEffect(() => {
-    const uri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
-    model = editor.createModel('', 'typescript', uri);
-    onCleanup(() => model.dispose());
+    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
+    outputModel = editor.createModel('', 'typescript', outputUri);
+    const importMapUri = Uri.parse(`file:///${props.id}/import_map.tsx`);
+    importMapModel = editor.createModel('', 'typescript', importMapUri);
+    onCleanup(() => {
+      outputModel.dispose();
+      importMapModel.dispose();
+    });
   });
 
   compiler.addEventListener('message', ({ data }) => {
-    const { event, compiled, error } = data;
-
+    const { event, compiled, importMap, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
 
     if (event === 'ROLLUP') {
+      importMapModel.setValue(JSON.stringify(importMap, null, 2));
       setCompiled(compiled);
     } else if (event === 'BABEL') {
-      model.setValue(compiled);
+      outputModel.setValue(compiled);
     }
 
     console.log(`Compilation took: ${performance.now() - now}ms`);
@@ -137,6 +143,7 @@ const Repl: ReplProps = (props) => {
    */
   createEffect(() => {
     if (!props.tabs.length) return;
+    if (props.current == 'import_map.tsx') return;
     compile();
   });
 
@@ -173,7 +180,6 @@ const Repl: ReplProps = (props) => {
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
   const [displayErrors, setDisplayErrors] = createSignal(true);
-
   return (
     <div
       ref={grid}
@@ -253,7 +259,17 @@ const Repl: ReplProps = (props) => {
               <span class="sr-only">Reset Editor</span>
             </button>
           </TabItem>
-          <TabItem class="justify-self-end">
+          <TabItem class="select-none justify-self-end" active={props.current === `import_map.tsx`}>
+            <label
+              class="cursor-pointer space-x-2 px-3 py-2"
+              onclick={() => {
+                props.setCurrent(`import_map.tsx`);
+              }}
+            >
+              <span>Import Map</span>
+            </label>
+          </TabItem>
+          <TabItem class="select-none justify-self-end">
             <label class="cursor-pointer space-x-2 px-3 py-2">
               <input
                 type="checkbox"
@@ -272,6 +288,7 @@ const Repl: ReplProps = (props) => {
           <Editor
             url={`file:///${props.id}/${props.current}`}
             onDocChange={() => compile()}
+            disabled={props.current == 'import_map.tsx' ? true : undefined}
             formatter={formatter}
             linter={linter}
             isDark={props.dark}
