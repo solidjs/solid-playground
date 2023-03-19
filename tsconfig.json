@@ -13,7 +13,6 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "importsNotUsedAsValues": "error",
     "skipLibCheck": true,
     "jsxImportSource": "solid-js",
     "types": ["vite/client"]
