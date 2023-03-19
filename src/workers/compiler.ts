@@ -73,14 +73,14 @@ const replPlugin: Plugin = {
 
     // Compile solid code
     else if (filename.startsWith('.')) {
-      let transformed = transform(code, {
+      let { code: transformedCode } = transform(code, {
         presets: [
           [babelPresetSolid, { generate: 'dom', hydratable: false }],
           ['typescript', { onlyRemoveTypeImports: true }],
         ],
         filename: filename + '.tsx',
       });
-      return transformed;
+      if (transformedCode) return { code: transformedCode };
     }
   },
 };

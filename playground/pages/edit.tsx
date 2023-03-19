@@ -80,10 +80,10 @@ export const Edit = (props: { horizontal: boolean }) => {
   const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
   const [resource, { mutate }] = createResource<APIRepl, { repl: string; scratchpad: boolean }>(
     () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
-    async ({ repl, scratchpad }) => {
+    async ({ repl, scratchpad }): Promise<APIRepl> => {
       if (disableFetch) {
         disableFetch = undefined;
-        return resource.latest;
+        if (resource.latest) return resource.latest;
       }
 
       let output: APIRepl;
