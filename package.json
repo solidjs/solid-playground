@@ -56,6 +56,7 @@
     "@babel/standalone": "^7.20.13",
     "@rollup/browser": "^3.11.0",
     "@solid-primitives/media": "^2.0.5",
+    "@solid-primitives/platform": "^0.0.104",
     "@solid-primitives/scheduled": "^1.2.1",
     "@unocss/reset": "^0.49.1",
     "babel-preset-solid": "1.6.9",
