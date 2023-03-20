@@ -102,13 +102,15 @@ const Repl: ReplProps = (props) => {
     else setError('');
 
     if (event === 'ROLLUP') {
-      importMapModel.setValue(JSON.stringify(importMap, null, 2));
+      if (importMapModel.getValue() != JSON.stringify(importMap, null, 2)) {
+        importMapModel.setValue(JSON.stringify(importMap, null, 2));
+      }
       setCompiled(compiled);
     } else if (event === 'BABEL') {
       outputModel.setValue(compiled);
     }
 
-    console.log(`Compilation took: ${performance.now() - now}ms`);
+    console.log(`Compilation took: ${performance.now() - now}ms (${event})`);
   });
 
   /**
@@ -123,6 +125,9 @@ const Repl: ReplProps = (props) => {
   }, 250);
 
   const compile = () => {
+    if (props.current == 'import_map.tsx') {
+      return;
+    }
     applyCompilation(
       outputTab() == 0
         ? {
@@ -264,6 +269,10 @@ const Repl: ReplProps = (props) => {
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => {
                 props.setCurrent(`import_map.tsx`);
+                applyCompilation({
+                  event: 'ROLLUP',
+                  tabs: unwrap(props.tabs),
+                });
               }}
             >
               <span>Import Map</span>
