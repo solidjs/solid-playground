@@ -1,7 +1,105 @@
-import { Component, createEffect, createSignal, onCleanup } from 'solid-js';
+import { Accessor, Component, createEffect, createSignal, onCleanup } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
+const generateHTML = (isDark: boolean, devtools: string, import_map: string) => {
+  const html = `
+  <!doctype html>
+  <html${isDark ? ' class="dark"' : ''}>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+      <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
+
+      <style>
+        html, body {
+          position: relative;
+          width: 100%;
+          height: 100%;
+        }
+
+        body {
+          color: #333;
+          margin: 0;
+          padding: 8px;
+          box-sizing: border-box;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+          max-width: 100%;
+        }
+
+        .dark body {
+          color: #e5e7eb;
+        }
+
+        .dark {
+          color-scheme: dark;
+        }
+
+        input, button, select, textarea {
+          padding: 0.4em;
+          margin: 0 0 0.5em 0;
+          box-sizing: border-box;
+          border: 1px solid #ccc;
+          border-radius: 2px;
+        }
+
+        button {
+          color: #333;
+          background-color: #f4f4f4;
+          outline: none;
+        }
+
+        button:disabled {
+          color: #999;
+        }
+
+        button:not(:disabled):active {
+          background-color: #ddd;
+        }
+
+        button:focus {
+          border-color: #666;
+        }
+      </style>
+      ${import_map}
+      ${devtools}
+      <script type="module">
+        window.addEventListener('message', async ({ data }) => {
+          const { event, value } = data;
+
+          if (event !== 'CODE_UPDATE') return;
+
+          window.dispose?.();
+          window.dispose = undefined;
+
+          document.getElementById('app').innerHTML = "";
+
+          console.clear();
+
+          document.getElementById('appsrc')?.remove();
+          const script = document.createElement('script');
+          script.src = value;
+          script.id = 'appsrc';
+          script.type = 'module';
+          document.body.appendChild(script);
+
+          const load = document.getElementById('load');
+          if (load) load.remove();
+        })
+      </script>
+    </head>
+    
+    <body>
+      <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
+        <p style="font-size: 1.5rem">Loading the playground...</p>
+      </div>
+      <div id="app"></div>
+      <script id="appsrc" type="module"></script>
+    </body>
+  </html>`;
+  return html;
+};
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
@@ -103,107 +201,26 @@ export const Preview: Component<Props> = (props) => {
           }
         });
       </script>`;
-
-  const html = `
-    <!doctype html>
-    <html${props.isDark ? ' class="dark"' : ''}>
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-        <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
-
-        <style>
-          html, body {
-            position: relative;
-            width: 100%;
-            height: 100%;
-          }
-
-          body {
-            color: #333;
-            margin: 0;
-            padding: 8px;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-            max-width: 100%;
-          }
-
-          .dark body {
-            color: #e5e7eb;
-          }
-
-          .dark {
-            color-scheme: dark;
-          }
-
-          input, button, select, textarea {
-            padding: 0.4em;
-            margin: 0 0 0.5em 0;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 2px;
-          }
-
-          button {
-            color: #333;
-            background-color: #f4f4f4;
-            outline: none;
-          }
-
-          button:disabled {
-            color: #999;
-          }
-
-          button:not(:disabled):active {
-            background-color: #ddd;
-          }
-
-          button:focus {
-            border-color: #666;
-          }
-		    </style>
-        ${devtools}
-        <script type="module">
-          window.addEventListener('message', async ({ data }) => {
-            const { event, value } = data;
-
-            if (event !== 'CODE_UPDATE') return;
-
-            window.dispose?.();
-            window.dispose = undefined;
-
-            document.getElementById('app').innerHTML = "";
-
-            console.clear();
-
-            document.getElementById('appsrc')?.remove();
-            const script = document.createElement('script');
-            script.src = value;
-            script.id = 'appsrc';
-            script.type = 'module';
-            document.body.appendChild(script);
-
-            const load = document.getElementById('load');
-            if (load) load.remove();
-          })
-        </script>
-      </head>
-      
-      <body>
-        <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
-          <p style="font-size: 1.5rem">Loading the playground...</p>
-        </div>
-        <div id="app"></div>
-        <script id="appsrc" type="module"></script>
-      </body>
-    </html>`;
+  let import_map = { imports: undefined };
+  import_map['imports'] = props.importMap();
+  const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
+  const html = generateHTML(props.isDark, devtools, import_map_str);
   const blob = new Blob([html], {
     type: 'text/html',
   });
   const src = URL.createObjectURL(blob);
   onCleanup(() => URL.revokeObjectURL(src));
-
+  createEffect(() => {
+    import_map['imports'] = props.importMap();
+    const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
+    const html = generateHTML(props.isDark, devtools, import_map_str);
+    const blob = new Blob([html], {
+      type: 'text/html',
+    });
+    const src = URL.createObjectURL(blob);
+    onCleanup(() => URL.revokeObjectURL(src));
+    iframe.src = src;
+  });
   createEffect(() => {
     // Bail early on first mount or we are already reloading
     if (!props.reloadSignal) return;
@@ -239,6 +256,7 @@ export const Preview: Component<Props> = (props) => {
 };
 
 type Props = {
+  importMap: Accessor<any>;
   classList?: {
     [k: string]: boolean | undefined;
   };

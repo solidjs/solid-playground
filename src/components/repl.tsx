@@ -82,14 +82,29 @@ const Repl: ReplProps = (props) => {
   }
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
-
   let outputModel: editor.ITextModel;
   let importMapModel: editor.ITextModel;
+  const [importMap, setImportMap] = createSignal<any>({});
+  createEffect(() => {
+    console.log(importMap());
+  });
+  function updateImportMap(map: any) {
+    setImportMap(map);
+    importMapModel.setValue(JSON.stringify(map, null, 2));
+  }
+  const userUpdateImportMap = throttle(() => {
+    const value = importMapModel.getValue();
+    setImportMap(JSON.parse(value));
+  });
   createEffect(() => {
     const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
     outputModel = editor.createModel('', 'typescript', outputUri);
     const importMapUri = Uri.parse(`file:///${props.id}/import_map.tsx`);
     importMapModel = editor.createModel('', 'typescript', importMapUri);
+    importMapModel.onDidChangeContent((e) => {
+      if (e.isFlush) return; // This checks if the input is actually from the user, or from a setValue call
+      userUpdateImportMap();
+    });
     onCleanup(() => {
       outputModel.dispose();
       importMapModel.dispose();
@@ -97,14 +112,31 @@ const Repl: ReplProps = (props) => {
   });
 
   compiler.addEventListener('message', ({ data }) => {
-    const { event, compiled, importMap, error } = data;
+    const { event, compiled, import_map, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
 
     if (event === 'ROLLUP') {
-      if (importMapModel.getValue() != JSON.stringify(importMap, null, 2)) {
-        importMapModel.setValue(JSON.stringify(importMap, null, 2));
+      const keys = Object.keys(import_map);
+      let currentMap = importMap();
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (!currentMap.hasOwnProperty(key)) {
+          currentMap[key] = import_map[key];
+        }
       }
+      const currentKeys = Object.keys(currentMap);
+      for (let i = 0; i < currentKeys.length; i++) {
+        const key = currentKeys[i];
+        if (!import_map.hasOwnProperty(key)) {
+          delete currentMap[key];
+        }
+      }
+      // if (JSON.stringify(newMap) != JSON.stringify(importMap())) {
+      //   console.log('Updating');
+      //   updateImportMap(newMap);
+      // }
+      updateImportMap(currentMap);
       setCompiled(compiled);
     } else if (event === 'BABEL') {
       outputModel.setValue(compiled);
@@ -125,9 +157,6 @@ const Repl: ReplProps = (props) => {
   }, 250);
 
   const compile = () => {
-    if (props.current == 'import_map.tsx') {
-      return;
-    }
     applyCompilation(
       outputTab() == 0
         ? {
@@ -148,7 +177,6 @@ const Repl: ReplProps = (props) => {
    */
   createEffect(() => {
     if (!props.tabs.length) return;
-    if (props.current == 'import_map.tsx') return;
     compile();
   });
 
@@ -269,10 +297,10 @@ const Repl: ReplProps = (props) => {
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => {
                 props.setCurrent(`import_map.tsx`);
-                applyCompilation({
-                  event: 'ROLLUP',
-                  tabs: unwrap(props.tabs),
-                });
+                // applyCompilation({
+                //   event: 'ROLLUP',
+                //   tabs: unwrap(props.tabs),
+                // });
               }}
             >
               <span>Import Map</span>
@@ -296,8 +324,12 @@ const Repl: ReplProps = (props) => {
         <Show when={props.current}>
           <Editor
             url={`file:///${props.id}/${props.current}`}
-            onDocChange={() => compile()}
-            disabled={props.current == 'import_map.tsx' ? true : undefined}
+            onDocChange={() => {
+              if (props.current == 'import_map.tsx') {
+                return;
+              }
+              compile();
+            }}
             formatter={formatter}
             linter={linter}
             isDark={props.dark}
@@ -362,6 +394,7 @@ const Repl: ReplProps = (props) => {
         <Switch>
           <Match when={outputTab() == 0}>
             <Preview
+              importMap={importMap}
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
               isDark={props.dark}

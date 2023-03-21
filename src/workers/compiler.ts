@@ -100,7 +100,7 @@ async function compile(tabs: Tab[], event: string) {
   } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
 
   if (event === 'ROLLUP') {
-    return { event, compiled: code.replace('render(', 'window.dispose = render('), importMap };
+    return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
   }
 
   if (event === 'IMPORTS') {
