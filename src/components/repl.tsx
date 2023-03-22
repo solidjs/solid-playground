@@ -84,18 +84,19 @@ const Repl: ReplProps = (props) => {
   const [outputTab, setOutputTab] = createSignal(0);
   let outputModel: editor.ITextModel;
   let importMapModel: editor.ITextModel;
-  const [importMap, setImportMap] = createSignal<any>({});
-  createEffect(() => {
-    console.log(importMap());
-  });
+  const [importMap, setImportMap] = createSignal<any>({}, { equals: false });
   function updateImportMap(map: any) {
+    const currentImportMap = importMap();
+    if (JSON.stringify(currentImportMap) === JSON.stringify(map)) {
+      return;
+    }
     setImportMap(map);
     importMapModel.setValue(JSON.stringify(map, null, 2));
   }
   const userUpdateImportMap = throttle(() => {
     const value = importMapModel.getValue();
     setImportMap(JSON.parse(value));
-  });
+  }, 300);
   createEffect(() => {
     const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
     outputModel = editor.createModel('', 'typescript', outputUri);
@@ -118,7 +119,7 @@ const Repl: ReplProps = (props) => {
 
     if (event === 'ROLLUP') {
       const keys = Object.keys(import_map);
-      let currentMap = importMap();
+      let currentMap = window.structuredClone(importMap());
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         if (!currentMap.hasOwnProperty(key)) {

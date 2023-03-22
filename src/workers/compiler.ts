@@ -41,7 +41,7 @@ const replPlugin: Plugin = {
     importMap[importee] = cdn_url;
     // NPM module via ESM CDN
     return {
-      id: cdn_url,
+      id: importee,
       external: true,
     };
   },

@@ -1,4 +1,4 @@
-import { Accessor, Component, createEffect, createSignal, onCleanup } from 'solid-js';
+import { Accessor, Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
@@ -75,7 +75,7 @@ const generateHTML = (isDark: boolean, devtools: string, import_map: string) => 
 
           document.getElementById('app').innerHTML = "";
 
-          console.clear();
+          // console.clear();
 
           document.getElementById('appsrc')?.remove();
           const script = document.createElement('script');
@@ -202,24 +202,23 @@ export const Preview: Component<Props> = (props) => {
         });
       </script>`;
   let import_map = { imports: undefined };
-  import_map['imports'] = props.importMap();
-  const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
-  const html = generateHTML(props.isDark, devtools, import_map_str);
-  const blob = new Blob([html], {
-    type: 'text/html',
+  let [src, setSrc] = createSignal<string>();
+  createEffect(() => {
+    console.log(src());
   });
-  const src = URL.createObjectURL(blob);
-  onCleanup(() => URL.revokeObjectURL(src));
   createEffect(() => {
     import_map['imports'] = props.importMap();
+    setIframeReady(false);
     const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
     const html = generateHTML(props.isDark, devtools, import_map_str);
     const blob = new Blob([html], {
       type: 'text/html',
     });
-    const src = URL.createObjectURL(blob);
-    onCleanup(() => URL.revokeObjectURL(src));
-    iframe.src = src;
+    setSrc(URL.createObjectURL(blob));
+    onCleanup(() => {
+      URL.revokeObjectURL(src()!);
+      setSrc(undefined);
+    });
   });
   createEffect(() => {
     // Bail early on first mount or we are already reloading
@@ -227,7 +226,7 @@ export const Preview: Component<Props> = (props) => {
 
     // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
-    iframe.src = src;
+    iframe.src = src()!;
   });
 
   const styleScale = () => {
@@ -240,17 +239,19 @@ export const Preview: Component<Props> = (props) => {
 
   return (
     <div class="relative h-full w-full">
-      <iframe
-        title="Solid REPL"
-        class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
-        classList={props.classList}
-        style={styleScale()}
-        ref={iframe}
-        src={src}
-        onload={[setIframeReady, true]}
-        // @ts-ignore
-        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-      ></iframe>
+      <Show when={src() != undefined}>
+        <iframe
+          title="Solid REPL"
+          class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
+          classList={props.classList}
+          style={styleScale()}
+          ref={iframe}
+          src={src()}
+          onload={[setIframeReady, true]}
+          // @ts-ignore
+          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+        ></iframe>
+      </Show>
     </div>
   );
 };
