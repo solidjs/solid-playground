@@ -91,7 +91,7 @@ const Repl: ReplProps = (props) => {
       return;
     }
     setImportMap(map);
-    importMapModel.setValue(JSON.stringify(map, null, 2));
+    importMapModel.setValue(JSON.stringify(map, null, 4));
   }
   const userUpdateImportMap = throttle(() => {
     const value = importMapModel.getValue();
@@ -101,7 +101,7 @@ const Repl: ReplProps = (props) => {
     const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
     outputModel = editor.createModel('', 'typescript', outputUri);
     const importMapUri = Uri.parse(`file:///${props.id}/import_map.tsx`);
-    importMapModel = editor.createModel('', 'typescript', importMapUri);
+    importMapModel = editor.createModel('', 'json', importMapUri);
     importMapModel.onDidChangeContent((e) => {
       if (e.isFlush) return; // This checks if the input is actually from the user, or from a setValue call
       userUpdateImportMap();
@@ -331,8 +331,8 @@ const Repl: ReplProps = (props) => {
               }
               compile();
             }}
-            formatter={formatter}
-            linter={linter}
+            // formatter={formatter}
+            // linter={linter}
             isDark={props.dark}
             withMinimap={false}
             onEditorReady={props.onEditorReady}

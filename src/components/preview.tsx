@@ -204,9 +204,6 @@ export const Preview: Component<Props> = (props) => {
   let import_map = { imports: undefined };
   let [src, setSrc] = createSignal<string>();
   createEffect(() => {
-    console.log(src());
-  });
-  createEffect(() => {
     import_map['imports'] = props.importMap();
     setIframeReady(false);
     const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;

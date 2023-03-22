@@ -1,6 +1,7 @@
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CompilerWorker from '../../src/workers/compiler?worker';
 import FormatterWorker from '../../src/workers/formatter?worker';
 import LinterWorker from '../../src/workers/linter?worker';
@@ -21,6 +22,8 @@ window.MonacoEnvironment = {
     switch (label) {
       case 'css':
         return new cssWorker();
+      case 'json':
+        return new jsonWorker();
       case 'typescript':
       case 'javascript':
         return new tsWorker();
