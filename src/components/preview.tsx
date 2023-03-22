@@ -1,4 +1,4 @@
-import { Accessor, Component, createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js';
+import { Accessor, Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
@@ -203,14 +203,11 @@ export const Preview: Component<Props> = (props) => {
       </script>`;
   let import_map = { imports: undefined };
   let [src, setSrc] = createSignal<string>();
-  let import_map_str = '';
   createEffect(() => {
-    if (props.importMap != undefined) {
-      import_map['imports'] = props.importMap();
-      import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
-    }
+    import_map['imports'] = props.importMap();
     setIframeReady(false);
-    const html = generateHTML(untrack(() => props.isDark), devtools, import_map_str);
+    const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
+    const html = generateHTML(props.isDark, devtools, import_map_str);
     const blob = new Blob([html], {
       type: 'text/html',
     });
@@ -257,7 +254,7 @@ export const Preview: Component<Props> = (props) => {
 };
 
 type Props = {
-  importMap: Accessor<any> | undefined;
+  importMap: Accessor<any>;
   classList?: {
     [k: string]: boolean | undefined;
   };

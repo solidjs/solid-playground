@@ -9,7 +9,7 @@ import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
 import { createMediaQuery } from '@solid-primitives/media';
 import { editor, Uri } from 'monaco-editor';
-import { isWebKit } from '@solid-primitives/platform';
+
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import indexTSX from '../defaultFiles/index.tsx?raw';
@@ -24,7 +24,7 @@ const compileMode = {
 const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
-  const isImportMapSupported = !isWebKit;
+
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [error, setError] = createSignal('');
@@ -166,7 +166,6 @@ const Repl: ReplProps = (props) => {
         ? {
             event: 'ROLLUP',
             tabs: unwrap(props.tabs),
-            importMapSupported: isImportMapSupported,
           }
         : {
             event: 'BABEL',
@@ -297,22 +296,20 @@ const Repl: ReplProps = (props) => {
               <span class="sr-only">Reset Editor</span>
             </button>
           </TabItem>
-          <Show when={isImportMapSupported}>
-            <TabItem class="select-none justify-self-end" active={props.current === `import_map.tsx`}>
-              <label
-                class="cursor-pointer space-x-2 px-3 py-2"
-                onclick={() => {
-                  props.setCurrent(`import_map.tsx`);
-                  // applyCompilation({
-                  //   event: 'ROLLUP',
-                  //   tabs: unwrap(props.tabs),
-                  // });
-                }}
-              >
-                <span>Import Map</span>
-              </label>
-            </TabItem>
-          </Show>
+          <TabItem class="select-none justify-self-end" active={props.current === `import_map.tsx`}>
+            <label
+              class="cursor-pointer space-x-2 px-3 py-2"
+              onclick={() => {
+                props.setCurrent(`import_map.tsx`);
+                // applyCompilation({
+                //   event: 'ROLLUP',
+                //   tabs: unwrap(props.tabs),
+                // });
+              }}
+            >
+              <span>Import Map</span>
+            </label>
+          </TabItem>
           <TabItem class="select-none justify-self-end">
             <label class="cursor-pointer space-x-2 px-3 py-2">
               <input
@@ -401,7 +398,7 @@ const Repl: ReplProps = (props) => {
         <Switch>
           <Match when={outputTab() == 0}>
             <Preview
-              importMap={isImportMapSupported ? importMap : undefined}
+              importMap={importMap}
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
               isDark={props.dark}
