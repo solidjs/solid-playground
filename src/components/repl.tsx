@@ -133,10 +133,6 @@ const Repl: ReplProps = (props) => {
           delete currentMap[key];
         }
       }
-      // if (JSON.stringify(newMap) != JSON.stringify(importMap())) {
-      //   console.log('Updating');
-      //   updateImportMap(newMap);
-      // }
       updateImportMap(currentMap);
       setCompiled(compiled);
     } else if (event === 'BABEL') {
@@ -331,8 +327,8 @@ const Repl: ReplProps = (props) => {
               }
               compile();
             }}
-            // formatter={formatter}
-            // linter={linter}
+            formatter={formatter}
+            linter={linter}
             isDark={props.dark}
             withMinimap={false}
             onEditorReady={props.onEditorReady}
