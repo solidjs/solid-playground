@@ -95,7 +95,14 @@ const Repl: ReplProps = (props) => {
   }
   const userUpdateImportMap = throttle(() => {
     const value = importMapModel.getValue();
-    setImportMap(JSON.parse(value));
+    let parsed = undefined;
+    try {
+      parsed = JSON.parse(value);
+      setError('');
+    } catch (e: any) {
+      setError(e.toString());
+    }
+    if (parsed != undefined) setImportMap(JSON.parse(value));
   }, 300);
   createEffect(() => {
     const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
