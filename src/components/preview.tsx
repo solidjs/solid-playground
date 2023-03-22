@@ -1,8 +1,8 @@
-import { Accessor, Component, createEffect, createSignal, onCleanup } from 'solid-js';
+import { Accessor, Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
-const generateHTML = (isDark: boolean, devtools: string) => {
+const generateHTML = (isDark: boolean, devtools: string, import_map: string) => {
   const html = `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
@@ -62,36 +62,30 @@ const generateHTML = (isDark: boolean, devtools: string) => {
           border-color: #666;
         }
       </style>
+      ${import_map}
       ${devtools}
-      <script>
+      <script type="module">
         window.addEventListener('message', async ({ data }) => {
-          const { event, value, import_map } = data;
+          const { event, value } = data;
 
           if (event !== 'CODE_UPDATE') return;
-          const map_script = document.createElement('script');
-          map_script.innerHTML = import_map;
-          map_script.id = 'map_script';
-          map_script.type = 'importmap';
-          document.body.appendChild(map_script);
 
           window.dispose?.();
           window.dispose = undefined;
-          
 
           document.getElementById('app').innerHTML = "";
-    
+
           console.clear();
-    
+
           document.getElementById('appsrc')?.remove();
           const script = document.createElement('script');
           script.src = value;
           script.id = 'appsrc';
           script.type = 'module';
           document.body.appendChild(script);
-        
+
           const load = document.getElementById('load');
           if (load) load.remove();
-          
         })
       </script>
     </head>
@@ -131,11 +125,8 @@ export const Preview: Component<Props> = (props) => {
     });
     const src = URL.createObjectURL(blob);
     onCleanup(() => URL.revokeObjectURL(src));
-    let import_map = { imports: props.importMap() };
-    iframe.contentWindow!.postMessage(
-      { event: 'CODE_UPDATE', value: src, import_map: JSON.stringify(import_map) },
-      '*',
-    );
+
+    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: src }, '*');
   });
 
   createEffect(() => {
@@ -210,18 +201,22 @@ export const Preview: Component<Props> = (props) => {
           }
         });
       </script>`;
+  let import_map = { imports: undefined };
   let [src, setSrc] = createSignal<string>();
-
-  const html = generateHTML(props.isDark, devtools);
-  const blob = new Blob([html], {
-    type: 'text/html',
+  createEffect(() => {
+    import_map['imports'] = props.importMap();
+    setIframeReady(false);
+    const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
+    const html = generateHTML(props.isDark, devtools, import_map_str);
+    const blob = new Blob([html], {
+      type: 'text/html',
+    });
+    setSrc(URL.createObjectURL(blob));
+    onCleanup(() => {
+      URL.revokeObjectURL(src()!);
+      setSrc(undefined);
+    });
   });
-  setSrc(URL.createObjectURL(blob));
-  onCleanup(() => {
-    URL.revokeObjectURL(src()!);
-    setSrc(undefined);
-  });
-
   createEffect(() => {
     // Bail early on first mount or we are already reloading
     if (!props.reloadSignal) return;
@@ -241,7 +236,7 @@ export const Preview: Component<Props> = (props) => {
 
   return (
     <div class="relative h-full w-full">
-      {/* <Show when={src() != undefined}> */}
+      <Show when={src() != undefined}>
         <iframe
           title="Solid REPL"
           class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
@@ -253,7 +248,7 @@ export const Preview: Component<Props> = (props) => {
           // @ts-ignore
           sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
         ></iframe>
-      {/* </Show> */}
+      </Show>
     </div>
   );
 };
