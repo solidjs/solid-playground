@@ -11,7 +11,7 @@ const generateHTML = (isDark: boolean, devtools: string, import_map: string) => 
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
       <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
-
+      <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
       <style>
         html, body {
           position: relative;
