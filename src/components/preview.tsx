@@ -75,7 +75,7 @@ const generateHTML = (isDark: boolean, devtools: string, import_map: string) => 
 
           document.getElementById('app').innerHTML = "";
 
-          // console.clear();
+          console.clear();
 
           document.getElementById('appsrc')?.remove();
           const script = document.createElement('script');
