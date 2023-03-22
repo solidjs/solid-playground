@@ -22,6 +22,7 @@ let importMap: any = {};
  * virtual file system and replacing every non-URL import with an
  * ESM CDN import.
  */
+let import_map_supported: boolean;
 const replPlugin: Plugin = {
   name: 'repl-plugin',
 
@@ -41,7 +42,7 @@ const replPlugin: Plugin = {
     importMap[importee] = cdn_url;
     // NPM module via ESM CDN
     return {
-      id: importee,
+      id: import_map_supported ? importee : cdn_url,
       external: true,
     };
   },
@@ -120,8 +121,10 @@ async function babel(tab: Tab, compileOpts: any) {
 }
 
 self.addEventListener('message', async ({ data }) => {
-  const { event, tabs, tab, compileOpts } = data;
-
+  const { event, tabs, tab, compileOpts, importMapSupported } = data;
+  if (importMapSupported != undefined) {
+    import_map_supported = importMapSupported;
+  }
   try {
     if (event === 'BABEL') {
       self.postMessage(await babel(tab, compileOpts));
