@@ -1,4 +1,4 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
+import { Accessor, Component, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
@@ -212,16 +212,13 @@ export const Preview: Component<Props> = (props) => {
       type: 'text/html',
     });
     const url = URL.createObjectURL(blob);
-    // onCleanup(() => {
-    //   URL.revokeObjectURL(srcUrl());
-    // });
     return url;
   });
-  createEffect(
-    on(srcUrl, () => {
-      setIframeReady(false);
-    }),
-  );
+  createEffect(() => {
+    const objUrl = srcUrl();
+    onCleanup(() => URL.revokeObjectURL(objUrl));
+    setIframeReady(false);
+  });
   createEffect(() => {
     // Bail early on first mount or we are already reloading
     if (!props.reloadSignal) return;
@@ -238,7 +235,6 @@ export const Preview: Component<Props> = (props) => {
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
-
   return (
     <div class="relative h-full w-full">
       <iframe
