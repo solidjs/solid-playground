@@ -1,4 +1,4 @@
-import { Accessor, Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
+import { Accessor, Component, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
@@ -201,29 +201,34 @@ export const Preview: Component<Props> = (props) => {
           }
         });
       </script>`;
-  let import_map = { imports: undefined };
-  let [src, setSrc] = createSignal<string>();
-  createEffect(() => {
-    import_map['imports'] = props.importMap();
-    setIframeReady(false);
-    const import_map_str = `<script type="importmap">${JSON.stringify(import_map)}</script>`;
-    const html = generateHTML(props.isDark, devtools, import_map_str);
+  let srcUrl = createMemo(() => {
+    const import_map_str = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
+    const html = generateHTML(
+      untrack(() => props.isDark),
+      devtools,
+      import_map_str,
+    );
     const blob = new Blob([html], {
       type: 'text/html',
     });
-    setSrc(URL.createObjectURL(blob));
-    onCleanup(() => {
-      URL.revokeObjectURL(src()!);
-      setSrc(undefined);
-    });
+    const url = URL.createObjectURL(blob);
+    // onCleanup(() => {
+    //   URL.revokeObjectURL(srcUrl());
+    // });
+    return url;
   });
+  createEffect(
+    on(srcUrl, () => {
+      setIframeReady(false);
+    }),
+  );
   createEffect(() => {
     // Bail early on first mount or we are already reloading
     if (!props.reloadSignal) return;
 
     // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
-    iframe.src = src()!;
+    iframe.src = srcUrl()!;
   });
 
   const styleScale = () => {
@@ -236,19 +241,17 @@ export const Preview: Component<Props> = (props) => {
 
   return (
     <div class="relative h-full w-full">
-      <Show when={src() != undefined}>
-        <iframe
-          title="Solid REPL"
-          class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
-          classList={props.classList}
-          style={styleScale()}
-          ref={iframe}
-          src={src()}
-          onload={[setIframeReady, true]}
-          // @ts-ignore
-          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-        ></iframe>
-      </Show>
+      <iframe
+        title="Solid REPL"
+        class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
+        classList={props.classList}
+        style={styleScale()}
+        ref={iframe}
+        src={srcUrl()}
+        onload={[setIframeReady, true]}
+        // @ts-ignore
+        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+      />
     </div>
   );
 };

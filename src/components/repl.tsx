@@ -82,40 +82,29 @@ const Repl: ReplProps = (props) => {
   }
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
-  let outputModel: editor.ITextModel;
-  let importMapModel: editor.ITextModel;
   const [importMap, setImportMap] = createSignal<any>({}, { equals: false });
   function updateImportMap(map: any) {
     const currentImportMap = importMap();
     if (JSON.stringify(currentImportMap) === JSON.stringify(map)) {
       return;
     }
-    setImportMap(map);
-    importMapModel.setValue(JSON.stringify(map, null, 4));
-  }
-  const userUpdateImportMap = throttle(() => {
-    const value = importMapModel.getValue();
-    let parsed = undefined;
-    try {
-      parsed = JSON.parse(value);
-      setError('');
-    } catch (e: any) {
-      setError(e.toString());
+    let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
+    if (idx < 0) {
+      props.setTabs(props.tabs.concat([{ name: 'data_import_map.json', source: JSON.stringify(map, null, 4) }]));
+      idx = props.tabs.length - 1;
     }
-    if (parsed != undefined) setImportMap(JSON.parse(value));
-  }, 300);
+    const newTabs = props.tabs;
+    newTabs[idx] = { name: 'data_import_map.json', source: JSON.stringify(map, null, 4) };
+    props.setTabs(newTabs);
+    setImportMap(map);
+  }
+  let outputModel: editor.ITextModel;
+
   createEffect(() => {
     const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
     outputModel = editor.createModel('', 'typescript', outputUri);
-    const importMapUri = Uri.parse(`file:///${props.id}/import_map.tsx`);
-    importMapModel = editor.createModel('', 'json', importMapUri);
-    importMapModel.onDidChangeContent((e) => {
-      if (e.isFlush) return; // This checks if the input is actually from the user, or from a setValue call
-      userUpdateImportMap();
-    });
     onCleanup(() => {
       outputModel.dispose();
-      importMapModel.dispose();
     });
   });
 
@@ -235,46 +224,53 @@ const Repl: ReplProps = (props) => {
         <TabList>
           <For each={props.tabs}>
             {(tab, index) => (
-              <TabItem active={props.current === tab.name} class="mr-2">
-                <div
-                  ref={(el) => tabRefs.set(tab.name, el)}
-                  class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
-                  contentEditable={edit() == index()}
-                  onBlur={(e) => {
-                    setEdit(-1);
-                    setCurrentName(e.currentTarget.textContent!);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.code === 'Space') e.preventDefault();
-                    if (e.code !== 'Enter') return;
-                    setEdit(-1);
-                    setCurrentName(e.currentTarget.textContent!);
-                  }}
-                  onClick={() => setCurrentTab(tab.name)}
-                  onDblClick={(e) => {
-                    e.preventDefault();
-                    setEdit(index());
-                    tabRefs.get(tab.name)?.focus();
-                  }}
-                >
-                  {tab.name}
-                </div>
-
-                <Show when={index() > 0}>
-                  <button
-                    type="button"
-                    class="cursor-pointer"
-                    onClick={() => {
-                      removeTab(tab.name);
+              <Show when={!tab.name.startsWith('data_')}>
+                <TabItem active={props.current === tab.name} class="mr-2">
+                  <div
+                    ref={(el) => tabRefs.set(tab.name, el)}
+                    class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
+                    contentEditable={edit() == index()}
+                    onBlur={(e) => {
+                      setEdit(-1);
+                      setCurrentName(e.currentTarget.textContent!);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.code === 'Space') e.preventDefault();
+                      if (e.code !== 'Enter') return;
+                      setEdit(-1);
+                      setCurrentName(e.currentTarget.textContent!);
+                    }}
+                    onClick={() => setCurrentTab(tab.name)}
+                    onDblClick={(e) => {
+                      e.preventDefault();
+                      setEdit(index());
+                      tabRefs.get(tab.name)?.focus();
                     }}
                   >
-                    <span class="sr-only">Delete this tab</span>
-                    <svg style="stroke: currentColor; fill: none;" class="h-4 opacity-60" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </Show>
-              </TabItem>
+                    {tab.name}
+                  </div>
+
+                  <Show when={index() > 0}>
+                    <button
+                      type="button"
+                      class="cursor-pointer"
+                      onClick={() => {
+                        removeTab(tab.name);
+                      }}
+                    >
+                      <span class="sr-only">Delete this tab</span>
+                      <svg style="stroke: currentColor; fill: none;" class="h-4 opacity-60" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </Show>
+                </TabItem>
+              </Show>
             )}
           </For>
 
@@ -296,15 +292,11 @@ const Repl: ReplProps = (props) => {
               <span class="sr-only">Reset Editor</span>
             </button>
           </TabItem>
-          <TabItem class="select-none justify-self-end" active={props.current === `import_map.tsx`}>
+          <TabItem class="select-none justify-self-end" active={props.current === `data_import_map.json`}>
             <label
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => {
-                props.setCurrent(`import_map.tsx`);
-                // applyCompilation({
-                //   event: 'ROLLUP',
-                //   tabs: unwrap(props.tabs),
-                // });
+                props.setCurrent(`data_import_map.json`);
               }}
             >
               <span>Import Map</span>
@@ -328,8 +320,12 @@ const Repl: ReplProps = (props) => {
         <Show when={props.current}>
           <Editor
             url={`file:///${props.id}/${props.current}`}
-            onDocChange={() => {
-              if (props.current == 'import_map.tsx') {
+            onDocChange={(code: string) => {
+              if (props.current?.startsWith('data_')) {
+                if (props.current == 'data_import_map.json') {
+                  const newImportMap = JSON.parse(code);
+                  setImportMap(newImportMap);
+                }
                 return;
               }
               compile();
