@@ -7,7 +7,6 @@ import babelPresetSolid from 'babel-preset-solid';
 import { rollup, Plugin } from '@rollup/browser';
 import dd from 'dedent';
 
-// export const CDN_URL = (importee: string) => `https://esm.sh/v112/${importee}?dev`;
 export const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
 
 const tabsLookup = new Map<string, Tab>();
