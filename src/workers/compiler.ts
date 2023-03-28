@@ -1,4 +1,4 @@
-import type { Tab } from 'solid-repl';
+import type { ImportMap, Tab } from 'solid-repl';
 
 import { transform } from '@babel/standalone';
 // @ts-ignore
@@ -16,7 +16,7 @@ function uid(str: string) {
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
-let importMap: any = {};
+let importMap: ImportMap = {};
 /**
  * This is a custom rollup plugin to handle tabs as a
  * virtual file system and replacing every non-URL import with an

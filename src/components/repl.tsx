@@ -14,6 +14,7 @@ import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import indexTSX from '../defaultFiles/index.tsx?raw';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
+import { ImportMap } from 'solid-repl';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -87,7 +88,7 @@ const Repl: ReplProps = (props) => {
   if (idx >= 0) {
     import_map = JSON.parse(unwrap(props.tabs[idx]).source);
   }
-  const [importMap, setImportMap] = createSignal<any>(import_map, { equals: false });
+  const [importMap, setImportMap] = createSignal<ImportMap>(import_map, { equals: false });
   function updateImportMap(map: any) {
     const currentImportMap = importMap();
     if (JSON.stringify(currentImportMap) === JSON.stringify(map)) {
@@ -227,55 +228,48 @@ const Repl: ReplProps = (props) => {
     >
       <div class="flex h-full flex-col">
         <TabList>
-          <For each={props.tabs}>
+          <For each={props.tabs.filter((x) => !x.name.startsWith('data_'))}>
             {(tab, index) => (
-              <Show when={!tab.name.startsWith('data_')}>
-                <TabItem active={props.current === tab.name} class="mr-2">
-                  <div
-                    ref={(el) => tabRefs.set(tab.name, el)}
-                    class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
-                    contentEditable={edit() == index()}
-                    onBlur={(e) => {
-                      setEdit(-1);
-                      setCurrentName(e.currentTarget.textContent!);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.code === 'Space') e.preventDefault();
-                      if (e.code !== 'Enter') return;
-                      setEdit(-1);
-                      setCurrentName(e.currentTarget.textContent!);
-                    }}
-                    onClick={() => setCurrentTab(tab.name)}
-                    onDblClick={(e) => {
-                      e.preventDefault();
-                      setEdit(index());
-                      tabRefs.get(tab.name)?.focus();
+              <TabItem active={props.current === tab.name} class="mr-2">
+                <div
+                  ref={(el) => tabRefs.set(tab.name, el)}
+                  class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
+                  contentEditable={edit() == index()}
+                  onBlur={(e) => {
+                    setEdit(-1);
+                    setCurrentName(e.currentTarget.textContent!);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.code === 'Space') e.preventDefault();
+                    if (e.code !== 'Enter') return;
+                    setEdit(-1);
+                    setCurrentName(e.currentTarget.textContent!);
+                  }}
+                  onClick={() => setCurrentTab(tab.name)}
+                  onDblClick={(e) => {
+                    e.preventDefault();
+                    setEdit(index());
+                    tabRefs.get(tab.name)?.focus();
+                  }}
+                >
+                  {tab.name}
+                </div>
+
+                <Show when={index() > 0}>
+                  <button
+                    type="button"
+                    class="cursor-pointer"
+                    onClick={() => {
+                      removeTab(tab.name);
                     }}
                   >
-                    {tab.name}
-                  </div>
-
-                  <Show when={index() > 0}>
-                    <button
-                      type="button"
-                      class="cursor-pointer"
-                      onClick={() => {
-                        removeTab(tab.name);
-                      }}
-                    >
-                      <span class="sr-only">Delete this tab</span>
-                      <svg style="stroke: currentColor; fill: none;" class="h-4 opacity-60" viewBox="0 0 24 24">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </Show>
-                </TabItem>
-              </Show>
+                    <span class="sr-only">Delete this tab</span>
+                    <svg style="stroke: currentColor; fill: none;" class="h-4 opacity-60" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </Show>
+              </TabItem>
             )}
           </For>
 
