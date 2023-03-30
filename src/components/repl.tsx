@@ -195,7 +195,7 @@ const Repl: ReplProps = (props) => {
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
                   ref={(el) => tabRefs.set(tab.name, el)}
-                  class="cursor-pointer select-none rounded border border-solid border-transparent py-2 px-3 transition focus:border-blue-600 focus:outline-none"
+                  class="cursor-pointer select-none rounded border border-solid border-transparent px-3 py-2 transition focus:border-blue-600 focus:outline-none"
                   contentEditable={edit() == index()}
                   onBlur={(e) => {
                     setEdit(-1);
@@ -294,7 +294,7 @@ const Repl: ReplProps = (props) => {
             <button
               type="button"
               title="Refresh the page"
-              class="py-2 px-3 active:animate-spin disabled:animate-none disabled:cursor-not-allowed disabled:opacity-25"
+              class="px-3 py-2 active:animate-spin disabled:animate-none disabled:cursor-not-allowed disabled:opacity-25"
               onClick={[reload, true]}
               disabled={outputTab() != 0}
             >
@@ -306,7 +306,7 @@ const Repl: ReplProps = (props) => {
             <button
               type="button"
               title={`${devtoolsOpen() ? 'Close' : 'Open'} the devtools`}
-              class="py-2 px-3 disabled:cursor-not-allowed disabled:opacity-25"
+              class="px-3 py-2 disabled:cursor-not-allowed disabled:opacity-25"
               onClick={() => setDevtoolsOpen(!devtoolsOpen())}
               disabled={outputTab() != 0}
             >
