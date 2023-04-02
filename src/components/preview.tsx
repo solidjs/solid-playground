@@ -1,8 +1,9 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import { Accessor, Component, createEffect, createMemo, createSignal, on, onCleanup, onMount, untrack } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
-const generateHTML = (isDark: boolean, devtools: string, import_map: string) => {
+import { GridResizer } from './gridResizer';
+const generateHTML = (isDark: boolean, import_map: string) => {
   const html = `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
@@ -63,7 +64,10 @@ const generateHTML = (isDark: boolean, devtools: string, import_map: string) => 
         }
       </style>
       ${import_map}
-      ${devtools}
+      ${
+        // ${devtools}/
+        ''
+      }
       <script type="module">
         window.addEventListener('message', async ({ data }) => {
           const { event, value } = data;
@@ -87,6 +91,13 @@ const generateHTML = (isDark: boolean, devtools: string, import_map: string) => 
           const load = document.getElementById('load');
           if (load) load.remove();
         })
+        window.onload = () => {
+          var script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
+          script.setAttribute('embedded', 'true');
+          script.setAttribute('cdn', 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public');
+          document.head.appendChild(script);
+        }
       </script>
     </head>
     
@@ -104,7 +115,7 @@ export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
-
+  let devtoolsIframe!: HTMLIFrameElement;
   const [isIframeReady, setIframeReady] = createSignal(false);
 
   if (!isServer) {
@@ -205,7 +216,6 @@ export const Preview: Component<Props> = (props) => {
     const import_map_str = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
     const html = generateHTML(
       untrack(() => props.isDark),
-      devtools,
       import_map_str,
     );
     const blob = new Blob([html], {
@@ -228,6 +238,15 @@ export const Preview: Component<Props> = (props) => {
     iframe.src = srcUrl()!;
   });
 
+  createEffect(() => {
+    if (!isIframeReady()) return;
+    (iframe!.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe!;
+  });
+  window.addEventListener('message', (event) => {
+    iframe!.contentWindow!.postMessage(event.data, event.origin);
+  });
+  let resizer!: HTMLDivElement;
+  let outerContainer!: HTMLDivElement;
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
@@ -235,19 +254,45 @@ export const Preview: Component<Props> = (props) => {
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
+  const [iframeHeight, setIframeHeight] = createSignal<number>(50);
+  const updateIframeHeight = (y: number) => {
+    const boundingRect = outerContainer.getBoundingClientRect();
+    let pos = y - boundingRect.top;
+    if (pos > boundingRect.height || pos < 0) pos = 0;
+    const percentage = (pos / outerContainer.offsetHeight) * 100;
+    setIframeHeight(percentage);
+  };
   return (
-    <div class="relative h-full w-full">
-      <iframe
-        title="Solid REPL"
-        class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
-        classList={props.classList}
-        style={styleScale()}
-        ref={iframe}
-        src={srcUrl()}
-        onload={[setIframeReady, true]}
-        // @ts-ignore
-        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-      />
+    <div class="relative h-full w-full" ref={outerContainer}>
+      <div style={{ height: iframeHeight() - 1 + '%' }}>
+        <iframe
+          title="Solid REPL"
+          class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
+          classList={props.classList}
+          style={styleScale()}
+          ref={iframe}
+          src={srcUrl()}
+          onload={[setIframeReady, true]}
+          // @ts-ignore
+          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+        />
+      </div>
+      <div style={{ height: '2%' }}>
+        <GridResizer
+          ref={resizer}
+          isHorizontal={true}
+          onResize={(x, y) => {
+            updateIframeHeight(y);
+          }}
+        />
+      </div>
+      <div style={{ height: 100 - iframeHeight() - 1 + '%' }}>
+        <iframe
+          class="h-full w-full"
+          ref={devtoolsIframe}
+          style={{ display: props.devtools ? 'block' : 'none' }}
+        ></iframe>
+      </div>
     </div>
   );
 };

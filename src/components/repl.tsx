@@ -94,14 +94,6 @@ const Repl: ReplProps = (props) => {
     if (JSON.stringify(currentImportMap) === JSON.stringify(map)) {
       return;
     }
-    let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
-    if (idx < 0) {
-      props.setTabs(props.tabs.concat([{ name: 'data_import_map.json', source: JSON.stringify(map, null, 4) }]));
-      idx = props.tabs.length - 1;
-    }
-    const newTabs = props.tabs;
-    newTabs[idx] = { name: 'data_import_map.json', source: JSON.stringify(map, null, 4) };
-    props.setTabs(newTabs);
     setImportMap(map);
   }
   let outputModel: editor.ITextModel;
@@ -295,6 +287,16 @@ const Repl: ReplProps = (props) => {
             <label
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => {
+                let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
+                if (idx < 0) {
+                  props.setTabs(
+                    props.tabs.concat([{ name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) }]),
+                  );
+                  idx = props.tabs.length - 1;
+                }
+                const newTabs = props.tabs;
+                newTabs[idx] = { name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) };
+                props.setTabs(newTabs);
                 props.setCurrent(`data_import_map.json`);
               }}
             >
