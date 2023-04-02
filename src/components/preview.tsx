@@ -64,10 +64,6 @@ const generateHTML = (isDark: boolean, import_map: string) => {
         }
       </style>
       ${import_map}
-      ${
-        // ${devtools}/
-        ''
-      }
       <script type="module">
         window.addEventListener('message', async ({ data }) => {
           const { event, value } = data;
@@ -153,65 +149,6 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   });
 
-  const devtools =
-    isChromium || isGecko
-      ? `<script src="https://cdn.jsdelivr.net/npm/chii@1.2.0/public/target.js" embedded="true" cdn="https://cdn.jsdelivr.net/npm/chii@1.2.0/public"></script>
-      <script>
-        let bodyHeight;
-        window.addEventListener('message', async ({ data }) => {
-          try {
-            const { event, value } = data;
-
-            if (event === 'DEVTOOLS') {
-              const iframe = document.querySelector('.__chobitsu-hide__ iframe')
-              if (value) {
-                iframe.parentElement.style.display = 'block';
-                if (bodyHeight) {
-                  document.body.style.height = bodyHeight + 'px';
-                }
-              } else {
-                iframe.parentElement.style.display = 'none';
-                bodyHeight = document.body.style.height;
-                document.body.style.height = 'auto';
-              }
-            }
-          } catch (e) {
-            console.error(e)
-          }
-        });
-      </script>`
-      : `<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-      <script src="https://cdn.jsdelivr.net/npm/eruda-dom"></script>
-      <script type="module">
-        eruda.init({
-          tool: ["console", "network", "resources", "elements"],
-          defaults: {
-            displaySize: 40,
-          }
-        });
-        eruda.add(erudaDom);
-        eruda.position({ x: window.innerWidth - 30, y: window.innerHeight - 30 });
-        const style = Object.assign(document.createElement('link'), {
-          rel: 'stylesheet',
-          href: '${location.origin}/eruda.css'
-        });
-        eruda._shadowRoot.appendChild(style);
-        window.addEventListener('message', async ({ data }) => {
-          try {
-            const { event, value } = data;
-
-            if (event === 'DEVTOOLS') {
-              if (value) eruda.show();
-              else eruda.hide();
-            } else if (event === 'THEME') {
-              eruda._devTools.config.set('theme', value ? 'Dark' : 'Light');
-              eruda._$el[0].style.colorScheme = value ? 'dark' : 'light';
-            }
-          } catch (e) {
-            console.error(e)
-          }
-        });
-      </script>`;
   let srcUrl = createMemo(() => {
     const import_map_str = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
     const html = generateHTML(
@@ -281,7 +218,7 @@ export const Preview: Component<Props> = (props) => {
         <GridResizer
           ref={resizer}
           isHorizontal={true}
-          onResize={(x, y) => {
+          onResize={(_, y) => {
             updateIframeHeight(y);
           }}
         />
