@@ -87,9 +87,9 @@ const generateHTML = (isDark: boolean, import_map: string) => {
           const load = document.getElementById('load');
           if (load) load.remove();
         })
-        window.onload = () => {
+        window.injectTarget = function (targetSrc) {
           var script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
+          script.src = targetSrc;
           script.setAttribute('embedded', 'true');
           script.setAttribute('cdn', 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public');
           document.head.appendChild(script);
@@ -177,10 +177,10 @@ export const Preview: Component<Props> = (props) => {
 
   createEffect(() => {
     if (!isIframeReady()) return;
-    (iframe!.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe!;
+    (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe!;
   });
   window.addEventListener('message', (event) => {
-    iframe!.contentWindow!.postMessage(event.data, event.origin);
+    iframe.contentWindow!.postMessage(event.data, event.origin);
   });
   let resizer!: HTMLDivElement;
   let outerContainer!: HTMLDivElement;
@@ -199,6 +199,13 @@ export const Preview: Component<Props> = (props) => {
     const percentage = (pos / outerContainer.offsetHeight) * 100;
     setIframeHeight(percentage);
   };
+  createEffect(() => {
+    if (!isIframeReady()) return;
+
+    const targetSrc = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
+    (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe;
+    (iframe.contentWindow! as any).injectTarget(targetSrc);
+  });
   return (
     <div class="relative h-full w-full" ref={outerContainer}>
       <div style={{ height: iframeHeight() - 1 + '%' }}>
