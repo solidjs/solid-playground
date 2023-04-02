@@ -221,7 +221,7 @@ export const Home = () => {
       </div>
       <Show when={!!open()}>
         <div
-          class="fixed top-0 left-0 z-10 flex h-full w-full items-center justify-center bg-gray-500/50"
+          class="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-gray-500/50"
           onClick={(e) => {
             if (e.target !== e.currentTarget) return;
             setOpen(undefined);
@@ -237,7 +237,7 @@ export const Home = () => {
             <p>Are you sure you want to delete that?</p>
             <div class="mt-2 flex justify-end gap-2">
               <button
-                class="rounded border py-1 px-2"
+                class="rounded border px-2 py-1"
                 onclick={() => {
                   fetch(`${API}/repl/${open()}`, {
                     method: 'DELETE',
@@ -254,7 +254,7 @@ export const Home = () => {
               >
                 Yes
               </button>
-              <button class="rounded border py-1 px-2" onClick={() => setOpen(undefined)}>
+              <button class="rounded border px-2 py-1" onClick={() => setOpen(undefined)}>
                 No
               </button>
             </div>

@@ -12,7 +12,7 @@ export const Update: Component<{
   return (
     <Portal mount={mount!}>
       <div class="text-brand-default z-10 max-w-sm rounded border border-blue-400 bg-blue-200 px-6 py-4 shadow">
-        <button title="close" onClick={props.onDismiss} class="absolute top-1 right-1 hover:text-blue-900">
+        <button title="close" onClick={props.onDismiss} class="absolute right-1 top-1 hover:text-blue-900">
           <Icon path={xMark} class="h-6" />
         </button>
         <p class="font-semibold">There's a new update available.</p>
