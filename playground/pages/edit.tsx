@@ -119,6 +119,13 @@ export const Edit = (props: { horizontal: boolean }) => {
     },
   );
 
+  const reset = () => {
+    batch(() => {
+      setTabs(mapTabs(defaultTabs));
+      setCurrent(defaultTabs[0].name);
+    });
+  };
+
   const updateRepl = debounce(
     () => {
       const files = tabs().map((x) => ({ name: x.name, content: x.source }));
@@ -247,6 +254,7 @@ export const Edit = (props: { horizontal: boolean }) => {
             dark={context.dark()}
             tabs={tabs()}
             setTabs={setTabs}
+            reset={reset}
             current={current()}
             setCurrent={setCurrent}
             id={'repl'}

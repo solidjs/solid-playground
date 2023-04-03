@@ -12,7 +12,6 @@ import { editor, Uri } from 'monaco-editor';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
-import indexTSX from '../defaultFiles/index.tsx?raw';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
 
 const compileMode = {
@@ -75,10 +74,7 @@ const Repl: ReplProps = (props) => {
   function resetTabs() {
     const confirmReset = confirm('Are you sure you want to reset the editor?');
     if (!confirmReset) return;
-    batch(() => {
-      props.setTabs([{ name: 'main.tsx', source: indexTSX }]);
-      props.setCurrent('main.tsx');
-    });
+    props.reset();
   }
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
