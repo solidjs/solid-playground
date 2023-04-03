@@ -1,4 +1,15 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, on, onCleanup, onMount, untrack } from 'solid-js';
+import {
+  Accessor,
+  Component,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onCleanup,
+  onMount,
+  untrack,
+} from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { isGecko, isChromium } from '@solid-primitives/platform';
@@ -208,7 +219,7 @@ export const Preview: Component<Props> = (props) => {
   });
   return (
     <div class="relative h-full w-full" ref={outerContainer}>
-      <div style={{ height: iframeHeight() - 1 + '%' }}>
+      <div style={{ height: props.devtools ? iframeHeight() - 1 + '%' : '100%' }}>
         <iframe
           title="Solid REPL"
           class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
@@ -221,16 +232,18 @@ export const Preview: Component<Props> = (props) => {
           sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
         />
       </div>
-      <div style={{ height: '2%' }}>
-        <GridResizer
-          ref={resizer}
-          isHorizontal={true}
-          onResize={(_, y) => {
-            updateIframeHeight(y);
-          }}
-        />
-      </div>
-      <div style={{ height: 100 - iframeHeight() - 1 + '%' }}>
+      <Show when={props.devtools}>
+        <div style={{ height: '2%' }}>
+          <GridResizer
+            ref={resizer}
+            isHorizontal={true}
+            onResize={(_, y) => {
+              updateIframeHeight(y);
+            }}
+          />
+        </div>
+      </Show>
+      <div style={{ height: props.devtools ? 100 - iframeHeight() - 1 + '%' : '0%' }}>
         <iframe
           class="h-full w-full"
           ref={devtoolsIframe}
