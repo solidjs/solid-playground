@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, lazy } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
@@ -12,7 +12,6 @@ import { editor, Uri } from 'monaco-editor';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
-import indexTSX from '../defaultFiles/index.tsx?raw';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
 import { ImportMap } from 'solid-repl';
 
@@ -76,10 +75,7 @@ const Repl: ReplProps = (props) => {
   function resetTabs() {
     const confirmReset = confirm('Are you sure you want to reset the editor?');
     if (!confirmReset) return;
-    batch(() => {
-      props.setTabs([{ name: 'main.tsx', source: indexTSX }]);
-      props.setCurrent('main.tsx');
-    });
+    props.reset();
   }
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);

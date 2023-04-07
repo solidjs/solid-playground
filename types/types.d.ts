@@ -17,6 +17,7 @@ declare module 'solid-repl/lib/repl' {
     tabs: Tab[];
     id: string;
     setTabs: (tab: Tab[]) => void;
+    reset: () => void;
     current: string | undefined;
     setCurrent: (tabId: string) => void;
     onEditorReady?: (

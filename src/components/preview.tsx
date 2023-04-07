@@ -1,21 +1,9 @@
-import {
-  Accessor,
-  Component,
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onCleanup,
-  onMount,
-  untrack,
-} from 'solid-js';
+import { Accessor, Component, createEffect, createMemo, createSignal, onCleanup, onMount, untrack } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
-import { isGecko, isChromium } from '@solid-primitives/platform';
 import { GridResizer } from './gridResizer';
-const generateHTML = (isDark: boolean, import_map: string) => {
-  const html = `
+
+const generateHTML = (isDark: boolean, import_map: string) => `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
     <head>
@@ -98,9 +86,9 @@ const generateHTML = (isDark: boolean, import_map: string) => {
           const load = document.getElementById('load');
           if (load) load.remove();
         })
-        window.injectTarget = function (targetSrc) {
+        window.injectTarget = () => {
           var script = document.createElement('script');
-          script.src = targetSrc;
+          script.src = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
           script.setAttribute('embedded', 'true');
           script.setAttribute('cdn', 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public');
           document.head.appendChild(script);
@@ -116,13 +104,15 @@ const generateHTML = (isDark: boolean, import_map: string) => {
       <script id="appsrc" type="module"></script>
     </body>
   </html>`;
-  return html;
-};
+
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
   let devtoolsIframe!: HTMLIFrameElement;
+  let resizer!: HTMLDivElement;
+  let outerContainer!: HTMLDivElement;
+
   const [isIframeReady, setIframeReady] = createSignal(false);
 
   if (!isServer) {
@@ -161,7 +151,9 @@ export const Preview: Component<Props> = (props) => {
   });
 
   let srcUrl = createMemo(() => {
-    const import_map_str = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
+    const import_map_str = `<script type="importmap">${JSON.stringify({
+      imports: props.importMap(),
+    })}</script>`;
     const html = generateHTML(
       untrack(() => props.isDark),
       import_map_str,
@@ -170,12 +162,8 @@ export const Preview: Component<Props> = (props) => {
       type: 'text/html',
     });
     const url = URL.createObjectURL(blob);
+    onCleanup(() => URL.revokeObjectURL(url));
     return url;
-  });
-  createEffect(() => {
-    const objUrl = srcUrl();
-    onCleanup(() => URL.revokeObjectURL(objUrl));
-    setIframeReady(false);
   });
   createEffect(() => {
     // Bail early on first mount or we are already reloading
@@ -186,15 +174,30 @@ export const Preview: Component<Props> = (props) => {
     iframe.src = srcUrl()!;
   });
 
-  createEffect(() => {
-    if (!isIframeReady()) return;
-    (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe!;
+  onMount(() => {
+    const script = devtoolsIframe.contentWindow!.document.createElement('script');
+    script.src = 'https://unpkg.com/@ungap/custom-elements';
+    devtoolsIframe.contentWindow!.document.head.appendChild(script);
   });
+
   window.addEventListener('message', (event) => {
     iframe.contentWindow!.postMessage(event.data, event.origin);
   });
-  let resizer!: HTMLDivElement;
-  let outerContainer!: HTMLDivElement;
+
+  createEffect(() => {
+    if (!isIframeReady()) return;
+
+    (iframe.contentWindow! as any).injectTarget();
+    const script = devtoolsIframe.contentWindow!.document.createElement('script');
+    script.src = 'https://unpkg.com/@ungap/custom-elements';
+    devtoolsIframe.contentWindow!.document.head.prepend(script);
+    const scriptThing = devtoolsIframe.contentWindow!.document.getElementById('customElementsShim');
+    if (!scriptThing) {
+    }
+    (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe;
+    console.log('Creating');
+  });
+
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
 
@@ -202,6 +205,7 @@ export const Preview: Component<Props> = (props) => {
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
+
   const [iframeHeight, setIframeHeight] = createSignal<number>(50);
   const updateIframeHeight = (y: number) => {
     const boundingRect = outerContainer.getBoundingClientRect();
@@ -210,16 +214,10 @@ export const Preview: Component<Props> = (props) => {
     const percentage = (pos / outerContainer.offsetHeight) * 100;
     setIframeHeight(percentage);
   };
-  createEffect(() => {
-    if (!isIframeReady()) return;
 
-    const targetSrc = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
-    (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe;
-    (iframe.contentWindow! as any).injectTarget(targetSrc);
-  });
   return (
-    <div class="relative h-full w-full" ref={outerContainer}>
-      <div style={{ height: props.devtools ? iframeHeight() - 1 + '%' : '100%' }}>
+    <div class="relative h-full w-full overflow-clip" ref={outerContainer}>
+      <div style={{ height: iframeHeight() - 1 + '%' }}>
         <iframe
           title="Solid REPL"
           class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
@@ -232,18 +230,16 @@ export const Preview: Component<Props> = (props) => {
           sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
         />
       </div>
-      <Show when={props.devtools}>
-        <div style={{ height: '2%' }}>
-          <GridResizer
-            ref={resizer}
-            isHorizontal={true}
-            onResize={(_, y) => {
-              updateIframeHeight(y);
-            }}
-          />
-        </div>
-      </Show>
-      <div style={{ height: props.devtools ? 100 - iframeHeight() - 1 + '%' : '0%' }}>
+      <div style={{ height: '2%' }}>
+        <GridResizer
+          ref={resizer}
+          isHorizontal={true}
+          onResize={(_, y) => {
+            updateIframeHeight(y);
+          }}
+        />
+      </div>
+      <div style={{ height: 100 - iframeHeight() - 1 + '%' }}>
         <iframe
           class="h-full w-full"
           ref={devtoolsIframe}
