@@ -18,7 +18,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "build:lib": "unocss \"./src/**\" && jiti rollup.config.js",
+    "build:lib": "unocss \"./src/**\" && jiti rollup.config.js && node scripts/post_lib_build.mjs",
     "format": "prettier -w .",
     "tsc": "tsc"
   },

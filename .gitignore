@@ -3,4 +3,4 @@ dist
 lib
 .DS_Store
 package-lock.json
-bundle.css
+uno.css
