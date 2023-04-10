@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, lazy } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';

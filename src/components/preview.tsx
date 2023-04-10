@@ -1,9 +1,9 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, onCleanup, onMount, untrack } from 'solid-js';
+import { Accessor, Component, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
-
-const generateHTML = (isDark: boolean, import_map: string) => `
+import { isWebKit } from '@solid-primitives/platform';
+const generateHTML = (isDark: boolean, importMap: string, devtoolsCode: string) => `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
     <head>
@@ -62,7 +62,7 @@ const generateHTML = (isDark: boolean, import_map: string) => `
           border-color: #666;
         }
       </style>
-      ${import_map}
+      ${importMap}
       <script type="module">
         window.addEventListener('message', async ({ data }) => {
           const { event, value } = data;
@@ -86,13 +86,7 @@ const generateHTML = (isDark: boolean, import_map: string) => `
           const load = document.getElementById('load');
           if (load) load.remove();
         })
-        window.injectTarget = () => {
-          var script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
-          script.setAttribute('embedded', 'true');
-          script.setAttribute('cdn', 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public');
-          document.head.appendChild(script);
-        }
+        ${devtoolsCode}
       </script>
     </head>
     
@@ -104,7 +98,18 @@ const generateHTML = (isDark: boolean, import_map: string) => `
       <script id="appsrc" type="module"></script>
     </body>
   </html>`;
+const generateDevtoolsCode = () => {
+  if (isWebKit) return '';
 
+  return `
+    window.injectTarget = () => {
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
+    script.setAttribute('embedded', 'true');
+    script.setAttribute('cdn', 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public');
+    document.head.appendChild(script);
+  }`;
+};
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
@@ -151,12 +156,13 @@ export const Preview: Component<Props> = (props) => {
   });
 
   let srcUrl = createMemo(() => {
-    const import_map_str = `<script type="importmap">${JSON.stringify({
+    const importMapStr = `<script type="importmap">${JSON.stringify({
       imports: props.importMap(),
     })}</script>`;
     const html = generateHTML(
       untrack(() => props.isDark),
-      import_map_str,
+      importMapStr,
+      generateDevtoolsCode(),
     );
     const blob = new Blob([html], {
       type: 'text/html',
@@ -174,28 +180,15 @@ export const Preview: Component<Props> = (props) => {
     iframe.src = srcUrl()!;
   });
 
-  onMount(() => {
-    const script = devtoolsIframe.contentWindow!.document.createElement('script');
-    script.src = 'https://unpkg.com/@ungap/custom-elements';
-    devtoolsIframe.contentWindow!.document.head.appendChild(script);
-  });
-
   window.addEventListener('message', (event) => {
-    iframe.contentWindow!.postMessage(event.data, event.origin);
+    iframe.contentWindow?.postMessage(event.data, event.origin);
   });
 
   createEffect(() => {
     if (!isIframeReady()) return;
 
-    (iframe.contentWindow! as any).injectTarget();
-    const script = devtoolsIframe.contentWindow!.document.createElement('script');
-    script.src = 'https://unpkg.com/@ungap/custom-elements';
-    devtoolsIframe.contentWindow!.document.head.prepend(script);
-    const scriptThing = devtoolsIframe.contentWindow!.document.getElementById('customElementsShim');
-    if (!scriptThing) {
-    }
     (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe;
-    console.log('Creating');
+    (iframe.contentWindow! as any).injectTarget();
   });
 
   const styleScale = () => {
@@ -206,7 +199,7 @@ export const Preview: Component<Props> = (props) => {
     }); transform-origin: 0 0;`;
   };
 
-  const [iframeHeight, setIframeHeight] = createSignal<number>(50);
+  const [iframeHeight, setIframeHeight] = createSignal<number>(isWebKit ? 101 : 50);
   const updateIframeHeight = (y: number) => {
     const boundingRect = outerContainer.getBoundingClientRect();
     let pos = y - boundingRect.top;
@@ -230,22 +223,24 @@ export const Preview: Component<Props> = (props) => {
           sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
         />
       </div>
-      <div style={{ height: '2%' }}>
-        <GridResizer
-          ref={resizer}
-          isHorizontal={true}
-          onResize={(_, y) => {
-            updateIframeHeight(y);
-          }}
-        />
-      </div>
-      <div style={{ height: 100 - iframeHeight() - 1 + '%' }}>
-        <iframe
-          class="h-full w-full"
-          ref={devtoolsIframe}
-          style={{ display: props.devtools ? 'block' : 'none' }}
-        ></iframe>
-      </div>
+      <Show when={!isWebKit}>
+        <div style={{ height: '2%' }}>
+          <GridResizer
+            ref={resizer}
+            isHorizontal={true}
+            onResize={(_, y) => {
+              updateIframeHeight(y);
+            }}
+          />
+        </div>
+        <div style={{ height: 100 - iframeHeight() - 1 + '%' }}>
+          <iframe
+            class="h-full w-full"
+            ref={devtoolsIframe}
+            style={{ display: props.devtools ? 'block' : 'none' }}
+          ></iframe>
+        </div>
+      </Show>
     </div>
   );
 };
