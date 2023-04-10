@@ -2,8 +2,8 @@ import { Accessor, Component, Show, createEffect, createMemo, createSignal, onCl
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
-import { isWebKit } from '@solid-primitives/platform';
-const generateHTML = (isDark: boolean, importMap: string, devtoolsCode: string) => `
+
+const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
     <head>
@@ -63,6 +63,7 @@ const generateHTML = (isDark: boolean, importMap: string, devtoolsCode: string) 
         }
       </style>
       ${importMap}
+      <script src="https://cdn.jsdelivr.net/npm/chobitsu"></script>
       <script type="module">
         window.addEventListener('message', async ({ data }) => {
           const { event, value } = data;
@@ -86,7 +87,53 @@ const generateHTML = (isDark: boolean, importMap: string, devtoolsCode: string) 
           const load = document.getElementById('load');
           if (load) load.remove();
         })
-        ${devtoolsCode}
+        const sendToDevtools = (message) => {
+          window.parent.postMessage(JSON.stringify(message), '${location.origin}');
+        };
+        let id = 0;
+        const sendToChobitsu = (message) => {
+          message.id = 'tmp' + ++id;
+          chobitsu.sendRawMessage(JSON.stringify(message));
+        };
+        chobitsu.setOnMessage((message) => {
+          if (message.includes('"id":"tmp')) return;
+          window.parent.postMessage(message, '${location.origin}');
+        });
+        window.addEventListener('message', ({ data }) => {
+          try {
+            const { event, value } = data;
+            if (event === 'DEV') {
+              chobitsu.sendRawMessage(data.data);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        });
+        
+        setTimeout(() => {
+          window.parent.postMessage(JSON.stringify({ event: 'READY' }), '${location.origin}');  
+          sendToDevtools({
+            method: 'Page.frameNavigated',
+            params: {
+              frame: {
+                id: '1',
+                mimeType: 'text/html',
+                securityOrigin: location.origin,
+                url: location.href,
+              },
+              type: 'Navigation',
+            },
+          });
+          sendToChobitsu({ method: 'Network.enable' });
+          sendToDevtools({ method: 'Runtime.executionContextsCleared' });
+          sendToChobitsu({ method: 'Runtime.enable' });
+          sendToChobitsu({ method: 'Debugger.enable' });
+          sendToChobitsu({ method: 'DOMStorage.enable' });
+          sendToChobitsu({ method: 'DOM.enable' });
+          sendToChobitsu({ method: 'CSS.enable' });
+          sendToChobitsu({ method: 'Overlay.enable' });
+          sendToDevtools({ method: 'DOM.documentUpdated' });
+        });
       </script>
     </head>
     
@@ -98,18 +145,29 @@ const generateHTML = (isDark: boolean, importMap: string, devtoolsCode: string) 
       <script id="appsrc" type="module"></script>
     </body>
   </html>`;
-const generateDevtoolsCode = () => {
-  if (isWebKit) return '';
 
-  return `
-    window.injectTarget = () => {
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public/target.js';
-    script.setAttribute('embedded', 'true');
-    script.setAttribute('cdn', 'https://cdn.jsdelivr.net/npm/chii@1.9.0/public');
-    document.head.appendChild(script);
-  }`;
+const useDevtoolsSrc = () => {
+  const html = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <meta charset="utf-8">
+  <title>DevTools</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: rgb(41 42 45);
+      }
+    }
+  </style>
+  <meta name="referrer" content="no-referrer">
+  <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.8.0/public/front_end/entrypoints/chii_app/chii_app.js"></script>
+  <body class="undocked" id="-blink-dev-tools">`;
+  const devtoolsRawUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  onCleanup(() => URL.revokeObjectURL(devtoolsRawUrl));
+  return `${devtoolsRawUrl}#?embedded=${encodeURIComponent(location.origin)}`;
 };
+
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
@@ -119,15 +177,6 @@ export const Preview: Component<Props> = (props) => {
   let outerContainer!: HTMLDivElement;
 
   const [isIframeReady, setIframeReady] = createSignal(false);
-
-  if (!isServer) {
-    try {
-      const selectedPanel = localStorage.getItem('panel-selectedTab');
-      if (!selectedPanel) {
-        localStorage.setItem('panel-selectedTab', '"console"');
-      }
-    } catch (err) {}
-  }
 
   createEffect(() => {
     if (!props.code) return;
@@ -156,13 +205,10 @@ export const Preview: Component<Props> = (props) => {
   });
 
   let srcUrl = createMemo(() => {
-    const importMapStr = `<script type="importmap">${JSON.stringify({
-      imports: props.importMap(),
-    })}</script>`;
+    const importMapStr = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
     const html = generateHTML(
       untrack(() => props.isDark),
       importMapStr,
-      generateDevtoolsCode(),
     );
     const blob = new Blob([html], {
       type: 'text/html',
@@ -180,16 +226,28 @@ export const Preview: Component<Props> = (props) => {
     iframe.src = srcUrl()!;
   });
 
-  window.addEventListener('message', (event) => {
-    iframe.contentWindow?.postMessage(event.data, event.origin);
-  });
+  const devtoolsSrc = useDevtoolsSrc();
 
-  createEffect(() => {
-    if (isWebKit) return;
-    if (!isIframeReady()) return;
-    (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe;
-    (iframe.contentWindow! as any).injectTarget();
-  });
+  const messageListener = (event: MessageEvent) => {
+    if (event.source === iframe.contentWindow) {
+      if (event.data == 'READY') {
+        (devtoolsIframe.contentWindow! as any).runtime.loadLegacyModule('core/sdk/sdk-legacy.js').then(() => {
+          const SDK = (devtoolsIframe.contentWindow! as any).SDK;
+          for (const resourceTreeModel of SDK.TargetManager.instance().models(SDK.ResourceTreeModel)) {
+            resourceTreeModel.dispatchEventToListeners(SDK.ResourceTreeModel.Events.WillReloadPage, resourceTreeModel);
+          }
+        });
+      } else {
+        console.log({ devtoolsSrc });
+        devtoolsIframe.contentWindow!.postMessage(event.data, devtoolsSrc);
+      }
+    }
+    if (event.source === devtoolsIframe.contentWindow) {
+      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, srcUrl());
+    }
+  };
+  window.addEventListener('message', messageListener);
+  onCleanup(() => window.removeEventListener('message', messageListener));
 
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
@@ -212,44 +270,43 @@ export const Preview: Component<Props> = (props) => {
 
     setIframeHeight(percentage * 2);
   };
-  createEffect(() => {});
+
   return (
     <div
-      class="grid h-full w-full overflow-clip"
+      class="grid h-full w-full"
       ref={outerContainer}
-      style={{ 'grid-template-rows': `${iframeHeight()}fr auto ${2 - iframeHeight()}fr ` }}
+      classList={props.classList}
+      style={{
+        'grid-template-rows': props.devtools
+          ? `minmax(0, ${iframeHeight()}fr) 12px minmax(0,${2 - iframeHeight()}fr)`
+          : 'minmax(0, 1fr)',
+      }}
     >
-      <div>
-        <iframe
-          title="Solid REPL"
-          class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
-          classList={props.classList}
-          style={styleScale()}
-          ref={iframe}
-          src={srcUrl()}
-          onload={[setIframeReady, true]}
-          // @ts-ignore
-          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+      <iframe
+        title="Solid REPL"
+        class="dark:bg-other block h-full w-full overflow-scroll bg-white p-0"
+        style={styleScale()}
+        ref={iframe}
+        src={srcUrl()}
+        onload={[setIframeReady, true]}
+        // @ts-ignore
+        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+      />
+      <Show when={props.devtools}>
+        <GridResizer
+          ref={resizer}
+          isHorizontal={true}
+          onResize={(_, y) => {
+            changeIframeHeight(y);
+          }}
         />
-      </div>
-      <Show when={!isWebKit}>
-        <div>
-          <GridResizer
-            ref={resizer}
-            isHorizontal={true}
-            onResize={(_, y) => {
-              changeIframeHeight(y);
-            }}
-          />
-        </div>
-        <div>
-          <iframe
-            class="h-full w-full"
-            ref={devtoolsIframe}
-            style={{ display: props.devtools ? 'block' : 'none' }}
-          ></iframe>
-        </div>
       </Show>
+      <iframe
+        class="h-full w-full"
+        ref={devtoolsIframe}
+        src={devtoolsSrc}
+        classList={{ block: props.devtools, hidden: !props.devtools }}
+      />
     </div>
   );
 };
