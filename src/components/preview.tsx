@@ -185,8 +185,8 @@ export const Preview: Component<Props> = (props) => {
   });
 
   createEffect(() => {
+    if (isWebKit) return;
     if (!isIframeReady()) return;
-
     (iframe.contentWindow! as any).ChiiDevtoolsIframe = devtoolsIframe;
     (iframe.contentWindow! as any).injectTarget();
   });
