@@ -199,18 +199,27 @@ export const Preview: Component<Props> = (props) => {
     }); transform-origin: 0 0;`;
   };
 
-  const [iframeHeight, setIframeHeight] = createSignal<number>(isWebKit ? 101 : 50);
-  const updateIframeHeight = (y: number) => {
-    const boundingRect = outerContainer.getBoundingClientRect();
-    let pos = y - boundingRect.top;
-    if (pos > boundingRect.height || pos < 0) pos = 0;
-    const percentage = (pos / outerContainer.offsetHeight) * 100;
-    setIframeHeight(percentage);
-  };
+  const [iframeHeight, setIframeHeight] = createSignal<number>(1);
+  const changeIframeHeight = (clientY: number) => {
+    let position: number;
+    let size: number;
 
+    const rect = outerContainer.getBoundingClientRect();
+
+    position = clientY - rect.top - resizer.offsetHeight / 2;
+    size = outerContainer.offsetHeight - resizer.offsetHeight;
+    const percentage = position / size;
+
+    setIframeHeight(percentage * 2);
+  };
+  createEffect(() => {});
   return (
-    <div class="relative h-full w-full overflow-clip" ref={outerContainer}>
-      <div style={{ height: iframeHeight() - 1 + '%' }}>
+    <div
+      class="grid h-full w-full overflow-clip"
+      ref={outerContainer}
+      style={{ 'grid-template-rows': `${iframeHeight()}fr auto ${2 - iframeHeight()}fr ` }}
+    >
+      <div style={{ height: `${iframeHeight()}fr` }}>
         <iframe
           title="Solid REPL"
           class="dark:bg-other row-start-5 block h-full w-full overflow-auto bg-white p-0"
@@ -224,16 +233,16 @@ export const Preview: Component<Props> = (props) => {
         />
       </div>
       <Show when={!isWebKit}>
-        <div style={{ height: '2%' }}>
+        <div>
           <GridResizer
             ref={resizer}
             isHorizontal={true}
             onResize={(_, y) => {
-              updateIframeHeight(y);
+              changeIframeHeight(y);
             }}
           />
         </div>
-        <div style={{ height: 100 - iframeHeight() - 1 + '%' }}>
+        <div>
           <iframe
             class="h-full w-full"
             ref={devtoolsIframe}
