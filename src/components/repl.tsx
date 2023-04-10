@@ -14,7 +14,7 @@ import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
 import { ImportMap } from 'solid-repl';
-
+import { clampPercentage } from '../helpers/clampPercentage';
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },
@@ -167,10 +167,6 @@ const Repl: ReplProps = (props) => {
     compile();
   });
 
-  const clampPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
-    return Math.min(Math.max(percentage, lowerBound), upperBound);
-  };
-
   let grid!: HTMLDivElement;
   let resizer!: HTMLDivElement;
   const [left, setLeft] = createSignal(1.25);
@@ -193,6 +189,7 @@ const Repl: ReplProps = (props) => {
     }
     const percentage = position / size;
     const percentageAdjusted = clampPercentage(percentage * 2, 0.5, 1.5);
+    // const percentageAdjusted = percentage * 2;
 
     setLeft(percentageAdjusted);
   };
