@@ -82,7 +82,11 @@ const Repl: ReplProps = (props) => {
   let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
   let import_map = {};
   if (idx >= 0) {
-    import_map = JSON.parse(unwrap(props.tabs[idx]).source);
+    try {
+      import_map = JSON.parse(unwrap(props.tabs[idx]).source);
+    } catch (e) {
+      import_map = {};
+    }
   }
   const [importMap, setImportMap] = createSignal<ImportMap>(import_map, { equals: false });
   function updateImportMap(map: any) {
