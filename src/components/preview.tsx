@@ -3,7 +3,6 @@ import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
 import { isWebKit } from '@solid-primitives/platform';
-import { clampPercentage } from '../helpers/clampPercentage';
 const generateHTML = (isDark: boolean, importMap: string, devtoolsCode: string) => `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
@@ -199,7 +198,8 @@ export const Preview: Component<Props> = (props) => {
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
-  const [iframeHeight, setIframeHeight] = createSignal<string>('1fr');
+
+  const [iframeHeight, setIframeHeight] = createSignal<number>(1);
   const changeIframeHeight = (clientY: number) => {
     let position: number;
     let size: number;
@@ -208,23 +208,16 @@ export const Preview: Component<Props> = (props) => {
 
     position = clientY - rect.top - resizer.offsetHeight / 2;
     size = outerContainer.offsetHeight - resizer.offsetHeight;
-    const percentage = (position / size) * 100;
-    setIframeHeight(clampPercentage(percentage, 5, 95) + '%');
-  };
-  const devtoolsHeight = () => {
-    if (iframeHeight() == '1fr') {
-      return '1fr';
-    }
-    return 100 - parseInt(iframeHeight().replace('%', '')) + '%';
+    const percentage = position / size;
+
+    setIframeHeight(percentage * 2);
   };
   createEffect(() => {});
   return (
     <div
       class="grid h-full w-full overflow-clip"
       ref={outerContainer}
-      style={{
-        'grid-template-rows': props.devtools && !isWebKit ? `${iframeHeight()} auto ${devtoolsHeight()}` : '100% 0%',
-      }}
+      style={{ 'grid-template-rows': `${iframeHeight()}fr auto ${2 - iframeHeight()}fr ` }}
     >
       <div>
         <iframe
