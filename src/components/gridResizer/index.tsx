@@ -63,7 +63,7 @@ export const GridResizer: Component<{
   return (
     <div
       ref={setRef}
-      class="hover:bg-brand-default dark:hover:bg-brand-default group flex items-center justify-center border-slate-200 dark:border-neutral-800 gap-2"
+      class="hover:bg-brand-default dark:hover:bg-brand-default group flex items-center justify-center gap-2 border-slate-200 dark:border-neutral-800"
       classList={{
         'bg-brand-default dark:bg-brand-default': isDragging(),
         'bg-slate-50 dark:bg-solid-darkbg/70': !isDragging(),
