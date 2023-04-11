@@ -1,7 +1,9 @@
-import { Accessor, Component, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import { Accessor, Component, Show, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
+import { isWebKit } from '@solid-primitives/platform';
+import { throttle } from '@solid-primitives/scheduled';
 
 const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>
@@ -256,8 +258,18 @@ export const Preview: Component<Props> = (props) => {
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
-
-  const [iframeHeight, setIframeHeight] = createSignal<number>(1);
+  function saveHeight(height: number) {
+    localStorage.setItem('iframe_height', height.toString());
+  }
+  function loadHeight() {
+    if (typeof window == undefined) return 1;
+    const loaded = localStorage.getItem('iframe_height');
+    if (loaded == null) {
+      return 1;
+    }
+    return parseFloat(loaded);
+  }
+  const [iframeHeight, setIframeHeight] = createSignal<number>(loadHeight());
   const changeIframeHeight = (clientY: number) => {
     let position: number;
     let size: number;
@@ -271,6 +283,14 @@ export const Preview: Component<Props> = (props) => {
     setIframeHeight(percentage * 2);
   };
 
+  createEffect(
+    on(
+      iframeHeight,
+      throttle(() => {
+        saveHeight(iframeHeight());
+      }, 50),
+    ),
+  );
   return (
     <div
       class="grid h-full w-full"
