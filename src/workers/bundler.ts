@@ -42,6 +42,22 @@ function getFileImports(contents: string) {
 function transformImportee(fileName: string) {
   // Base cases
   if (fileName.includes('://')) {
+    if (fileName.endsWith('.css')) {
+      const id = uid(fileName);
+      const js = dd`
+    (() => {
+      let link = document.getElementById('${id}');
+      if (!link) {
+        link = document.createElement('link')
+        link.setAttribute('id', ${id})
+        document.head.appendChild(link)
+      }
+      link.setAttribute('rel', 'stylesheet')
+      link.setAttribute('href', '${fileName}')
+    })()
+  `;
+      return createObjectURL(js);
+    }
     return fileName;
   }
   if (!fileName.startsWith('.')) {
