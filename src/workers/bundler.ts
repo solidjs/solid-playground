@@ -20,48 +20,39 @@ function getFileImports(contents: string) {
   const re = /import(?:[\s.*]([\w*{}\n\r\t, ]+)[\s*]from)?[\s*](?:["'](.*[\w]+)["'])?/gm;
   let names = [];
   for (const match of contents.matchAll(re)) {
-    names.push({ name: match[2], index: match.index });
+    names.push({ name: match[2], index: match.index, statement: match[0] });
   }
   return names;
 }
-function transformImport(importName: string) {
-  if (importName.startsWith('.')) {
-    const contents = transformedFiles[importName];
-    const transformedCode = babelTransform(contents);
-    transformedFiles[importName] = transformedCode!;
-    const importURL = URL.createObjectURL(new Blob([transformedCode!], { type: 'text/javascript' }));
-    return importURL;
-  }
-  if (importName.includes('://')) {
-    return importName;
-  }
-  importMap[importName] = CDN_URL(importName);
-  return importName;
-}
-let transformedFiles: Record<string, string> = {};
-function transformFile(fileName: string) {
-  let contents = files[fileName];
-  const imports = getFileImports(contents);
-  for (let i = 0; i < imports.length; i++) {
-    const importInfo = imports[i];
-    const { name } = importInfo;
-    if (name.startsWith('.')) {
-      transformFile(name);
-    }
-  }
-  for (let i = 0; i < imports.length; i++) {
-    const importInfo = imports[i];
-    const { name, index } = importInfo;
-    contents =
-      contents.substring(0, index) +
-      contents.substring(index!, contents.length - 1).replace(name, transformImport(name));
-  }
 
-  transformedFiles[fileName] = contents;
+let transformedFiles: Record<string, string> = {};
+function transformImportee(fileName: string) {
+  // Returns new import URL
+  if (fileName.includes('://')) {
+    return fileName;
+  }
+  if (!fileName.startsWith('.')) {
+    const url = CDN_URL(fileName);
+    importMap[fileName] = url;
+    return fileName;
+  }
+  const contents = files[fileName];
+  const imports = getFileImports(contents);
+  let newContents = contents;
+  for (let i = 0; i < imports.length; i++) {
+    const importee = imports[i];
+    const name = importee.name;
+    const importUrl = transformImportee(name);
+    const newStatement = importee.statement.replace(name, importUrl!);
+    newContents = newContents.replace(importee.statement, newStatement);
+  }
+  const transpiledContents = babelTransform(newContents);
+  return fileName == './main'
+    ? transpiledContents
+    : URL.createObjectURL(new Blob([transpiledContents!], { type: 'application/javascript' }));
 }
 export function bundle(entryPoint: string, yes: Record<string, string>) {
   files = yes;
   transformedFiles = {};
-  transformFile(entryPoint);
-  return [babelTransform(transformedFiles[entryPoint]), importMap];
+  return [transformImportee(entryPoint), importMap];
 }
