@@ -88,14 +88,14 @@ const Repl: ReplProps = (props) => {
       import_map = {};
     }
   }
-  const [importMap, setImportMap] = createSignal<ImportMap>(import_map, { equals: false });
-  function updateImportMap(map: any) {
-    const currentImportMap = importMap();
-    if (JSON.stringify(currentImportMap) === JSON.stringify(map)) {
-      return;
-    }
-    setImportMap(map);
-  }
+  const [importMap, setImportMap] = createSignal<ImportMap>(import_map, {
+    equals: (prev, next) => {
+      if (JSON.stringify(prev) === JSON.stringify(next)) {
+        return true;
+      }
+      return false;
+    },
+  });
   let outputModel: editor.ITextModel;
 
   createEffect(() => {
@@ -127,7 +127,7 @@ const Repl: ReplProps = (props) => {
           delete currentMap[key];
         }
       }
-      updateImportMap(currentMap);
+      setImportMap(currentMap);
       setCompiled(compiled);
     } else if (event === 'BABEL') {
       outputModel.setValue(compiled);
@@ -201,6 +201,12 @@ const Repl: ReplProps = (props) => {
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
   const [displayErrors, setDisplayErrors] = createSignal(true);
+  const tabs = () => {
+    const filtered = props.tabs.filter((tab) => {
+      return !tab.name.startsWith('data_');
+    });
+    return filtered;
+  };
   return (
     <div
       ref={grid}
@@ -217,7 +223,7 @@ const Repl: ReplProps = (props) => {
     >
       <div class="flex h-full flex-col">
         <TabList>
-          <For each={props.tabs.filter((x) => !x.name.startsWith('data_'))}>
+          <For each={tabs()}>
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
@@ -326,6 +332,7 @@ const Repl: ReplProps = (props) => {
                 }
                 return;
               }
+              // console.log(code)
               compile();
             }}
             formatter={formatter}

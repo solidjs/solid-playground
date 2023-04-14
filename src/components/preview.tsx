@@ -1,8 +1,6 @@
 import { Accessor, Component, Show, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
-import { isServer } from 'solid-js/web';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
-import { isWebKit } from '@solid-primitives/platform';
 import { throttle } from '@solid-primitives/scheduled';
 
 const generateHTML = (isDark: boolean, importMap: string) => `
@@ -113,7 +111,6 @@ const generateHTML = (isDark: boolean, importMap: string) => `
         });
         
         setTimeout(() => {
-          window.parent.postMessage(JSON.stringify({ event: 'READY' }), '${location.origin}');  
           sendToDevtools({
             method: 'Page.frameNavigated',
             params: {
@@ -240,7 +237,6 @@ export const Preview: Component<Props> = (props) => {
           }
         });
       } else {
-        console.log({ devtoolsSrc });
         devtoolsIframe.contentWindow!.postMessage(event.data, devtoolsSrc);
       }
     }
