@@ -5,7 +5,6 @@ import { transform } from '@babel/standalone';
 import babelPresetSolid from 'babel-preset-solid';
 // @ts-ignore
 import { rollup, Plugin } from '@rollup/browser';
-import dd from 'dedent';
 import { bundle } from './bundler';
 
 export const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
