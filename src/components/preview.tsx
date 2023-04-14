@@ -176,18 +176,20 @@ export const Preview: Component<Props> = (props) => {
   let outerContainer!: HTMLDivElement;
 
   const [isIframeReady, setIframeReady] = createSignal(false);
-
-  createEffect(() => {
+  const appSrcUrl = createMemo(() => {
     if (!props.code) return;
-    if (!isIframeReady()) return;
-
     const blob = new Blob([props.code], {
       type: 'text/javascript',
     });
     const src = URL.createObjectURL(blob);
     onCleanup(() => URL.revokeObjectURL(src));
+    return src;
+  });
+  createEffect(() => {
+    if (!props.code) return;
+    if (!isIframeReady()) return;
 
-    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: src }, '*');
+    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: appSrcUrl() }, '*');
   });
 
   createEffect(() => {
@@ -203,7 +205,7 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   });
 
-  let srcUrl = createMemo(() => {
+  let iframeSrcUrl = createMemo(() => {
     const importMapStr = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
     const html = generateHTML(
       untrack(() => props.isDark),
@@ -222,7 +224,7 @@ export const Preview: Component<Props> = (props) => {
 
     // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
-    iframe.src = srcUrl()!;
+    iframe.src = iframeSrcUrl()!;
   });
 
   const devtoolsSrc = useDevtoolsSrc();
@@ -241,7 +243,7 @@ export const Preview: Component<Props> = (props) => {
       }
     }
     if (event.source === devtoolsIframe.contentWindow) {
-      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, srcUrl());
+      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, iframeSrcUrl());
     }
   };
   window.addEventListener('message', messageListener);
@@ -303,7 +305,7 @@ export const Preview: Component<Props> = (props) => {
         class="dark:bg-other block h-full w-full overflow-scroll bg-white p-0"
         style={styleScale()}
         ref={iframe}
-        src={srcUrl()}
+        src={iframeSrcUrl()}
         onload={[setIframeReady, true]}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"

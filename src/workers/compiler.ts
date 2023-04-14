@@ -6,6 +6,7 @@ import babelPresetSolid from 'babel-preset-solid';
 // @ts-ignore
 import { rollup, Plugin } from '@rollup/browser';
 import dd from 'dedent';
+import { bundle } from './bundler';
 
 export const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
 
@@ -86,10 +87,14 @@ const replPlugin: Plugin = {
 };
 
 async function compile(tabs: Tab[], event: string) {
+  const tabsRecord: Record<string, string> = {};
   for (const tab of tabs) {
+    tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
     tabsLookup.set(`./${tab.name.replace(/.(tsx|jsx)$/, '')}`, tab);
   }
   importMap = {};
+
+  // const code = bundle();
   const compiler = await rollup({
     input: `./${tabs[0].name.replace(/.(tsx|jsx)$/, '')}`,
     plugins: [replPlugin],
@@ -98,13 +103,8 @@ async function compile(tabs: Tab[], event: string) {
   const {
     output: [{ code, imports }],
   } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
-
   if (event === 'ROLLUP') {
     return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
-  }
-
-  if (event === 'IMPORTS') {
-    return { event, imports };
   }
 }
 
