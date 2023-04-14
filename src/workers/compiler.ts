@@ -94,16 +94,10 @@ async function compile(tabs: Tab[], event: string) {
   }
   importMap = {};
 
-  // const code = bundle();
-  const compiler = await rollup({
-    input: `./${tabs[0].name.replace(/.(tsx|jsx)$/, '')}`,
-    plugins: [replPlugin],
-  });
-  const customCode = bundle('./main', tabsRecord);
-  console.log(customCode);
-  const {
-    output: [{ code, imports }],
-  } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
+  const output = bundle('./main', tabsRecord);
+  console.log(output);
+  const code = output[0] as string;
+  importMap = output[1] as ImportMap;
   if (event === 'ROLLUP') {
     return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
   }
