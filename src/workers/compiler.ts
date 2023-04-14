@@ -1,4 +1,4 @@
-import type { ImportMap, Tab } from 'solid-repl';
+import type { Tab } from 'solid-repl';
 
 import { transform } from '@babel/standalone';
 // @ts-ignore
@@ -8,27 +8,12 @@ import { bundle } from './bundler';
 
 export const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
 
-const tabsLookup = new Map<string, Tab>();
-
-function uid(str: string) {
-  return Array.from(str)
-    .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
-    .toString();
-}
-let importMap: ImportMap = {};
-
 async function compile(tabs: Tab[], event: string) {
   const tabsRecord: Record<string, string> = {};
   for (const tab of tabs) {
     tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
-    tabsLookup.set(`./${tab.name.replace(/.(tsx|jsx)$/, '')}`, tab);
   }
-  importMap = {};
-
-  const output = bundle('./main', tabsRecord);
-  console.log(output);
-  const code = output[0] as string;
-  importMap = output[1] as ImportMap;
+  const { code, importMap } = bundle('./main', tabsRecord);
   if (event === 'ROLLUP') {
     return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
   }

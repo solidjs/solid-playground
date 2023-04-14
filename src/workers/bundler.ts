@@ -1,9 +1,10 @@
 import { transform } from '@babel/standalone';
+import type { ImportMap } from 'solid-repl';
 //@ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
 import dd from 'dedent';
 let files: Record<string, string> = {};
-let importMap: Record<string, string> = {};
+let importMap: ImportMap = {};
 let createdObjectURLs: string[] = [];
 const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
 function uid(str: string) {
@@ -77,7 +78,7 @@ function transformImportee(fileName: string) {
     newContents = newContents.replace(importee.statement, newStatement);
   }
   const transpiledContents = babelTransform(newContents);
-  return fileName == './main' ? transpiledContents : createObjectURL(transpiledContents!);
+  return fileName == './main' ? transpiledContents! : createObjectURL(transpiledContents!);
 }
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   // Clean up object URLs from last run
@@ -87,5 +88,5 @@ export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   createdObjectURLs = [];
   files = fileRecord;
   importMap = {};
-  return [transformImportee(entryPoint), importMap];
+  return { code: transformImportee(entryPoint), importMap };
 }
