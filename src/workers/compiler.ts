@@ -99,7 +99,8 @@ async function compile(tabs: Tab[], event: string) {
     input: `./${tabs[0].name.replace(/.(tsx|jsx)$/, '')}`,
     plugins: [replPlugin],
   });
-
+  const customCode = bundle('./main', tabsRecord);
+  console.log(customCode);
   const {
     output: [{ code, imports }],
   } = await compiler.generate({ format: 'esm', inlineDynamicImports: true });
