@@ -12,13 +12,13 @@ function uid(str: string) {
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
-function babelTransform(code: string) {
+function babelTransform(filename: string, code: string) {
   let { code: transformedCode } = transform(code, {
     presets: [
       [babelPresetSolid, { generate: 'dom', hydratable: false }],
       ['typescript', { onlyRemoveTypeImports: true }],
     ],
-    filename: 'file' + '.tsx',
+    filename: filename + '.tsx',
   });
   return transformedCode;
 }
@@ -67,6 +67,7 @@ function transformImportee(fileName: string) {
   `;
     return createObjectURL(js);
   }
+  // Parse file and all its children through recursion
   const contents = files[fileName];
   const imports = getFileImports(contents);
   let newContents = contents;
@@ -77,7 +78,7 @@ function transformImportee(fileName: string) {
     const newStatement = importee.statement.replace(name, importUrl!);
     newContents = newContents.replace(importee.statement, newStatement);
   }
-  const transpiledContents = babelTransform(newContents);
+  const transpiledContents = babelTransform(fileName, newContents);
   return fileName == './main' ? transpiledContents! : createObjectURL(transpiledContents!);
 }
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
