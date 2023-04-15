@@ -14,6 +14,7 @@ let currentFileImports: string[] = [];
 function babelTransform(filename: string, code: string) {
   let { code: transformedCode } = transform(code, {
     plugins: [
+      // Babel plugin to get file import names
       function importGetter() {
         return {
           visitor: {
@@ -22,6 +23,7 @@ function babelTransform(filename: string, code: string) {
               if (!currentFileImports.includes(importee)) {
                 currentFileImports.push(importee);
                 if (importee.startsWith('./')) {
+                  // Replace relative imports, as import maps don't seem to be able to handle them properly
                   path.node.source.value = importee.replace('./', '');
                 }
               }
@@ -97,8 +99,7 @@ function transformImportee(fileName: string) {
     const importee = imports[i];
     const transformed = transformImportee(importee);
     if (transformed == undefined) continue;
-
-    dataToReturn = dataToReturn.concat(transformed);
+    dataToReturn.push(...transformed)
   }
   dataToReturn.push({ name: fileName.replace('./', ''), contents: transpiledContents! });
   return dataToReturn;

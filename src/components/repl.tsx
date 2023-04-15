@@ -113,27 +113,12 @@ const Repl: ReplProps = (props) => {
     else setError('');
 
     if (event === 'ROLLUP') {
-      // const keys = Object.keys(import_map);
-      // let currentMap = window.structuredClone(importMap());
-      // for (let i = 0; i < keys.length; i++) {
-      //   const key = keys[i];
-      //   if (!currentMap.hasOwnProperty(key)) {
-      //     currentMap[key] = import_map[key];
-      //   }
-      // }
-      // const currentKeys = Object.keys(currentMap);
-      // for (let i = 0; i < currentKeys.length; i++) {
-      //   const key = currentKeys[i];
-      //   if (!import_map.hasOwnProperty(key)) {
-      //     delete currentMap[key];
-      //   }
-      // }
-      let currentMap: Record<string, string> = {};
+      let import_map: Record<string, string> = {};
       let entryFile = '';
       for (let i = 0; i < compiled.length; i++) {
         const file = compiled[i];
         if (file.external) {
-          currentMap[file.name] = CDN_URL(file.name);
+          import_map[file.name] = CDN_URL(file.name);
           continue;
         }
         if (file.name == 'main') {
@@ -141,8 +126,29 @@ const Repl: ReplProps = (props) => {
           continue;
         }
         const url = URL.createObjectURL(new Blob([file.contents], { type: 'application/javascript' }));
-        currentMap[file.name] = url;
+        import_map[file.name] = url;
       }
+      let currentMap = window.structuredClone(importMap());
+      // Remove keys no longer present in the new map
+      const currentKeys = Object.keys(currentMap);
+      for (let i = 0; i < currentKeys.length; i++) {
+        const key = currentKeys[i];
+        if (currentMap[key].startsWith('blob:')) {
+          delete currentMap[key];
+        }
+        if (!import_map.hasOwnProperty(key)) {
+          delete currentMap[key];
+        }
+      }
+      // Combine current import map with the new map
+      const keys = Object.keys(import_map);
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (!currentMap.hasOwnProperty(key)) {
+          currentMap[key] = import_map[key];
+        }
+      }
+
       setImportMap(currentMap);
       setCompiled(entryFile);
     } else if (event === 'BABEL') {

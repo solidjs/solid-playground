@@ -37,8 +37,8 @@ export const GridResizer: Component<{
   const setRef = (el: HTMLDivElement) => {
     (props.ref as SolidRef)(el);
 
-    el.addEventListener('mousedown', onResizeStart);
-    el.addEventListener('touchstart', onResizeStart);
+    el.addEventListener('mousedown', onResizeStart, { passive: true });
+    el.addEventListener('touchstart', onResizeStart, { passive: true });
 
     onCleanup(() => {
       el.removeEventListener('mousedown', onResizeStart);
