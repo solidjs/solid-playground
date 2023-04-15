@@ -15,6 +15,7 @@ import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
 import { ImportMap } from 'solid-repl';
 import { clampPercentage } from '../helpers/clampPercentage';
+import { CDN_URL } from '../helpers/cdn_url';
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },
@@ -107,28 +108,43 @@ const Repl: ReplProps = (props) => {
   });
 
   compiler.addEventListener('message', ({ data }) => {
-    const { event, compiled, import_map, error } = data;
+    const { event, compiled, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
 
     if (event === 'ROLLUP') {
-      const keys = Object.keys(import_map);
-      let currentMap = window.structuredClone(importMap());
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        if (!currentMap.hasOwnProperty(key)) {
-          currentMap[key] = import_map[key];
+      // const keys = Object.keys(import_map);
+      // let currentMap = window.structuredClone(importMap());
+      // for (let i = 0; i < keys.length; i++) {
+      //   const key = keys[i];
+      //   if (!currentMap.hasOwnProperty(key)) {
+      //     currentMap[key] = import_map[key];
+      //   }
+      // }
+      // const currentKeys = Object.keys(currentMap);
+      // for (let i = 0; i < currentKeys.length; i++) {
+      //   const key = currentKeys[i];
+      //   if (!import_map.hasOwnProperty(key)) {
+      //     delete currentMap[key];
+      //   }
+      // }
+      let currentMap: Record<string, string> = {};
+      let entryFile = '';
+      for (let i = 0; i < compiled.length; i++) {
+        const file = compiled[i];
+        if (file.external) {
+          currentMap[file.name] = CDN_URL(file.name);
+          continue;
         }
-      }
-      const currentKeys = Object.keys(currentMap);
-      for (let i = 0; i < currentKeys.length; i++) {
-        const key = currentKeys[i];
-        if (!import_map.hasOwnProperty(key)) {
-          delete currentMap[key];
+        if (file.name == 'main') {
+          entryFile = file.contents;
+          continue;
         }
+        const url = URL.createObjectURL(new Blob([file.contents], { type: 'application/javascript' }));
+        currentMap[file.name] = url;
       }
       setImportMap(currentMap);
-      setCompiled(compiled);
+      setCompiled(entryFile);
     } else if (event === 'BABEL') {
       outputModel.setValue(compiled);
     }

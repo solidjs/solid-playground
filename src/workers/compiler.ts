@@ -6,8 +6,6 @@ import babelPresetSolid from 'babel-preset-solid';
 
 import { bundle } from './bundler';
 
-export const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
-
 async function compile(tabs: Tab[], event: string) {
   const tabsRecord: Record<string, string> = {};
   for (const tab of tabs) {
@@ -17,7 +15,7 @@ async function compile(tabs: Tab[], event: string) {
   console.log(code)
   if (event === 'ROLLUP') {
     // return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
-    return { event, compiled: "", import_map: {} };
+    return { event, compiled: code };
   }
 }
 

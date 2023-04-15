@@ -4,7 +4,7 @@ import babelPresetSolid from 'babel-preset-solid';
 import dd from 'dedent';
 let files: Record<string, string> = {};
 let allImports: string[] = [];
-const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
+
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
@@ -18,8 +18,13 @@ function babelTransform(filename: string, code: string) {
         return {
           visitor: {
             ImportDeclaration(path: any) {
-              const importee = path.node.source.value;
-              if (!currentFileImports.includes(importee)) currentFileImports.push(path.node.source.value);
+              const importee: string = path.node.source.value;
+              if (!currentFileImports.includes(importee)) {
+                currentFileImports.push(importee);
+                if (importee.startsWith('./')) {
+                  path.node.source.value = importee.replace('./', '');
+                }
+              }
             },
           },
         };
@@ -80,28 +85,26 @@ function transformImportee(fileName: string) {
       stylesheet.appendChild(styles)
     })()
   `;
-    return [{ name: fileName, contents: js }];
+    return [{ name: fileName.replace('./', ''), contents: js }];
   }
-  let dataToReturn: { name: string; contents?: string; external?: boolean }[] = [];
   // Parse file and all its children through recursion
+  let dataToReturn: { name: string; contents?: string; external?: boolean }[] = [];
   const contents = files[fileName];
-  const parsedContents = babelTransform(fileName, contents);
+  const transpiledContents = babelTransform(fileName, contents);
   const imports = structuredClone(currentFileImports);
   currentFileImports = [];
-  // console.log(imports);
   for (let i = 0; i < imports.length; i++) {
     const importee = imports[i];
-    // console.log(transformImportee("./tab2"))
-    // transformImportee('./tab3');
     const transformed = transformImportee(importee);
     if (transformed == undefined) continue;
 
     dataToReturn = dataToReturn.concat(transformed);
   }
-  dataToReturn.push({ name: fileName, contents: parsedContents! });
+  dataToReturn.push({ name: fileName.replace('./', ''), contents: transpiledContents! });
   return dataToReturn;
 }
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   files = fileRecord;
+  allImports = [];
   return { code: transformImportee(entryPoint) };
 }

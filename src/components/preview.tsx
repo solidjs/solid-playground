@@ -185,12 +185,13 @@ export const Preview: Component<Props> = (props) => {
     onCleanup(() => URL.revokeObjectURL(src));
     return src;
   });
-  createEffect(() => {
-    if (!props.code) return;
-    if (!isIframeReady()) return;
-
-    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: appSrcUrl() }, '*');
-  });
+  createEffect(
+    on([isIframeReady, () => props.code, appSrcUrl], () => {
+      if (!props.code) return;
+      if (!isIframeReady()) return;
+      iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: appSrcUrl() }, '*');
+    }),
+  );
 
   createEffect(() => {
     if (!isIframeReady()) return;

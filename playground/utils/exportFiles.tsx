@@ -1,7 +1,7 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl';
 import dedent from 'dedent';
-import { CDN_URL as MAKE_CDN_URL } from '../../src/workers/compiler';
+import { CDN_URL as MAKE_CDN_URL } from '../../src/helpers/cdn_url';
 
 enum CDN_URL {
   domain = 'https://esm.sh/',
