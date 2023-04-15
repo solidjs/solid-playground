@@ -1,19 +1,30 @@
 import { transform } from '@babel/standalone';
-import type { ImportMap } from 'solid-repl';
 //@ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
 import dd from 'dedent';
 let files: Record<string, string> = {};
-let importMap: ImportMap = {};
-let createdObjectURLs: string[] = [];
+let allImports: string[] = [];
 const CDN_URL = (importee: string) => `https://jspm.dev/${importee}`;
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
+let currentFileImports: string[] = [];
 function babelTransform(filename: string, code: string) {
   let { code: transformedCode } = transform(code, {
+    plugins: [
+      function importGetter() {
+        return {
+          visitor: {
+            ImportDeclaration(path: any) {
+              const importee = path.node.source.value;
+              if (!currentFileImports.includes(importee)) currentFileImports.push(path.node.source.value);
+            },
+          },
+        };
+      },
+    ],
     presets: [
       [babelPresetSolid, { generate: 'dom', hydratable: false }],
       ['typescript', { onlyRemoveTypeImports: true }],
@@ -22,24 +33,14 @@ function babelTransform(filename: string, code: string) {
   });
   return transformedCode;
 }
-function createObjectURL(data: string) {
-  const url = URL.createObjectURL(new Blob([data], { type: 'application/javascript' }));
-  createdObjectURLs.push(url);
-  return url;
-}
-// Gets all imports within the file
-function getFileImports(contents: string) {
-  // Regex below taken from https://gist.github.com/manekinekko/7e58a17bc62a9be47172
-  const re = /import(?:[\s.*]([\w*{}\n\r\t, ]+)[\s*]from)?[\s*](?:["'](.*[\w]+)["'])?/gm;
-  let names = [];
-  for (const match of contents.matchAll(re)) {
-    names.push({ name: match[2], index: match.index, statement: match[0] });
-  }
-  return names;
-}
 
 // Returns new import URL
 function transformImportee(fileName: string) {
+  // There's no point re-visiting a node again, as it's already been processed
+  if (allImports.includes(fileName)) {
+    return;
+  }
+  allImports.push(fileName);
   // Base cases
   if (fileName.includes('://')) {
     if (fileName.endsWith('.css')) {
@@ -56,14 +57,12 @@ function transformImportee(fileName: string) {
       link.setAttribute('href', '${fileName}')
     })()
   `;
-      return createObjectURL(js);
+      return [{ name: fileName, contents: js }];
     }
-    return fileName;
+    return [{ name: fileName, external: true }];
   }
   if (!fileName.startsWith('.')) {
-    const url = CDN_URL(fileName);
-    importMap[fileName] = url;
-    return fileName;
+    return [{ name: fileName, external: true }];
   }
   if (fileName.endsWith('.css')) {
     const contents = files[fileName];
@@ -81,29 +80,28 @@ function transformImportee(fileName: string) {
       stylesheet.appendChild(styles)
     })()
   `;
-    return createObjectURL(js);
+    return [{ name: fileName, contents: js }];
   }
+  let dataToReturn: { name: string; contents?: string; external?: boolean }[] = [];
   // Parse file and all its children through recursion
   const contents = files[fileName];
-  const imports = getFileImports(contents);
-  let newContents = contents;
+  const parsedContents = babelTransform(fileName, contents);
+  const imports = structuredClone(currentFileImports);
+  currentFileImports = [];
+  // console.log(imports);
   for (let i = 0; i < imports.length; i++) {
     const importee = imports[i];
-    const name = importee.name;
-    const importUrl = transformImportee(name);
-    const newStatement = importee.statement.replace(name, importUrl!);
-    newContents = newContents.replace(importee.statement, newStatement);
+    // console.log(transformImportee("./tab2"))
+    // transformImportee('./tab3');
+    const transformed = transformImportee(importee);
+    if (transformed == undefined) continue;
+
+    dataToReturn = dataToReturn.concat(transformed);
   }
-  const transpiledContents = babelTransform(fileName, newContents);
-  return fileName == './main' ? transpiledContents! : createObjectURL(transpiledContents!);
+  dataToReturn.push({ name: fileName, contents: parsedContents! });
+  return dataToReturn;
 }
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
-  // Clean up object URLs from last run
-  for (const url of createdObjectURLs) {
-    URL.revokeObjectURL(url);
-  }
-  createdObjectURLs = [];
   files = fileRecord;
-  importMap = {};
-  return { code: transformImportee(entryPoint), importMap };
+  return { code: transformImportee(entryPoint) };
 }
