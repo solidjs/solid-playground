@@ -221,7 +221,7 @@ const Repl: ReplProps = (props) => {
         '--right': `${2 - left()}fr`,
       }}
     >
-      <div class="flex h-full flex-col">
+      <div class="grid h-full grid-rows-[min-content_1fr]">
         <TabList>
           <For each={tabs()}>
             {(tab, index) => (
@@ -351,7 +351,7 @@ const Repl: ReplProps = (props) => {
 
       <GridResizer ref={resizer} isHorizontal={isHorizontal()} onResize={changeLeft} />
 
-      <div class="flex h-full flex-col">
+      <div class="grid h-full grid-rows-[min-content_1fr]">
         <TabList>
           <TabItem>
             <button
@@ -404,9 +404,6 @@ const Repl: ReplProps = (props) => {
               devtools={devtoolsOpen()}
               isDark={props.dark}
               code={compiled()}
-              classList={{
-                'md:row-start-2': !props.isHorizontal,
-              }}
             />
           </Match>
           <Match when={outputTab() == 1}>
