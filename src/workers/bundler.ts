@@ -2,20 +2,23 @@ import { transform } from '@babel/standalone';
 //@ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
 import dd from 'dedent';
+
 let files: Record<string, string> = {};
 let allImports: string[] = [];
+let currentFileImports: string[] = [];
 
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
-let currentFileImports: string[] = [];
+
 function babelTransform(filename: string, code: string) {
   let { code: transformedCode } = transform(code, {
     plugins: [
       // Babel plugin to get file import names
       function importGetter() {
+        currentFileImports = [];
         return {
           visitor: {
             ImportDeclaration(path: any) {
@@ -94,16 +97,16 @@ function transformImportee(fileName: string) {
   const contents = files[fileName];
   const transpiledContents = babelTransform(fileName, contents);
   const imports = structuredClone(currentFileImports);
-  currentFileImports = [];
   for (let i = 0; i < imports.length; i++) {
     const importee = imports[i];
     const transformed = transformImportee(importee);
     if (transformed == undefined) continue;
-    dataToReturn.push(...transformed)
+    dataToReturn.push(...transformed);
   }
   dataToReturn.push({ name: fileName.replace('./', ''), contents: transpiledContents! });
   return dataToReturn;
 }
+
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   files = fileRecord;
   allImports = [];
