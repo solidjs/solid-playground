@@ -12,7 +12,7 @@ async function compile(tabs: Tab[], event: string) {
     tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
   }
   const { code } = bundle('./main', tabsRecord);
-  console.log(code)
+  console.log(code);
   if (event === 'ROLLUP') {
     // return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
     return { event, compiled: code };

@@ -31,7 +31,12 @@ const Repl: ReplProps = (props) => {
   const [error, setError] = createSignal('');
   const [compiled, setCompiled] = createSignal('');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
-
+  const userTabs = () => {
+    const filtered = props.tabs.filter((tab) => {
+      return !tab.name.startsWith('data_');
+    });
+    return filtered;
+  };
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
     if (idx < 0) return;
@@ -65,7 +70,7 @@ const Repl: ReplProps = (props) => {
   }
   function addTab() {
     const newTab = {
-      name: `tab${props.tabs.length}.tsx`,
+      name: `tab${userTabs().length}.tsx`,
       source: '',
     };
     batch(() => {
@@ -223,12 +228,6 @@ const Repl: ReplProps = (props) => {
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
   const [displayErrors, setDisplayErrors] = createSignal(true);
-  const tabs = () => {
-    const filtered = props.tabs.filter((tab) => {
-      return !tab.name.startsWith('data_');
-    });
-    return filtered;
-  };
   return (
     <div
       ref={grid}
@@ -245,7 +244,7 @@ const Repl: ReplProps = (props) => {
     >
       <div class="grid h-full grid-rows-[min-content_1fr]">
         <TabList>
-          <For each={tabs()}>
+          <For each={userTabs()}>
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
@@ -315,9 +314,9 @@ const Repl: ReplProps = (props) => {
                 let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
                 if (idx < 0) {
                   props.setTabs(
-                    props.tabs.concat([{ name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) }]),
+                    [{ name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) }].concat(props.tabs),
                   );
-                  idx = props.tabs.length - 1;
+                  idx = 0;
                 }
                 const newTabs = props.tabs;
                 newTabs[idx] = { name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) };
