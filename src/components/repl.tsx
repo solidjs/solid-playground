@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, on } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
@@ -111,7 +111,19 @@ const Repl: ReplProps = (props) => {
       outputModel.dispose();
     });
   });
-
+  createEffect(
+    on(importMap, () => {
+      console.log('Import Map Changed');
+      let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
+      if (idx < 0) {
+        props.setTabs(
+          [{ name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) }].concat(props.tabs),
+        );
+        idx = 0;
+      }
+      props.tabs[idx].source = JSON.stringify(importMap(), null, 4);
+    }),
+  );
   compiler.addEventListener('message', ({ data }) => {
     const { event, compiled, error } = data;
     if (event === 'ERROR') return setError(error);
@@ -153,7 +165,6 @@ const Repl: ReplProps = (props) => {
           currentMap[key] = import_map[key];
         }
       }
-
       setImportMap(currentMap);
       setCompiled(entryFile);
     } else if (event === 'BABEL') {
@@ -311,16 +322,7 @@ const Repl: ReplProps = (props) => {
             <label
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => {
-                let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
-                if (idx < 0) {
-                  props.setTabs(
-                    [{ name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) }].concat(props.tabs),
-                  );
-                  idx = 0;
-                }
-                const newTabs = props.tabs;
-                newTabs[idx] = { name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) };
-                props.setTabs(newTabs);
+                console.log(props.tabs);
                 props.setCurrent(`data_import_map.json`);
               }}
             >
