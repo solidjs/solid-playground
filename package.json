@@ -61,7 +61,7 @@
     "@unocss/reset": "^0.50.6",
     "babel-preset-solid": "1.7.0",
     "dedent": "^0.7.0",
-    "eslint-solid-standalone": "^0.12.0",
+    "eslint-solid-standalone": "^0.12.1",
     "jszip": "^3.10.1",
     "monaco-editor-textmate": "^4.0.0",
     "monaco-textmate": "^3.0.1",

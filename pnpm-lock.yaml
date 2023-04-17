@@ -31,7 +31,7 @@ specifiers:
   assert: ^2.0.0
   babel-preset-solid: 1.7.0
   dedent: ^0.7.0
-  eslint-solid-standalone: ^0.12.0
+  eslint-solid-standalone: ^0.12.1
   fs-extra: ^11.1.1
   jiti: ^1.18.2
   jszip: ^3.10.1
@@ -65,7 +65,7 @@ dependencies:
   '@unocss/reset': 0.50.6
   babel-preset-solid: 1.7.0_@babel+core@7.21.3
   dedent: 0.7.0
-  eslint-solid-standalone: 0.12.0_typescript@5.0.2
+  eslint-solid-standalone: 0.12.1_typescript@5.0.2
   jszip: 3.10.1
   monaco-editor-textmate: 4.0.0_n7746n4du5g5boijpd7xdle434
   monaco-textmate: 3.0.1_onigasm@2.2.5
@@ -1421,8 +1421,8 @@ packages:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
 
-  /eslint-solid-standalone/0.12.0_typescript@5.0.2:
-    resolution: {integrity: sha512-mqmwAMx7vpytIe8z43o/Z0sKpTbq4LpHlyCTpTbAozpjmRxS3HBKeSVopntqbycBqcoCLVTsJe0/fQqN27yLZw==}
+  /eslint-solid-standalone/0.12.1_typescript@5.0.2:
+    resolution: {integrity: sha512-UkIV1w9jFihY6X3sAapngkSxObON8zjM+4Lbyqj/itSh2QwUXvvT56gGw3eDCK0TXDTnsV+UxRf/2uzWnBCkfw==}
     peerDependencies:
       typescript: '>=4.0.0'
     dependencies:
