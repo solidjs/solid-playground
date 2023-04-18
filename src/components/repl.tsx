@@ -116,7 +116,7 @@ const Repl: ReplProps = (props) => {
       let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
       let currentMap = JSON.parse(tab?.source || '{}');
       for (const file in currentMap) {
-        if (!(file in compiled) && currentMap[file].includes('jspm.dev/')) {
+        if (!(file in compiled) && currentMap[file] === `https://jspm.dev/${file}`) {
           delete currentMap[file];
         }
       }
