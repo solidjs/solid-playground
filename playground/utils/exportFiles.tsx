@@ -55,7 +55,7 @@ const indexHTML = (tabs: Tab[]) => dedent`
  * package.json by using the imports list provided by the bundler,
  * and then generating the package.json itself, for the export
  */
-function packageJSON(imports: string[]): Promise<string> {
+function packageJSON(imports: string[]): string {
   const deps = imports.reduce((acc, importPath): Record<string, string> => {
     const name = importPath.split('/')[0];
     if (!acc[name]) acc[name] = '*';

@@ -3,7 +3,6 @@ declare module 'solid-repl' {
     name: string;
     source: string;
   }
-  export type ImportMap = Record<string, string>;
   export const defaultTabs: Tab[];
 }
 

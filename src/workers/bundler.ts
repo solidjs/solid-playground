@@ -64,7 +64,8 @@ function transformImportee(fileName: string) {
       `;
       return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
     }
-    return fileName;
+    if (fileName.includes('://')) return fileName;
+    else return `https://jspm.dev/${fileName}`;
   }
   if (fileName.endsWith('.css')) {
     const contents = files[fileName];

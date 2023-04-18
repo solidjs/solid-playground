@@ -13,7 +13,6 @@ import { editor, Uri } from 'monaco-editor';
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
-import { clampPercentage } from '../helpers/clampPercentage';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -193,8 +192,7 @@ const Repl: ReplProps = (props) => {
       size = grid.offsetWidth - resizer.offsetWidth;
     }
     const percentage = position / size;
-    const percentageAdjusted = clampPercentage(percentage * 2, 0.5, 1.5);
-    // const percentageAdjusted = percentage * 2;
+    const percentageAdjusted = Math.min(Math.max(percentage * 2, 0.5), 1.5);
 
     setLeft(percentageAdjusted);
   };

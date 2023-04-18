@@ -2,7 +2,6 @@ import { Component, Show, createEffect, createMemo, createSignal, onCleanup, unt
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
 import { throttle } from '@solid-primitives/scheduled';
-import { ImportMap } from 'solid-repl';
 
 const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>
@@ -295,7 +294,7 @@ export const Preview: Component<Props> = (props) => {
 };
 
 type Props = {
-  importMap: ImportMap;
+  importMap: Record<string, string>;
   classList?: {
     [k: string]: boolean | undefined;
   };
