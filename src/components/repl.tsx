@@ -1,6 +1,6 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
+import { arrowPath, commandLine, trash, inboxStack } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -265,6 +265,12 @@ const Repl: ReplProps = (props) => {
             )}
           </For>
 
+          <TabItem class="select-none" active={props.current === 'import_map.json'}>
+            <label class="cursor-pointer space-x-2 px-3 py-2" onclick={() => props.setCurrent('import_map.json')}>
+              <Icon path={inboxStack} class="h-5" />
+              <span class="sr-only">Import Map</span>
+            </label>
+          </TabItem>
           <li class="m-0 inline-flex items-center border-b-2 border-transparent">
             <button type="button" onClick={addTab} title="Add a new tab">
               <span class="sr-only">Add a new tab</span>
@@ -282,11 +288,6 @@ const Repl: ReplProps = (props) => {
               <Icon path={trash} class="h-5" />
               <span class="sr-only">Reset Editor</span>
             </button>
-          </TabItem>
-          <TabItem class="select-none justify-self-end" active={props.current === 'import_map.json'}>
-            <label class="cursor-pointer space-x-2 px-3 py-2" onclick={() => props.setCurrent('import_map.json')}>
-              <span>Import Map</span>
-            </label>
           </TabItem>
           <TabItem class="select-none justify-self-end">
             <label class="cursor-pointer space-x-2 px-3 py-2">

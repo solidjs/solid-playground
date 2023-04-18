@@ -44,6 +44,9 @@ function transformImportee(fileName: string) {
   if (fileName in dataToReturn) {
     return dataToReturn[fileName];
   }
+  if (!fileName) {
+    return '';
+  }
   dataToReturn[fileName] = '';
 
   // Base cases
