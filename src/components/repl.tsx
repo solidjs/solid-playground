@@ -1,6 +1,6 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { arrowPath, commandLine, trash, inboxStack } from 'solid-heroicons/outline';
+import { arrowPath, commandLine, trash, inboxStack, bell, bellSlash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -290,14 +290,15 @@ const Repl: ReplProps = (props) => {
             </button>
           </TabItem>
           <TabItem class="select-none justify-self-end">
-            <label class="cursor-pointer space-x-2 px-3 py-2">
+            <label class="cursor-pointer px-3 py-2">
               <input
                 type="checkbox"
-                name="display-errors"
+                hidden
                 checked={displayErrors()}
                 onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
               />
-              <span>Display Errors</span>
+              <Icon path={displayErrors() ? bell : bellSlash} class="h-5" />
+              <span class="sr-only">Display Errors</span>
             </label>
           </TabItem>
         </TabList>
