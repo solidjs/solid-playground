@@ -24,7 +24,7 @@ const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
 
   const tabRefs = new Map<string, HTMLSpanElement>();
-
+  let now = performance.now();
   const [error, setError] = createSignal('');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
   const userTabs = () => {
@@ -122,7 +122,7 @@ const Repl: ReplProps = (props) => {
           currentMap[file] = compiled[file];
         }
       }
-
+      console.log(`Compilation took: ${performance.now() - now}ms`);
       if (!tab) {
         tab = {
           name: 'import_map.json',
@@ -148,6 +148,8 @@ const Repl: ReplProps = (props) => {
    * Also, real time feedback can be stressful
    */
   const applyCompilation = throttle((message: any) => {
+    now = performance.now();
+
     compiler.postMessage(message);
   }, 250);
 
@@ -243,6 +245,7 @@ const Repl: ReplProps = (props) => {
                     setEdit(index());
                     tabRefs.get(tab.name)?.focus();
                   }}
+                  title={tab.name}
                 >
                   {tab.name}
                 </div>
@@ -266,7 +269,11 @@ const Repl: ReplProps = (props) => {
           </For>
 
           <TabItem class="select-none" active={props.current === 'import_map.json'}>
-            <label class="cursor-pointer space-x-2 px-3 py-2" onclick={() => props.setCurrent('import_map.json')}>
+            <label
+              class="cursor-pointer space-x-2 px-3 py-2"
+              onclick={() => props.setCurrent('import_map.json')}
+              title={'Import Map'}
+            >
               <Icon path={inboxStack} class="h-5" />
               <span class="sr-only">Import Map</span>
             </label>

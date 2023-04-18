@@ -11,7 +11,9 @@ async function compile(tabs: Tab[], event: string) {
   for (const tab of tabs) {
     tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
   }
-  return { event, compiled: bundle('./main', tabsRecord) };
+  const bundled = bundle('./main', tabsRecord);
+  console.log(bundled)
+  return { event, compiled: bundled };
 }
 
 async function babel(tab: Tab, compileOpts: any) {
