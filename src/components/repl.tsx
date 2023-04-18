@@ -134,9 +134,10 @@ const Repl: ReplProps = (props) => {
       } else {
         tab.source = JSON.stringify(currentMap, null, 2);
       }
-
-      setOutput(compiled['./main']);
-      setImportMap(currentMap);
+      batch(() => {
+        setOutput(compiled['./main']);
+        setImportMap(currentMap);
+      });
 
       const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
       editor.getModel(importModel)!.setValue(tab.source);
