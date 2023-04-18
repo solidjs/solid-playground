@@ -115,8 +115,7 @@ export const Edit = (props: { horizontal: boolean }) => {
             return { name: x.name, source: x.content };
           }),
         );
-        const currentTab = output.files.find((item) => !item.name.startsWith('data_'))!;
-        setCurrent(currentTab.name);
+        setCurrent(output.files[0].name);
       });
 
       return output;

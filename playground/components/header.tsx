@@ -4,11 +4,11 @@ import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
+import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
 
 import logo from '../assets/logo.svg?url';
-import { exportToZip } from '../utils/exportFiles';
 
 export const Header: ParentComponent<{
   compiler?: Worker;

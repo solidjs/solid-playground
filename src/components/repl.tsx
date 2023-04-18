@@ -22,9 +22,8 @@ const compileMode = {
 
 const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
-
+  let now: number;
   const tabRefs = new Map<string, HTMLSpanElement>();
-  let now = performance.now();
   const [error, setError] = createSignal('');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
   const userTabs = () => {
@@ -297,7 +296,7 @@ const Repl: ReplProps = (props) => {
             </button>
           </TabItem>
           <TabItem class="select-none justify-self-end">
-            <label class="cursor-pointer px-3 py-2">
+            <label class="cursor-pointer px-3 py-2" title="Display Errors">
               <input
                 type="checkbox"
                 hidden

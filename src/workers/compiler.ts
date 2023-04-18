@@ -12,7 +12,6 @@ async function compile(tabs: Tab[], event: string) {
     tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
   }
   const bundled = bundle('./main', tabsRecord);
-  console.log(bundled)
   return { event, compiled: bundled };
 }
 
