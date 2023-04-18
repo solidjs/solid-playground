@@ -118,7 +118,7 @@ const Repl: ReplProps = (props) => {
       let currentMap = JSON.parse(tab?.source || '{}');
 
       for (const file in compiled) {
-        if (!(file in currentMap)) {
+        if (!(file in currentMap) && !file.startsWith('./')) {
           currentMap[file] = compiled[file];
         }
       }
