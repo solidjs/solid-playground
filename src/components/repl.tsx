@@ -23,12 +23,15 @@ const compileMode = {
 const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
+
   const tabRefs = new Map<string, HTMLSpanElement>();
+
   const [error, setError] = createSignal('');
+  const [output, setOutput] = createSignal('');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
-  const userTabs = () => {
-    return props.tabs.filter((tab) => tab.name != 'import_map.json');
-  };
+
+  const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
+
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
     if (idx < 0) return;
@@ -75,10 +78,9 @@ const Repl: ReplProps = (props) => {
     if (!confirmReset) return;
     props.reset();
   }
+
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
-
-  const [output, setOutput] = createSignal('');
 
   let import_map = {};
   {
@@ -94,13 +96,10 @@ const Repl: ReplProps = (props) => {
   });
 
   let outputModel: editor.ITextModel;
-
   createEffect(() => {
     const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
     outputModel = editor.createModel('', 'typescript', outputUri);
-    onCleanup(() => {
-      outputModel.dispose();
-    });
+    onCleanup(() => outputModel.dispose());
   });
 
   const onCompilerMessage = ({ data }: any) => {
@@ -134,6 +133,7 @@ const Repl: ReplProps = (props) => {
 
       setOutput(compiled['./main']);
       setImportMap(currentMap);
+
       const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
       editor.getModel(importModel)!.setValue(tab.source);
     }
@@ -205,6 +205,7 @@ const Repl: ReplProps = (props) => {
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
   const [displayErrors, setDisplayErrors] = createSignal(true);
+
   return (
     <div
       ref={grid}
@@ -271,7 +272,7 @@ const Repl: ReplProps = (props) => {
             <label
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => props.setCurrent('import_map.json')}
-              title={'Import Map'}
+              title="Import Map"
             >
               <Icon path={inboxStack} class="h-5" />
               <span class="sr-only">Import Map</span>
