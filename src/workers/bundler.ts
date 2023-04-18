@@ -4,8 +4,7 @@ import babelPresetSolid from 'babel-preset-solid';
 import dd from 'dedent';
 
 let files: Record<string, string> = {};
-let allImports: string[] = [];
-let currentFileImports: string[] = [];
+let dataToReturn: Record<string, string> = {};
 
 function uid(str: string) {
   return Array.from(str)
@@ -18,18 +17,12 @@ function babelTransform(filename: string, code: string) {
     plugins: [
       // Babel plugin to get file import names
       function importGetter() {
-        currentFileImports = [];
         return {
           visitor: {
             ImportDeclaration(path: any) {
               const importee: string = path.node.source.value;
-              if (!currentFileImports.includes(importee)) {
-                currentFileImports.push(importee);
-                if (importee.startsWith('./')) {
-                  // Replace relative imports, as import maps don't seem to be able to handle them properly
-                  path.node.source.value = importee.replace('./', '');
-                }
-              }
+              // Replace relative imports, as import maps don't seem to be able to handle them properly
+              dataToReturn[importee] = path.node.source.value = transformImportee(importee);
             },
           },
         };
@@ -41,38 +34,37 @@ function babelTransform(filename: string, code: string) {
     ],
     filename: filename + '.tsx',
   });
-  return transformedCode;
+
+  return transformedCode!.replace('render(', 'window.dispose = render(');
 }
 
 // Returns new import URL
 function transformImportee(fileName: string) {
   // There's no point re-visiting a node again, as it's already been processed
-  if (allImports.includes(fileName)) {
-    return;
+  if (fileName in dataToReturn) {
+    return dataToReturn[fileName];
   }
-  allImports.push(fileName);
+  dataToReturn[fileName] = '';
+
   // Base cases
-  if (fileName.includes('://')) {
+  if (fileName.includes('://') || !fileName.startsWith('.')) {
     if (fileName.endsWith('.css')) {
       const id = uid(fileName);
       const js = dd`
-    (() => {
-      let link = document.getElementById('${id}');
-      if (!link) {
-        link = document.createElement('link')
-        link.setAttribute('id', ${id})
-        document.head.appendChild(link)
-      }
-      link.setAttribute('rel', 'stylesheet')
-      link.setAttribute('href', '${fileName}')
-    })()
-  `;
-      return [{ name: fileName, contents: js }];
+        (() => {
+          let link = document.getElementById('${id}');
+          if (!link) {
+            link = document.createElement('link')
+            link.setAttribute('id', ${id})
+            document.head.appendChild(link)
+          }
+          link.setAttribute('rel', 'stylesheet')
+          link.setAttribute('href', '${fileName}')
+        })()
+      `;
+      return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
     }
-    return [{ name: fileName, external: true }];
-  }
-  if (!fileName.startsWith('.')) {
-    return [{ name: fileName, external: true }];
+    return fileName;
   }
   if (fileName.endsWith('.css')) {
     const contents = files[fileName];
@@ -90,25 +82,21 @@ function transformImportee(fileName: string) {
       stylesheet.appendChild(styles)
     })()
   `;
-    return [{ name: fileName.replace('./', ''), contents: js }];
+    return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
   }
+
   // Parse file and all its children through recursion
-  let dataToReturn: { name: string; contents?: string; external?: boolean }[] = [];
-  const contents = files[fileName];
-  const transpiledContents = babelTransform(fileName, contents);
-  const imports = structuredClone(currentFileImports);
-  for (let i = 0; i < imports.length; i++) {
-    const importee = imports[i];
-    const transformed = transformImportee(importee);
-    if (transformed == undefined) continue;
-    dataToReturn.push(...transformed);
-  }
-  dataToReturn.push({ name: fileName.replace('./', ''), contents: transpiledContents! });
-  return dataToReturn;
+  const js = babelTransform(fileName, files[fileName]);
+  return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
 }
 
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   files = fileRecord;
-  allImports = [];
-  return { code: transformImportee(entryPoint) };
+  for (let out in dataToReturn) {
+    const url = dataToReturn[out];
+    if (url.startsWith('blob:')) URL.revokeObjectURL(dataToReturn[out]);
+  }
+  dataToReturn = {};
+  dataToReturn[entryPoint] = transformImportee(entryPoint);
+  return dataToReturn;
 }
