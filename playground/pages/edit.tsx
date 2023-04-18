@@ -260,7 +260,7 @@ export const Edit = (props: { horizontal: boolean }) => {
             reset={reset}
             current={current()}
             setCurrent={setCurrent}
-            id={'repl'}
+            id="repl"
           />
         </Show>
       </Suspense>
