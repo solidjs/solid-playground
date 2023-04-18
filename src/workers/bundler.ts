@@ -4,6 +4,7 @@ import babelPresetSolid from 'babel-preset-solid';
 import dd from 'dedent';
 
 let files: Record<string, string> = {};
+let cache: Record<string, string> = {};
 let dataToReturn: Record<string, string> = {};
 
 function uid(str: string) {
@@ -22,7 +23,7 @@ function babelTransform(filename: string, code: string) {
             ImportDeclaration(path: any) {
               const importee: string = path.node.source.value;
               // Replace relative imports, as import maps don't seem to be able to handle them properly
-              path.node.source.value = transformImportee(importee);
+              cache[importee] = path.node.source.value = transformImportee(importee);
             },
           },
         };
@@ -41,13 +42,12 @@ function babelTransform(filename: string, code: string) {
 // Returns new import URL
 function transformImportee(fileName: string) {
   // There's no point re-visiting a node again, as it's already been processed
-  if (fileName in dataToReturn) {
-    return dataToReturn[fileName];
+  if (fileName in cache) {
+    return cache[fileName];
   }
   if (!fileName) {
     return '';
   }
-  dataToReturn[fileName] = '';
 
   // Base cases
   if (fileName.includes('://') || !fileName.startsWith('.')) {
@@ -66,7 +66,6 @@ function transformImportee(fileName: string) {
         })()
       `;
       const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
-      dataToReturn[fileName] = url;
       return url;
     }
     if (fileName.includes('://')) return fileName;
@@ -92,14 +91,13 @@ function transformImportee(fileName: string) {
     })()
   `;
     const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
-    dataToReturn[fileName] = url;
     return url;
   }
 
   // Parse file and all its children through recursion
+  cache[fileName] = ''; // Prevent infinite recursion
   const js = babelTransform(fileName, files[fileName]);
   const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
-  dataToReturn[fileName] = url;
   return url;
 }
 
@@ -109,7 +107,8 @@ export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
     const url = dataToReturn[out];
     if (url.startsWith('blob:')) URL.revokeObjectURL(dataToReturn[out]);
   }
+  cache = {};
   dataToReturn = {};
-  transformImportee(entryPoint);
+  dataToReturn[entryPoint] = transformImportee(entryPoint);
   return dataToReturn;
 }
