@@ -175,16 +175,15 @@ export const Preview: Component<Props> = (props) => {
   let resizer!: HTMLDivElement;
   let outerContainer!: HTMLDivElement;
 
-  const [isIframeReady, setIframeReady] = createSignal(false);
-
-  createEffect(() => {
-    if (!isIframeReady()) return;
-
-    iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
-  });
-
-  const iframeSrcUrl = createMemo(() => {
+  // This is the createWriteable paradigm in action
+  // We have that the iframe src is entangled with its loading state
+  const iframeLoader = createMemo(() => {
     const html = generateHTML(props.isDark, JSON.stringify({ imports: props.importMap }));
+    const loaded = createSignal(false);
+    return [html, loaded] as const;
+  });
+  const iframeSrcUrl = createMemo(() => {
+    const [html] = iframeLoader();
     const url = URL.createObjectURL(
       new Blob([html], {
         type: 'text/html',
@@ -192,6 +191,20 @@ export const Preview: Component<Props> = (props) => {
     );
     onCleanup(() => URL.revokeObjectURL(url));
     return url;
+  });
+  const isIframeReady = () => {
+    const [, [loaded]] = iframeLoader();
+    return loaded();
+  };
+  const setIframeReady = (value: boolean) => {
+    const [, [, setLoaded]] = iframeLoader();
+    setLoaded(value);
+  };
+
+  createEffect(() => {
+    if (!isIframeReady()) return;
+
+    iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
   });
 
   createEffect(() => {
@@ -270,7 +283,7 @@ export const Preview: Component<Props> = (props) => {
         style={styleScale()}
         ref={iframe}
         src={iframeSrcUrl()}
-        onload={[setIframeReady, true]}
+        onload={() => setIframeReady(true)}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       />
