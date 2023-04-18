@@ -22,7 +22,7 @@ function babelTransform(filename: string, code: string) {
             ImportDeclaration(path: any) {
               const importee: string = path.node.source.value;
               // Replace relative imports, as import maps don't seem to be able to handle them properly
-              dataToReturn[importee] = path.node.source.value = transformImportee(importee);
+              path.node.source.value = transformImportee(importee);
             },
           },
         };
@@ -62,10 +62,15 @@ function transformImportee(fileName: string) {
           link.setAttribute('href', '${fileName}')
         })()
       `;
-      return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
+      const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
+      dataToReturn[fileName] = url;
+      return url;
     }
     if (fileName.includes('://')) return fileName;
-    else return `https://jspm.dev/${fileName}`;
+    else {
+      dataToReturn[fileName] = `https://jspm.dev/${fileName}`;
+      return fileName;
+    }
   }
   if (fileName.endsWith('.css')) {
     const contents = files[fileName];
@@ -83,12 +88,16 @@ function transformImportee(fileName: string) {
       stylesheet.appendChild(styles)
     })()
   `;
-    return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
+    const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
+    dataToReturn[fileName] = url;
+    return url;
   }
 
   // Parse file and all its children through recursion
   const js = babelTransform(fileName, files[fileName]);
-  return URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
+  const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
+  dataToReturn[fileName] = url;
+  return url;
 }
 
 export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
@@ -98,6 +107,6 @@ export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
     if (url.startsWith('blob:')) URL.revokeObjectURL(dataToReturn[out]);
   }
   dataToReturn = {};
-  dataToReturn[entryPoint] = transformImportee(entryPoint);
+  transformImportee(entryPoint);
   return dataToReturn;
 }

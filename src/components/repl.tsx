@@ -104,7 +104,7 @@ const Repl: ReplProps = (props) => {
     });
   });
 
-  compiler.addEventListener('message', ({ data }) => {
+  const onCompilerMessage = ({ data }) => {
     const { event, compiled, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
@@ -135,8 +135,12 @@ const Repl: ReplProps = (props) => {
 
       setOutput(compiled['./main']);
       setImportMap(currentMap);
+      const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
+      editor.getModel(importModel)!.setValue(tab.source);
     }
-  });
+  };
+  compiler.addEventListener('message', onCompilerMessage);
+  onCleanup(() => compiler.removeEventListener('message', onCompilerMessage));
 
   /**
    * We need to debounce a bit the compilation because
