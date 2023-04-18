@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, on } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
@@ -104,7 +104,7 @@ const Repl: ReplProps = (props) => {
     });
   });
 
-  const onCompilerMessage = ({ data }) => {
+  const onCompilerMessage = ({ data }: any) => {
     const { event, compiled, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
