@@ -4,11 +4,11 @@ import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
-import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
 
 import logo from '../assets/logo.svg?url';
+import { exportToZip } from '../utils/exportFiles';
 
 export const Header: ParentComponent<{
   compiler?: Worker;
@@ -39,12 +39,6 @@ export const Header: ParentComponent<{
   function closeMobileMenu() {
     setShowMenu(false);
   }
-
-  props.compiler?.addEventListener('message', ({ data }) => {
-    const { event, imports } = data;
-
-    if (event === 'IMPORTS') exportToZip(context.tabs()!, imports);
-  });
 
   return (
     <header class="dark:bg-solid-darkbg border-b-2px sticky top-0 z-10 flex items-center gap-x-4 border-slate-200 bg-white p-1 px-2 text-sm dark:border-neutral-800">
@@ -86,12 +80,7 @@ export const Header: ParentComponent<{
         <Show when={context.tabs()}>
           <button
             type="button"
-            onClick={() => {
-              props.compiler?.postMessage({
-                event: 'IMPORTS',
-                tabs: unwrap(context.tabs()),
-              });
-            }}
+            onClick={() => exportToZip(unwrap(context.tabs())!)}
             class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
             classList={{
               'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),

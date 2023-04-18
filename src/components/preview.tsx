@@ -1,4 +1,4 @@
-import { Accessor, Component, Show, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
+import { Component, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
 import { throttle } from '@solid-primitives/scheduled';
@@ -62,7 +62,7 @@ const generateHTML = (isDark: boolean, importMap: string) => `
           border-color: #666;
         }
       </style>
-      ${importMap}
+      <script type="importmap">${importMap}</script>
       <script src="https://cdn.jsdelivr.net/npm/chobitsu"></script>
       <script type="module">
         window.addEventListener('message', async ({ data }) => {
@@ -175,76 +175,59 @@ export const Preview: Component<Props> = (props) => {
   let resizer!: HTMLDivElement;
   let outerContainer!: HTMLDivElement;
 
-  const [isIframeReady, setIframeReady] = createSignal(false);
-  const appSrcUrl = createMemo(() => {
-    if (!props.code) return;
-    const blob = new Blob([props.code], {
-      type: 'text/javascript',
-    });
-    const src = URL.createObjectURL(blob);
-    onCleanup(() => URL.revokeObjectURL(src));
-    return src;
+  // This is the createWriteable paradigm in action
+  // We have that the iframe src is entangled with its loading state
+  const iframeLoader = createMemo(() => {
+    const html = generateHTML(props.isDark, JSON.stringify({ imports: props.importMap }));
+    const loaded = createSignal(false);
+    return [html, loaded] as const;
   });
-  createEffect(
-    on([isIframeReady, () => props.code, appSrcUrl], () => {
-      if (!props.code) return;
-      if (!isIframeReady()) return;
-      iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: appSrcUrl() }, '*');
-    }),
-  );
-
-  createEffect(() => {
-    if (!isIframeReady()) return;
-
-    iframe.contentWindow!.postMessage({ event: 'DEVTOOLS', value: props.devtools }, '*');
+  const iframeSrcUrl = createMemo(() => {
+    const [html] = iframeLoader();
+    const url = URL.createObjectURL(
+      new Blob([html], {
+        type: 'text/html',
+      }),
+    );
+    onCleanup(() => URL.revokeObjectURL(url));
+    return url;
   });
+  const isIframeReady = () => {
+    const [, [loaded]] = iframeLoader();
+    return loaded();
+  };
+  const setIframeReady = (value: boolean) => {
+    const [, [, setLoaded]] = iframeLoader();
+    setLoaded(value);
+  };
 
   createEffect(() => {
     if (!isIframeReady()) return;
 
     iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
-    iframe.contentWindow!.postMessage({ event: 'THEME', value: props.isDark }, '*');
   });
 
-  let iframeSrcUrl = createMemo(() => {
-    const importMapStr = `<script type="importmap">${JSON.stringify({ imports: props.importMap() })}</script>`;
-    const html = generateHTML(
-      untrack(() => props.isDark),
-      importMapStr,
-    );
-    const blob = new Blob([html], {
-      type: 'text/html',
-    });
-    const url = URL.createObjectURL(blob);
-    onCleanup(() => URL.revokeObjectURL(url));
-    return url;
-  });
   createEffect(() => {
-    // Bail early on first mount or we are already reloading
     if (!props.reloadSignal) return;
 
-    // Otherwise, reload everytime we clicked the reload button
     setIframeReady(false);
-    iframe.src = iframeSrcUrl()!;
+    iframe.src = untrack(iframeSrcUrl);
+  });
+
+  createEffect(() => {
+    if (!isIframeReady()) return;
+
+    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, untrack(iframeSrcUrl));
   });
 
   const devtoolsSrc = useDevtoolsSrc();
 
   const messageListener = (event: MessageEvent) => {
     if (event.source === iframe.contentWindow) {
-      if (event.data == 'READY') {
-        (devtoolsIframe.contentWindow! as any).runtime.loadLegacyModule('core/sdk/sdk-legacy.js').then(() => {
-          const SDK = (devtoolsIframe.contentWindow! as any).SDK;
-          for (const resourceTreeModel of SDK.TargetManager.instance().models(SDK.ResourceTreeModel)) {
-            resourceTreeModel.dispatchEventToListeners(SDK.ResourceTreeModel.Events.WillReloadPage, resourceTreeModel);
-          }
-        });
-      } else {
-        devtoolsIframe.contentWindow!.postMessage(event.data, devtoolsSrc);
-      }
+      devtoolsIframe.contentWindow!.postMessage(event.data, devtoolsSrc);
     }
     if (event.source === devtoolsIframe.contentWindow) {
-      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, iframeSrcUrl());
+      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, untrack(iframeSrcUrl));
     }
   };
   window.addEventListener('message', messageListener);
@@ -257,18 +240,18 @@ export const Preview: Component<Props> = (props) => {
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
-  function saveHeight(height: number) {
+
+  const saveHeight = throttle((height: number) => {
     localStorage.setItem('iframe_height', height.toString());
-  }
+  });
+
   function loadHeight() {
-    if (typeof window == undefined) return 1;
     const loaded = localStorage.getItem('iframe_height');
-    if (loaded == null) {
-      return 1;
-    }
-    return parseFloat(loaded);
+    return parseFloat(loaded || '1');
   }
+
   const [iframeHeight, setIframeHeight] = createSignal<number>(loadHeight());
+
   const changeIframeHeight = (clientY: number) => {
     let position: number;
     let size: number;
@@ -280,16 +263,9 @@ export const Preview: Component<Props> = (props) => {
     const percentage = position / size;
 
     setIframeHeight(percentage * 2);
+    saveHeight(percentage * 2);
   };
 
-  createEffect(
-    on(
-      iframeHeight,
-      throttle(() => {
-        saveHeight(iframeHeight());
-      }, 50),
-    ),
-  );
   return (
     <div
       class="grid h-full w-full"
@@ -307,7 +283,7 @@ export const Preview: Component<Props> = (props) => {
         style={styleScale()}
         ref={iframe}
         src={iframeSrcUrl()}
-        onload={[setIframeReady, true]}
+        onload={() => setIframeReady(true)}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       />
@@ -331,7 +307,7 @@ export const Preview: Component<Props> = (props) => {
 };
 
 type Props = {
-  importMap: Accessor<any>;
+  importMap: Record<string, string>;
   classList?: {
     [k: string]: boolean | undefined;
   };

@@ -11,12 +11,7 @@ async function compile(tabs: Tab[], event: string) {
   for (const tab of tabs) {
     tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
   }
-  const { code } = bundle('./main', tabsRecord);
-  console.log(code);
-  if (event === 'ROLLUP') {
-    // return { event, compiled: code.replace('render(', 'window.dispose = render('), import_map: importMap };
-    return { event, compiled: code };
-  }
+  return { event, compiled: bundle('./main', tabsRecord) };
 }
 
 async function babel(tab: Tab, compileOpts: any) {
@@ -36,7 +31,7 @@ self.addEventListener('message', async ({ data }) => {
   try {
     if (event === 'BABEL') {
       self.postMessage(await babel(tab, compileOpts));
-    } else if (event === 'ROLLUP' || event === 'IMPORTS') {
+    } else if (event === 'ROLLUP') {
       self.postMessage(await compile(tabs, event));
     }
   } catch (e) {

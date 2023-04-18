@@ -1,6 +1,6 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, on } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
+import { arrowPath, commandLine, trash, inboxStack, bell, bellSlash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -13,9 +13,7 @@ import { editor, Uri } from 'monaco-editor';
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/lib/repl';
-import { ImportMap } from 'solid-repl';
-import { clampPercentage } from '../helpers/clampPercentage';
-import { CDN_URL } from '../helpers/cdn_url';
+
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },
@@ -24,18 +22,13 @@ const compileMode = {
 
 const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
-  let now: number;
 
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [error, setError] = createSignal('');
-  const [compiled, setCompiled] = createSignal('');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
   const userTabs = () => {
-    const filtered = props.tabs.filter((tab) => {
-      return !tab.name.startsWith('data_');
-    });
-    return filtered;
+    return props.tabs.filter((tab) => tab.name != 'import_map.json');
   };
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
@@ -85,23 +78,22 @@ const Repl: ReplProps = (props) => {
   }
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
-  let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
+
+  const [output, setOutput] = createSignal('');
+
   let import_map = {};
-  if (idx >= 0) {
+  {
+    let import_map_raw = props.tabs.find((tab) => tab.name === 'import_map.json');
     try {
-      import_map = JSON.parse(unwrap(props.tabs[idx]).source);
-    } catch (e) {
-      import_map = {};
-    }
-  }
-  const [importMap, setImportMap] = createSignal<ImportMap>(import_map, {
-    equals: (prev, next) => {
-      if (JSON.stringify(prev) === JSON.stringify(next)) {
-        return true;
+      if (import_map_raw >= 0) {
+        import_map = JSON.parse(import_map_raw.source);
       }
-      return false;
-    },
+    } catch (e) {}
+  }
+  const [importMap, setImportMap] = createSignal<Record<string, string>>(import_map, {
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
   });
+
   let outputModel: editor.ITextModel;
 
   createEffect(() => {
@@ -111,68 +103,44 @@ const Repl: ReplProps = (props) => {
       outputModel.dispose();
     });
   });
-  createEffect(
-    on(importMap, () => {
-      console.log('Import Map Changed');
-      let idx = props.tabs.findIndex((tab) => tab.name === 'data_import_map.json');
-      if (idx < 0) {
-        props.setTabs(
-          [{ name: 'data_import_map.json', source: JSON.stringify(importMap(), null, 4) }].concat(props.tabs),
-        );
-        idx = 0;
-      }
-      props.tabs[idx].source = JSON.stringify(importMap(), null, 4);
-    }),
-  );
-  compiler.addEventListener('message', ({ data }) => {
+
+  const onCompilerMessage = ({ data }: any) => {
     const { event, compiled, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
 
-    if (event === 'ROLLUP') {
-      let import_map: Record<string, string> = {};
-      let entryFile = '';
-      for (let i = 0; i < compiled.length; i++) {
-        const file = compiled[i];
-        if (file.external) {
-          import_map[file.name] = CDN_URL(file.name);
-          continue;
-        }
-        if (file.name == 'main') {
-          entryFile = file.contents;
-          continue;
-        }
-        const url = URL.createObjectURL(new Blob([file.contents], { type: 'application/javascript' }));
-        import_map[file.name] = url;
-      }
-      let currentMap = window.structuredClone(importMap());
-      // Remove keys no longer present in the new map
-      const currentKeys = Object.keys(currentMap);
-      for (let i = 0; i < currentKeys.length; i++) {
-        const key = currentKeys[i];
-        if (currentMap[key].startsWith('blob:')) {
-          delete currentMap[key];
-        }
-        if (!import_map.hasOwnProperty(key)) {
-          delete currentMap[key];
-        }
-      }
-      // Combine current import map with the new map
-      const keys = Object.keys(import_map);
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        if (!currentMap.hasOwnProperty(key)) {
-          currentMap[key] = import_map[key];
-        }
-      }
-      setImportMap(currentMap);
-      setCompiled(entryFile);
-    } else if (event === 'BABEL') {
+    if (event === 'BABEL') {
       outputModel.setValue(compiled);
     }
 
-    console.log(`Compilation took: ${performance.now() - now}ms (${event})`);
-  });
+    if (event === 'ROLLUP') {
+      let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
+      let currentMap = JSON.parse(tab?.source || '{}');
+
+      for (const file in compiled) {
+        if (!(file in currentMap) && !file.startsWith('./')) {
+          currentMap[file] = compiled[file];
+        }
+      }
+
+      if (!tab) {
+        tab = {
+          name: 'import_map.json',
+          source: JSON.stringify(currentMap, null, 2),
+        };
+        props.setTabs(props.tabs.concat(tab));
+      } else {
+        tab.source = JSON.stringify(currentMap, null, 2);
+      }
+
+      setOutput(compiled['./main']);
+      setImportMap(currentMap);
+      const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
+      editor.getModel(importModel)!.setValue(tab.source);
+    }
+  };
+  compiler.addEventListener('message', onCompilerMessage);
+  onCleanup(() => compiler.removeEventListener('message', onCompilerMessage));
 
   /**
    * We need to debounce a bit the compilation because
@@ -180,8 +148,6 @@ const Repl: ReplProps = (props) => {
    * Also, real time feedback can be stressful
    */
   const applyCompilation = throttle((message: any) => {
-    now = performance.now();
-
     compiler.postMessage(message);
   }, 250);
 
@@ -230,8 +196,7 @@ const Repl: ReplProps = (props) => {
       size = grid.offsetWidth - resizer.offsetWidth;
     }
     const percentage = position / size;
-    const percentageAdjusted = clampPercentage(percentage * 2, 0.5, 1.5);
-    // const percentageAdjusted = percentage * 2;
+    const percentageAdjusted = Math.min(Math.max(percentage * 2, 0.5), 1.5);
 
     setLeft(percentageAdjusted);
   };
@@ -300,6 +265,12 @@ const Repl: ReplProps = (props) => {
             )}
           </For>
 
+          <TabItem class="select-none" active={props.current === 'import_map.json'}>
+            <label class="cursor-pointer space-x-2 px-3 py-2" onclick={() => props.setCurrent('import_map.json')}>
+              <Icon path={inboxStack} class="h-5" />
+              <span class="sr-only">Import Map</span>
+            </label>
+          </TabItem>
           <li class="m-0 inline-flex items-center border-b-2 border-transparent">
             <button type="button" onClick={addTab} title="Add a new tab">
               <span class="sr-only">Add a new tab</span>
@@ -318,26 +289,16 @@ const Repl: ReplProps = (props) => {
               <span class="sr-only">Reset Editor</span>
             </button>
           </TabItem>
-          <TabItem class="select-none justify-self-end" active={props.current === `data_import_map.json`}>
-            <label
-              class="cursor-pointer space-x-2 px-3 py-2"
-              onclick={() => {
-                console.log(props.tabs);
-                props.setCurrent(`data_import_map.json`);
-              }}
-            >
-              <span>Import Map</span>
-            </label>
-          </TabItem>
           <TabItem class="select-none justify-self-end">
-            <label class="cursor-pointer space-x-2 px-3 py-2">
+            <label class="cursor-pointer px-3 py-2">
               <input
                 type="checkbox"
-                name="display-errors"
+                hidden
                 checked={displayErrors()}
                 onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
               />
-              <span>Display Errors</span>
+              <Icon path={displayErrors() ? bell : bellSlash} class="h-5" />
+              <span class="sr-only">Display Errors</span>
             </label>
           </TabItem>
         </TabList>
@@ -348,15 +309,12 @@ const Repl: ReplProps = (props) => {
           <Editor
             url={`file:///${props.id}/${props.current}`}
             onDocChange={(code: string) => {
-              if (props.current?.startsWith('data_')) {
-                if (props.current == 'data_import_map.json') {
-                  const newImportMap = JSON.parse(code);
-                  setImportMap(newImportMap);
-                }
-                return;
+              if (props.current == 'import_map.json') {
+                const newImportMap = JSON.parse(code);
+                setImportMap(newImportMap);
+              } else {
+                compile();
               }
-              // console.log(code)
-              compile();
             }}
             formatter={formatter}
             linter={linter}
@@ -422,11 +380,11 @@ const Repl: ReplProps = (props) => {
         <Switch>
           <Match when={outputTab() == 0}>
             <Preview
-              importMap={importMap}
+              importMap={importMap()}
+              code={output()}
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
               isDark={props.dark}
-              code={compiled()}
             />
           </Match>
           <Match when={outputTab() == 1}>

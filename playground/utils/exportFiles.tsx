@@ -1,12 +1,6 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl';
 import dedent from 'dedent';
-import { CDN_URL as MAKE_CDN_URL } from '../../src/helpers/cdn_url';
-
-enum CDN_URL {
-  domain = 'https://esm.sh/',
-  mode = '?dev',
-}
 
 const viteConfigFile = dedent`
 import { defineConfig } from "vite";
@@ -57,68 +51,16 @@ const indexHTML = (tabs: Tab[]) => dedent`
 `;
 
 /**
- * This function extracts the name and version of an imported
- * package, returning an array [name, version], in case the
- * import si written as name@version, or otherwhise as [name, '']
- */
-function extractNameAndVersionFromImportPath(importPath: string): string[] {
-  const withoutCDN = importPath.startsWith(CDN_URL.domain)
-    ? importPath.split(CDN_URL.domain)[1]?.split(CDN_URL.mode)[0]
-    : importPath;
-  const withoutCDNSplitted = withoutCDN.split('/');
-
-  const rawName = withoutCDN.startsWith('@')
-    ? `${withoutCDNSplitted[0]}/${withoutCDNSplitted[1]}`
-    : withoutCDNSplitted[0];
-  const rawNameSplitted = rawName.split('@');
-
-  const name = rawName.startsWith('@') ? `@${rawNameSplitted[1]}` : rawNameSplitted[0];
-
-  const version = name.startsWith('@') ? rawNameSplitted[2] ?? '' : rawNameSplitted[1] ?? '';
-
-  return [name, version];
-}
-
-/**
- * This function sends a request to esm.sh in order to get
- * the latest version of a pkg, which will be included in
- * the URL to which esm.sh automatically redirects
- */
-function getLatestVersion(pkgName: string): Promise<string[]> {
-  return fetch(MAKE_CDN_URL(pkgName))
-    .then((res) =>
-      extractNameAndVersionFromImportPath(res.url)[1].length
-        ? extractNameAndVersionFromImportPath(res.url)
-        : [pkgName, 'latest'],
-    )
-    .catch(() => [pkgName, 'latest']);
-}
-/**
  * This function will calculate the dependencies of the
- * package.json by using the imports list provided by rollup,
- * and then generating the package.json itself, for the exoport
+ * package.json by using the imports list provided by the bundler,
+ * and then generating the package.json itself, for the export
  */
-async function packageJSON(imports: string[]): Promise<string> {
-  const versionRequests: Promise<string[]>[] = [];
-
-  const depsFirstDraft = ([...new Set(imports)] as string[]).reduce((acc, importPath): Record<string, string> => {
-    const [name, version]: string[] = extractNameAndVersionFromImportPath(importPath);
-
-    if (acc[name]) return acc;
-
-    if (!version) versionRequests.push(getLatestVersion(name));
-
-    acc[name] = version;
+function packageJSON(imports: string[]): string {
+  const deps = imports.reduce((acc, importPath): Record<string, string> => {
+    const name = importPath.split('/')[0];
+    if (!acc[name]) acc[name] = '*';
     return acc;
   }, {} as Record<string, string>);
-
-  const deps = await Promise.all(versionRequests).then((values) =>
-    values.reduce((acc, value) => {
-      const [name, version] = value;
-      acc[name] = version;
-      return acc;
-    }, depsFirstDraft),
-  );
 
   return JSON.stringify(
     {
@@ -141,25 +83,28 @@ async function packageJSON(imports: string[]): Promise<string> {
  * This function will convert the tabs of the playground
  * into a ZIP formatted playground that can then be reimported later on
  */
-export async function exportToZip(tabs: Tab[], imports: string[]): Promise<void> {
+export async function exportToZip(tabs: Tab[]): Promise<void> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
   // basic structure
   zip.file('index.html', indexHTML(tabs));
-  zip.file('package.json', await packageJSON(imports));
   zip.file('vite.config.ts', viteConfigFile);
   zip.file('tsconfig.json', tsConfig);
   zip.folder('src');
 
   for (const tab of tabs) {
-    zip.file(`src/${tab.name}`, tab.source);
+    if (tab.name == 'import_map.json') {
+      zip.file('package.json', packageJSON(Object.keys(JSON.parse(tab.source))));
+    } else {
+      zip.file(`src/${tab.name}`, tab.source);
+    }
   }
 
   const blob = await zip.generateAsync({ type: 'blob' });
   const url = URL.createObjectURL(blob);
 
-  const anchor = (<a href={url} target="_blank" rel="noopener" download="solid-playground-poject" />) as HTMLElement;
+  const anchor = (<a href={url} target="_blank" rel="noopener" download="solid-playground-project" />) as HTMLElement;
   document.body.prepend(anchor);
   anchor.click();
   anchor.remove();
