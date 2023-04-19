@@ -246,7 +246,7 @@ export const Preview: Component<Props> = (props) => {
 
   function loadHeight() {
     const loaded = localStorage.getItem('iframe_height');
-    return parseFloat(loaded || '1');
+    return parseFloat(loaded || '1.25');
   }
 
   const [iframeHeight, setIframeHeight] = createSignal<number>(loadHeight());
