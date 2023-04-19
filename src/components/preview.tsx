@@ -104,38 +104,35 @@ const generateHTML = (isDark: boolean, importMap: string) => `
             const { event, value } = data;
             if (event === 'DEV') {
               chobitsu.sendRawMessage(data.data);
+            } else if (event === 'LOADED') {
+              sendToDevtools({
+                method: 'Page.frameNavigated',
+                params: {
+                  frame: {
+                    id: '1',
+                    mimeType: 'text/html',
+                    securityOrigin: location.origin,
+                    url: location.href,
+                  },
+                  type: 'Navigation',
+                },
+              });
+              sendToChobitsu({ method: 'Network.enable' });
+              sendToDevtools({ method: 'Runtime.executionContextsCleared' });
+              sendToChobitsu({ method: 'Runtime.enable' });
+              sendToChobitsu({ method: 'Debugger.enable' });
+              sendToChobitsu({ method: 'DOMStorage.enable' });
+              sendToChobitsu({ method: 'DOM.enable' });
+              sendToChobitsu({ method: 'CSS.enable' });
+              sendToChobitsu({ method: 'Overlay.enable' });
+              sendToDevtools({ method: 'DOM.documentUpdated' });
             }
           } catch (e) {
             console.error(e);
           }
         });
-        
-        setTimeout(() => {
-          sendToDevtools({
-            method: 'Page.frameNavigated',
-            params: {
-              frame: {
-                id: '1',
-                mimeType: 'text/html',
-                securityOrigin: location.origin,
-                url: location.href,
-              },
-              type: 'Navigation',
-            },
-          });
-          sendToChobitsu({ method: 'Network.enable' });
-          sendToDevtools({ method: 'Runtime.executionContextsCleared' });
-          sendToChobitsu({ method: 'Runtime.enable' });
-          sendToChobitsu({ method: 'Debugger.enable' });
-          sendToChobitsu({ method: 'DOMStorage.enable' });
-          sendToChobitsu({ method: 'DOM.enable' });
-          sendToChobitsu({ method: 'CSS.enable' });
-          sendToChobitsu({ method: 'Overlay.enable' });
-          sendToDevtools({ method: 'DOM.documentUpdated' });
-        });
       </script>
     </head>
-    
     <body>
       <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
         <p style="font-size: 1.5rem">Loading the playground...</p>
@@ -174,6 +171,8 @@ export const Preview: Component<Props> = (props) => {
   let devtoolsIframe!: HTMLIFrameElement;
   let resizer!: HTMLDivElement;
   let outerContainer!: HTMLDivElement;
+
+  let devtoolsLoaded = false;
 
   // This is the createWriteable paradigm in action
   // We have that the iframe src is entangled with its loading state
@@ -283,7 +282,10 @@ export const Preview: Component<Props> = (props) => {
         style={styleScale()}
         ref={iframe}
         src={iframeSrcUrl()}
-        onload={() => setIframeReady(true)}
+        onload={() => {
+          setIframeReady(true);
+          if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, untrack(iframeSrcUrl));
+        }}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
       />
@@ -300,6 +302,7 @@ export const Preview: Component<Props> = (props) => {
         class="h-full w-full"
         ref={devtoolsIframe}
         src={devtoolsSrc}
+        onload={() => (devtoolsLoaded = true)}
         classList={{ block: props.devtools, hidden: !props.devtools }}
       />
     </div>
