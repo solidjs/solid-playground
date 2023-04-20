@@ -107,6 +107,9 @@ devDependencies:
   '@types/fs-extra':
     specifier: ^11.0.1
     version: 11.0.1
+  '@unocss/cli':
+    specifier: ^0.51.4
+    version: 0.51.4(rollup@3.20.4)
   '@unocss/preset-wind':
     specifier: ^0.51.4
     version: 0.51.4

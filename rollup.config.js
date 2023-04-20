@@ -13,7 +13,6 @@ import { renameSync, ensureDirSync } from 'fs-extra';
 import { basename, join, extname, resolve, dirname } from 'path';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { createReadStream, createWriteStream, readFileSync } from 'fs';
-import Unocss from 'unocss/vite';
 
 const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.d.ts'];
 const copies = Object.create(null);
@@ -179,7 +178,6 @@ export default ${name}urlImport`;
       'process.env.NODE_DEBUG': 'false',
       'preventAssignment': true,
     }),
-    Unocss(),
     babel({
       extensions: extensions,
       babelHelpers: 'bundled',

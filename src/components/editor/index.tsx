@@ -2,7 +2,6 @@ import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
-import type { Repl } from 'solid-repl/lib/repl';
 import type { LinterWorkerPayload, LinterWorkerResponse } from '../../workers/linter';
 import { throttle } from '@solid-primitives/scheduled';
 
@@ -15,7 +14,13 @@ const Editor: Component<{
   linter?: Worker;
   displayErrors?: boolean;
   onDocChange?: (code: string) => void;
-  onEditorReady?: Parameters<Repl>[0]['onEditorReady'];
+  onEditorReady?: (
+    editor: mEditor.IStandaloneCodeEditor,
+    monaco: {
+      Uri: typeof Uri;
+      editor: typeof mEditor;
+    },
+  ) => void;
 }> = (props) => {
   let parent!: HTMLDivElement;
   let editor: mEditor.IStandaloneCodeEditor;
@@ -93,6 +98,10 @@ const Editor: Component<{
       },
     });
 
+    createEffect(() => {
+      const disabled = props.disabled == true ? true : false;
+      editor.updateOptions({ readOnly: disabled });
+    });
     if (props.linter) {
       editor.addAction({
         id: 'eslint.executeAutofix',
@@ -166,7 +175,7 @@ const Editor: Component<{
     props.onEditorReady?.(editor, { Uri, editor: mEditor });
   });
 
-  return <div class="h-full min-h-0 p-0" ref={parent} />;
+  return <div class="h-full min-h-0 min-w-0 p-0" ref={parent} />;
 };
 
 export default Editor;

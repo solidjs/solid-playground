@@ -1,6 +1,6 @@
 import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { arrowPath, commandLine, trash } from 'solid-heroicons/outline';
+import { arrowPath, commandLine, trash, inboxStack, bell, bellSlash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { TabItem, TabList } from './tabs';
@@ -27,8 +27,10 @@ const Repl: ReplProps = (props) => {
   const tabRefs = new Map<string, HTMLSpanElement>();
 
   const [error, setError] = createSignal('');
-  const [compiled, setCompiled] = createSignal('');
+  const [output, setOutput] = createSignal('');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
+
+  const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
 
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
@@ -63,7 +65,7 @@ const Repl: ReplProps = (props) => {
   }
   function addTab() {
     const newTab = {
-      name: `tab${props.tabs.length}.tsx`,
+      name: `tab${userTabs().length}.tsx`,
       source: '',
     };
     batch(() => {
@@ -76,30 +78,74 @@ const Repl: ReplProps = (props) => {
     if (!confirmReset) return;
     props.reset();
   }
+
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
 
-  let model: editor.ITextModel;
-  createEffect(() => {
-    const uri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
-    model = editor.createModel('', 'typescript', uri);
-    onCleanup(() => model.dispose());
+  let import_map = {};
+  {
+    let import_map_raw = props.tabs.find((tab) => tab.name === 'import_map.json');
+    try {
+      if (import_map_raw >= 0) {
+        import_map = JSON.parse(import_map_raw.source);
+      }
+    } catch (e) {}
+  }
+  const [importMap, setImportMap] = createSignal<Record<string, string>>(import_map, {
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
   });
 
-  compiler.addEventListener('message', ({ data }) => {
-    const { event, compiled, error } = data;
+  let outputModel: editor.ITextModel;
+  createEffect(() => {
+    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
+    outputModel = editor.createModel('', 'typescript', outputUri);
+    onCleanup(() => outputModel.dispose());
+  });
 
+  const onCompilerMessage = ({ data }: any) => {
+    const { event, compiled, error } = data;
     if (event === 'ERROR') return setError(error);
     else setError('');
 
-    if (event === 'ROLLUP') {
-      setCompiled(compiled);
-    } else if (event === 'BABEL') {
-      model.setValue(compiled);
+    if (event === 'BABEL') {
+      outputModel.setValue(compiled);
+      setOutput('');
     }
 
-    console.log(`Compilation took: ${performance.now() - now}ms`);
-  });
+    if (event === 'ROLLUP') {
+      let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
+      let currentMap = JSON.parse(tab?.source || '{}');
+      for (const file in currentMap) {
+        if (!(file in compiled) && currentMap[file] === `https://jspm.dev/${file}`) {
+          delete currentMap[file];
+        }
+      }
+      for (const file in compiled) {
+        if (!(file in currentMap) && !file.startsWith('./')) {
+          currentMap[file] = compiled[file];
+        }
+      }
+      console.log(`Compilation took: ${performance.now() - now}ms`);
+      if (!tab) {
+        tab = {
+          name: 'import_map.json',
+          source: JSON.stringify(currentMap, null, 2),
+        };
+        props.setTabs(props.tabs.concat(tab));
+      } else {
+        tab.source = JSON.stringify(currentMap, null, 2);
+      }
+      batch(() => {
+        setOutput(compiled['./main']);
+        setImportMap(currentMap);
+      });
+
+      const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
+      editor.getModel(importModel)!.setValue(tab.source);
+    }
+  };
+  compiler.addEventListener('message', onCompilerMessage);
+  onCleanup(() => compiler.removeEventListener('message', onCompilerMessage));
 
   /**
    * We need to debounce a bit the compilation because
@@ -136,10 +182,6 @@ const Repl: ReplProps = (props) => {
     compile();
   });
 
-  const clampPercentage = (percentage: number, lowerBound: number, upperBound: number) => {
-    return Math.min(Math.max(percentage, lowerBound), upperBound);
-  };
-
   let grid!: HTMLDivElement;
   let resizer!: HTMLDivElement;
   const [left, setLeft] = createSignal(1.25);
@@ -161,7 +203,7 @@ const Repl: ReplProps = (props) => {
       size = grid.offsetWidth - resizer.offsetWidth;
     }
     const percentage = position / size;
-    const percentageAdjusted = clampPercentage(percentage * 2, 0.5, 1.5);
+    const percentageAdjusted = Math.min(Math.max(percentage * 2, 0.5), 1.5);
 
     setLeft(percentageAdjusted);
   };
@@ -184,9 +226,9 @@ const Repl: ReplProps = (props) => {
         '--right': `${2 - left()}fr`,
       }}
     >
-      <div class="flex h-full flex-col">
+      <div class="grid h-full grid-rows-[min-content_1fr]">
         <TabList>
-          <For each={props.tabs}>
+          <For each={userTabs()}>
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
@@ -209,6 +251,7 @@ const Repl: ReplProps = (props) => {
                     setEdit(index());
                     tabRefs.get(tab.name)?.focus();
                   }}
+                  title={tab.name}
                 >
                   {tab.name}
                 </div>
@@ -231,6 +274,16 @@ const Repl: ReplProps = (props) => {
             )}
           </For>
 
+          <TabItem class="select-none" active={props.current === 'import_map.json'}>
+            <label
+              class="cursor-pointer space-x-2 px-3 py-2"
+              onclick={() => props.setCurrent('import_map.json')}
+              title="Import Map"
+            >
+              <Icon path={inboxStack} class="h-5" />
+              <span class="sr-only">Import Map</span>
+            </label>
+          </TabItem>
           <li class="m-0 inline-flex items-center border-b-2 border-transparent">
             <button type="button" onClick={addTab} title="Add a new tab">
               <span class="sr-only">Add a new tab</span>
@@ -249,15 +302,16 @@ const Repl: ReplProps = (props) => {
               <span class="sr-only">Reset Editor</span>
             </button>
           </TabItem>
-          <TabItem class="justify-self-end">
-            <label class="cursor-pointer space-x-2 px-3 py-2">
+          <TabItem class="select-none justify-self-end">
+            <label class="cursor-pointer px-3 py-2" title="Display Errors">
               <input
                 type="checkbox"
-                name="display-errors"
+                hidden
                 checked={displayErrors()}
                 onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
               />
-              <span>Display Errors</span>
+              <Icon path={displayErrors() ? bell : bellSlash} class="h-5" />
+              <span class="sr-only">Display Errors</span>
             </label>
           </TabItem>
         </TabList>
@@ -267,7 +321,14 @@ const Repl: ReplProps = (props) => {
         <Show when={props.current}>
           <Editor
             url={`file:///${props.id}/${props.current}`}
-            onDocChange={() => compile()}
+            onDocChange={(code: string) => {
+              if (props.current == 'import_map.json') {
+                const newImportMap = JSON.parse(code);
+                setImportMap(newImportMap);
+              } else {
+                compile();
+              }
+            }}
             formatter={formatter}
             linter={linter}
             isDark={props.dark}
@@ -284,7 +345,7 @@ const Repl: ReplProps = (props) => {
 
       <GridResizer ref={resizer} isHorizontal={isHorizontal()} onResize={changeLeft} />
 
-      <div class="flex h-full flex-col">
+      <div class="grid h-full grid-rows-[min-content_1fr]">
         <TabList>
           <TabItem>
             <button
@@ -332,17 +393,15 @@ const Repl: ReplProps = (props) => {
         <Switch>
           <Match when={outputTab() == 0}>
             <Preview
+              importMap={importMap()}
+              code={output()}
               reloadSignal={reloadSignal()}
               devtools={devtoolsOpen()}
               isDark={props.dark}
-              code={compiled()}
-              classList={{
-                'md:row-start-2': !props.isHorizontal,
-              }}
             />
           </Match>
           <Match when={outputTab() == 1}>
-            <section class="relative flex h-full flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
+            <section class="relative flex h-full min-h-0 min-w-0 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
                 url={`file:///${props.id}/output_dont_import.tsx`}
                 isDark={props.dark}

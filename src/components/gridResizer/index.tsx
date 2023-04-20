@@ -1,8 +1,20 @@
 import { Component, createSignal, createEffect, onCleanup } from 'solid-js';
 import { throttle } from '@solid-primitives/scheduled';
-import { Dot } from './dot';
+
+export const Dot: Component<{ isDragging: boolean }> = (props) => {
+  return (
+    <span
+      class="h-1 w-1 rounded-full bg-slate-300 dark:bg-white dark:group-hover:bg-slate-200"
+      classList={{
+        'bg-slate-200': props.isDragging,
+        'dark:bg-slate-200': props.isDragging,
+      }}
+    />
+  );
+};
 
 type SolidRef = (el: HTMLDivElement) => void;
+
 export const GridResizer: Component<{
   ref: HTMLDivElement | SolidRef;
   isHorizontal: boolean;
@@ -25,8 +37,8 @@ export const GridResizer: Component<{
   const setRef = (el: HTMLDivElement) => {
     (props.ref as SolidRef)(el);
 
-    el.addEventListener('mousedown', onResizeStart);
-    el.addEventListener('touchstart', onResizeStart);
+    el.addEventListener('mousedown', onResizeStart, { passive: true });
+    el.addEventListener('touchstart', onResizeStart, { passive: true });
 
     onCleanup(() => {
       el.removeEventListener('mousedown', onResizeStart);
@@ -51,7 +63,7 @@ export const GridResizer: Component<{
   return (
     <div
       ref={setRef}
-      class="hover:bg-brand-default dark:hover:bg-brand-default group flex items-center justify-center border-slate-200 dark:border-neutral-800"
+      class="hover:bg-brand-default dark:hover:bg-brand-default group flex items-center justify-center gap-2 border-slate-200 dark:border-neutral-800"
       classList={{
         'bg-brand-default dark:bg-brand-default': isDragging(),
         'bg-slate-50 dark:bg-solid-darkbg/70': !isDragging(),
