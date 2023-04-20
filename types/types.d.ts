@@ -3,6 +3,7 @@ declare module 'solid-repl' {
     name: string;
     source: string;
   }
+
   export const defaultTabs: Tab[];
 }
 

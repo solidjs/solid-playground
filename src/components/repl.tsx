@@ -401,7 +401,7 @@ const Repl: ReplProps = (props) => {
             />
           </Match>
           <Match when={outputTab() == 1}>
-            <section class="relative flex h-full flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800 min-h-0 min-w-0">
+            <section class="relative flex h-full min-h-0 min-w-0 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
                 url={`file:///${props.id}/output_dont_import.tsx`}
                 isDark={props.dark}
