@@ -143,7 +143,9 @@ rollup({
     nodeResolve({ extensions, exportConditions: ['solid'], preferBuiltins: false }),
     json(),
     css(),
-    commonjs(),
+    commonjs({
+      strictRequires: true,
+    }),
     {
       name: 'url',
       load(id) {
