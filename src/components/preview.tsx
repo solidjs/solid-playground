@@ -86,9 +86,9 @@ const generateHTML = (isDark: boolean, importMap: string) => `
 
           const load = document.getElementById('load');
           if (load) load.remove();
-        })
+        });
         const sendToDevtools = (message) => {
-          window.parent.postMessage(JSON.stringify(message), '${location.origin}');
+          window.parent.postMessage(JSON.stringify(message), '*');
         };
         let id = 0;
         const sendToChobitsu = (message) => {
@@ -97,7 +97,7 @@ const generateHTML = (isDark: boolean, importMap: string) => `
         };
         chobitsu.setOnMessage((message) => {
           if (message.includes('"id":"tmp')) return;
-          window.parent.postMessage(message, '${location.origin}');
+          window.parent.postMessage(message, '*');
         });
         window.addEventListener('message', ({ data }) => {
           try {
@@ -173,16 +173,15 @@ export const Preview: Component<Props> = (props) => {
   let outerContainer!: HTMLDivElement;
 
   let devtoolsLoaded = false;
+  let isIframeReady = false;
 
   // This is the createWriteable paradigm in action
   // We have that the iframe src is entangled with its loading state
-  const iframeLoader = createMemo(() => {
-    const html = generateHTML(props.isDark, JSON.stringify({ imports: props.importMap }));
-    const loaded = createSignal(false);
-    return [html, loaded] as const;
-  });
   const iframeSrcUrl = createMemo(() => {
-    const [html] = iframeLoader();
+    const html = generateHTML(
+      untrack(() => props.isDark),
+      JSON.stringify({ imports: props.importMap }),
+    );
     const url = URL.createObjectURL(
       new Blob([html], {
         type: 'text/html',
@@ -191,42 +190,38 @@ export const Preview: Component<Props> = (props) => {
     onCleanup(() => URL.revokeObjectURL(url));
     return url;
   });
-  const isIframeReady = () => {
-    const [, [loaded]] = iframeLoader();
-    return loaded();
-  };
-  const setIframeReady = (value: boolean) => {
-    const [, [, setLoaded]] = iframeLoader();
-    setLoaded(value);
-  };
 
   createEffect(() => {
-    if (!isIframeReady()) return;
+    const dark = props.isDark;
 
-    iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
+    if (!isIframeReady) return;
+
+    iframe.contentDocument!.documentElement.classList.toggle('dark', dark);
   });
 
   createEffect(() => {
     if (!props.reloadSignal) return;
 
-    setIframeReady(false);
+    isIframeReady = false;
     iframe.src = untrack(iframeSrcUrl);
   });
 
   createEffect(() => {
-    if (!isIframeReady()) return;
+    const code = props.code;
 
-    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, untrack(iframeSrcUrl));
+    if (!isIframeReady) return;
+
+    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: code }, '*');
   });
 
   const devtoolsSrc = useDevtoolsSrc();
 
   const messageListener = (event: MessageEvent) => {
     if (event.source === iframe.contentWindow) {
-      devtoolsIframe.contentWindow!.postMessage(event.data, devtoolsSrc);
+      devtoolsIframe.contentWindow!.postMessage(event.data, '*');
     }
     if (event.source === devtoolsIframe.contentWindow) {
-      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, untrack(iframeSrcUrl));
+      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, '*');
     }
   };
   window.addEventListener('message', messageListener);
@@ -283,8 +278,11 @@ export const Preview: Component<Props> = (props) => {
         ref={iframe}
         src={iframeSrcUrl()}
         onload={() => {
-          setIframeReady(true);
-          if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, untrack(iframeSrcUrl));
+          isIframeReady = true;
+
+          if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
+          iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
+          iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
         }}
         // @ts-ignore
         sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
