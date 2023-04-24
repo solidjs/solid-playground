@@ -9,6 +9,7 @@ import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
 
 import logo from '../assets/logo.svg?url';
+import githubLogo from '../assets/github-icon.png';
 
 export const Header: ParentComponent<{
   compiler?: Worker;
@@ -108,6 +109,18 @@ export const Header: ParentComponent<{
           <Icon class="h-6" path={copy() ? link : share} />
           <span class="text-xs md:sr-only">{copy() ? 'Copied to clipboard' : 'Share'}</span>
         </button>
+        <a
+          href="https://github.com/solidjs/solid-playground"
+          target="_blank"
+          class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
+          classList={{
+            'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+          }}
+          title="solid playground repo"
+        >
+          <img src={githubLogo} alt="github" class="h-6 w-6 rounded-full" />
+          <span class="text-xs md:sr-only">Github repo</span>
+        </a>
       </Dismiss>
       <button
         type="button"
