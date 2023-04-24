@@ -20,6 +20,11 @@ function babelTransform(filename: string, code: string) {
       function importGetter() {
         return {
           visitor: {
+            Import(path: any) {
+              const importee: string = path.parent.arguments[0].value;
+
+              cache[importee] = path.parent.arguments[0].value = transformImportee(importee);
+            },
             ImportDeclaration(path: any) {
               const importee: string = path.node.source.value;
               // Replace relative imports, as import maps don't seem to be able to handle them properly
