@@ -35,7 +35,7 @@ $ pnpm run build
 
 :warning: Firefox doesn't work by default in development (`pnpm dev`) due to to [vite's limitation with web worker](https://vitejs.dev/guide/features.html#web-workers). However it still works after build (`pnpm build`)
 
-To develop on firefox, ensure that `dom.workers.modules.enabled` is enabled in `about:config`
+To develop on Firefox, ensure that `dom.workers.modules.enabled` is enabled in `about:config`
 
 ## Credits / Technologies used
 
