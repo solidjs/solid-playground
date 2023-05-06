@@ -4,12 +4,12 @@ import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
+import { githubMarkWhite, githubMark } from '../assets/githubIcons';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
 
 import logo from '../assets/logo.svg?url';
-import githubLogo from '../assets/github-icon.png';
 
 export const Header: ParentComponent<{
   compiler?: Worker;
@@ -116,10 +116,12 @@ export const Header: ParentComponent<{
           classList={{
             'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
           }}
-          title="solid playground repo"
+          title="Github"
         >
-          <img src={githubLogo} alt="github" class="h-6 w-6 rounded-full" />
-          <span class="text-xs md:sr-only">Github repo</span>
+          <Show when={context.dark()} fallback={<Icon class="h-6" viewBox="0 0 96 96" path={githubMark} />}>
+            <Icon viewBox="0 0 96 96" class="h-6" path={githubMarkWhite} />
+          </Show>
+          <span class="text-xs md:sr-only">Github</span>
         </a>
       </Dismiss>
       <button
