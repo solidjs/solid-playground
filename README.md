@@ -33,7 +33,9 @@ $ pnpm run dev
 $ pnpm run build
 ```
 
-:warning: Make sure to use Chromium-based browser for dev mode. Firefox doesn't work due to to [vite's limitation with web worker](https://vitejs.dev/guide/features.html#web-workers).
+:warning: Firefox doesn't work by default in development (`pnpm dev`) due to to [vite's limitation with web worker](https://vitejs.dev/guide/features.html#web-workers). However it still works after build (`pnpm build`)
+
+To develop on Firefox, ensure that `dom.workers.modules.enabled` is enabled in `about:config`
 
 ## Credits / Technologies used
 

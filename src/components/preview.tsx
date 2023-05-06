@@ -297,6 +297,7 @@ export const Preview: Component<Props> = (props) => {
         />
       </Show>
       <iframe
+        title="Devtools"
         class="h-full w-full"
         ref={devtoolsIframe}
         src={devtoolsSrc}
