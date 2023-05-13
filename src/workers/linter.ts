@@ -39,7 +39,7 @@ async function fixResponse(code: string, ruleSeverityOverrides?: RuleSeverityOve
 }
 
 function errorResponse(e: any) {
-  return { event: 'ERROR' as const, error: (e as Error).message };
+  return { event: 'ERROR' as const, error: e };
 }
 
 self.addEventListener('message', async ({ data }: MessageEvent<LinterWorkerPayload>) => {

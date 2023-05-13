@@ -36,7 +36,7 @@ self.addEventListener('message', async ({ data }) => {
       self.postMessage(await compile(tabs, event));
     }
   } catch (e) {
-    self.postMessage({ event: 'ERROR', error: (e as Error).message });
+    self.postMessage({ event: 'ERROR', error: e });
   }
 });
 

@@ -104,8 +104,10 @@ const Repl: ReplProps = (props) => {
 
   const onCompilerMessage = ({ data }: any) => {
     const { event, compiled, error } = data;
-    if (event === 'ERROR') return setError(error);
-    else setError('');
+    if (event === 'ERROR') {
+      console.error(error);
+      return setError(error.message);
+    } else setError('');
 
     if (event === 'BABEL') {
       outputModel.setValue(compiled);
