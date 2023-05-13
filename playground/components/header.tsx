@@ -67,7 +67,7 @@ export const Header: ParentComponent<{
           onClick={context.toggleDark}
           class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
           classList={{
-            'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+            'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
           }}
           title="Toggle dark mode"
         >
@@ -83,7 +83,7 @@ export const Header: ParentComponent<{
             onClick={() => exportToZip(unwrap(context.tabs())!)}
             class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
             classList={{
-              'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+              'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
             }}
             title="Export to Zip"
           >
@@ -101,7 +101,7 @@ export const Header: ParentComponent<{
           classList={{
             'opacity-80 hover:opacity-100': !copy(),
             'text-green-100': copy() && !showMenu(),
-            'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+            'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
           }}
           title="Share with a minified link"
         >
@@ -113,7 +113,7 @@ export const Header: ParentComponent<{
           target="_blank"
           class="flex cursor-alias flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
           classList={{
-            'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+            'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
           }}
           title="Github"
         >

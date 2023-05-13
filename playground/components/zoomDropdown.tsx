@@ -89,7 +89,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         type="button"
         class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
         classList={{
-          'rounded-none	active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.showMenu,
+          'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.showMenu,
           'bg-gray-300 dark:text-black': open() && props.showMenu,
         }}
         title="Scale editor to make text larger or smaller"
