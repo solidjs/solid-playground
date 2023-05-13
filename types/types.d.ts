@@ -16,6 +16,7 @@ declare module 'solid-repl/lib/repl' {
     dark: boolean;
     tabs: Tab[];
     id: string;
+    hideDevtools?: boolean;
     setTabs: (tab: Tab[]) => void;
     reset: () => void;
     current: string | undefined;

@@ -186,7 +186,7 @@ const Repl: ReplProps = (props) => {
 
   let grid!: HTMLDivElement;
   let resizer!: HTMLDivElement;
-  const [left, setLeft] = createSignal(1.25);
+  const [left, setLeft] = createSignal(0.625);
 
   const isLarge = createMediaQuery('(min-width: 768px)');
   const isHorizontal = () => props.isHorizontal || !isLarge();
@@ -205,30 +205,25 @@ const Repl: ReplProps = (props) => {
       size = grid.offsetWidth - resizer.offsetWidth;
     }
     const percentage = position / size;
-    const percentageAdjusted = Math.min(Math.max(percentage * 2, 0.5), 1.5);
+    const percentageAdjusted = Math.min(Math.max(percentage, 0.25), 0.75);
 
     setLeft(percentageAdjusted);
   };
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
-  const [devtoolsOpen, setDevtoolsOpen] = createSignal(true);
+  const [devtoolsOpen, setDevtoolsOpen] = createSignal(!props.hideDevtools);
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
   return (
     <div
       ref={grid}
-      class="dark:bg-solid-darkbg grid h-full min-h-0 bg-white font-sans text-black dark:text-white"
+      class="dark:bg-solid-darkbg flex min-h-0 flex-1 flex-col bg-white font-sans text-black dark:text-white"
       classList={{
-        'wrapper--forced': props.isHorizontal,
-        'wrapper': !props.isHorizontal,
+        'md:flex-row': !props.isHorizontal,
         'dark': props.dark,
       }}
-      style={{
-        '--left': `${left()}fr`,
-        '--right': `${2 - left()}fr`,
-      }}
     >
-      <div class="grid h-full grid-rows-[min-content_1fr]">
+      <div class="flex min-h-0 min-w-0 flex-col" style={`flex: ${left()}`}>
         <TabList>
           <For each={userTabs()}>
             {(tab, index) => (
@@ -347,7 +342,7 @@ const Repl: ReplProps = (props) => {
 
       <GridResizer ref={resizer} isHorizontal={isHorizontal()} onResize={changeLeft} />
 
-      <div class="grid h-full grid-rows-[min-content_1fr]">
+      <div class="flex min-h-0 min-w-0 flex-col" style={`flex: ${1 - left()}`}>
         <TabList>
           <TabItem>
             <button
@@ -403,7 +398,7 @@ const Repl: ReplProps = (props) => {
             />
           </Match>
           <Match when={outputTab() == 1}>
-            <section class="relative flex h-full min-h-0 min-w-0 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
+            <section class="relative flex min-h-0 min-w-0 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
                 url={`file:///${props.id}/output_dont_import.tsx`}
                 isDark={props.dark}

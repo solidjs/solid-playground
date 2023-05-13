@@ -235,16 +235,7 @@ export const Preview: Component<Props> = (props) => {
     }); transform-origin: 0 0;`;
   };
 
-  const saveHeight = throttle((height: number) => {
-    localStorage.setItem('iframe_height', height.toString());
-  });
-
-  function loadHeight() {
-    const loaded = localStorage.getItem('iframe_height');
-    return parseFloat(loaded || '1.25');
-  }
-
-  const [iframeHeight, setIframeHeight] = createSignal<number>(loadHeight());
+  const [iframeHeight, setIframeHeight] = createSignal<number>(0.625);
 
   const changeIframeHeight = (clientY: number) => {
     let position: number;
@@ -256,25 +247,15 @@ export const Preview: Component<Props> = (props) => {
     size = outerContainer.offsetHeight - resizer.offsetHeight;
     const percentage = position / size;
 
-    setIframeHeight(percentage * 2);
-    saveHeight(percentage * 2);
+    setIframeHeight(percentage);
   };
 
   return (
-    <div
-      class="grid h-full w-full"
-      ref={outerContainer}
-      classList={props.classList}
-      style={{
-        'grid-template-rows': props.devtools
-          ? `minmax(0, ${iframeHeight()}fr) 12px minmax(0,${2 - iframeHeight()}fr)`
-          : 'minmax(0, 1fr)',
-      }}
-    >
+    <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
       <iframe
         title="Solid REPL"
-        class="dark:bg-other block h-full w-full overflow-scroll bg-white p-0"
-        style={styleScale()}
+        class="dark:bg-other block min-h-0 min-w-0 overflow-scroll bg-white p-0"
+        style={styleScale() + `flex: ${props.devtools ? iframeHeight() : 1};`}
         ref={iframe}
         src={iframeSrcUrl()}
         onload={() => {
@@ -298,7 +279,8 @@ export const Preview: Component<Props> = (props) => {
       </Show>
       <iframe
         title="Devtools"
-        class="h-full w-full"
+        class="min-h-0 min-w-0"
+        style={`flex: ${1 - iframeHeight()};`}
         ref={devtoolsIframe}
         src={devtoolsSrc}
         onload={() => (devtoolsLoaded = true)}

@@ -63,12 +63,12 @@ export const GridResizer: Component<{
   return (
     <div
       ref={setRef}
-      class="hover:bg-brand-default dark:hover:bg-brand-default group flex items-center justify-center gap-2 border-slate-200 dark:border-neutral-800"
+      class="hover:bg-brand-default dark:hover:bg-brand-default flex items-center justify-center gap-2 border-slate-200 dark:border-neutral-800"
       classList={{
         'bg-brand-default dark:bg-brand-default': isDragging(),
         'bg-slate-50 dark:bg-solid-darkbg/70': !isDragging(),
-        'flex-col cursor-col-resize border-l-2 border-r-2': !props.isHorizontal,
-        'flex-row cursor-row-resize border-t-2 border-b-2': props.isHorizontal,
+        'flex-col cursor-col-resize border-l-2 border-r-2 w-[12px]': !props.isHorizontal,
+        'flex-row cursor-row-resize border-t-2 border-b-2 h-[12px]': props.isHorizontal,
       }}
     >
       <div

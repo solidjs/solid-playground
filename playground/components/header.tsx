@@ -2,7 +2,7 @@ import Dismiss from 'solid-dismiss';
 import { A } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
-import { onCleanup, createSignal, Show, ParentComponent, JSX } from 'solid-js';
+import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
 import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
