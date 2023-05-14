@@ -17,7 +17,7 @@ function parseHash<T>(hash: string, fallback: T): T {
   }
 }
 
-export interface ReplFile {
+interface ReplFile {
   name: string;
   content: string;
 }

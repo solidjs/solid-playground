@@ -1,7 +1,6 @@
 import { Component, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
-import { throttle } from '@solid-primitives/scheduled';
 
 const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>

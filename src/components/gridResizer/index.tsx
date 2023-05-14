@@ -1,7 +1,7 @@
 import { Component, createSignal, createEffect, onCleanup } from 'solid-js';
 import { throttle } from '@solid-primitives/scheduled';
 
-export const Dot: Component<{ isDragging: boolean }> = (props) => {
+const Dot: Component<{ isDragging: boolean }> = (props) => {
   return (
     <span
       class="h-1 w-1 rounded-full bg-slate-300 dark:bg-white dark:group-hover:bg-slate-200"
