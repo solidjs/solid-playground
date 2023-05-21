@@ -66,6 +66,7 @@ export const AppContextProvider: ParentComponent = (props) => {
           document.body.classList.toggle('dark', x);
           setDark(x);
           localStorage.setItem('dark', String(x));
+          localStorage.setItem('uiTheme', x ? '"dark"' : '');
         },
       }}
     >
