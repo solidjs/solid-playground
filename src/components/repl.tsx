@@ -65,7 +65,7 @@ const Repl: ReplProps = (props) => {
   }
   function addTab() {
     const newTab = {
-      name: `tab${userTabs().length}.tsx`,
+      name: `tab${userTabs().length}.${props.id === 'repl' ? 'tsx' : 'jsx'}`,
       source: '',
     };
     batch(() => {
@@ -97,7 +97,7 @@ const Repl: ReplProps = (props) => {
 
   let outputModel: editor.ITextModel;
   createEffect(() => {
-    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.tsx`);
+    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.${props.id === 'repl' ? 'tsx' : 'jsx'}`);
     outputModel = editor.createModel('', 'typescript', outputUri);
     onCleanup(() => outputModel.dispose());
   });
@@ -400,7 +400,7 @@ const Repl: ReplProps = (props) => {
           <Match when={outputTab() == 1}>
             <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
-                url={`file:///${props.id}/output_dont_import.tsx`}
+                url={`file:///${props.id}/output_dont_import.${props.id === 'repl' ? 'tsx' : 'jsx'}`}
                 isDark={props.dark}
                 disabled
                 withMinimap={false}
