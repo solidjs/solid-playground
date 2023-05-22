@@ -31,6 +31,7 @@ const Repl: ReplProps = (props) => {
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
 
   const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
+  const tabExtension = props.tabs[0].name.split('.').at(-1);
 
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
@@ -65,7 +66,7 @@ const Repl: ReplProps = (props) => {
   }
   function addTab() {
     const newTab = {
-      name: `tab${userTabs().length}.${props.id === 'repl' ? 'tsx' : 'jsx'}`,
+      name: `tab${userTabs().length}.${tabExtension}`,
       source: '',
     };
     batch(() => {
@@ -97,7 +98,7 @@ const Repl: ReplProps = (props) => {
 
   let outputModel: editor.ITextModel;
   createEffect(() => {
-    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.${props.id === 'repl' ? 'tsx' : 'jsx'}`);
+    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.${tabExtension}`);
     outputModel = editor.createModel('', 'typescript', outputUri);
     onCleanup(() => outputModel.dispose());
   });
@@ -400,7 +401,7 @@ const Repl: ReplProps = (props) => {
           <Match when={outputTab() == 1}>
             <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
               <Editor
-                url={`file:///${props.id}/output_dont_import.${props.id === 'repl' ? 'tsx' : 'jsx'}`}
+                url={`file:///${props.id}/output_dont_import.${tabExtension}`}
                 isDark={props.dark}
                 disabled
                 withMinimap={false}

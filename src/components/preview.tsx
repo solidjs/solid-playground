@@ -249,6 +249,9 @@ export const Preview: Component<Props> = (props) => {
     setIframeHeight(percentage);
   };
 
+  createEffect(() => {
+    localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '');
+  });
   return (
     <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
       <iframe
