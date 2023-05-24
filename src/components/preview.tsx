@@ -251,6 +251,7 @@ export const Preview: Component<Props> = (props) => {
 
   createEffect(() => {
     localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '');
+    devtoolsIframe.contentWindow!.location.reload();
   });
   return (
     <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
