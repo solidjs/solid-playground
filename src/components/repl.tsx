@@ -128,16 +128,16 @@ const Repl: ReplProps = (props) => {
         }
       }
       console.log(`Compilation took: ${performance.now() - now}ms`);
-      if (!tab) {
-        tab = {
-          name: 'import_map.json',
-          source: JSON.stringify(currentMap, null, 2),
-        };
-        props.setTabs(props.tabs.concat(tab));
-      } else {
-        tab.source = JSON.stringify(currentMap, null, 2);
-      }
       batch(() => {
+        if (!tab) {
+          tab = {
+            name: 'import_map.json',
+            source: JSON.stringify(currentMap, null, 2),
+          };
+          props.setTabs(props.tabs.concat(tab));
+        } else {
+          tab.source = JSON.stringify(currentMap, null, 2);
+        }
         setOutput(compiled['./main']);
         setImportMap(currentMap);
       });
