@@ -250,7 +250,7 @@ export const Preview: Component<Props> = (props) => {
   };
 
   createEffect(() => {
-    localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '');
+    localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '"default"');
     devtoolsIframe.contentWindow!.location.reload();
   });
   return (
