@@ -2,7 +2,6 @@ import { Component, createEffect, onMount, onCleanup } from 'solid-js';
 import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
 import { liftOff } from './setupSolid';
 import { useZoom } from '../../hooks/useZoom';
-import type { LinterWorkerPayload, LinterWorkerResponse } from '../../workers/linter';
 import { throttle } from '@solid-primitives/scheduled';
 
 const Editor: Component<{
@@ -56,7 +55,7 @@ const Editor: Component<{
     });
   }
   if (props.linter) {
-    const listener = ({ data }: MessageEvent<LinterWorkerResponse>) => {
+    const listener = ({ data }: any) => {
       if (props.displayErrors) {
         const { event } = data;
         if (event === 'LINT') {
@@ -75,11 +74,10 @@ const Editor: Component<{
 
   const runLinter = throttle((code: string) => {
     if (props.linter && props.displayErrors) {
-      const payload: LinterWorkerPayload = {
+      props.linter.postMessage({
         event: 'LINT',
         code,
-      };
-      props.linter.postMessage(payload);
+      });
     }
   }, 250);
 
@@ -111,11 +109,10 @@ const Editor: Component<{
         run: (ed) => {
           const code = ed.getValue();
           if (code) {
-            const payload: LinterWorkerPayload = {
+            props.linter?.postMessage({
               event: 'FIX',
               code,
-            };
-            props.linter?.postMessage(payload);
+            });
           }
         },
       });

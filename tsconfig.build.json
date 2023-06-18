@@ -9,14 +9,15 @@
     "moduleResolution": "node",
     "jsx": "preserve",
     "resolveJsonModule": true,
-    "noEmit": true,
     "strict": true,
+    "outDir": "lib",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "jsxImportSource": "solid-js",
+    "rootDir": "src",
     "types": ["vite/client"]
   },
-  "include": ["./src/**/*", "./playground/**/*", "repl/**/*"],
+  "include": ["./src/**/*"],
   "exclude": ["node_modules/"]
 }
