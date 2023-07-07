@@ -257,6 +257,7 @@ export const Repl: ReplProps = (props) => {
                     tabRefs.get(tab.name)?.focus();
                   }}
                   title={tab.name}
+                  role="button"
                 >
                   {tab.name}
                 </div>
@@ -284,6 +285,7 @@ export const Repl: ReplProps = (props) => {
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => props.setCurrent('import_map.json')}
               title="Import Map"
+              role="button"
             >
               <Icon path={inboxStack} class="h-5" />
               <span class="sr-only">Import Map</span>
