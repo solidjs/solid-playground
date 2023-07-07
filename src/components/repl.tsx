@@ -24,7 +24,7 @@ export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
 
-  const tabRefs = new Map<string, HTMLSpanElement>();
+  const tabRefs = new Map<number, HTMLSpanElement>();
 
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal('');
@@ -237,27 +237,38 @@ export const Repl: ReplProps = (props) => {
             {(tab, index) => (
               <TabItem active={props.current === tab.name} class="mr-2">
                 <div
-                  ref={(el) => tabRefs.set(tab.name, el)}
-                  class="cursor-pointer select-none rounded border border-solid border-transparent px-3 py-2 transition focus:border-blue-600 focus:outline-none"
+                  ref={(el) => tabRefs.set(index(), el)}
+                  class="cursor-pointer select-none rounded border border-solid border-transparent px-3 py-2 transition"
+                  classList={{
+                    'border-transparent': edit() !== index(),
+                    'border-blue-600 outline-none': edit() === index(),
+                  }}
                   contentEditable={edit() == index()}
                   onBlur={(e) => {
+                    if (edit() !== index()) return;
                     setEdit(-1);
                     setCurrentName(e.currentTarget.textContent!);
                   }}
                   onKeyDown={(e) => {
                     if (e.code === 'Space') e.preventDefault();
                     if (e.code !== 'Enter') return;
-                    setEdit(-1);
-                    setCurrentName(e.currentTarget.textContent!);
+                    if (edit() === index()) {
+                      setEdit(-1);
+                      setCurrentName(e.currentTarget.textContent!);
+                      e.currentTarget.blur();
+                    } else {
+                      setCurrentTab(tab.name);
+                    }
                   }}
                   onClick={() => setCurrentTab(tab.name)}
                   onDblClick={(e) => {
                     e.preventDefault();
                     setEdit(index());
-                    tabRefs.get(tab.name)?.focus();
+                    tabRefs.get(index())?.focus();
                   }}
                   title={tab.name}
                   role="button"
+                  tabindex="0"
                 >
                   {tab.name}
                 </div>
@@ -284,8 +295,12 @@ export const Repl: ReplProps = (props) => {
             <label
               class="cursor-pointer space-x-2 px-3 py-2"
               onclick={() => props.setCurrent('import_map.json')}
+              onKeyDown={(e) => {
+                if (e.code === 'Enter') props.setCurrent('import_map.json');
+              }}
               title="Import Map"
               role="button"
+              tabindex="0"
             >
               <Icon path={inboxStack} class="h-5" />
               <span class="sr-only">Import Map</span>
