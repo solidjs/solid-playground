@@ -2,9 +2,9 @@ import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import CompilerWorker from '../../src/workers/compiler?worker';
-import FormatterWorker from '../../src/workers/formatter?worker';
-import LinterWorker from '../../src/workers/linter?worker';
+import CompilerWorker from '../../repl/compiler?worker';
+import FormatterWorker from '../../repl/formatter?worker';
+import LinterWorker from '../../repl/linter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useMatch, useNavigate, useParams } from '@solidjs/router';
@@ -15,7 +15,7 @@ import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 
-const Repl = lazy(() => import('../../src/components/repl'));
+const Repl = lazy(() => import('../components/setupSolid'));
 
 window.MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {

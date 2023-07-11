@@ -1,3 +1,5 @@
+@import url('@unocss/reset/tailwind.css');
+
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Regular.woff') format('woff');

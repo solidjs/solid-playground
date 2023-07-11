@@ -1,6 +1,9 @@
+import type { Tab } from 'solid-repl';
+
 import { transform } from '@babel/standalone';
-//@ts-ignore
+// @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
+
 import dd from 'dedent';
 
 let files: Record<string, string> = {};
@@ -106,7 +109,7 @@ function transformImportee(fileName: string) {
   return url;
 }
 
-export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
+function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   files = fileRecord;
   for (let out in dataToReturn) {
     const url = dataToReturn[out];
@@ -117,3 +120,39 @@ export function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   dataToReturn[entryPoint] = transformImportee(entryPoint);
   return dataToReturn;
 }
+
+async function compile(tabs: Tab[], event: string) {
+  const tabsRecord: Record<string, string> = {};
+  for (const tab of tabs) {
+    tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
+  }
+  const bundled = bundle('./main', tabsRecord);
+  return { event, compiled: bundled };
+}
+
+async function babel(tab: Tab, compileOpts: any) {
+  const { code } = await transform(tab.source, {
+    presets: [
+      [babelPresetSolid, compileOpts],
+      ['typescript', { onlyRemoveTypeImports: true }],
+    ],
+    filename: tab.name,
+  });
+  return { event: 'BABEL', compiled: code };
+}
+
+self.addEventListener('message', async ({ data }) => {
+  const { event, tabs, tab, compileOpts } = data;
+
+  try {
+    if (event === 'BABEL') {
+      self.postMessage(await babel(tab, compileOpts));
+    } else if (event === 'ROLLUP') {
+      self.postMessage(await compile(tabs, event));
+    }
+  } catch (e) {
+    self.postMessage({ event: 'ERROR', error: e });
+  }
+});
+
+export {};

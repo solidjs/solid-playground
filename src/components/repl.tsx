@@ -20,7 +20,7 @@ const compileMode = {
   HYDRATABLE: { generate: 'dom', hydratable: true },
 } as const;
 
-const Repl: ReplProps = (props) => {
+export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
 
@@ -83,6 +83,7 @@ const Repl: ReplProps = (props) => {
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
 
+  let importMapChanging = false;
   let import_map = {};
   {
     let import_map_raw = props.tabs.find((tab) => tab.name === 'import_map.json');
@@ -129,6 +130,8 @@ const Repl: ReplProps = (props) => {
         }
       }
       console.log(`Compilation took: ${performance.now() - now}ms`);
+
+      importMapChanging = true;
       batch(() => {
         if (!tab) {
           tab = {
@@ -139,9 +142,11 @@ const Repl: ReplProps = (props) => {
         } else {
           tab.source = JSON.stringify(currentMap, null, 2);
         }
+
         setOutput(compiled['./main']);
         setImportMap(currentMap);
       });
+      importMapChanging = false;
 
       const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
       editor.getModel(importModel)!.setValue(tab.source);
@@ -182,6 +187,9 @@ const Repl: ReplProps = (props) => {
    */
   createEffect(() => {
     if (!props.tabs.length) return;
+
+    if (importMapChanging) return;
+
     compile();
   });
 
@@ -455,5 +463,3 @@ const Repl: ReplProps = (props) => {
     </div>
   );
 };
-
-export default Repl;
