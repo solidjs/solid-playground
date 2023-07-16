@@ -20,6 +20,14 @@ const compileMode = {
   HYDRATABLE: { generate: 'dom', hydratable: true },
 } as const;
 
+const possibleExtensions = ['tsx', 'jsx'] as const;
+type TPossibleExtensions = (typeof possibleExtensions)[number];
+const findExtension = (str: string): TPossibleExtensions => {
+  for (const ext of possibleExtensions) {
+    if (str.endsWith(ext)) return ext;
+  }
+  return 'jsx';
+};
 export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
@@ -31,7 +39,7 @@ export const Repl: ReplProps = (props) => {
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
 
   const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
-  const tabExtension = props.tabs[0].name.split('.').at(-1);
+  const tabExtension = findExtension(props.tabs[0].name);
 
   function setCurrentTab(current: string) {
     const idx = props.tabs.findIndex((tab) => tab.name === current);
