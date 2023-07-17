@@ -20,13 +20,13 @@ const compileMode = {
   HYDRATABLE: { generate: 'dom', hydratable: true },
 } as const;
 
-const possibleExtensions = ['tsx', 'jsx'] as const;
+const possibleExtensions = ['.tsx', '.jsx'] as const;
 type TPossibleExtensions = (typeof possibleExtensions)[number];
 const findExtension = (str: string): TPossibleExtensions => {
   for (const ext of possibleExtensions) {
     if (str.endsWith(ext)) return ext;
   }
-  return 'jsx';
+  return '.jsx';
 };
 export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
@@ -74,7 +74,7 @@ export const Repl: ReplProps = (props) => {
   }
   function addTab() {
     const newTab = {
-      name: `tab${userTabs().length}.${tabExtension}`,
+      name: `tab${userTabs().length}${tabExtension}`,
       source: '',
     };
     batch(() => {
