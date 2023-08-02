@@ -56,11 +56,14 @@ const indexHTML = (tabs: Tab[]) => dedent`
  * and then generating the package.json itself, for the export
  */
 function packageJSON(imports: string[]): string {
-  const deps = imports.reduce((acc, importPath): Record<string, string> => {
-    const name = importPath.split('/')[0];
-    if (!acc[name]) acc[name] = '*';
-    return acc;
-  }, {} as Record<string, string>);
+  const deps = imports.reduce(
+    (acc, importPath): Record<string, string> => {
+      const name = importPath.split('/')[0];
+      if (!acc[name]) acc[name] = '*';
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return JSON.stringify(
     {

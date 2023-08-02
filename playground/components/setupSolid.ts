@@ -1,6 +1,6 @@
 import { languages } from 'monaco-editor';
 
-const solidTypes = import.meta.glob('/node_modules/solid-js/**/*.{d.ts,json}', { eager: true, as: 'raw' });
+const solidTypes = import.meta.glob('/node_modules/{solid-js,csstype}/**/*.{d.ts,json}', { eager: true, as: 'raw' });
 
 for (const path in solidTypes) {
   languages.typescript.typescriptDefaults.addExtraLib(solidTypes[path], `file://${path}`);
