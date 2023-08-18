@@ -2,7 +2,7 @@ import { Show, JSX } from 'solid-js';
 import { Routes, Route, useSearchParams } from '@solidjs/router';
 import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
-import { useZoom } from '../src/hooks/useZoom';
+import { useZoom } from 'solid-repl/src/hooks/useZoom';
 import { Edit } from './pages/edit';
 import { Home } from './pages/home';
 import { Login } from './pages/login';

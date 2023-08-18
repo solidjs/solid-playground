@@ -1,5 +1,1 @@
 node_modules
-dist
-lib
-.DS_Store
-package-lock.json
