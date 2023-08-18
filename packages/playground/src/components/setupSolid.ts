@@ -7,5 +7,5 @@ for (const path in solidTypes) {
   languages.typescript.javascriptDefaults.addExtraLib(solidTypes[path], `file://${path}`);
 }
 
-import repl from '../../src/repl';
+import repl from 'solid-repl/src/repl';
 export default repl;

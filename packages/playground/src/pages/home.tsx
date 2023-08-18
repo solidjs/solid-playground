@@ -3,7 +3,7 @@ import { Icon } from 'solid-heroicons';
 import { eye, eyeSlash, plus, xMark } from 'solid-heroicons/outline';
 import { createEffect, createResource, createSignal, For, Show, Suspense } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
-import { defaultTabs } from '../../src';
+import { defaultTabs } from 'solid-repl/src';
 import { API, useAppContext } from '../context';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { Header } from '../components/header';
