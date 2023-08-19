@@ -1,27 +1,26 @@
 {
-	"name": "solid-playground-restructured",
-	"private": true,
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"build": "cd packages/playground && pnpm build",
-		"dev": "cd packages/playground && pnpm dev"
-	},
-	"keywords": [],
-	"author": "",
-	"workspaces": [
-		"./packages/*"
-	],
-	"devDependencies": {
-		"@changesets/cli": "2.26.2",
-		"vitest": "^0.33.0",
-		"prettier": "^3.0.0",
-		"prettier-plugin-tailwindcss": "^0.4.1"
-	},
-	"pnpm": {
-		"patchedDependencies": {
-			"monaco-editor@0.40.0": "patches/monaco-editor@0.37.1.patch"
-		}
-	}
+  "name": "solid-playground-restructured",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "cd packages/playground && pnpm build",
+    "dev": "cd packages/playground && pnpm dev",
+    "format": "prettier -w ."
+  },
+  "keywords": [],
+  "author": "",
+  "workspaces": [
+    "./packages/*"
+  ],
+  "devDependencies": {
+    "@changesets/cli": "2.26.2",
+    "prettier": "^3.0.2",
+    "prettier-plugin-tailwindcss": "^0.5.3"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "monaco-editor@0.41.0": "patches/monaco-editor@0.41.0.patch"
+    }
+  }
 }

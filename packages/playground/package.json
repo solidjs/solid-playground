@@ -1,47 +1,39 @@
 {
-    "name": "solid-playground",
-    "private": true,
-    "scripts": {
-        "build": "vite build",
-        "start": "vite preview",
-        "dev": "vite"
-    },
-    "dependencies": {
-        "@solid-primitives/scheduled": "^1.4.0",
-        "@solidjs/router": "^0.8.2",
-        "dedent": "^1.5.1",
-        "onigasm": "^2.2.5",
-        "solid-dismiss": "^1.7.121",
-        "solid-heroicons": "^3.2.4",
-        "solid-js": "1.7.8",
-        "solid-repl": "workspace:*"
-    },
-    "devDependencies": {
-        "@amoutonbrady/lz-string": "^0.1.0",
-        "@babel/core": "^7.22.9",
-        "@babel/plugin-syntax-jsx": "^7.22.5",
-        "@babel/preset-typescript": "^7.22.5",
-        "@babel/types": "^7.22.5",
-        "@solidjs/router": "^0.8.2",
-        "@types/babel__standalone": "^7.1.4",
-        "@types/dedent": "^0.7.0",
-        "@types/fs-extra": "^11.0.1",
-        "@unocss/cli": "^0.54.1",
-        "@unocss/preset-wind": "^0.54.1",
-        "acorn-jsx": "^5.3.2",
-        "assert": "^2.0.0",
-        "csstype": "^3.1.2",
-        "esbuild": "^0.18.17",
-        "fs-extra": "^11.1.1",
-        "jiti": "^1.19.1",
-        "jszip": "^3.10.1",
-        "mime": "^3.0.0",
-        "monaco-editor": "~0.40.0",
-        "prettier-plugin-tailwindcss": "^0.4.1",
-        "register-service-worker": "^1.7.2",
-        "typescript": "^5.1.6",
-        "unocss": "^0.54.1",
-        "vite": "^4.4.8",
-        "vite-plugin-solid": "^2.7.0"
-    }
+  "name": "solid-playground",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "start": "vite preview",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@solid-primitives/scheduled": "^1.4.1",
+    "@solidjs/router": "^0.8.3",
+    "dedent": "^1.5.1",
+    "onigasm": "^2.2.5",
+    "solid-dismiss": "^1.7.121",
+    "solid-heroicons": "^3.2.4",
+    "solid-js": "1.7.11",
+    "solid-repl": "workspace:*"
+  },
+  "devDependencies": {
+    "@amoutonbrady/lz-string": "^0.1.0",
+    "@babel/core": "^7.22.10",
+    "@babel/plugin-syntax-jsx": "^7.22.5",
+    "@babel/preset-typescript": "^7.22.5",
+    "@babel/types": "^7.22.10",
+    "@solidjs/router": "^0.8.3",
+    "@types/babel__standalone": "^7.1.4",
+    "@types/dedent": "^0.7.0",
+    "@unocss/preset-wind": "^0.55.1",
+    "assert": "^2.0.0",
+    "csstype": "^3.1.2",
+    "jszip": "^3.10.1",
+    "monaco-editor": "~0.41.0",
+    "register-service-worker": "^1.7.2",
+    "typescript": "^5.1.6",
+    "unocss": "^0.55.1",
+    "vite": "^4.4.9",
+    "vite-plugin-solid": "^2.7.0"
+  }
 }
