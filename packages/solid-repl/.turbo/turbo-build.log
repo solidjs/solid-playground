@@ -1,8 +1,0 @@
-
-> solid-repl@0.24.0 build E:\Development\solid-playground\packages\solid-repl
-> tsc -p tsconfig.build.json && unocss "./src/**" && jiti build.ts
-
-[32munocss v0.54.1[39m
-[35m◐[39m UnoCSS for production...
-[32m✔[39m 121 utilities generated to [36muno.css[39m
-

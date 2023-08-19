@@ -1,4 +1,4 @@
-import type { Tab } from "solid-repl";
+import type { Tab } from 'solid-repl';
 
 const indexTSX = `import { render } from "solid-js/web";
 import { createSignal } from "solid-js";
@@ -18,8 +18,8 @@ render(() => <Counter />, document.getElementById("app")!);
 `;
 
 export const defaultTabs: Tab[] = [
-	{
-		name: "main.tsx",
-		source: indexTSX,
-	},
+  {
+    name: 'main.tsx',
+    source: indexTSX,
+  },
 ];

@@ -1,22 +1,22 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "ESNext",
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"allowSyntheticDefaultImports": true,
-		"isolatedModules": true,
-		"esModuleInterop": true,
-		"moduleResolution": "node",
-		"jsx": "preserve",
-		"resolveJsonModule": true,
-		"noEmit": true,
-		"strict": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"skipLibCheck": true,
-		"jsxImportSource": "solid-js",
-		"types": ["vite/client"]
-	},
-	"include": ["./src/**/*", "./playground/**/*", "repl/**/*"],
-	"exclude": ["node_modules/"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "jsxImportSource": "solid-js",
+    "types": ["vite/client"]
+  },
+  "include": ["./src/**/*", "./playground/**/*", "repl/**/*"],
+  "exclude": ["node_modules/"]
 }
