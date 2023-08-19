@@ -11,7 +11,7 @@ import { useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from 'solid-repl/src';
-import type { Tab } from "solid-repl";
+import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 
