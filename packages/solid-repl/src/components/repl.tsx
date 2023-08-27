@@ -12,7 +12,7 @@ import { editor, Uri } from 'monaco-editor';
 
 import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
-import type { Repl as ReplProps } from 'solid-repl/lib/repl';
+import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },

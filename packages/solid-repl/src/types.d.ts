@@ -7,7 +7,7 @@ declare module 'solid-repl' {
   export const defaultTabs: Tab[];
 }
 
-declare module 'solid-repl/lib/repl' {
+declare module 'solid-repl/dist/repl' {
   export type Repl = import('solid-js').Component<{
     compiler: Worker;
     formatter: Worker;

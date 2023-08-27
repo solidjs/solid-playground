@@ -100,6 +100,7 @@ const Editor: Component<{
       const disabled = props.disabled == true ? true : false;
       editor.updateOptions({ readOnly: disabled });
     });
+
     if (props.linter) {
       editor.addAction({
         id: 'eslint.executeAutofix',
@@ -119,13 +120,11 @@ const Editor: Component<{
     }
 
     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
-      if (editor) {
-        // auto-format
-        editor.getAction('editor.action.formatDocument')?.run();
-        // auto-fix problems
-        props.displayErrors && editor.getAction('eslint.executeAutofix')?.run();
-        editor.focus();
-      }
+      // auto-format
+      editor.getAction('editor.action.formatDocument')?.run();
+      // auto-fix problems
+      props.displayErrors && editor.getAction('eslint.executeAutofix')?.run();
+      editor.focus();
     });
 
     editor.onDidChangeModelContent(() => {
@@ -134,7 +133,7 @@ const Editor: Component<{
       runLinter(code);
     });
   });
-  onCleanup(() => editor?.dispose());
+  onCleanup(() => editor.dispose());
 
   createEffect(() => {
     editor.setModel(model());

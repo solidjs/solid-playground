@@ -1,12 +1,11 @@
-// @ts-ignore
-import prettier from 'prettier/esm/standalone.mjs';
-// @ts-ignore
-import parserBabel from 'prettier/esm/parser-babel.mjs';
+import { format as prettierFormat } from 'prettier/standalone';
+import * as prettierPluginBabel from 'prettier/plugins/babel';
+import * as prettierPluginEstree from 'prettier/plugins/estree';
 
 function format(code: string) {
-  return prettier.format(code, {
+  return prettierFormat(code, {
     parser: 'babel-ts',
-    plugins: [parserBabel],
+    plugins: [prettierPluginBabel, prettierPluginEstree],
   });
 }
 
