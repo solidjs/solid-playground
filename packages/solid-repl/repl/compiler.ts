@@ -25,13 +25,21 @@ function babelTransform(filename: string, code: string) {
           visitor: {
             Import(path: any) {
               const importee: string = path.parent.arguments[0].value;
-
               cache[importee] = path.parent.arguments[0].value = transformImportee(importee);
             },
             ImportDeclaration(path: any) {
               const importee: string = path.node.source.value;
-              // Replace relative imports, as import maps don't seem to be able to handle them properly
               cache[importee] = path.node.source.value = transformImportee(importee);
+            },
+            ExportAllDeclaration(path: any) {
+              const importee: string = path.node.source.value;
+              cache[importee] = path.node.source.value = transformImportee(importee);
+            },
+            ExportNamedDeclaration(path: any) {
+              const importee: string = path.node.source?.value;
+              if (importee) {
+                cache[importee] = path.node.source.value = transformImportee(importee);
+              }
             },
           },
         };
@@ -121,7 +129,7 @@ function bundle(entryPoint: string, fileRecord: Record<string, string>) {
   return dataToReturn;
 }
 
-async function compile(tabs: Tab[], event: string) {
+function compile(tabs: Tab[], event: string) {
   const tabsRecord: Record<string, string> = {};
   for (const tab of tabs) {
     tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
@@ -130,8 +138,8 @@ async function compile(tabs: Tab[], event: string) {
   return { event, compiled: bundled };
 }
 
-async function babel(tab: Tab, compileOpts: any) {
-  const { code } = await transform(tab.source, {
+function babel(tab: Tab, compileOpts: any) {
+  const { code } = transform(tab.source, {
     presets: [
       [babelPresetSolid, compileOpts],
       ['typescript', { onlyRemoveTypeImports: true }],
@@ -141,14 +149,14 @@ async function babel(tab: Tab, compileOpts: any) {
   return { event: 'BABEL', compiled: code };
 }
 
-self.addEventListener('message', async ({ data }) => {
+self.addEventListener('message', ({ data }) => {
   const { event, tabs, tab, compileOpts } = data;
 
   try {
     if (event === 'BABEL') {
-      self.postMessage(await babel(tab, compileOpts));
+      self.postMessage(babel(tab, compileOpts));
     } else if (event === 'ROLLUP') {
-      self.postMessage(await compile(tabs, event));
+      self.postMessage(compile(tabs, event));
     }
   } catch (e) {
     self.postMessage({ event: 'ERROR', error: e });
