@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup } from 'solid-js';
+import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, createMemo } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { arrowPath, commandLine, trash, inboxStack, bell, bellSlash } from 'solid-heroicons/outline';
 import { unwrap } from 'solid-js/store';
@@ -9,10 +9,11 @@ import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
 import { createMediaQuery } from '@solid-primitives/media';
 import { editor, Uri } from 'monaco-editor';
+import { createMonacoTabs } from './editor/monacoTabs';
 
-import MonacoTabs from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
+import type { Tab } from 'solid-repl';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -20,14 +21,21 @@ const compileMode = {
   HYDRATABLE: { generate: 'dom', hydratable: true },
 } as const;
 
-const possibleExtensions = ['.tsx', '.jsx'] as const;
-type TPossibleExtensions = (typeof possibleExtensions)[number];
-const findExtension = (str: string): TPossibleExtensions => {
-  for (const ext of possibleExtensions) {
+const findExtension = (str: string): '.tsx' | '.jsx' => {
+  for (const ext of ['.tsx', '.jsx'] as const) {
     if (str.endsWith(ext)) return ext;
   }
   return '.jsx';
 };
+const getImportMap = (tabs: Tab[]): Record<string, string> => {
+  try {
+    const rawImportMap = tabs.find((tab) => tab.name === 'import_map.json');
+    return JSON.parse(rawImportMap?.source ?? '{}');
+  } catch (e) {
+    return {};
+  }
+};
+
 export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
@@ -90,27 +98,13 @@ export const Repl: ReplProps = (props) => {
 
   const [edit, setEdit] = createSignal(-1);
   const [outputTab, setOutputTab] = createSignal(0);
-
-  let importMapChanging = false;
-  let import_map = {};
-  {
-    let import_map_raw = props.tabs.find((tab) => tab.name === 'import_map.json');
-    try {
-      if (import_map_raw >= 0) {
-        import_map = JSON.parse(import_map_raw.source);
-      }
-    } catch (e) {}
-  }
-  const [importMap, setImportMap] = createSignal<Record<string, string>>(import_map, {
+  const [importMap, setImportMap] = createSignal(getImportMap(props.tabs), {
     equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
   });
 
-  let outputModel: editor.ITextModel;
-  createEffect(() => {
-    const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.ts`);
-    outputModel = editor.createModel('', 'typescript', outputUri);
-    onCleanup(() => outputModel.dispose());
-  });
+  const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.ts`);
+  const outputModel = editor.createModel('', 'typescript', outputUri);
+  onCleanup(() => outputModel.dispose());
 
   const onCompilerMessage = ({ data }: any) => {
     const { event, compiled, error } = data;
@@ -125,8 +119,7 @@ export const Repl: ReplProps = (props) => {
     }
 
     if (event === 'ROLLUP') {
-      let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
-      let currentMap = JSON.parse(tab?.source || '{}');
+      const currentMap = { ...importMap() };
       for (const file in currentMap) {
         if (!(file in compiled) && currentMap[file] === `https://jspm.dev/${file}`) {
           delete currentMap[file];
@@ -139,8 +132,8 @@ export const Repl: ReplProps = (props) => {
       }
       console.log(`Compilation took: ${performance.now() - now}ms`);
 
-      importMapChanging = true;
       batch(() => {
+        let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
         if (!tab) {
           tab = {
             name: 'import_map.json',
@@ -149,15 +142,13 @@ export const Repl: ReplProps = (props) => {
           props.setTabs(props.tabs.concat(tab));
         } else {
           tab.source = JSON.stringify(currentMap, null, 2);
+          const { model } = monacoTabs().get(`file:///${props.id}/import_map.json`)!;
+          model.setValue(tab.source);
         }
 
         setOutput(compiled['./main']);
         setImportMap(currentMap);
       });
-      importMapChanging = false;
-
-      const importModel = Uri.parse(`file:///${props.id}/import_map.json`);
-      editor.getModel(importModel)!.setValue(tab.source);
     }
   };
   compiler.addEventListener('message', onCompilerMessage);
@@ -179,7 +170,7 @@ export const Repl: ReplProps = (props) => {
       outputTab() == 0
         ? {
             event: 'ROLLUP',
-            tabs: unwrap(props.tabs),
+            tabs: unwrap(userTabs()),
           }
         : {
             event: 'BABEL',
@@ -196,10 +187,11 @@ export const Repl: ReplProps = (props) => {
   createEffect(() => {
     if (!props.tabs.length) return;
 
-    if (importMapChanging) return;
-
     compile();
   });
+
+  const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
+  const currentModel = createMemo(() => monacoTabs().get(`file:///${props.id}/${props.current}`)!.model);
 
   let grid!: HTMLDivElement;
   let resizer!: HTMLDivElement;
@@ -347,11 +339,9 @@ export const Repl: ReplProps = (props) => {
           </TabItem>
         </TabList>
 
-        <MonacoTabs tabs={props.tabs} folder={props.id} />
-
         <Show when={props.current}>
           <Editor
-            url={`file:///${props.id}/${props.current}`}
+            model={currentModel()}
             onDocChange={(code: string) => {
               if (props.current == 'import_map.json') {
                 const newImportMap = JSON.parse(code);
@@ -433,12 +423,7 @@ export const Repl: ReplProps = (props) => {
           </Match>
           <Match when={outputTab() == 1}>
             <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
-              <Editor
-                url={`file:///${props.id}/output_dont_import.ts`}
-                isDark={props.dark}
-                disabled
-                withMinimap={false}
-              />
+              <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
 
               <div class="p-5">
                 <label class="text-sm font-semibold uppercase">Compile mode</label>

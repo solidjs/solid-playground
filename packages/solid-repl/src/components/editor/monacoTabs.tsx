@@ -1,45 +1,36 @@
-import { Component, createEffect, onCleanup, untrack } from 'solid-js';
+import { createMemo, onCleanup } from 'solid-js';
 import type { Tab } from 'solid-repl';
 import { Uri, editor, IDisposable } from 'monaco-editor';
 
-const MonacoTabs: Component<{ folder: string; tabs: Tab[] }> = (props) => {
-  const key = (tab: Tab) => `file:///${props.folder}/${tab.name}`;
-  let currentTabs = new Map<string, { model: editor.ITextModel; watcher: IDisposable }>();
-  let syncing = false;
-  createEffect(() => {
+export const createMonacoTabs = (folder: string, tabs: () => Tab[]) => {
+  const currentTabs = createMemo<Map<string, { model: editor.ITextModel; watcher: IDisposable }>>((prevTabs) => {
     const newTabs = new Map<string, { model: editor.ITextModel; watcher: IDisposable }>();
-    syncing = true;
-    for (const tab of props.tabs) {
-      const keyValue = key(tab);
-      const lookup = currentTabs.get(keyValue);
-      const source = untrack(() => tab.source);
+    for (const tab of tabs()) {
+      const url = `file:///${folder}/${tab.name}`;
+      const lookup = prevTabs?.get(url);
       if (!lookup) {
-        const uri = Uri.parse(keyValue);
-        const model = editor.createModel(source, undefined, uri);
-        const watcher = model.onDidChangeContent(() => {
-          if (!syncing) tab.source = model.getValue();
-        });
-        newTabs.set(keyValue, { model, watcher });
+        const uri = Uri.parse(url);
+        const model = editor.createModel(tab.source, undefined, uri);
+        const watcher = model.onDidChangeContent(() => (tab.source = model.getValue()));
+        newTabs.set(url, { model, watcher });
       } else {
-        lookup.model.setValue(source);
+        lookup.model.setValue(tab.source);
         lookup.watcher.dispose();
-        lookup.watcher = lookup.model.onDidChangeContent(() => {
-          if (!syncing) tab.source = lookup.model.getValue();
-        });
-        newTabs.set(keyValue, lookup);
+        lookup.watcher = lookup.model.onDidChangeContent(() => (tab.source = lookup.model.getValue()));
+        newTabs.set(url, lookup);
       }
     }
-    syncing = false;
 
-    for (const [old, lookup] of currentTabs) {
-      if (!newTabs.has(old)) lookup.model.dispose();
+    if (prevTabs) {
+      for (const [old, lookup] of prevTabs) {
+        if (!newTabs.has(old)) lookup.model.dispose();
+      }
     }
-    currentTabs = newTabs;
+    return newTabs;
   });
   onCleanup(() => {
-    for (const lookup of currentTabs.values()) lookup.model.dispose();
+    for (const lookup of currentTabs().values()) lookup.model.dispose();
   });
 
-  return <></>;
+  return currentTabs;
 };
-export default MonacoTabs;

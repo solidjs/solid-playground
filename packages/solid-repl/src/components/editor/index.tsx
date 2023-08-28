@@ -5,7 +5,7 @@ import { useZoom } from '../../hooks/useZoom';
 import { throttle } from '@solid-primitives/scheduled';
 
 const Editor: Component<{
-  url: string;
+  model: mEditor.ITextModel;
   disabled?: true;
   isDark?: boolean;
   withMinimap?: boolean;
@@ -25,8 +25,6 @@ const Editor: Component<{
   let editor: mEditor.IStandaloneCodeEditor;
 
   const { zoomState } = useZoom();
-
-  const model = () => mEditor.getModel(Uri.parse(props.url));
 
   if (props.formatter) {
     languages.registerDocumentFormattingEditProvider('typescript', {
@@ -59,12 +57,10 @@ const Editor: Component<{
       if (props.displayErrors) {
         const { event } = data;
         if (event === 'LINT') {
-          const m = model();
-          m && mEditor.setModelMarkers(m, 'eslint', data.markers);
+          mEditor.setModelMarkers(props.model, 'eslint', data.markers);
         } else if (event === 'FIX') {
-          const m = model();
-          m && mEditor.setModelMarkers(m, 'eslint', data.markers);
-          data.fixed && model()?.setValue(data.output);
+          mEditor.setModelMarkers(props.model, 'eslint', data.markers);
+          data.fixed && props.model.setValue(data.output);
         }
       }
     };
@@ -97,8 +93,7 @@ const Editor: Component<{
     });
 
     createEffect(() => {
-      const disabled = props.disabled == true ? true : false;
-      editor.updateOptions({ readOnly: disabled });
+      editor.updateOptions({ readOnly: !!props.disabled });
     });
 
     if (props.linter) {
@@ -136,7 +131,7 @@ const Editor: Component<{
   onCleanup(() => editor.dispose());
 
   createEffect(() => {
-    editor.setModel(model());
+    editor.setModel(props.model);
     liftOff();
   });
 
@@ -162,8 +157,7 @@ const Editor: Component<{
       runLinter(editor.getValue());
     } else {
       // reset eslint markers when displayLintMessages is turned off
-      const m = model();
-      m && mEditor.setModelMarkers(m, 'eslint', []);
+      mEditor.setModelMarkers(props.model, 'eslint', []);
     }
   });
 

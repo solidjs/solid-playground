@@ -64,28 +64,42 @@ const generateHTML = (isDark: boolean, importMap: string) => `
       <script type="importmap">${importMap}</script>
       <script src="https://cdn.jsdelivr.net/npm/chobitsu"></script>
       <script type="module">
-        window.addEventListener('message', async ({ data }) => {
+        let finisher = undefined;
+        window.addEventListener('message', ({ data }) => {
           const { event, value } = data;
 
           if (event !== 'CODE_UPDATE') return;
 
-          window.dispose?.();
-          window.dispose = undefined;
+          const next = () => {
+            window.dispose?.();
+            window.dispose = undefined;
 
-          document.getElementById('app').innerHTML = "";
+            document.getElementById('app').innerHTML = "";
 
-          console.clear();
+            console.clear();
 
-          document.getElementById('appsrc')?.remove();
-          const script = document.createElement('script');
-          script.src = value;
-          script.id = 'appsrc';
-          script.type = 'module';
-          document.body.appendChild(script);
+            document.getElementById('appsrc')?.remove();
+            const script = document.createElement('script');
+            script.id = 'appsrc';
+            script.type = 'module';
+            finisher = () => {};
+            script.onload = () => {
+              if (finisher) finisher();
+              finisher = undefined;
+            };
+            script.src = value;
+            document.body.appendChild(script);
 
-          const load = document.getElementById('load');
-          if (load) load.remove();
+            const load = document.getElementById('load');
+            if (load) load.remove();
+          }
+          if (finisher !== undefined) {
+            finisher = next;
+          } else {
+            next();
+          }
         });
+
         const sendToDevtools = (message) => {
           window.parent.postMessage(JSON.stringify(message), '*');
         };
@@ -265,7 +279,7 @@ export const Preview: Component<Props> = (props) => {
           isIframeReady = true;
 
           if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
-          iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
+          if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
           iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
         }}
         // @ts-ignore

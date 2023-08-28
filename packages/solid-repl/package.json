@@ -17,37 +17,40 @@
     "build": "tsc -p tsconfig.build.json && unocss \"./src/**\" && jiti build.ts",
     "tsc": "tsc"
   },
+  "peerDependencies": {
+    "solid-js": ">=1.7.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.22.11",
     "@babel/plugin-syntax-jsx": "^7.22.5",
     "@babel/preset-typescript": "^7.22.11",
+    "@babel/standalone": "^7.22.12",
     "@babel/types": "^7.22.11",
     "@types/babel__standalone": "^7.1.4",
     "@types/dedent": "^0.7.0",
     "@types/fs-extra": "^11.0.1",
     "@unocss/cli": "^0.55.3",
     "@unocss/preset-wind": "^0.55.3",
+    "@unocss/reset": "^0.55.3",
+    "babel-preset-solid": "1.7.7",
     "esbuild": "^0.19.2",
+    "eslint-solid-standalone": "^0.13.0",
     "fs-extra": "^11.1.1",
     "jiti": "^1.19.3",
     "monaco-editor": "~0.40.0",
+    "prettier": "^3.0.2",
+    "solid-js": "1.7.11",
     "typescript": "^5.2.2",
     "unocss": "^0.55.3"
   },
   "dependencies": {
-    "@babel/standalone": "^7.22.12",
     "@solid-primitives/media": "^2.2.4",
     "@solid-primitives/scheduled": "^1.4.1",
-    "@unocss/reset": "^0.55.3",
-    "babel-preset-solid": "1.7.7",
     "dedent": "^1.5.1",
-    "eslint-solid-standalone": "^0.13.0",
     "monaco-editor-textmate": "^4.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
-    "prettier": "^3.0.2",
     "solid-dismiss": "^1.7.121",
-    "solid-heroicons": "^3.2.4",
-    "solid-js": "1.7.11"
+    "solid-heroicons": "^3.2.4"
   }
 }
