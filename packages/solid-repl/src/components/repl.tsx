@@ -226,7 +226,7 @@ export const Repl: ReplProps = (props) => {
   return (
     <div
       ref={grid}
-      class="dark:bg-solid-darkbg flex min-h-0 flex-1 flex-col bg-white font-sans text-black dark:text-white"
+      class="dark:bg-solid-darkbg flex min-h-0 h-full flex-1 flex-col bg-white font-sans text-black dark:text-white"
       classList={{
         'md:flex-row': !props.isHorizontal,
         'dark': props.dark,

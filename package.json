@@ -15,12 +15,12 @@
   ],
   "devDependencies": {
     "@changesets/cli": "2.26.2",
-    "prettier": "^3.0.2",
-    "prettier-plugin-tailwindcss": "^0.5.3"
+    "prettier": "^3.0.3",
+    "prettier-plugin-tailwindcss": "^0.5.4"
   },
   "pnpm": {
     "patchedDependencies": {
-      "monaco-editor@0.40.0": "patches/monaco-editor@0.41.0.patch"
+      "monaco-editor@0.43.0": "patches/monaco-editor@0.43.0.patch"
     }
   }
 }
