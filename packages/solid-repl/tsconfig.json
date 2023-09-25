@@ -15,7 +15,6 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "jsxImportSource": "solid-js",
-    "types": ["vite/client"]
   },
   "include": ["./src/**/*", "repl/**/*"],
   "exclude": ["node_modules/"]

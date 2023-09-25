@@ -19,6 +19,8 @@ function uid(str: string) {
 function babelTransform(filename: string, code: string) {
   let { code: transformedCode } = transform(code, {
     plugins: [
+      ['proposal-decorators', { decoratorsBeforeExport: true }],
+      'proposal-class-properties',
       // Babel plugin to get file import names
       function importGetter() {
         return {
