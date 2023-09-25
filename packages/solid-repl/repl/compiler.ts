@@ -142,6 +142,7 @@ function compile(tabs: Tab[], event: string) {
 
 function babel(tab: Tab, compileOpts: any) {
   const { code } = transform(tab.source, {
+    plugins: [['proposal-decorators', { decoratorsBeforeExport: true }], 'transform-class-properties'],
     presets: [
       [babelPresetSolid, compileOpts],
       ['typescript', { onlyRemoveTypeImports: true }],
