@@ -19,6 +19,7 @@ const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },
   HYDRATABLE: { generate: 'dom', hydratable: true },
+  UNIVERSAL: { generate: 'universal', hydratable: false, moduleName: "solid-universal-module" as string },
 } as const;
 
 const findExtension = (str: string): '.tsx' | '.jsx' => {
@@ -44,6 +45,7 @@ export const Repl: ReplProps = (props) => {
 
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal('');
+  const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
 
   const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
@@ -166,6 +168,13 @@ export const Repl: ReplProps = (props) => {
   }, 250);
 
   const compile = () => {
+    let compileOpts = mode();
+    if (compileOpts === compileMode.UNIVERSAL) {
+      compileOpts = { generate: 'universal',
+        hydratable: false,
+        moduleName: universalModuleName()
+      }
+    }
     applyCompilation(
       outputTab() == 0
         ? {
@@ -175,7 +184,7 @@ export const Repl: ReplProps = (props) => {
         : {
             event: 'BABEL',
             tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
-            compileOpts: mode(),
+            compileOpts,
           },
     );
   };
@@ -403,7 +412,6 @@ export const Repl: ReplProps = (props) => {
               class="-mb-0.5 w-full py-2"
               onClick={() => {
                 setOutputTab(1);
-                setMode(compileMode.DOM);
               }}
             >
               Output
@@ -463,6 +471,28 @@ export const Repl: ReplProps = (props) => {
                       name="dom"
                     />
                     <span>Client side rendering with hydration</span>
+                  </label>
+
+                  <label class="mr-auto block cursor-pointer space-x-2">
+                    <input
+                      checked={mode() === compileMode.UNIVERSAL}
+                      value="UNIVERSAL"
+                      class="text-brand-default"
+                      onChange={[setMode, compileMode.UNIVERSAL]}
+                      type="radio"
+                      name="dom"
+                    />
+                    <span>Universal Rendering & moduleName:</span>
+                    <input
+                      onFocus={[setMode, compileMode.UNIVERSAL]}
+                      onInput={(e) => {
+                        setUniversalModuleName(e.target.value);
+                      }}
+                      class="p-2.5"
+                      type="text"
+                      value={universalModuleName()}
+                      name="moduleName"
+                    />
                   </label>
                 </div>
               </div>

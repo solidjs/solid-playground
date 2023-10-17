@@ -12,6 +12,7 @@ There are 3 modes available:
 - DOM: The classic SPA generation mechanism
 - SSR: The server side generation mechanism
 - HYDRATION: The client side generation for hydration
+- UNIVERSAL: The client side generation for universal (custom renderer)
 
 ## Getting up and running
 
