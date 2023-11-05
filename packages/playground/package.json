@@ -13,27 +13,27 @@
     "onigasm": "^2.2.5",
     "solid-dismiss": "^1.7.121",
     "solid-heroicons": "^3.2.4",
-    "solid-js": "1.7.11",
+    "solid-js": "1.8.5",
     "solid-repl": "workspace:*"
   },
   "devDependencies": {
     "@amoutonbrady/lz-string": "^0.1.0",
-    "@babel/core": "^7.22.19",
+    "@babel/core": "^7.23.2",
     "@babel/plugin-syntax-jsx": "^7.22.5",
-    "@babel/preset-typescript": "^7.22.15",
-    "@babel/types": "^7.22.19",
+    "@babel/preset-typescript": "^7.23.2",
+    "@babel/types": "^7.23.0",
     "@solidjs/router": "^0.8.3",
-    "@types/babel__standalone": "^7.1.5",
-    "@types/dedent": "^0.7.0",
-    "@unocss/preset-wind": "^0.55.7",
+    "@types/babel__standalone": "^7.1.6",
+    "@types/dedent": "^0.7.1",
+    "@unocss/preset-wind": "^0.57.2",
     "assert": "^2.1.0",
     "csstype": "^3.1.2",
     "jszip": "^3.10.1",
-    "monaco-editor": "^0.43.0",
+    "monaco-editor": "^0.44.0",
     "register-service-worker": "^1.7.2",
     "typescript": "^5.2.2",
-    "unocss": "^0.55.7",
-    "vite": "^4.4.9",
-    "vite-plugin-solid": "^2.7.0"
+    "unocss": "^0.57.2",
+    "vite": "^4.5.0",
+    "vite-plugin-solid": "^2.7.2"
   }
 }
