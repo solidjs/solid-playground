@@ -31,7 +31,7 @@ export const App = (): JSX.Element => {
   const [searchParams] = useSearchParams();
 
   return (
-    <div class="dark:bg-solid-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
+    <div class="dark:bg-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
       <Routes>
         <Route
           path={['/:user/:repl', '/scratchpad']}

@@ -113,6 +113,9 @@ importers:
       dedent:
         specifier: ^1.5.1
         version: 1.5.1
+      dockview-core:
+        specifier: ^1.8.5
+        version: 1.8.5
       monaco-editor-textmate:
         specifier: ^4.0.0
         version: 4.0.0(monaco-editor@0.44.0)(monaco-textmate@3.0.1)
@@ -2032,6 +2035,10 @@ packages:
     dependencies:
       path-type: 4.0.0
     dev: true
+
+  /dockview-core@1.8.5:
+    resolution: {integrity: sha512-ryhqBpxvQ2U43b5kFO86M7ty+ElLJ4fxaVKvWr/2QatKyc6/oScc5jIYu0zveyHs6iAbbY+z7igOJSSsFtDw3w==}
+    dev: false
 
   /duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}

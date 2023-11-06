@@ -47,6 +47,7 @@
     "@solid-primitives/media": "^2.2.5",
     "@solid-primitives/scheduled": "^1.4.1",
     "dedent": "^1.5.1",
+    "dockview-core": "^1.8.5",
     "monaco-editor-textmate": "^4.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",

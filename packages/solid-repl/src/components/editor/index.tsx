@@ -90,6 +90,9 @@ const Editor: Component<{
       minimap: {
         enabled: props.withMinimap,
       },
+      dropIntoEditor: {
+        enabled: false,
+      },
     });
 
     createEffect(() => {

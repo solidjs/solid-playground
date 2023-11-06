@@ -1,6 +1,15 @@
-import { Component, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createRoot,
+  onCleanup,
+  onMount,
+  untrack,
+} from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
-import { GridResizer } from './gridResizer';
+import { Orientation, SplitviewComponent, SplitviewPanel } from 'dockview-core';
+import { insert } from 'solid-js/web';
 
 const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>
@@ -177,12 +186,31 @@ const useDevtoolsSrc = () => {
   return `${devtoolsRawUrl}#?embedded=${encodeURIComponent(location.origin)}`;
 };
 
+class SolidPanelView extends SplitviewPanel {
+  constructor(
+    id: string,
+    component: string,
+    private readonly myComponent: any,
+  ) {
+    super(id, component);
+  }
+  getComponent() {
+    const dispose = createRoot((dispose) => {
+      insert(this.element, () => this.myComponent(this.params));
+      return dispose;
+    });
+    return {
+      update: (params: any) => {},
+      dispose,
+    };
+  }
+}
+
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
   let devtoolsIframe!: HTMLIFrameElement;
-  let resizer!: HTMLDivElement;
   let outerContainer!: HTMLDivElement;
 
   let devtoolsLoaded = false;
@@ -205,40 +233,13 @@ export const Preview: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    const dark = props.isDark;
-
-    if (!isIframeReady) return;
-
-    iframe.contentDocument!.documentElement.classList.toggle('dark', dark);
-  });
-
-  createEffect(() => {
     if (!props.reloadSignal) return;
 
     isIframeReady = false;
     iframe.src = untrack(iframeSrcUrl);
   });
 
-  createEffect(() => {
-    const code = props.code;
-
-    if (!isIframeReady) return;
-
-    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: code }, '*');
-  });
-
   const devtoolsSrc = useDevtoolsSrc();
-
-  const messageListener = (event: MessageEvent) => {
-    if (event.source === iframe.contentWindow) {
-      devtoolsIframe.contentWindow!.postMessage(event.data, '*');
-    }
-    if (event.source === devtoolsIframe.contentWindow) {
-      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, '*');
-    }
-  };
-  window.addEventListener('message', messageListener);
-  onCleanup(() => window.removeEventListener('message', messageListener));
 
   const styleScale = () => {
     if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
@@ -248,63 +249,95 @@ export const Preview: Component<Props> = (props) => {
     }); transform-origin: 0 0;`;
   };
 
-  const [iframeHeight, setIframeHeight] = createSignal<number>(0.625);
+  onMount(() => {
+    const splitview = new SplitviewComponent({
+      parentElement: outerContainer,
+      orientation: Orientation.VERTICAL,
+      frameworkWrapper: {
+        createComponent: (id, componentId, component) => {
+          return new SolidPanelView(id, componentId, component);
+        },
+      },
+      frameworkComponents: {
+        preview: () => (
+          <iframe
+            title="Solid REPL"
+            class="dark:bg-darkbg block min-h-0 min-w-0 w-full h-full overflow-scroll bg-white p-0"
+            style={styleScale()}
+            ref={iframe}
+            src={iframeSrcUrl()}
+            onload={() => {
+              isIframeReady = true;
 
-  const changeIframeHeight = (clientY: number) => {
-    let position: number;
-    let size: number;
+              if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
+              if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
+              iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
+            }}
+            // @ts-ignore
+            sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+          />
+        ),
+        devtools: () => (
+          <iframe
+            title="Devtools"
+            class="min-h-0 min-w-0 w-full h-full"
+            ref={devtoolsIframe}
+            src={devtoolsSrc}
+            onload={() => (devtoolsLoaded = true)}
+            classList={{ block: props.devtools, hidden: !props.devtools }}
+          />
+        ),
+      },
+    });
+    splitview.addPanel({
+      id: 'preview',
+      component: 'preview',
+      minimumSize: 100,
+    });
+    splitview.addPanel({
+      id: 'devtools',
+      component: 'devtools',
+      minimumSize: 100,
+      snap: true
+    });
 
-    const rect = outerContainer.getBoundingClientRect();
+    createEffect(() => {
+      const dark = props.isDark;
 
-    position = clientY - rect.top - resizer.offsetHeight / 2;
-    size = outerContainer.offsetHeight - resizer.offsetHeight;
-    const percentage = position / size;
+      if (!isIframeReady) return;
 
-    setIframeHeight(percentage);
-  };
+      iframe.contentDocument!.documentElement.classList.toggle('dark', dark);
+    });
 
-  createEffect(() => {
-    localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '"default"');
-    devtoolsIframe.contentWindow!.location.reload();
+    createEffect(() => {
+      const code = props.code;
+
+      if (!isIframeReady) return;
+
+      iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: code }, '*');
+    });
+
+    const messageListener = (event: MessageEvent) => {
+      if (event.source === iframe.contentWindow) {
+        devtoolsIframe.contentWindow!.postMessage(event.data, '*');
+      }
+      if (event.source === devtoolsIframe.contentWindow) {
+        iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, '*');
+      }
+    };
+    window.addEventListener('message', messageListener);
+    onCleanup(() => window.removeEventListener('message', messageListener));
+
+    createEffect(() => {
+      localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '"default"');
+
+      if (!devtoolsLoaded) return;
+
+      devtoolsIframe.contentWindow!.location.reload();
+    });
   });
-  return (
-    <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
-      <iframe
-        title="Solid REPL"
-        class="dark:bg-other block min-h-0 min-w-0 overflow-scroll bg-white p-0"
-        style={styleScale() + `flex: ${props.devtools ? iframeHeight() : 1};`}
-        ref={iframe}
-        src={iframeSrcUrl()}
-        onload={() => {
-          isIframeReady = true;
 
-          if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
-          if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
-          iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
-        }}
-        // @ts-ignore
-        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-      />
-      <Show when={props.devtools}>
-        <GridResizer
-          ref={resizer}
-          isHorizontal={true}
-          onResize={(_, y) => {
-            changeIframeHeight(y);
-          }}
-        />
-      </Show>
-      <iframe
-        title="Devtools"
-        class="min-h-0 min-w-0"
-        style={`flex: ${1 - iframeHeight()};`}
-        ref={devtoolsIframe}
-        src={devtoolsSrc}
-        onload={() => (devtoolsLoaded = true)}
-        classList={{ block: props.devtools, hidden: !props.devtools }}
-      />
-    </div>
-  );
+  return <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}></div>;
 };
 
 type Props = {
