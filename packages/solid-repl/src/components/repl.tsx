@@ -19,7 +19,7 @@ const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },
   HYDRATABLE: { generate: 'dom', hydratable: true },
-  UNIVERSAL: { generate: 'universal', hydratable: false, moduleName: "solid-universal-module" as string },
+  UNIVERSAL: { generate: 'universal', hydratable: false, moduleName: 'solid-universal-module' as string },
 } as const;
 
 const findExtension = (str: string): '.tsx' | '.jsx' => {
@@ -170,10 +170,7 @@ export const Repl: ReplProps = (props) => {
   const compile = () => {
     let compileOpts = mode();
     if (compileOpts === compileMode.UNIVERSAL) {
-      compileOpts = { generate: 'universal',
-        hydratable: false,
-        moduleName: universalModuleName()
-      }
+      compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
     }
     applyCompilation(
       outputTab() == 0
@@ -235,7 +232,7 @@ export const Repl: ReplProps = (props) => {
   return (
     <div
       ref={grid}
-      class="dark:bg-solid-darkbg flex min-h-0 h-full flex-1 flex-col bg-white font-sans text-black dark:text-white"
+      class="dark:bg-solid-darkbg flex h-full min-h-0 flex-1 flex-col bg-white font-sans text-black dark:text-white"
       classList={{
         'md:flex-row': !props.isHorizontal,
         'dark': props.dark,
