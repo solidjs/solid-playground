@@ -11,7 +11,7 @@ import { createMonacoTabs } from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
-import { DockviewComponent } from 'dockview-core';
+import { DockviewComponent, Orientation } from 'dockview-core';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
 import { FileTree } from './fileTree';
 
@@ -325,39 +325,46 @@ export const Repl: ReplProps = (props) => {
         ),
       },
     });
-    const panel = dockview.addPanel({
-      id: props.current!,
-      component: 'editor',
-      params: {
-        currentModel: currentModel(),
-      },
-    });
 
-    const preview = dockview.addPanel({
-      id: 'Preview',
-      component: 'preview',
-      position: {
-        referencePanel: panel,
-        direction: 'right',
+    dockview.fromJSON({
+      grid: {
+        root: {
+          type: 'branch',
+          data: [
+            { type: 'leaf', data: { views: ['File Tree'], activeView: 'File Tree', id: '4' }, size: 250 },
+            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 800 },
+            { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 550 },
+          ],
+          size: 480,
+        },
+        width: 1600,
+        height: 480,
+        orientation: Orientation.HORIZONTAL,
       },
-    });
-    dockview.addPanel({
-      id: 'Output',
-      component: 'output',
-      position: {
-        referencePanel: preview,
-        direction: 'within',
-      },
-    });
-    dockview.addPanel({
-      id: 'File Tree',
-      component: 'filetree',
-      position: {
-        referencePanel: panel,
-        direction: 'below',
+      panels: {
+        'File Tree': {
+          id: 'File Tree',
+          contentComponent: 'filetree',
+        },
+        'Output': {
+          id: 'Output',
+          contentComponent: 'output',
+        },
+        'Preview': {
+          id: 'Preview',
+          contentComponent: 'preview',
+        },
+        [props.current!]: {
+          id: props.current!,
+          contentComponent: 'editor',
+          params: {
+            currentModel: currentModel(),
+          },
+        },
       },
     });
   });
+
   return (
     <>
       <div
