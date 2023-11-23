@@ -88,7 +88,7 @@ export const Header: ParentComponent<{
   }
 
   return (
-    <header class="dark:bg-darkbg border-b-1px sticky top-0 z-10 flex items-center border-slate-200 bg-white text-sm dark:border-neutral-800">
+    <header class="dark:bg-darkbg border-b-1px border-bord sticky top-0 z-10 flex items-center bg-white text-sm">
       <A href="/">
         <img src={logo} alt="solid-js logo" class="mx-2 h-6" />
       </A>
@@ -114,8 +114,7 @@ export const Header: ParentComponent<{
         <Dismiss
           class="absolute relative  top-0 top-[28px] flex flex-row items-center"
           classList={{
-            'z-10 w-40 right-0 absolute rounded border dark:border-gray-700 flex flex-col bg-white dark:bg-darkbg':
-              showMenu(),
+            'z-10 w-40 right-0 absolute rounded border border-bord flex flex-col bg-white dark:bg-darkbg': showMenu(),
             'hidden': !showMenu(),
           }}
           menuButton={menuBtnEl}
@@ -169,7 +168,7 @@ export const Header: ParentComponent<{
             <img crossOrigin="anonymous" src={context.user()?.avatar} class="h-6 w-6 rounded-full" />
           </button>
           <Dismiss menuButton={profileBtn} open={showProfile} setOpen={setShowProfile}>
-            <div class="dark:bg-darkbg absolute right-0 top-[30px] flex flex-col items-center rounded border bg-white dark:border-gray-700">
+            <div class="dark:bg-darkbg border-bord absolute right-0 top-[30px] flex flex-col items-center rounded border bg-white">
               <a class="p-2 hover:bg-gray-300 dark:hover:bg-gray-800" href="/">
                 {context.user()?.display}
               </a>

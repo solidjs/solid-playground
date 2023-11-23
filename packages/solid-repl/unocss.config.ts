@@ -13,6 +13,7 @@ export default defineConfig({
       dark: '#07254A',
       medium: '#446b9e',
       light: '#4f88c6',
+      bord: 'rgba(128, 128, 128, 0.35)',
       solid: {
         default: '#2c4f7c',
         darkdefault: '#b8d7ff',

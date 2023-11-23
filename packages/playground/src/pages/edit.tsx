@@ -234,7 +234,7 @@ export const Edit = (props: { horizontal: boolean }) => {
         )}
       </Header>
       <div class="flex h-full w-full overflow-hidden">
-        <div class="border-r-1 flex h-full w-[40px] flex-col items-center border-slate-200 dark:border-neutral-800">
+        <div class="border-r-1 border-bord flex h-full w-[40px] flex-col items-center">
           <HeaderButton title="Folder tree">
             <Icon path={folder} class="w-5" />
           </HeaderButton>

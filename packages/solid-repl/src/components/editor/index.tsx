@@ -175,7 +175,7 @@ const Editor: Component<{
     <>
       <div class="min-h-0 min-w-0 flex-1 p-0" ref={parent} />
       <Show when={!props.disabled}>
-        <div class="border-t-1 flex h-[30px] w-full justify-between border-slate-200 dark:border-neutral-800">
+        <div class="border-t-1 border-bord flex h-[30px] w-full justify-between">
           <div></div>
           <div class="flex items-center">
             <button
