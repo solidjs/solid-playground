@@ -1,15 +1,8 @@
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createRoot,
-  onCleanup,
-  onMount,
-  untrack,
-} from 'solid-js';
+import { Component, createEffect, createMemo, createRoot, onCleanup, onMount, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { Orientation, SplitviewComponent, SplitviewPanel } from 'dockview-core';
 import { insert } from 'solid-js/web';
+import { SolidPanelView } from '../dockview/solid';
 
 const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>
@@ -186,26 +179,6 @@ const useDevtoolsSrc = () => {
   return `${devtoolsRawUrl}#?embedded=${encodeURIComponent(location.origin)}`;
 };
 
-class SolidPanelView extends SplitviewPanel {
-  constructor(
-    id: string,
-    component: string,
-    private readonly myComponent: any,
-  ) {
-    super(id, component);
-  }
-  getComponent() {
-    const dispose = createRoot((dispose) => {
-      insert(this.element, () => this.myComponent(this.params));
-      return dispose;
-    });
-    return {
-      update: (params: any) => {},
-      dispose,
-    };
-  }
-}
-
 export const Preview: Component<Props> = (props) => {
   const { zoomState } = useZoom();
 
@@ -262,7 +235,7 @@ export const Preview: Component<Props> = (props) => {
         preview: () => (
           <iframe
             title="Solid REPL"
-            class="dark:bg-darkbg block min-h-0 min-w-0 w-full h-full overflow-scroll bg-white p-0"
+            class="dark:bg-darkbg block h-full min-h-0 w-full min-w-0 overflow-scroll bg-white p-0"
             style={styleScale()}
             ref={iframe}
             src={iframeSrcUrl()}
@@ -280,7 +253,7 @@ export const Preview: Component<Props> = (props) => {
         devtools: () => (
           <iframe
             title="Devtools"
-            class="min-h-0 min-w-0 w-full h-full"
+            class="h-full min-h-0 w-full min-w-0"
             ref={devtoolsIframe}
             src={devtoolsSrc}
             onload={() => (devtoolsLoaded = true)}
@@ -298,7 +271,7 @@ export const Preview: Component<Props> = (props) => {
       id: 'devtools',
       component: 'devtools',
       minimumSize: 100,
-      snap: true
+      snap: true,
     });
 
     createEffect(() => {

@@ -27,9 +27,6 @@ export default defineConfig({
   presets: [presetWind()],
   transformers: [transformerDirectives()],
   content: {
-    filesystem: [
-      './src/**/*.tsx',
-      '../solid-repl/src/**/*.ts',
-    ]
-  }
+    filesystem: ['./src/**/*.tsx', '../solid-repl/src/**/*.ts'],
+  },
 });

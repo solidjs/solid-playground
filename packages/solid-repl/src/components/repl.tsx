@@ -1,6 +1,4 @@
-import { createSignal, createEffect, batch, onCleanup, createMemo, onMount, createRoot, Show } from 'solid-js';
-import { insert } from 'solid-js/web';
-import { arrowPath, commandLine, trash, bell, bellSlash } from 'solid-heroicons/outline';
+import { createSignal, createEffect, batch, onCleanup, createMemo, onMount, Show } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { Error } from './error';
@@ -11,9 +9,10 @@ import { createMonacoTabs } from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
-import { DockviewComponent, Orientation } from 'dockview-core';
+import { DockviewComponent, GridviewComponent, Orientation } from 'dockview-core';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
 import { FileTree } from './fileTree';
+import { SolidGridPanelView, frameworkComponentFactory } from '../dockview/solid';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -113,21 +112,23 @@ export const Repl: ReplProps = (props) => {
   const applyBabelCompilation = throttle(sendCompile, 250);
 
   const compile = () => {
-    let compileOpts = mode();
-    if (compileOpts === compileMode.UNIVERSAL) {
-      compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
-    }
-    if (previewVisible())
+    if (previewVisible()) {
       applyRollupCompilation({
         event: 'ROLLUP',
         tabs: unwrap(userTabs()),
       });
-    if (outputVisible())
+    }
+    if (outputVisible()) {
+      let compileOpts = mode();
+      if (compileOpts === compileMode.UNIVERSAL) {
+        compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
+      }
       applyBabelCompilation({
         event: 'BABEL',
         tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
         compileOpts,
       });
+    }
   };
 
   /**
@@ -139,7 +140,6 @@ export const Repl: ReplProps = (props) => {
 
     compile();
   });
-
   const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
   const currentModel = createMemo(() => monacoTabs().get(`file:///${props.id}/${props.current}`)!.model);
 
@@ -150,58 +150,84 @@ export const Repl: ReplProps = (props) => {
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
   onMount(() => {
-    const dockview = new DockviewComponent({
+    let ref!: HTMLDivElement;
+    const dockviewGrid = new GridviewComponent({
       parentElement: grid,
       frameworkComponentFactory: {
-        content: {
-          createComponent: (id, componentId, component) => {
-            const element = (<div class="flex h-full"></div>) as HTMLDivElement;
-            let disposer;
-            return {
-              element,
-              init: (params) => {
-                createRoot((dispose) => {
-                  insert(element, () => component(params.params));
-                  disposer = dispose;
-                });
-              },
-              dispose: () => disposer!(),
-            };
-          },
-        },
-        tab: {
-          createComponent: (id, componentId, component) => {
-            const element = (<div class="flex h-full"></div>) as HTMLDivElement;
-            let disposer;
-            return {
-              element,
-              init: (params) => {
-                if (params.api.isVisible)
-                  createRoot((dispose) => {
-                    insert(element, () => component(params.params));
-                    disposer = dispose;
-                  });
-              },
-              dispose: () => disposer!(),
-            };
-          },
-        },
-        watermark: {
-          createComponent: (id, componentId, component) => {
-            return {
-              element: document.createElement('div'),
-              init: () => {},
-              updateParentGroup: () => {},
-            };
-          },
+        createComponent: (id, component, props) => {
+          return new SolidGridPanelView(id, component, props);
         },
       },
+      proportionalLayout: false,
+      orientation: Orientation.HORIZONTAL,
+      frameworkComponents: {
+        filetree: () => (
+          <FileTree
+            files={props.tabs.map((x) => ({ name: x.name }))}
+            folders={[]}
+            onClick={(name) => {
+              const panel = dockview.getGroupPanel(name);
+              if (panel) {
+                dockview.setActivePanel(panel);
+              } else {
+                dockview.addPanel({
+                  id: name,
+                  component: 'editor',
+                  params: {
+                    currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+                  },
+                });
+              }
+            }}
+            newFile={(name) => {
+              const newTab = {
+                name: name,
+                source: '',
+              };
+              batch(() => {
+                props.setTabs(props.tabs.concat(newTab));
+                props.setCurrent(newTab.name);
+              });
+              dockview.addPanel({
+                id: name,
+                component: 'editor',
+                params: {
+                  currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+                },
+              });
+            }}
+          />
+        ),
+        body() {
+          ref = this.element;
+          return null;
+        },
+      },
+    });
+    dockviewGrid.fromJSON({
+      grid: {
+        root: {
+          type: 'branch',
+          data: [
+            { type: 'leaf', data: { component: 'filetree', id: 'filetree', minimumWidth: 150, snap: true } },
+            { type: 'leaf', data: { component: 'body', id: 'body' } },
+          ],
+        },
+        width: 800,
+        height: 600,
+        orientation: Orientation.HORIZONTAL,
+      },
+    });
+
+    const dockview = new DockviewComponent({
+      parentElement: ref,
+      frameworkComponentFactory,
       frameworkComponents: {
         editor: (params: { currentModel: editor.ITextModel }) => (
           <Editor
             model={params.currentModel}
             onDocChange={(code: string) => {
-              if (props.current == 'import_map.json') {
+              if (params.currentModel.uri.path.includes('import_map.json')) {
                 const newImportMap = JSON.parse(code);
                 setImportMap(newImportMap);
               } else {
@@ -213,6 +239,7 @@ export const Repl: ReplProps = (props) => {
             isDark={props.dark}
             withMinimap={false}
             displayErrors={displayErrors()}
+            setDisplayErrors={setDisplayErrors}
           />
         ),
         preview: () => {
@@ -305,24 +332,6 @@ export const Repl: ReplProps = (props) => {
             </section>
           );
         },
-        filetree: () => (
-          <FileTree
-            files={props.tabs.map((x) => ({ name: x.name }))}
-            folders={[]}
-            onClick={(name) => {
-              const panel = dockview.getGroupPanel(name);
-              if (panel) panel.focus?.();
-              else
-                dockview.addPanel({
-                  id: name,
-                  component: 'editor',
-                  params: {
-                    currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
-                  },
-                });
-            }}
-          />
-        ),
       },
     });
 
@@ -331,7 +340,6 @@ export const Repl: ReplProps = (props) => {
         root: {
           type: 'branch',
           data: [
-            { type: 'leaf', data: { views: ['File Tree'], activeView: 'File Tree', id: '4' }, size: 250 },
             { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 800 },
             { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 550 },
           ],
@@ -341,6 +349,7 @@ export const Repl: ReplProps = (props) => {
         height: 480,
         orientation: Orientation.HORIZONTAL,
       },
+      activeGroup: '1',
       panels: {
         'File Tree': {
           id: 'File Tree',
@@ -362,6 +371,13 @@ export const Repl: ReplProps = (props) => {
           },
         },
       },
+    });
+
+    dockview.onDidActivePanelChange((e) => {
+      if (!e) return;
+      if ('currentModel' in (e.params ?? {})) {
+        props.setCurrent(e.id);
+      }
     });
   });
 

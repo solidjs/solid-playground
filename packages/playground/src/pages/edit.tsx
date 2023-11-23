@@ -276,11 +276,10 @@ export const Edit = (props: { horizontal: boolean }) => {
           </Show>
         </Suspense>
         <div class="border-l-1 h-full w-[40px] border-slate-200 dark:border-neutral-800">
-
-        <a
+          <a
             href="https://github.com/solidjs/solid-playground"
             target="_blank"
-            class="flex cursor-alias flex-row rounded p-1 m-1 opacity-80 hover:opacity-100 px-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+            class="m-1 flex cursor-alias flex-row rounded p-1 px-1 opacity-80 hover:bg-gray-200 hover:opacity-100 dark:hover:bg-gray-700"
             title="Github"
           >
             <Icon
@@ -299,15 +298,6 @@ export const Edit = (props: { horizontal: boolean }) => {
               }}
             />
           </a>
-        </div>
-      </div>
-      <div class="border-t-1 h-[30px] w-full border-slate-200 dark:border-neutral-800 flex justify-between">
-        <div>
-
-        </div>
-        <div>
-        <button class="text-xs p-1 mx-1 hover:bg-gray-200">{"{ }"}</button>
-        <button class="text-xs p-1 mx-1 hover:bg-gray-200">TypeScript</button>
         </div>
       </div>
     </div>

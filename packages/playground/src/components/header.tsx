@@ -22,7 +22,7 @@ export const HeaderButton = (props: {
       ref={props.ref}
       type="button"
       onClick={props.onClick}
-      class="flex flex-row items-center space-x-2 rounded p-1 m-1 mr-0 text-neutral-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+      class="m-1 mr-0 flex flex-row items-center space-x-2 rounded p-1 text-neutral-700 hover:bg-gray-200 dark:text-slate-200 dark:hover:bg-gray-700"
       classList={props.classList}
       title={props.title}
     >
@@ -46,10 +46,14 @@ export const HeaderIcon = (props: {
       ref={props.ref}
       onClick={props.onClick}
       title={props.title}
-      classList={{'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.menu,...props.classList,'m-0':true}}
+      classList={{
+        'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.menu,
+        ...props.classList,
+        'm-0': true,
+      }}
     >
       <Icon path={props.path} class="h-6" />
-      <span class="text-xs sr-only">{props.text}</span>
+      <span class="sr-only text-xs">{props.text}</span>
     </HeaderButton>
   );
 };
@@ -99,7 +103,7 @@ export const Header: ParentComponent<{
           classList={{
             'bg-gray-200 dark:bg-gray-700': showMenu(),
           }}
-          class="visible rounded p-1 opacity-80 hover:bg-gray-200 hover:opacity-100 dark:hover:bg-gray-700 hidden"
+          class="visible hidden rounded p-1 opacity-80 hover:bg-gray-200 hover:opacity-100 dark:hover:bg-gray-700"
           title="Mobile Menu Button"
           ref={menuBtnEl}
         >
@@ -108,7 +112,7 @@ export const Header: ParentComponent<{
         </button>
 
         <Dismiss
-          class="absolute top-[28px]  relative top-0 flex flex-row items-center"
+          class="absolute relative  top-0 top-[28px] flex flex-row items-center"
           classList={{
             'z-10 w-40 right-0 absolute rounded border dark:border-gray-700 flex flex-col bg-white dark:bg-darkbg':
               showMenu(),
@@ -161,7 +165,7 @@ export const Header: ParentComponent<{
             </a>
           }
         >
-          <button ref={profileBtn} class="rounded p-1 mr-1 hover:bg-gray-200 hover:dark:bg-gray-700">
+          <button ref={profileBtn} class="mr-1 rounded p-1 hover:bg-gray-200 hover:dark:bg-gray-700">
             <img crossOrigin="anonymous" src={context.user()?.avatar} class="h-6 w-6 rounded-full" />
           </button>
           <Dismiss menuButton={profileBtn} open={showProfile} setOpen={setShowProfile}>
