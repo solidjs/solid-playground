@@ -1,3 +1,4 @@
+import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
 import { documentPlus, ellipsisVertical } from 'solid-heroicons/outline';
 import { Component, For, Show, createSignal } from 'solid-js';
@@ -40,7 +41,7 @@ export const FileTree: Component<{
         <div class="border-bord flex items-center justify-between border-b px-4 py-1 dark:bg-[#252526]">
           <h1>Files</h1>
           <button
-            class="rounded p-1 text-xs hover:bg-gray-200"
+            class="rounded p-1 text-xs hover:bg-gray-200 dark:hover:bg-[rgba(90,93,94,0.31)]"
             onClick={() => {
               setNewFile('');
               input.focus();
@@ -53,7 +54,7 @@ export const FileTree: Component<{
         <For each={props.files}>
           {(file) => (
             <div
-              class="hover-visible-button flex cursor-pointer items-center rounded px-1 hover:bg-[#e4e5e6]"
+              class="hover-visible-button flex cursor-pointer items-center rounded px-1 hover:bg-[#e4e5e6] dark:hover:bg-[rgba(90,93,94,0.31)]"
               onClick={() => props.onClick(file.name)}
               draggable="true"
             >
@@ -73,8 +74,11 @@ export const FileTree: Component<{
             </div>
           )}
         </For>
+        <Dismiss open={() => true} setOpen={() => {}} menuButton={() => false}>
+          <div>hi</div>
+        </Dismiss>
         <Show when={newFile() !== undefined}>
-          <div class="cursor-pointer rounded px-1 hover:bg-[#e4e5e6]">
+          <div class="cursor-pointer rounded px-1 hover:bg-[#e4e5e6] dark:hover:bg-[rgba(90,93,94,0.31)]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" class="inline-block h-[24px] w-[24px]">
               <path d="M394.1 537.8h411.7v54.7H394.1v-54.7zm0-130.3H624v54.7H394.1v-54.7zm0-130.3h411.7v54.7H394.1v-54.7zm0 390.9H700v54.7H394.1v-54.7z" />
             </svg>

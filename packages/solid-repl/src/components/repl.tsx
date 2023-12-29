@@ -180,6 +180,7 @@ export const Repl: ReplProps = (props) => {
               }
             }}
             newFile={(name) => {
+              if(!name.trim()) return;
               const newTab = {
                 name: name,
                 source: '',
@@ -218,6 +219,12 @@ export const Repl: ReplProps = (props) => {
         orientation: Orientation.HORIZONTAL,
       },
     });
+
+    props.setToggleVisible(() => {
+      const panel = dockviewGrid.getPanel('filetree')!
+      const visible = dockviewGrid.isVisible(panel);
+      dockviewGrid.setVisible(panel, !visible)
+    })
 
     const dockview = new DockviewComponent({
       parentElement: ref,

@@ -1,7 +1,6 @@
-import { Component, createEffect, createMemo, createRoot, onCleanup, onMount, untrack } from 'solid-js';
+import { Component, createEffect, createMemo, onCleanup, onMount, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
-import { Orientation, SplitviewComponent, SplitviewPanel } from 'dockview-core';
-import { insert } from 'solid-js/web';
+import { Orientation, SplitviewComponent } from 'dockview-core';
 import { SolidPanelView } from '../dockview/solid';
 
 const generateHTML = (isDark: boolean, importMap: string) => `

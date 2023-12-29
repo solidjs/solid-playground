@@ -14,9 +14,9 @@
     "./packages/*"
   ],
   "devDependencies": {
-    "@changesets/cli": "2.26.2",
-    "prettier": "^3.1.0",
-    "prettier-plugin-tailwindcss": "^0.5.7"
+    "@changesets/cli": "2.27.1",
+    "prettier": "^3.1.1",
+    "prettier-plugin-tailwindcss": "^0.5.9"
   },
   "pnpm": {
     "patchedDependencies": {

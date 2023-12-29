@@ -7,7 +7,7 @@ import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useMatch, useNavigate, useParams } from '@solidjs/router';
+import { useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from 'solid-repl/src';
@@ -40,7 +40,9 @@ interface InternalTab extends Tab {
   _source: string;
   _name: string;
 }
-export const Edit = (props: { horizontal: boolean }) => {
+export const Edit = () => {
+  const [searchParams] = useSearchParams();
+
   const scratchpad = useMatch(() => '/scratchpad');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
@@ -168,6 +170,8 @@ export const Edit = (props: { horizontal: boolean }) => {
     !!scratchpad() ? 10 : 1000,
   );
 
+  let toggleVisible: () => void;
+
   return (
     <div class="flex h-full flex-col overflow-hidden">
       <Header
@@ -235,7 +239,7 @@ export const Edit = (props: { horizontal: boolean }) => {
       </Header>
       <div class="flex h-full w-full overflow-hidden">
         <div class="border-r-1 border-bord flex h-full w-[40px] flex-col items-center">
-          <HeaderButton title="Folder tree">
+          <HeaderButton title="Folder tree" onClick={() => toggleVisible?.()}>
             <Icon path={folder} class="w-5" />
           </HeaderButton>
           <HeaderButton title="Import map">
@@ -264,13 +268,14 @@ export const Edit = (props: { horizontal: boolean }) => {
               compiler={compiler}
               formatter={formatter}
               linter={linter}
-              isHorizontal={props.horizontal}
+              isHorizontal={searchParams.isHorizontal != undefined}
               dark={context.dark()}
               tabs={tabs()}
               setTabs={setTabs}
               reset={reset}
               current={current()}
               setCurrent={setCurrent}
+              setToggleVisible={(tv) => toggleVisible = tv}
               id="repl"
             />
           </Show>

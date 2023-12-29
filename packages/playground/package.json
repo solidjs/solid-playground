@@ -6,34 +6,35 @@
     "start": "vite preview",
     "dev": "vite"
   },
+  "type": "module",
   "dependencies": {
     "@solid-primitives/scheduled": "^1.4.1",
-    "@solidjs/router": "^0.9.1",
+    "@solidjs/router": "^0.10.5",
     "dedent": "^1.5.1",
     "onigasm": "^2.2.5",
     "solid-dismiss": "^1.7.121",
     "solid-heroicons": "^3.2.4",
-    "solid-js": "1.8.6",
+    "solid-js": "1.8.7",
     "solid-repl": "workspace:*"
   },
   "devDependencies": {
     "@amoutonbrady/lz-string": "^0.1.0",
-    "@babel/core": "^7.23.3",
+    "@babel/core": "^7.23.6",
     "@babel/plugin-syntax-jsx": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
-    "@babel/types": "^7.23.4",
-    "@solidjs/router": "^0.9.1",
+    "@babel/types": "^7.23.6",
+    "@solidjs/router": "^0.10.5",
     "@types/babel__standalone": "^7.1.7",
     "@types/dedent": "^0.7.2",
-    "@unocss/preset-wind": "^0.57.7",
+    "@unocss/preset-wind": "^0.58.0",
     "assert": "^2.1.0",
-    "csstype": "^3.1.2",
+    "csstype": "^3.1.3",
     "jszip": "^3.10.1",
-    "monaco-editor": "^0.44.0",
+    "monaco-editor": "^0.45.0",
     "register-service-worker": "^1.7.2",
-    "typescript": "^5.3.2",
-    "unocss": "^0.57.7",
-    "vite": "^5.0.2",
-    "vite-plugin-solid": "^2.7.2"
+    "typescript": "^5.3.3",
+    "unocss": "^0.58.0",
+    "vite": "^5.0.10",
+    "vite-plugin-solid": "^2.8.0"
   }
 }

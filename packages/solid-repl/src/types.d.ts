@@ -21,6 +21,7 @@ declare module 'solid-repl/dist/repl' {
     reset: () => void;
     current: string | undefined;
     setCurrent: (tabId: string) => void;
+    setToggleVisible: (toggle: () => void) => void;
     onEditorReady?: (
       editor: import('monaco-editor').editor.IStandaloneCodeEditor,
       monaco: {

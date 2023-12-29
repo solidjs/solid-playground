@@ -1,4 +1,3 @@
-import { Router } from '@solidjs/router';
 import { render } from 'solid-js/web';
 import { App } from './app';
 import { AppContextProvider } from './context';
@@ -8,11 +7,9 @@ import 'solid-repl/repl/main.css';
 
 render(
   () => (
-    <Router>
-      <AppContextProvider>
-        <App />
-      </AppContextProvider>
-    </Router>
+    <AppContextProvider>
+      <App />
+    </AppContextProvider>
   ),
   document.querySelector('#app')!,
 );
