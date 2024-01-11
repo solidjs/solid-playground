@@ -243,7 +243,7 @@ export const Preview: Component<Props> = (props) => {
 
               if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
               if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
-              iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
+              iframe.contentDocument?.documentElement.classList.toggle('dark', props.isDark);
             }}
             // @ts-ignore
             sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
@@ -278,7 +278,7 @@ export const Preview: Component<Props> = (props) => {
 
       if (!isIframeReady) return;
 
-      iframe.contentDocument!.documentElement.classList.toggle('dark', dark);
+      iframe.contentDocument?.documentElement.classList.toggle('dark', dark);
     });
 
     createEffect(() => {
