@@ -73,8 +73,9 @@ const generateHTML = (isDark: boolean, importMap: string) => `
           const next = () => {
             window.dispose?.();
             window.dispose = undefined;
-
-            document.getElementById('app').innerHTML = "";
+            
+            if(document.getElementById('app'))
+              document.getElementById('app').innerHTML = "";
 
             console.clear();
 
