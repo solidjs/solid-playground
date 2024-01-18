@@ -180,7 +180,7 @@ export const Repl: ReplProps = (props) => {
               }
             }}
             newFile={(name) => {
-              if(!name.trim()) return;
+              if (!name.trim()) return;
               const newTab = {
                 name: name,
                 source: '',
@@ -221,10 +221,10 @@ export const Repl: ReplProps = (props) => {
     });
 
     props.setToggleVisible(() => {
-      const panel = dockviewGrid.getPanel('filetree')!
+      const panel = dockviewGrid.getPanel('filetree')!;
       const visible = dockviewGrid.isVisible(panel);
-      dockviewGrid.setVisible(panel, !visible)
-    })
+      dockviewGrid.setVisible(panel, !visible);
+    });
 
     const dockview = new DockviewComponent({
       parentElement: ref,
@@ -369,6 +369,8 @@ export const Repl: ReplProps = (props) => {
         'Preview': {
           id: 'Preview',
           contentComponent: 'preview',
+          tabComponent: '',
+          renderer: 'always',
         },
         [props.current!]: {
           id: props.current!,
