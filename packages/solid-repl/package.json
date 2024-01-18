@@ -38,20 +38,20 @@
     "fs-extra": "^11.2.0",
     "jiti": "^1.21.0",
     "monaco-editor": "^0.45.0",
-    "prettier": "^3.1.1",
-    "solid-js": "1.8.10",
+    "prettier": "^3.2.4",
+    "solid-js": "1.8.11",
     "typescript": "^5.3.3",
     "unocss": "^0.58.3"
   },
   "dependencies": {
-    "@solid-primitives/media": "^2.2.5",
-    "@solid-primitives/scheduled": "^1.4.1",
+    "@solid-primitives/media": "^2.2.6",
+    "@solid-primitives/scheduled": "^1.4.2",
     "dedent": "^1.5.1",
-    "dockview-core": "^1.8.5",
+    "dockview-core": "^1.9.0",
     "monaco-editor-textmate": "^4.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
-    "solid-dismiss": "^1.7.121",
+    "solid-dismiss": "^1.7.122",
     "solid-heroicons": "^3.2.4"
   }
 }
