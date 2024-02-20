@@ -19,6 +19,8 @@ function uid(str: string) {
 function babelTransform(filename: string, code: string) {
   let { code: transformedCode } = transform(code, {
     plugins: [
+      ['proposal-decorators', { decoratorsBeforeExport: true }],
+      'transform-class-properties',
       // Babel plugin to get file import names
       function importGetter() {
         return {
@@ -140,6 +142,7 @@ function compile(tabs: Tab[], event: string) {
 
 function babel(tab: Tab, compileOpts: any) {
   const { code } = transform(tab.source, {
+    plugins: [['proposal-decorators', { decoratorsBeforeExport: true }], 'transform-class-properties'],
     presets: [
       [babelPresetSolid, compileOpts],
       ['typescript', { onlyRemoveTypeImports: true }],

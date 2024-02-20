@@ -6,6 +6,7 @@
   "scripts": {
     "build": "cd packages/playground && pnpm build",
     "dev": "cd packages/playground && pnpm dev",
+    "start": "cd packages/playground && pnpm start",
     "format": "prettier -w ."
   },
   "keywords": [],
