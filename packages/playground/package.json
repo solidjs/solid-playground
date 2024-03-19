@@ -7,20 +7,20 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@solid-primitives/scheduled": "^1.4.1",
+    "@solid-primitives/scheduled": "^1.4.3",
     "@solidjs/router": "^0.8.3",
     "dedent": "^1.5.1",
     "onigasm": "^2.2.5",
-    "solid-dismiss": "^1.7.121",
+    "solid-dismiss": "^1.7.122",
     "solid-heroicons": "^3.2.4",
-    "solid-js": "1.7.11",
+    "solid-js": "1.8.16",
     "solid-repl": "workspace:*"
   },
   "devDependencies": {
     "@amoutonbrady/lz-string": "^0.1.0",
-    "@babel/core": "^7.22.19",
-    "@babel/plugin-syntax-jsx": "^7.22.5",
-    "@babel/preset-typescript": "^7.22.15",
+    "@babel/core": "^7.24.1",
+    "@babel/plugin-syntax-jsx": "^7.24.1",
+    "@babel/preset-typescript": "^7.24.1",
     "@babel/types": "^7.22.19",
     "@solidjs/router": "^0.8.3",
     "@types/babel__standalone": "^7.1.5",
