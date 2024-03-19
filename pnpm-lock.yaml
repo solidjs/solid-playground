@@ -63,14 +63,14 @@ importers:
         specifier: ^7.24.1
         version: 7.24.1(@babel/core@7.24.1)
       '@babel/types':
-        specifier: ^7.22.19
-        version: 7.22.19
+        specifier: ^7.24.0
+        version: 7.24.0
       '@types/babel__standalone':
-        specifier: ^7.1.5
-        version: 7.1.5
+        specifier: ^7.1.7
+        version: 7.1.7
       '@types/dedent':
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.7.2
+        version: 0.7.2
       '@unocss/preset-wind':
         specifier: ^0.58.6
         version: 0.58.6
@@ -90,8 +90,8 @@ importers:
         specifier: ^1.7.2
         version: 1.7.2
       typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
+        specifier: ^5.4.2
+        version: 5.4.2
       unocss:
         specifier: ^0.58.6
         version: 0.58.6(postcss@8.4.29)(vite@4.4.9)
@@ -426,18 +426,8 @@ packages:
       '@babel/types': 7.24.0
     dev: true
 
-  /@babel/helper-string-parser@7.22.5:
-    resolution: {integrity: sha512-mM4COjgZox8U+JcXQwPijIZLElkgEpO5rsERVDJTc2qfCDfERyob6k5WegS14SX18IIjv+XD+GrqNumY5JRCDw==}
-    engines: {node: '>=6.9.0'}
-    dev: true
-
   /@babel/helper-string-parser@7.24.1:
     resolution: {integrity: sha512-2ofRCjnnA9y+wk8b9IAREroeUP02KHp431N2mhKniy2yKIDKpbrHv9eXwm8cBeWQYcJmzv5qKCu65P47eCF7CQ==}
-    engines: {node: '>=6.9.0'}
-    dev: true
-
-  /@babel/helper-validator-identifier@7.22.19:
-    resolution: {integrity: sha512-Tinq7ybnEPFFXhlYOYFiSjespWQk0dq2dRNAiMdRTOYQzEGqnnNyrTxPYHP5r6wGjlF1rFgABdDV0g8EwD6Qbg==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -466,7 +456,7 @@ packages:
     resolution: {integrity: sha512-C/BaXcnnvBCmHTpz/VGZ8jgtE2aYlW4hxDhseJAWZb7gqGM/qtCK6iZUb0TyKFf7BOUsBH7Q7fkRsDRhg1XklQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/helper-validator-identifier': 7.22.19
+      '@babel/helper-validator-identifier': 7.22.20
       chalk: 2.4.2
       js-tokens: 4.0.0
     dev: true
@@ -602,15 +592,6 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
-
-  /@babel/types@7.22.19:
-    resolution: {integrity: sha512-P7LAw/LbojPzkgp5oznjE6tQEIWbp4PkkfrZDINTro9zgBRtI324/EYsiSI7lhPbpIQ+DCeR2NNmMWANGGfZsg==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-string-parser': 7.22.5
-      '@babel/helper-validator-identifier': 7.22.19
-      to-fast-properties: 2.0.0
     dev: true
 
   /@babel/types@7.24.0:
@@ -1417,14 +1398,6 @@ packages:
       '@babel/types': 7.24.0
     dev: true
 
-  /@types/babel__standalone@7.1.5:
-    resolution: {integrity: sha512-hvnktcGmz73/WwkAT8BpOagDNiJX56/TGOllWi604PBP7xw7Wz+rdFjKhE5p9EFCcNZMv+LkOVD0wgOdYqtMDA==}
-    dependencies:
-      '@babel/core': 7.24.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@types/babel__standalone@7.1.7:
     resolution: {integrity: sha512-4RUJX9nWrP/emaZDzxo/+RYW8zzLJTXWJyp2k78HufG459HCz754hhmSymt3VFOU6/Wy+IZqfPvToHfLuGOr7w==}
     dependencies:
@@ -1442,10 +1415,6 @@ packages:
     resolution: {integrity: sha512-ojlGK1Hsfce93J0+kn3H5R73elidKUaZonirN33GSmgTUMpzI/MIFfSpF3haANe3G1bEBS9/9/QEqwTzwqFsKw==}
     dependencies:
       '@babel/types': 7.24.0
-    dev: true
-
-  /@types/dedent@0.7.0:
-    resolution: {integrity: sha512-EGlKlgMhnLt/cM4DbUSafFdrkeJoC9Mvnj0PUCU7tFmTjMjNRT957kXCx0wYm3JuEq4o4ZsS5vG+NlkM2DMd2A==}
     dev: true
 
   /@types/dedent@0.7.2:
@@ -3950,12 +3919,6 @@ packages:
       call-bind: 1.0.2
       for-each: 0.3.3
       is-typed-array: 1.1.12
-    dev: true
-
-  /typescript@5.2.2:
-    resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
-    engines: {node: '>=14.17'}
-    hasBin: true
     dev: true
 
   /typescript@5.4.2:
