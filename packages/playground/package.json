@@ -25,14 +25,14 @@
     "@solidjs/router": "^0.8.3",
     "@types/babel__standalone": "^7.1.5",
     "@types/dedent": "^0.7.0",
-    "@unocss/preset-wind": "^0.55.7",
+    "@unocss/preset-wind": "^0.58.6",
     "assert": "^2.1.0",
-    "csstype": "^3.1.2",
+    "csstype": "^3.1.3",
     "jszip": "^3.10.1",
     "monaco-editor": "^0.43.0",
     "register-service-worker": "^1.7.2",
     "typescript": "^5.2.2",
-    "unocss": "^0.55.7",
+    "unocss": "^0.58.6",
     "vite": "^4.4.9",
     "vite-plugin-solid": "^2.7.0"
   }
