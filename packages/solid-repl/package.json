@@ -29,9 +29,9 @@
     "@types/babel__standalone": "^7.1.7",
     "@types/dedent": "^0.7.2",
     "@types/fs-extra": "^11.0.4",
-    "@unocss/cli": "^0.55.7",
-    "@unocss/preset-wind": "^0.55.7",
-    "@unocss/reset": "^0.55.7",
+    "@unocss/cli": "^0.58.6",
+    "@unocss/preset-wind": "^0.58.6",
+    "@unocss/reset": "^0.58.6",
     "babel-preset-solid": "^1.8.16",
     "esbuild": "^0.20.2",
     "eslint-solid-standalone": "^0.13.1",
@@ -41,7 +41,7 @@
     "prettier": "^3.2.5",
     "solid-js": "1.8.16",
     "typescript": "^5.4.2",
-    "unocss": "^0.55.7"
+    "unocss": "^0.58.6"
   },
   "dependencies": {
     "@solid-primitives/media": "^2.2.8",
