@@ -8,11 +8,7 @@ import 'solid-repl/repl/main.css';
 
 render(
   () => (
-    <Router>
-      <AppContextProvider>
-        <App />
-      </AppContextProvider>
-    </Router>
+    <App />
   ),
   document.querySelector('#app')!,
 );
