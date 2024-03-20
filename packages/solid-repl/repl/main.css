@@ -29,6 +29,10 @@ div[contenteditable='true']:focus {
   color-scheme: dark;
 }
 
+div.view-lines.monaco-mouse-cursor-text {
+  font-family: Menlo, Monaco, "Courier New", monospace !important;
+}
+
 textarea.monaco-mouse-cursor-text:focus {
   box-shadow: unset;
 }
