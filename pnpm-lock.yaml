@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  monaco-editor@0.43.0:
-    hash: rngzpred4gaw6acomjc6aqpz4q
-    path: patches/monaco-editor@0.43.0.patch
+  monaco-editor@0.47.0:
+    hash: zh2cngzw2ntxiukfono7knjkfq
+    path: patches/monaco-editor@0.47.0.patch
 
 importers:
 
@@ -84,8 +84,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
       monaco-editor:
-        specifier: ^0.43.0
-        version: 0.43.0(patch_hash=rngzpred4gaw6acomjc6aqpz4q)
+        specifier: ^0.47.0
+        version: 0.47.0(patch_hash=zh2cngzw2ntxiukfono7knjkfq)
       register-service-worker:
         specifier: ^1.7.2
         version: 1.7.2
@@ -115,7 +115,7 @@ importers:
         version: 1.5.1
       monaco-editor-textmate:
         specifier: ^4.0.0
-        version: 4.0.0(monaco-editor@0.43.0)(monaco-textmate@3.0.1)
+        version: 4.0.0(monaco-editor@0.47.0)(monaco-textmate@3.0.1)
       monaco-textmate:
         specifier: ^3.0.1
         version: 3.0.1(onigasm@2.2.5)
@@ -178,8 +178,8 @@ importers:
         specifier: ^1.21.0
         version: 1.21.0
       monaco-editor:
-        specifier: ^0.43.0
-        version: 0.43.0(patch_hash=rngzpred4gaw6acomjc6aqpz4q)
+        specifier: ^0.47.0
+        version: 0.47.0(patch_hash=zh2cngzw2ntxiukfono7knjkfq)
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -2933,18 +2933,18 @@ packages:
       ufo: 1.5.2
     dev: true
 
-  /monaco-editor-textmate@4.0.0(monaco-editor@0.43.0)(monaco-textmate@3.0.1):
+  /monaco-editor-textmate@4.0.0(monaco-editor@0.47.0)(monaco-textmate@3.0.1):
     resolution: {integrity: sha512-Clwup5LJzVfwURQrS+odSEC5/hZBEG36pQnvBKt4OtBndF8r2xLeXUZcK/AqEBK2u0Npy7frFp9hG7m66Ol9hA==}
     peerDependencies:
       monaco-editor: 0.x.x
       monaco-textmate: ^3.0.0
     dependencies:
-      monaco-editor: 0.43.0(patch_hash=rngzpred4gaw6acomjc6aqpz4q)
+      monaco-editor: 0.47.0(patch_hash=zh2cngzw2ntxiukfono7knjkfq)
       monaco-textmate: 3.0.1(onigasm@2.2.5)
     dev: false
 
-  /monaco-editor@0.43.0(patch_hash=rngzpred4gaw6acomjc6aqpz4q):
-    resolution: {integrity: sha512-cnoqwQi/9fml2Szamv1XbSJieGJ1Dc8tENVMD26Kcfl7xGQWp7OBKMjlwKVGYFJ3/AXJjSOGvcqK7Ry/j9BM1Q==}
+  /monaco-editor@0.47.0(patch_hash=zh2cngzw2ntxiukfono7knjkfq):
+    resolution: {integrity: sha512-VabVvHvQ9QmMwXu4du008ZDuyLnHs9j7ThVFsiJoXSOQk18+LF89N4ADzPbFenm0W4V2bGHnFBztIRQTgBfxzw==}
     patched: true
 
   /monaco-textmate@3.0.1(onigasm@2.2.5):
