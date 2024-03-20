@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@solid-primitives/scheduled": "^1.4.3",
-    "@solidjs/router": "^0.8.3",
+    "@solidjs/router": "^0.13.1",
     "dedent": "^1.5.1",
     "onigasm": "^2.2.5",
     "solid-dismiss": "^1.7.122",
@@ -22,7 +22,7 @@
     "@babel/plugin-syntax-jsx": "^7.24.1",
     "@babel/preset-typescript": "^7.24.1",
     "@babel/types": "^7.24.0",
-    "@solidjs/router": "^0.8.3",
+    "@solidjs/router": "^0.13.1",
     "@types/babel__standalone": "^7.1.7",
     "@types/dedent": "^0.7.2",
     "@unocss/preset-wind": "^0.58.6",
@@ -33,7 +33,7 @@
     "register-service-worker": "^1.7.2",
     "typescript": "^5.4.2",
     "unocss": "^0.58.6",
-    "vite": "^5.1.6",
+    "vite": "^5.2.0",
     "vite-plugin-solid": "^2.10.2"
   }
 }

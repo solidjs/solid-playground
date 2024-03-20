@@ -7,7 +7,7 @@ import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useMatch, useNavigate, useParams } from '@solidjs/router';
+import { useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { defaultTabs } from 'solid-repl/src';
@@ -38,7 +38,8 @@ interface InternalTab extends Tab {
   _source: string;
   _name: string;
 }
-export const Edit = (props: { horizontal: boolean }) => {
+export const Edit = () => {
+  const [searchParams] = useSearchParams();
   const scratchpad = useMatch(() => '/scratchpad');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
@@ -253,7 +254,7 @@ export const Edit = (props: { horizontal: boolean }) => {
             compiler={compiler}
             formatter={formatter}
             linter={linter}
-            isHorizontal={props.horizontal}
+            isHorizontal={searchParams.isHorizontal != undefined}
             dark={context.dark()}
             tabs={tabs()}
             setTabs={setTabs}
