@@ -29,19 +29,16 @@ export const App = (): JSX.Element => {
     }
   });
 
-
   return (
     <div class="dark:bg-solid-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
-      
-      <Router root={(props)=>(
-        <AppContextProvider>
-          <Suspense>{props.children}</Suspense>
-        </AppContextProvider>
-      )}>
-        <Route
-          path={['/:user/:repl', '/scratchpad']}
-          component={Edit}
-        />
+      <Router
+        root={(props) => (
+          <AppContextProvider>
+            <Suspense>{props.children}</Suspense>
+          </AppContextProvider>
+        )}
+      >
+        <Route path={['/:user/:repl', '/scratchpad']} component={Edit} />
         <Route path="/:user" component={Home} />
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
