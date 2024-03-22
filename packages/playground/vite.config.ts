@@ -3,7 +3,7 @@ import solidPlugin from 'vite-plugin-solid';
 import UnoCSS from 'unocss/vite';
 
 export default defineConfig((env) => ({
-  plugins: [ UnoCSS(), solidPlugin()],
+  plugins: [UnoCSS(), solidPlugin()],
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',
