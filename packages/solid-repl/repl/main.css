@@ -1,4 +1,3 @@
-@import url('@unocss/reset/tailwind.css');
 
 @font-face {
   font-family: 'Gordita';
@@ -27,4 +26,12 @@ div[contenteditable='true']:focus {
 
 .dark {
   color-scheme: dark;
+}
+
+div.view-lines.monaco-mouse-cursor-text {
+  font-family: Menlo, Monaco, 'Courier New', monospace !important;
+}
+
+textarea.monaco-mouse-cursor-text:focus {
+  box-shadow: unset;
 }
