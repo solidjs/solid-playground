@@ -41,7 +41,7 @@ export const Header: ParentComponent<{
   }
 
   return (
-    <header class="dark:bg-solid-darkbg border-b-2px sticky top-0 z-10 flex items-center gap-x-4 border-slate-200 bg-white p-1 px-2 text-sm dark:border-neutral-800">
+    <header class="dark:bg-solid-darkbg border-b-2px z-12 sticky top-0 flex items-center gap-x-4 border-slate-200 bg-white p-1 px-2 text-sm dark:border-neutral-800">
       <A href="/">
         <img src={logo} alt="solid-js logo" class="w-8" />
       </A>
