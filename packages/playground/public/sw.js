@@ -1,19 +1,22 @@
 const cacheName = 'my-cache';
 
-async function fetchAndCacheIfOk(event, stale) {
+async function revalidate(event) {
+  const client = await clients.get(event.clientId);
+  client.postMessage({ type: 'cache' });
+}
+
+async function fetchAndCacheIfOk(cache, event) {
   try {
     const response = await fetch(event.request);
 
     if (response.ok) {
-      const responseClone = response.clone();
-      const cache = await caches.open(cacheName);
-      await cache.put(event.request, responseClone);
-      if (stale) self.postMessage({ type: 'cache' });
+      await cache.put(event.request, response.clone());
     }
 
     return response;
   } catch (e) {
-    const cache = await caches.open(cacheName);
+    console.error(e);
+
     return await cache.match('/index.html');
   }
 }
@@ -21,9 +24,49 @@ async function fetchAndCacheIfOk(event, stale) {
 async function fetchWithCache(event) {
   const cache = await caches.open(cacheName);
   const response = await cache.match(event.request);
-  const result = fetchAndCacheIfOk(event, !!response);
+  const result = fetchAndCacheIfOk(cache, event);
   if (!!response) {
-    return response;
+    result.then(async (response2) => {
+      const reader1 = response.body.getReader();
+      const reader2 = response2.body.getReader();
+
+      let i = 0;
+      let j = 0;
+
+      let oldChunk1 = null;
+      let oldChunk2 = null;
+      if (!oldChunk1) {
+        oldChunk1 = await reader1.read();
+      }
+      if (!oldChunk2) {
+        oldChunk2 = await reader2.read();
+      }
+      while (!oldChunk1.done && !oldChunk2.done) {
+        if (oldChunk1.value[i] !== oldChunk2.value[j]) {
+          revalidate(event);
+          return;
+        }
+        i++;
+        j++;
+        if (i === oldChunk1.value.length) {
+          oldChunk1 = await reader1.read();
+          i = 0;
+        }
+        if (j === oldChunk2.value.length) {
+          oldChunk2 = await reader2.read();
+          j = 0;
+        }
+      }
+
+      if (oldChunk1.done && oldChunk2.done) {
+        return;
+      } else {
+        revalidate(event);
+        return;
+      }
+    });
+
+    return response.clone();
   } else {
     return result;
   }
