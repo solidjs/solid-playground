@@ -81,6 +81,7 @@ const Editor: Component<{
   onMount(() => {
     editor = mEditor.create(parent, {
       model: null,
+      fontFamily:'Menlo, Monaco, "Courier New", monospace',
       automaticLayout: true,
       readOnly: props.disabled,
       fontSize: zoomState.fontSize,
