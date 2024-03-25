@@ -21,10 +21,10 @@
     "solid-js": ">=1.7.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.1",
+    "@babel/core": "^7.24.3",
     "@babel/plugin-syntax-jsx": "^7.24.1",
     "@babel/preset-typescript": "^7.24.1",
-    "@babel/standalone": "^7.24.2",
+    "@babel/standalone": "^7.24.3",
     "@babel/types": "^7.24.0",
     "@types/babel__standalone": "^7.1.7",
     "@types/dedent": "^0.7.2",
@@ -34,13 +34,13 @@
     "@unocss/reset": "^0.58.6",
     "babel-preset-solid": "^1.8.16",
     "esbuild": "^0.20.2",
-    "eslint-solid-standalone": "^0.13.1",
+    "eslint-solid-standalone": "^0.13.2",
     "fs-extra": "^11.2.0",
     "jiti": "^1.21.0",
     "monaco-editor": "^0.47.0",
     "prettier": "^3.2.5",
     "solid-js": "1.8.16",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.3",
     "unocss": "^0.58.6"
   },
   "dependencies": {
