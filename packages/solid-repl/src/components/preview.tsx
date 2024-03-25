@@ -269,22 +269,24 @@ export const Preview: Component<Props> = (props) => {
   });
   return (
     <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
-      <iframe
-        title="Solid REPL"
-        class="dark:bg-other block min-h-0 min-w-0 overflow-scroll bg-white p-0"
-        style={styleScale() + `flex: ${props.devtools ? iframeHeight() : 1};`}
-        ref={iframe}
-        src={iframeSrcUrl()}
-        onload={() => {
-          isIframeReady = true;
+      <div class="min-h-0 min-w-0" style={`flex: ${props.devtools ? iframeHeight() : 1};`}>
+        <iframe
+          title="Solid REPL"
+          class="dark:bg-other block h-full w-full overflow-scroll bg-white p-0"
+          style={styleScale()}
+          ref={iframe}
+          src={iframeSrcUrl()}
+          onload={() => {
+            isIframeReady = true;
 
-          if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
-          if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
-          iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
-        }}
-        // @ts-ignore
-        sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-      />
+            if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
+            if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
+            iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
+          }}
+          // @ts-ignore
+          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+        />
+      </div>
       <Show when={props.devtools}>
         <GridResizer
           ref={resizer}
@@ -294,15 +296,17 @@ export const Preview: Component<Props> = (props) => {
           }}
         />
       </Show>
-      <iframe
-        title="Devtools"
-        class="min-h-0 min-w-0"
-        style={`flex: ${1 - iframeHeight()};`}
-        ref={devtoolsIframe}
-        src={devtoolsSrc}
-        onload={() => (devtoolsLoaded = true)}
-        classList={{ block: props.devtools, hidden: !props.devtools }}
-      />
+      <div class="min-h-0 min-w-0" style={`flex: ${1 - iframeHeight()};`}>
+        <iframe
+          title="Devtools"
+          class="h-full w-full"
+          style={styleScale()}
+          ref={devtoolsIframe}
+          src={devtoolsSrc}
+          onload={() => (devtoolsLoaded = true)}
+          classList={{ block: props.devtools, hidden: !props.devtools }}
+        />
+      </div>
     </div>
   );
 };
