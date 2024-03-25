@@ -2,6 +2,23 @@ import { Component, Show, createEffect, createMemo, createSignal, onCleanup, unt
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
 
+const dispatchKeyboardEventToParentZoomState = () => `
+  document.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if(!['=', '-'].includes(e.key)) return
+
+    const options = {
+      key: e.key,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey
+    }
+    const keyboardEvent = new KeyboardEvent('keydown', options)
+    window.parent.document.dispatchEvent(keyboardEvent)
+
+    e.preventDefault()
+  });
+`;
+
 const generateHTML = (isDark: boolean, importMap: string) => `
   <!doctype html>
   <html${isDark ? ' class="dark"' : ''}>
@@ -144,6 +161,8 @@ const generateHTML = (isDark: boolean, importMap: string) => `
             console.error(e);
           }
         });
+
+        ${dispatchKeyboardEventToParentZoomState()}
       </script>
     </head>
     <body>
@@ -168,6 +187,9 @@ const useDevtoolsSrc = () => {
       }
     }
   </style>
+  <script>
+    ${dispatchKeyboardEventToParentZoomState()}
+  </script>
   <meta name="referrer" content="no-referrer">
   <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.8.0/public/front_end/entrypoints/chii_app/chii_app.js"></script>
