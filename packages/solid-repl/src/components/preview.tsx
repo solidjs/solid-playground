@@ -291,7 +291,7 @@ export const Preview: Component<Props> = (props) => {
   });
   return (
     <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
-      <div class="min-h-0 min-w-0" style={`flex: ${props.devtools ? iframeHeight() : 1};`}>
+      <div class="min-h-0 min-w-0" style={`flex: ${props.devtools ? iframeHeight() : '1 1 100%'};`}>
         <iframe
           title="Solid REPL"
           class="dark:bg-other block h-full w-full overflow-scroll bg-white p-0"
