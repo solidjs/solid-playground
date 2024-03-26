@@ -48,11 +48,17 @@ export const GridResizer: Component<{
 
   createEffect(() => {
     if (isDragging()) {
+      // Fixes Firefox issue where dragging cursor fails to emit events to overlay, and instead to iframe, resulting in resizer bar not moving.
+      // use class instead of style because style attribute, when tracked, value is reset. Related to https://github.com/solidjs/solid/issues/1938
+      document.querySelectorAll('iframe').forEach((el) => el.classList.add('pointer-events-none'));
+
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onResizeEnd);
       window.addEventListener('touchmove', onTouchMove);
       window.addEventListener('touchend', onResizeEnd);
     } else {
+      document.querySelectorAll('iframe').forEach((el) => el.classList.remove('pointer-events-none'));
+
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onResizeEnd);
       window.removeEventListener('touchmove', onTouchMove);
