@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import { Component, JSX, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { GridResizer } from './gridResizer';
 
@@ -262,12 +262,21 @@ export const Preview: Component<Props> = (props) => {
   window.addEventListener('message', messageListener);
   onCleanup(() => window.removeEventListener('message', messageListener));
 
-  const styleScale = () => {
-    if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
+  const styleScale = (): JSX.CSSProperties => {
+    if (zoomState.scale === 100 || !zoomState.scaleIframe) return {};
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
-      zoomState.zoom / 100
-    }); transform-origin: 0 0;`;
+    const sizePercentage = `${zoomState.scale}%`;
+    const width = sizePercentage;
+    const height = sizePercentage;
+    const transform = `scale(${zoomState.zoom / 100})`;
+    const transformOrigin = `0 0`;
+
+    return {
+      width,
+      height,
+      transform,
+      'transform-origin': transformOrigin,
+    };
   };
 
   const [iframeHeight, setIframeHeight] = createSignal<number>(0.625);
