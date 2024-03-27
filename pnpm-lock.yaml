@@ -107,6 +107,9 @@ importers:
       '@solid-primitives/media':
         specifier: ^2.2.8
         version: 2.2.8(solid-js@1.8.16)
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.8.16)
       '@solid-primitives/scheduled':
         specifier: ^1.4.3
         version: 1.4.3(solid-js@1.8.16)
@@ -1204,6 +1207,14 @@ packages:
       '@solid-primitives/rootless': 1.4.5(solid-js@1.8.16)
       '@solid-primitives/static-store': 0.0.8(solid-js@1.8.16)
       '@solid-primitives/utils': 6.2.3(solid-js@1.8.16)
+      solid-js: 1.8.16
+    dev: false
+
+  /@solid-primitives/platform@0.1.2(solid-js@1.8.16):
+    resolution: {integrity: sha512-sSxcZfuUrtxcwV0vdjmGnZQcflACzMfLriVeIIWXKp8hzaS3Or3tO6EFQkTd3L8T5dTq+kTtLvPscXIpL0Wzdg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
       solid-js: 1.8.16
     dev: false
 
