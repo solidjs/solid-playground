@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@solid-primitives/media": "^2.2.8",
+    "@solid-primitives/platform": "^0.1.2",
     "@solid-primitives/scheduled": "^1.4.3",
     "dedent": "^1.5.1",
     "monaco-editor-textmate": "^4.0.0",
