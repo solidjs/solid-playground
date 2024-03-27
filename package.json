@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "start": "cd packages/playground && pnpm start",
     "build": "cd packages/playground && pnpm build",
     "dev": "cd packages/playground && pnpm dev",
     "format": "prettier -w ."
