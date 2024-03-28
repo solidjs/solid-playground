@@ -33,4 +33,18 @@ export default defineConfig({
   },
   presets: [presetWind()],
   transformers: [transformerDirectives()],
+  rules: [
+    [
+      /^contain-(.+)$/,
+      ([, name]) => {
+        if (name.includes('|')) return;
+        return {
+          contain: name,
+        };
+      },
+    ],
+  ],
+  autocomplete: {
+    templates: ['contain-(none|strict|content|size|inline-size|layout|style|paint)'],
+  },
 });
