@@ -16,7 +16,7 @@ const dispatchKeyboardEventToParentZoomState = () => `
     window.parent.document.dispatchEvent(keyboardEvent);
 
     e.preventDefault();
-  });
+  }, true);
 `;
 
 const generateHTML = (isDark: boolean, importMap: string) => `
