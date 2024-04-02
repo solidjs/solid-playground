@@ -86,7 +86,7 @@ function transformImportee(fileName: string) {
     }
     if (fileName.includes('://')) return fileName;
     else {
-      dataToReturn[fileName] = `https://jspm.dev/${fileName}`;
+      dataToReturn[fileName] = `https://esm.sh/${fileName}`;
       return fileName;
     }
   }
