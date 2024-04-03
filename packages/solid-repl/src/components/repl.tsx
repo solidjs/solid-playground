@@ -123,6 +123,10 @@ export const Repl: ReplProps = (props) => {
     if (event === 'ROLLUP') {
       const currentMap = { ...importMap() };
       for (const file in currentMap) {
+        // Catch any `jspm.dev` URLs and migrate them to `esm.sh`
+        if (currentMap[file] === `https://jspm.dev/${file}`) {
+          currentMap[file] = `https://esm.sh/${file}`;
+        }
         if (!(file in compiled) && currentMap[file] === `https://esm.sh/${file}`) {
           delete currentMap[file];
         }
