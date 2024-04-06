@@ -300,10 +300,10 @@ export const Preview: Component<Props> = (props) => {
   });
   return (
     <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
-      <div class="contain-layout min-h-0 min-w-0" style={`flex: ${props.devtools ? iframeHeight() : '1 1 100%'};`}>
+      <div class="relative" style={`flex: ${props.devtools ? iframeHeight() : '1 1 100%'};`}>
         <iframe
           title="Solid REPL"
-          class="dark:bg-other block h-full w-full overflow-scroll bg-white p-0"
+          class="dark:bg-other absolute inset-0 block h-full w-full overflow-scroll bg-white p-0"
           style={styleScale()}
           ref={iframe}
           src={iframeSrcUrl()}
@@ -327,10 +327,10 @@ export const Preview: Component<Props> = (props) => {
           }}
         />
       </Show>
-      <div class="contain-layout min-h-0 min-w-0" style={`flex: ${1 - iframeHeight()};`}>
+      <div class="relative" style={`flex: ${1 - iframeHeight()};`}>
         <iframe
           title="Devtools"
-          class="h-full w-full"
+          class="absolute inset-0 block h-full w-full"
           style={styleScale()}
           ref={devtoolsIframe}
           src={devtoolsSrc}
