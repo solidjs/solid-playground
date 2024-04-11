@@ -21,17 +21,17 @@
     "solid-js": ">=1.7.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.3",
+    "@babel/core": "^7.24.4",
     "@babel/plugin-syntax-jsx": "^7.24.1",
     "@babel/preset-typescript": "^7.24.1",
-    "@babel/standalone": "^7.24.3",
+    "@babel/standalone": "^7.24.4",
     "@babel/types": "^7.24.0",
     "@types/babel__standalone": "^7.1.7",
     "@types/dedent": "^0.7.2",
     "@types/fs-extra": "^11.0.4",
-    "@unocss/cli": "^0.58.6",
-    "@unocss/preset-wind": "^0.58.6",
-    "@unocss/reset": "^0.58.6",
+    "@unocss/cli": "^0.59.1",
+    "@unocss/preset-wind": "^0.59.1",
+    "@unocss/reset": "^0.59.1",
     "babel-preset-solid": "^1.8.16",
     "esbuild": "^0.20.2",
     "eslint-solid-standalone": "^0.13.2",
@@ -40,18 +40,18 @@
     "monaco-editor": "^0.47.0",
     "prettier": "^3.2.5",
     "solid-js": "1.8.16",
-    "typescript": "^5.4.3",
-    "unocss": "^0.58.6"
+    "typescript": "^5.4.5",
+    "unocss": "^0.59.1"
   },
   "dependencies": {
-    "@solid-primitives/media": "^2.2.8",
+    "@solid-primitives/media": "^2.2.9",
     "@solid-primitives/platform": "^0.1.2",
     "@solid-primitives/scheduled": "^1.4.3",
-    "dedent": "^1.5.1",
+    "dedent": "^1.5.3",
     "monaco-editor-textmate": "^4.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
-    "solid-dismiss": "^1.7.122",
+    "solid-dismiss": "^1.8.1",
     "solid-heroicons": "^3.2.4"
   }
 }
