@@ -1,4 +1,4 @@
-import { createSignal, createEffect, batch, onCleanup, createMemo, onMount, Show } from 'solid-js';
+import { createSignal, createEffect, batch, onCleanup, createMemo, onMount, Show, createRoot, JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { Error } from './error';
@@ -9,10 +9,11 @@ import { createMonacoTabs } from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
-import { DockviewComponent, GridviewComponent, Orientation } from 'dockview-core';
+import { DockviewComponent, GridviewComponent, Orientation, GroupPanelPartInitParameters } from 'dockview-core';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
 import { FileTree } from './fileTree';
-import { SolidGridPanelView, frameworkComponentFactory } from '../dockview/solid';
+import { SolidGridPanelView } from '../dockview/solid';
+import { insert } from 'solid-js/web';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -228,117 +229,135 @@ export const Repl: ReplProps = (props) => {
 
     const dockview = new DockviewComponent({
       parentElement: ref,
-      frameworkComponentFactory,
-      frameworkComponents: {
-        editor: (params: { currentModel: editor.ITextModel }) => (
-          <Editor
-            model={params.currentModel}
-            onDocChange={(code: string) => {
-              if (params.currentModel.uri.path.includes('import_map.json')) {
-                const newImportMap = JSON.parse(code);
-                setImportMap(newImportMap);
-              } else {
-                compile();
-              }
-            }}
-            formatter={formatter}
-            linter={linter}
-            isDark={props.dark}
-            withMinimap={false}
-            displayErrors={displayErrors()}
-            setDisplayErrors={setDisplayErrors}
-          />
-        ),
-        preview: () => {
-          setPreviewVisible(true);
-          onCleanup(() => {
-            setPreviewVisible(false);
-          });
-          return (
-            <Preview
-              importMap={importMap()}
-              code={output()}
-              reloadSignal={reloadSignal()}
-              devtools={devtoolsOpen()}
-              isDark={props.dark}
-            />
-          );
-        },
-        output: () => {
-          setOutputVisible(true);
-          onCleanup(() => {
-            setOutputVisible(false);
-          });
-          return (
-            <section class="divide-y-1 relative flex min-h-0 min-w-0 flex-1 flex-col divide-slate-200 dark:divide-neutral-800">
-              <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
+      createComponent(options) {
+        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        let disposer;
 
-              <div class="p-2">
-                <label class="text-sm font-semibold uppercase">Compile mode</label>
+        let component: (params: GroupPanelPartInitParameters['params']) => JSX.Element = () => null;
 
-                <div class="mt-1 space-y-1 text-sm">
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.DOM}
-                      value="DOM"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.DOM]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Client side rendering</span>
-                  </label>
+        switch (options.name) {
+          case 'editor':
+            component = (params) => (
+              <Editor
+                model={params.currentModel}
+                onDocChange={(code: string) => {
+                  if (params.currentModel.uri.path.includes('import_map.json')) {
+                    const newImportMap = JSON.parse(code);
+                    setImportMap(newImportMap);
+                  } else {
+                    compile();
+                  }
+                }}
+                formatter={formatter}
+                linter={linter}
+                isDark={props.dark}
+                withMinimap={false}
+                displayErrors={displayErrors()}
+                setDisplayErrors={setDisplayErrors}
+              />
+            );
+            break;
+          case 'preview':
+            setPreviewVisible(true);
+            onCleanup(() => {
+              setPreviewVisible(false);
+            });
+            component = () => (
+              <Preview
+                importMap={importMap()}
+                code={output()}
+                reloadSignal={reloadSignal()}
+                devtools={devtoolsOpen()}
+                isDark={props.dark}
+              />
+            );
+            break;
+          case 'output':
+            setOutputVisible(true);
+            onCleanup(() => {
+              setOutputVisible(false);
+            });
+            component = () => (
+              <section class="divide-y-1 relative flex min-h-0 min-w-0 flex-1 flex-col divide-slate-200 dark:divide-neutral-800">
+                <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
 
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.SSR}
-                      value="SSR"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.SSR]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Server side rendering</span>
-                  </label>
+                <div class="p-2">
+                  <label class="text-sm font-semibold uppercase">Compile mode</label>
 
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.HYDRATABLE}
-                      value="HYDRATABLE"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.HYDRATABLE]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Client side rendering with hydration</span>
-                  </label>
+                  <div class="mt-1 space-y-1 text-sm">
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.DOM}
+                        value="DOM"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.DOM]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Client side rendering</span>
+                    </label>
 
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.UNIVERSAL}
-                      value="UNIVERSAL"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.UNIVERSAL]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Universal Rendering & moduleName:</span>
-                    <input
-                      onFocus={[setMode, compileMode.UNIVERSAL]}
-                      onInput={(e) => {
-                        setUniversalModuleName(e.target.value);
-                      }}
-                      class="p-2.5"
-                      type="text"
-                      value={universalModuleName()}
-                      name="moduleName"
-                    />
-                  </label>
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.SSR}
+                        value="SSR"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.SSR]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Server side rendering</span>
+                    </label>
+
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.HYDRATABLE}
+                        value="HYDRATABLE"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.HYDRATABLE]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Client side rendering with hydration</span>
+                    </label>
+
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.UNIVERSAL}
+                        value="UNIVERSAL"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.UNIVERSAL]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Universal Rendering & moduleName:</span>
+                      <input
+                        onFocus={[setMode, compileMode.UNIVERSAL]}
+                        onInput={(e) => {
+                          setUniversalModuleName(e.target.value);
+                        }}
+                        class="p-2.5"
+                        type="text"
+                        value={universalModuleName()}
+                        name="moduleName"
+                      />
+                    </label>
+                  </div>
                 </div>
-              </div>
-            </section>
-          );
-        },
+              </section>
+            );
+        }
+
+        return {
+          element,
+          init: (params) => {
+            createRoot((dispose) => {
+              insert(element, () => component(params.params));
+              disposer = dispose;
+            });
+          },
+          dispose: () => disposer!(),
+        };
       },
     });
 
