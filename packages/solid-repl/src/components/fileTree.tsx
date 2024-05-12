@@ -2,6 +2,7 @@ import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
 import { documentPlus, ellipsisVertical } from 'solid-heroicons/outline';
 import { Component, For, Show, createSignal } from 'solid-js';
+import { useFloating } from 'solid-floating-ui';
 
 interface File {
   name: string;
@@ -20,6 +21,7 @@ export const FileTree: Component<{
   files: File[];
   onClick: (path: string) => void;
   newFile: (path: string) => void;
+  deleteFile: (path: string) => void;
 }> = (props) => {
   let input!: HTMLInputElement;
   const [newFile, setNewFile] = createSignal<string | undefined>(undefined);
@@ -41,9 +43,14 @@ export const FileTree: Component<{
     setNewFile(undefined);
   };
 
+  const [menuButton, setMenuButton] = createSignal<HTMLButtonElement | false>(false);
+  const [selectedFile, setSelectedFile] = createSignal<File | undefined>(undefined);
+  const [floating, setFloating] = createSignal<HTMLDivElement>();
+  const position = useFloating(() => menuButton() || undefined, floating);
+
   return (
     <div class="box-border h-full w-full p-1 text-sm">
-      <div class="h-full w-full overflow-hidden rounded-xl bg-white dark:bg-[#1e1e1e]">
+      <div class="relative h-full w-full rounded-xl bg-white dark:bg-[#1e1e1e]">
         <div class="border-bord flex items-center justify-between border-b px-4 py-1 dark:bg-[#252526]">
           <h1>Files</h1>
           <button
@@ -73,15 +80,39 @@ export const FileTree: Component<{
               <span class="shrink-1 min-w-0 overflow-hidden text-ellipsis">{file.name}</span>
               <button
                 class="ml-auto hidden rounded hover:bg-[rgba(90,93,94,0.31)]"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  setMenuButton(e.currentTarget);
+                  setSelectedFile(file);
+                  e.stopPropagation();
+                  floating()?.focus()
+                }}
               >
                 <Icon path={ellipsisVertical} class="h-4" />
               </button>
             </div>
           )}
         </For>
-        <Dismiss open={() => true} setOpen={() => {}} menuButton={() => false}>
-          <div>hi</div>
+        <Dismiss 
+          open={() => menuButton() != false} 
+          setOpen={(o) => setMenuButton(false)} 
+          menuButton={menuButton} cursorKeys
+          mount="#app">
+          <div
+            style={{
+              position: position.strategy,
+              top: `${position.y ?? 0}px`,
+              left: `${position.x ?? 0}px`,
+            }}
+            class="z-5"
+            ref={setFloating}
+          >
+            <button onClick={() => {
+              const file = selectedFile()!;
+              setMenuButton(false);
+              setSelectedFile(undefined);
+              props.deleteFile(file.name);
+            }}>Delete file</button>
+          </div>
         </Dismiss>
         <Show when={newFile() !== undefined}>
           <div class="flex cursor-pointer rounded pr-1 hover:bg-[#e4e5e6] dark:hover:bg-[rgba(90,93,94,0.31)]">

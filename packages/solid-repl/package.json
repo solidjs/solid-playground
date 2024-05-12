@@ -44,6 +44,7 @@
     "unocss": "^0.60.0"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.6.5",
     "@solid-primitives/media": "^2.2.9",
     "@solid-primitives/scheduled": "^1.4.3",
     "dedent": "^1.5.3",
@@ -52,6 +53,7 @@
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
     "solid-dismiss": "^1.8.1",
+    "solid-floating-ui": "^0.3.1",
     "solid-heroicons": "^3.2.4"
   }
 }

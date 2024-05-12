@@ -104,6 +104,9 @@ importers:
 
   packages/solid-repl:
     dependencies:
+      '@floating-ui/dom':
+        specifier: ^1.6.5
+        version: 1.6.5
       '@solid-primitives/media':
         specifier: ^2.2.9
         version: 2.2.9(solid-js@1.8.17)
@@ -128,6 +131,9 @@ importers:
       solid-dismiss:
         specifier: ^1.8.1
         version: 1.8.1(solid-js@1.8.17)
+      solid-floating-ui:
+        specifier: ^0.3.1
+        version: 0.3.1(@floating-ui/dom@1.6.5)(solid-js@1.8.17)
       solid-heroicons:
         specifier: ^3.2.4
         version: 3.2.4(solid-js@1.8.17)
@@ -747,6 +753,15 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
+
+  '@floating-ui/core@1.6.1':
+    resolution: {integrity: sha512-42UH54oPZHPdRHdw6BgoBD6cg/eVTmVrFcgeRDM3jbO7uxSoipVcmcIGFcA5jmOHO5apcyvBhkSKES3fQJnu7A==}
+
+  '@floating-ui/dom@1.6.5':
+    resolution: {integrity: sha512-Nsdud2X65Dz+1RHjAIP0t8z5e2ff/IRbei6BqFrl1urT8sDVzM1HMQ+R0XcU5ceRfyO3I6ayeqIfh+6Wb8LGTw==}
+
+  '@floating-ui/utils@0.2.2':
+    resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -2191,6 +2206,13 @@ packages:
     peerDependencies:
       solid-js: '1'
 
+  solid-floating-ui@0.3.1:
+    resolution: {integrity: sha512-o/QmGsWPS2Z3KidAxP0nDvN7alI7Kqy0kU+wd85Fz+au5SYcnYm7I6Fk3M60Za35azsPX0U+5fEtqfOuk6Ao0Q==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@floating-ui/dom': ^1.5
+      solid-js: ^1.8
+
   solid-heroicons@3.2.4:
     resolution: {integrity: sha512-u6BMdFLvkJnvUGYzdFcWp1wvJ4hb9Y1zd3AbZ9D3bUmmiy9jBzNZX+RcqBCI2EKRvdQwAb1UB9bkESfqfhayDg==}
     peerDependencies:
@@ -3068,6 +3090,17 @@ snapshots:
 
   '@esbuild/win32-x64@0.21.1':
     optional: true
+
+  '@floating-ui/core@1.6.1':
+    dependencies:
+      '@floating-ui/utils': 0.2.2
+
+  '@floating-ui/dom@1.6.5':
+    dependencies:
+      '@floating-ui/core': 1.6.1
+      '@floating-ui/utils': 0.2.2
+
+  '@floating-ui/utils@0.2.2': {}
 
   '@iconify/types@2.0.0': {}
 
@@ -4614,6 +4647,11 @@ snapshots:
 
   solid-dismiss@1.8.1(solid-js@1.8.17):
     dependencies:
+      solid-js: 1.8.17
+
+  solid-floating-ui@0.3.1(@floating-ui/dom@1.6.5)(solid-js@1.8.17):
+    dependencies:
+      '@floating-ui/dom': 1.6.5
       solid-js: 1.8.17
 
   solid-heroicons@3.2.4(solid-js@1.8.17):

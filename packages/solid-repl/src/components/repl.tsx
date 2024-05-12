@@ -169,7 +169,7 @@ export const Repl: ReplProps = (props) => {
             onClick={(name) => {
               const panel = dockview.getGroupPanel(name);
               if (panel) {
-                dockview.setActivePanel(panel);
+                panel.focus()
               } else {
                 dockview.addPanel({
                   id: name,
@@ -179,6 +179,20 @@ export const Repl: ReplProps = (props) => {
                   },
                 });
               }
+            }}
+            deleteFile={(name) => {
+              if (name === 'main.tsx') return;
+              const newTabs = props.tabs.filter((tab) => tab.name !== name);
+              const panel = dockview.getGroupPanel(name);
+              panel?.api.close();
+              batch(() => {
+                props.setTabs(newTabs);
+                if (props.current === name) {
+                  const panel = dockview.getGroupPanel('main.tsx')!;
+                  panel.focus();
+                  props.setCurrent('main.tsx');
+                }
+              });
             }}
             newFile={(name) => {
               if (!name.trim()) return;
