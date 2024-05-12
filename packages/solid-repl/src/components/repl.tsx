@@ -169,7 +169,7 @@ export const Repl: ReplProps = (props) => {
             onClick={(name) => {
               const panel = dockview.getGroupPanel(name);
               if (panel) {
-                panel.focus()
+                panel.focus();
               } else {
                 dockview.addPanel({
                   id: name,

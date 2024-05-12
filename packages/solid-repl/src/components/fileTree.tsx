@@ -1,6 +1,6 @@
 import Dismiss from 'solid-dismiss';
 import { Icon } from 'solid-heroicons';
-import { documentPlus, ellipsisVertical } from 'solid-heroicons/outline';
+import { documentPlus, ellipsisVertical, trash } from 'solid-heroicons/outline';
 import { Component, For, Show, createSignal } from 'solid-js';
 import { useFloating } from 'solid-floating-ui';
 
@@ -84,7 +84,7 @@ export const FileTree: Component<{
                   setMenuButton(e.currentTarget);
                   setSelectedFile(file);
                   e.stopPropagation();
-                  floating()?.focus()
+                  floating()?.focus();
                 }}
               >
                 <Icon path={ellipsisVertical} class="h-4" />
@@ -92,26 +92,34 @@ export const FileTree: Component<{
             </div>
           )}
         </For>
-        <Dismiss 
-          open={() => menuButton() != false} 
-          setOpen={(o) => setMenuButton(false)} 
-          menuButton={menuButton} cursorKeys
-          mount="#app">
+        <Dismiss
+          open={() => menuButton() != false}
+          setOpen={(o) => setMenuButton(false)}
+          menuButton={menuButton}
+          cursorKeys
+          mount="#app"
+        >
           <div
             style={{
               position: position.strategy,
               top: `${position.y ?? 0}px`,
               left: `${position.x ?? 0}px`,
             }}
-            class="z-5"
+            class="dark:bg-darkbg border-bord absolute z-10 w-min rounded border bg-white"
             ref={setFloating}
           >
-            <button onClick={() => {
-              const file = selectedFile()!;
-              setMenuButton(false);
-              setSelectedFile(undefined);
-              props.deleteFile(file.name);
-            }}>Delete file</button>
+            <button
+              class="mx-2 my-1 block w-[100px] cursor-pointer dark:text-white"
+              onClick={() => {
+                const file = selectedFile()!;
+                setMenuButton(false);
+                setSelectedFile(undefined);
+                props.deleteFile(file.name);
+              }}
+            >
+              <Icon path={trash} class="inline-block h-4 px-1" />
+              Delete file
+            </button>
           </div>
         </Dismiss>
         <Show when={newFile() !== undefined}>
