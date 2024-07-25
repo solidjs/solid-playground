@@ -39,7 +39,7 @@
     "jiti": "^1.21.0",
     "monaco-editor": "^0.47.0",
     "prettier": "^3.2.5",
-    "solid-js": "1.8.16",
+    "solid-js": "1.8.19",
     "typescript": "^5.4.5",
     "unocss": "^0.59.1"
   },
