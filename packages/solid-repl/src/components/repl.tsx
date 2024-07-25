@@ -14,6 +14,8 @@ import '../../node_modules/dockview-core/dist/styles/dockview.css';
 import { FileTree } from './fileTree';
 import { SolidGridPanelView } from '../dockview/solid';
 import { insert } from 'solid-js/web';
+import { Icon } from 'solid-heroicons';
+import { trash } from 'solid-heroicons/outline';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -243,6 +245,38 @@ export const Repl: ReplProps = (props) => {
 
     const dockview = new DockviewComponent({
       parentElement: ref,
+      createRightHeaderActionComponent: (group) => {
+        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        let disposer;
+
+        return {
+          element,
+          init: (params) => {
+            const isTSX = params.group.activePanel?.id.endsWith('.tsx')
+            console.log("got here", params.group.panels.find((panel) => panel)?.id, isTSX)
+            if (!isTSX) return;
+            createRoot((dispose) => {
+              disposer = dispose;
+
+              insert(element, () => (
+                  <button
+                  class="cursor-pointer space-x-2 px-2 py-2"
+                  onClick={() => {
+                    const confirmReset = confirm('Are you sure you want to reset the editor?');
+                    if (!confirmReset) return;
+                    props.reset();
+                  }}
+                  title="Reset Editor"
+                >
+                  <Icon path={trash} class="h-5" />
+                  <span class="sr-only">Reset Editor</span>
+                </button>
+              ));
+            });
+          },
+          dispose: () => disposer!(),
+        }
+      },
       createComponent(options) {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
         let disposer;

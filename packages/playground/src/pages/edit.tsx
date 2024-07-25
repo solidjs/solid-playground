@@ -275,7 +275,7 @@ export const Edit = () => {
               reset={reset}
               current={current()}
               setCurrent={setCurrent}
-              setToggleVisible={(tv) => toggleVisible = tv}
+              setToggleVisible={(tv) => (toggleVisible = tv)}
               id="repl"
             />
           </Show>
