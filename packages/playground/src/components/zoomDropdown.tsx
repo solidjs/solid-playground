@@ -121,7 +121,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               +
             </button>
             <button
-              class="border-1 border-bord rounded  px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700"
+              class="border-1 border-bord rounded px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700"
               aria-label="reset font size"
               onClick={() => updateZoom('reset')}
             >

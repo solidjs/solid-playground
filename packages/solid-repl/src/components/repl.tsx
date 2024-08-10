@@ -252,14 +252,14 @@ export const Repl: ReplProps = (props) => {
         return {
           element,
           init: (params) => {
-            const isTSX = params.group.activePanel?.id.endsWith('.tsx')
-            console.log("got here", params.group.panels.find((panel) => panel)?.id, isTSX)
+            const isTSX = params.group.activePanel?.id.endsWith('.tsx');
+            console.log('got here', params.group.panels.find((panel) => panel)?.id, isTSX);
             if (!isTSX) return;
             createRoot((dispose) => {
               disposer = dispose;
 
               insert(element, () => (
-                  <button
+                <button
                   class="cursor-pointer space-x-2 px-2 py-2"
                   onClick={() => {
                     const confirmReset = confirm('Are you sure you want to reset the editor?');
@@ -275,7 +275,7 @@ export const Repl: ReplProps = (props) => {
             });
           },
           dispose: () => disposer!(),
-        }
+        };
       },
       createComponent(options) {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;

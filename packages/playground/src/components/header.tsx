@@ -112,7 +112,7 @@ export const Header: ParentComponent<{
         </button>
 
         <Dismiss
-          class="absolute relative  top-0 top-[28px] flex flex-row items-center"
+          class="absolute relative top-0 top-[28px] flex flex-row items-center"
           classList={{
             'z-10 w-40 right-0 absolute rounded border border-bord flex flex-col bg-white dark:bg-darkbg': showMenu(),
             'hidden': !showMenu(),
