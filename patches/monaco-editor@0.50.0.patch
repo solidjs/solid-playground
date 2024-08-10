@@ -1,8 +1,8 @@
 diff --git a/esm/vs/basic-languages/monaco.contribution.js b/esm/vs/basic-languages/monaco.contribution.js
-index bc3e04d04d2c19401109a37d169b9d9c878a1bab..97d5f006db052392ea819dcd81643dd718aabe60 100644
+index 589b8f038d4daa920c6b36451ae704a5d8c5fedc..b934ffa2a73ce359aa00b151af13ba985ad58288 100644
 --- a/esm/vs/basic-languages/monaco.contribution.js
 +++ b/esm/vs/basic-languages/monaco.contribution.js
-@@ -8,83 +8,7 @@ import '../editor/editor.api.js';
+@@ -8,84 +8,7 @@ import '../editor/editor.api.js';
  
  
  // src/basic-languages/monaco.contribution.ts
@@ -82,6 +82,7 @@ index bc3e04d04d2c19401109a37d169b9d9c878a1bab..97d5f006db052392ea819dcd81643dd7
 -import "./tcl/tcl.contribution.js";
 -import "./twig/twig.contribution.js";
  import "./typescript/typescript.contribution.js";
+-import "./typespec/typespec.contribution.js";
 -import "./vb/vb.contribution.js";
 -import "./wgsl/wgsl.contribution.js";
 -import "./xml/xml.contribution.js";
