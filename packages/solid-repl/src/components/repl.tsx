@@ -130,6 +130,9 @@ export const Repl: ReplProps = (props) => {
         if (!(file in compiled) && currentMap[file] === `https://esm.sh/${file}`) {
           delete currentMap[file];
         }
+        if (file.split('/')[0] !== 'solid-js' && currentMap[file] === `https://esm.sh/${file}`) {
+          currentMap[file] = `https://esm.sh/${file}?external=solid-js`;
+        }
       }
       for (const file in compiled) {
         if (!(file in currentMap) && !file.startsWith('./')) {
