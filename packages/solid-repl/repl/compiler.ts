@@ -3,12 +3,15 @@ import type { Tab } from 'solid-repl';
 import { transform } from '@babel/standalone';
 // @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
+import { Generator } from '@jspm/generator';
 
 import dd from 'dedent';
 
 let files: Record<string, string> = {};
 let cache: Record<string, string> = {};
 let dataToReturn: Record<string, string> = {};
+let generator: Generator;
+let installQueue: Array<Promise<any>> = [];
 
 function uid(str: string) {
   return Array.from(str)
@@ -87,6 +90,7 @@ function transformImportee(fileName: string) {
     if (fileName.includes('://')) return fileName;
     else {
       dataToReturn[fileName] = `https://esm.sh/${fileName}`;
+      installQueue.push(generator.install(fileName));
       return fileName;
     }
   }
@@ -123,6 +127,8 @@ function bundle(entryPoint: string, fileRecord: Record<string, string>) {
     const url = dataToReturn[out];
     if (url.startsWith('blob:')) URL.revokeObjectURL(dataToReturn[out]);
   }
+  installQueue = [];
+  generator = new Generator();
   cache = {};
   dataToReturn = {};
   dataToReturn[entryPoint] = transformImportee(entryPoint);
@@ -149,14 +155,16 @@ function babel(tab: Tab, compileOpts: any) {
   return { event: 'BABEL', compiled: code };
 }
 
-self.addEventListener('message', ({ data }) => {
+self.addEventListener('message', async ({ data }) => {
   const { event, tabs, tab, compileOpts } = data;
 
   try {
     if (event === 'BABEL') {
       self.postMessage(babel(tab, compileOpts));
     } else if (event === 'ROLLUP') {
-      self.postMessage(compile(tabs, event));
+      const result = compile(tabs, event);
+      await Promise.all(installQueue);
+      self.postMessage({ ...result, importMap: generator.getMap() });
     }
   } catch (e) {
     self.postMessage({ event: 'ERROR', error: e });

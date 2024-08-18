@@ -216,7 +216,7 @@ export const Preview: Component<Props> = (props) => {
   const iframeSrcUrl = createMemo(() => {
     const html = generateHTML(
       untrack(() => props.isDark),
-      JSON.stringify({ imports: props.importMap }),
+      JSON.stringify(props.importMap),
     );
     const url = URL.createObjectURL(
       new Blob([html], {

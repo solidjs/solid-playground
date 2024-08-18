@@ -121,21 +121,24 @@ export const Repl: ReplProps = (props) => {
     }
 
     if (event === 'ROLLUP') {
-      const currentMap = { ...importMap() };
-      for (const file in currentMap) {
-        // Catch any `jspm.dev` URLs and migrate them to `esm.sh`
-        if (currentMap[file] === `https://jspm.dev/${file}`) {
-          currentMap[file] = `https://esm.sh/${file}`;
-        }
-        if (!(file in compiled) && currentMap[file] === `https://esm.sh/${file}`) {
-          delete currentMap[file];
-        }
-      }
-      for (const file in compiled) {
-        if (!(file in currentMap) && !file.startsWith('./')) {
-          currentMap[file] = compiled[file];
-        }
-      }
+      // need to handle existing importmap somehow
+      // const currentMap = { ...importMap() };
+      // const imports: Record<string, string> = ((currentMap.imports as any) ??= {});
+      // for (const file in imports) {
+      //   // Catch any `jspm.dev` URLs and migrate them to `esm.sh`
+      //   if (imports[file] === `https://jspm.dev/${file}`) {
+      //     imports[file] = `https://esm.sh/${file}`;
+      //   }
+      //   if (!(file in compiled) && imports[file] === `https://esm.sh/${file}`) {
+      //     delete imports[file];
+      //   }
+      // }
+      // for (const file in compiled) {
+      //   if (!(file in imports) && !file.startsWith('./')) {
+      //     imports[file] = compiled[file];
+      //   }
+      // }
+      const currentMap = data.importMap;
       console.log(`Compilation took: ${performance.now() - now}ms`);
 
       batch(() => {

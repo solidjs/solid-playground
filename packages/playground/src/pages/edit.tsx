@@ -109,6 +109,7 @@ export const Edit = () => {
         output = await data.json();
         navigate(`/anonymous/${output.id}`);
       } else {
+        localStorage.clear();
         const myScratchpad = localStorage.getItem('scratchpad');
         if (!myScratchpad) {
           output = {
