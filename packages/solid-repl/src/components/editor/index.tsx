@@ -123,7 +123,8 @@ const Editor: Component<{
       editor.focus();
     });
 
-    editor.onDidChangeModelContent(() => {
+    editor.onDidChangeModelContent(async () => {
+      await Promise.resolve();
       const code = editor.getValue();
       props.onDocChange?.(code);
       runLinter(code);

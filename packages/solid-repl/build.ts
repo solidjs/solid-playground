@@ -1,6 +1,7 @@
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { copyFileSync } from 'fs-extra';
+import { nodeModulesPolyfillPlugin } from 'esbuild-plugins-node-modules-polyfill';
 
 build({
   entryPoints: ['./repl/compiler.ts', './repl/formatter.ts', './repl/linter.ts', './repl/main.css'],
@@ -11,8 +12,11 @@ build({
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',
+    'process.version': '"20"',
+    'process.versions': '{}',
     'preventAssignment': 'true',
   },
+  plugins: [nodeModulesPolyfillPlugin()],
 }).then(() => {
   const unoCSS_build = readFileSync('./uno.css');
   const generated_bundle = readFileSync('./dist/main.css');
