@@ -193,7 +193,7 @@ const useDevtoolsSrc = () => {
   </script>
   <meta name="referrer" content="no-referrer">
   <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.8.0/public/front_end/entrypoints/chii_app/chii_app.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.12.3/public/front_end/entrypoints/chii_app/chii_app.js"></script>
   <body class="undocked" id="-blink-dev-tools">`;
   const devtoolsRawUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
   onCleanup(() => URL.revokeObjectURL(devtoolsRawUrl));
