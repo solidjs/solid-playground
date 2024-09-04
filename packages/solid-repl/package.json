@@ -21,27 +21,27 @@
     "solid-js": ">=1.7.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.5",
-    "@babel/plugin-syntax-jsx": "^7.24.1",
-    "@babel/preset-typescript": "^7.24.1",
-    "@babel/standalone": "^7.24.5",
-    "@babel/types": "^7.24.5",
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-syntax-jsx": "^7.24.7",
+    "@babel/preset-typescript": "^7.24.7",
+    "@babel/standalone": "^7.25.6",
+    "@babel/types": "^7.25.6",
     "@types/babel__standalone": "^7.1.7",
     "@types/dedent": "^0.7.2",
     "@types/fs-extra": "^11.0.4",
-    "@unocss/cli": "^0.60.0",
-    "@unocss/preset-wind": "^0.60.0",
-    "@unocss/reset": "^0.60.0",
-    "babel-preset-solid": "^1.8.17",
-    "esbuild": "^0.21.1",
+    "@unocss/cli": "^0.62.3",
+    "@unocss/preset-wind": "^0.62.3",
+    "@unocss/reset": "^0.62.3",
+    "babel-preset-solid": "^1.8.22",
+    "esbuild": "^0.23.1",
     "eslint-solid-standalone": "^0.13.2",
     "fs-extra": "^11.2.0",
-    "jiti": "^1.21.0",
-    "monaco-editor": "^0.48.0",
-    "prettier": "^3.2.5",
-    "solid-js": "1.8.17",
-    "typescript": "^5.4.5",
-    "unocss": "^0.60.0"
+    "jiti": "^1.21.6",
+    "monaco-editor": "^0.51.0",
+    "prettier": "^3.3.3",
+    "solid-js": "1.8.22",
+    "typescript": "^5.5.4",
+    "unocss": "^0.62.3"
   },
   "dependencies": {
     "@solid-primitives/media": "^2.2.9",
@@ -51,7 +51,7 @@
     "monaco-editor-textmate": "^4.0.0",
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
-    "solid-dismiss": "^1.8.1",
+    "solid-dismiss": "^1.8.2",
     "solid-heroicons": "^3.2.4"
   }
 }
