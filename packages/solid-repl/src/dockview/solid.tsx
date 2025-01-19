@@ -16,7 +16,7 @@ export class SolidPanelView extends SplitviewPanel {
       return dispose;
     });
     return {
-      update: (params: any) => {},
+      update: () => {},
       dispose,
     };
   }
@@ -36,7 +36,7 @@ export class SolidGridPanelView extends GridviewPanel {
       return dispose;
     });
     return {
-      update: (params: any) => {},
+      update: () => {},
       dispose,
     };
   }

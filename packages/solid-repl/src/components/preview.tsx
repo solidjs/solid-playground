@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, onCleanup, onMount, untrack } from 'solid-js';
+import { Component, createEffect, createMemo, JSX, onCleanup, onMount, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { Orientation, SplitviewComponent } from 'dockview-core';
 import { SolidPanelView } from '../dockview/solid';
@@ -222,43 +222,41 @@ export const Preview: Component<Props> = (props) => {
   };
 
   onMount(() => {
-    const splitview = new SplitviewComponent({
-      parentElement: outerContainer,
-      orientation: Orientation.VERTICAL,
-      frameworkWrapper: {
-        createComponent: (id, componentId, component) => {
-          return new SolidPanelView(id, componentId, component);
-        },
-      },
-      frameworkComponents: {
-        preview: () => (
-          <iframe
-            title="Solid REPL"
-            class="dark:bg-darkbg block h-full min-h-0 w-full min-w-0 overflow-scroll bg-white p-0"
-            style={styleScale()}
-            ref={iframe}
-            src={iframeSrcUrl()}
-            onload={() => {
-              isIframeReady = true;
+    const frameworkComponents: Record<string, () => JSX.Element> = {
+      preview: () => (
+        <iframe
+          title="Solid REPL"
+          class="dark:bg-darkbg block h-full min-h-0 w-full min-w-0 overflow-scroll bg-white p-0"
+          style={styleScale()}
+          ref={iframe}
+          src={iframeSrcUrl()}
+          onload={() => {
+            isIframeReady = true;
 
-              if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
-              if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
-              iframe.contentDocument?.documentElement.classList.toggle('dark', props.isDark);
-            }}
-            // @ts-ignore
-            sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
-          />
-        ),
-        devtools: () => (
-          <iframe
-            title="Devtools"
-            class="h-full min-h-0 w-full min-w-0"
-            ref={devtoolsIframe}
-            src={devtoolsSrc}
-            onload={() => (devtoolsLoaded = true)}
-            classList={{ block: props.devtools, hidden: !props.devtools }}
-          />
-        ),
+            if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
+            if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
+            iframe.contentDocument?.documentElement.classList.toggle('dark', props.isDark);
+          }}
+          // @ts-ignore
+          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+        />
+      ),
+      devtools: () => (
+        <iframe
+          title="Devtools"
+          class="h-full min-h-0 w-full min-w-0"
+          ref={devtoolsIframe}
+          src={devtoolsSrc}
+          onload={() => (devtoolsLoaded = true)}
+          classList={{ block: props.devtools, hidden: !props.devtools }}
+        />
+      ),
+    };
+    const splitview = new SplitviewComponent(outerContainer, {
+      orientation: Orientation.VERTICAL,
+
+      createComponent: ({ id, name }) => {
+        return new SolidPanelView(id, name, frameworkComponents[name]);
       },
     });
     splitview.addPanel({

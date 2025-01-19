@@ -1,5 +1,5 @@
 diff --git a/esm/vs/basic-languages/monaco.contribution.js b/esm/vs/basic-languages/monaco.contribution.js
-index 589b8f038d4daa920c6b36451ae704a5d8c5fedc..b934ffa2a73ce359aa00b151af13ba985ad58288 100644
+index 425244acef1b0e9451a0899dace77180f8c04bdc..366ed847c9e6292650d36d9e513dd555008ebb2c 100644
 --- a/esm/vs/basic-languages/monaco.contribution.js
 +++ b/esm/vs/basic-languages/monaco.contribution.js
 @@ -8,84 +8,7 @@ import '../editor/editor.api.js';

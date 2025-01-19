@@ -55,9 +55,9 @@ textarea.monaco-mouse-cursor-text:focus {
   --dv-icon-hover-background-color: rgba(90, 93, 94, 0.31);
 }
 
-.dark .dockview-theme-replit .groupview .tabs-and-actions-container .tab:hover {
+.dark .dockview-theme-replit .dv-groupview .dv-tabs-and-actions-container .dv-tab:hover {
   background-color: rgba(90, 93, 94, 0.31) !important;
 }
-.dark .dockview-theme-replit .groupview .content-container {
+.dark .dockview-theme-replit .dv-groupview .dv-content-container {
   background-color: #1e1e1e;
 }
