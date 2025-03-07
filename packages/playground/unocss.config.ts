@@ -1,4 +1,4 @@
-import { presetWind, theme } from '@unocss/preset-wind';
+import { presetWind, theme } from '@unocss/preset-wind3';
 import { transformerDirectives, defineConfig } from 'unocss';
 
 export default defineConfig({
@@ -25,7 +25,7 @@ export default defineConfig({
       sans: 'Gordita, ' + theme.fontFamily!.sans,
     },
   },
-  presets: [presetWind()],
+  presets: [presetWind],
   transformers: [transformerDirectives()],
   content: {
     filesystem: ['./src/**/*.tsx', '../solid-repl/src/**/*.ts'],

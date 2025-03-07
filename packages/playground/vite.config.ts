@@ -1,9 +1,21 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import UnoCSS from 'unocss/vite';
+import devtools from 'solid-devtools/vite';
 
 export default defineConfig((env) => ({
-  plugins: [solidPlugin(), UnoCSS()],
+  plugins: [
+    devtools({
+      autoname: true,
+      locator: {
+        targetIDE: 'vscode',
+        componentLocation: true,
+        jsxLocation: true,
+      },
+    }),
+    solidPlugin(),
+    UnoCSS(),
+  ],
   define: {
     'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',

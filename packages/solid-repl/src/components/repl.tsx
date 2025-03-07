@@ -15,7 +15,7 @@ import { FileTree } from './fileTree';
 import { SolidGridPanelView } from '../dockview/solid';
 import { insert } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
-import { trash } from 'solid-heroicons/outline';
+import { plus, trash } from 'solid-heroicons/outline';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -241,16 +241,13 @@ export const Repl: ReplProps = (props) => {
     });
 
     const dockview = new DockviewComponent(ref, {
-      createRightHeaderActionComponent: () => {
+      createLeftHeaderActionComponent: () => {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
-        let disposer;
+        let disposer: () => void;
 
         return {
           element,
           init: (params) => {
-            const isTSX = params.group.activePanel?.id.endsWith('.tsx');
-            console.log('got here', params.group.panels.find((panel) => panel)?.id, isTSX);
-            if (!isTSX) return;
             createRoot((dispose) => {
               disposer = dispose;
 
@@ -258,24 +255,60 @@ export const Repl: ReplProps = (props) => {
                 <button
                   class="cursor-pointer space-x-2 px-2 py-2"
                   onClick={() => {
-                    const confirmReset = confirm('Are you sure you want to reset the editor?');
-                    if (!confirmReset) return;
-                    props.reset();
+                    const confirmReload = confirm('Are you sure you want to reload the preview?');
+                    if (!confirmReload) return;
+                    reload();
                   }}
-                  title="Reset Editor"
+                  title="Reload Preview"
                 >
-                  <Icon path={trash} class="h-5" />
-                  <span class="sr-only">Reset Editor</span>
+                  <Icon path={plus} class="h-5" />
+                  <span class="sr-only">Reload Preview</span>
                 </button>
               ));
             });
           },
-          dispose: () => disposer!(),
+          dispose: () => disposer?.(),
+        };
+      },
+      createRightHeaderActionComponent: () => {
+        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        let disposer: () => void;
+
+        return {
+          element,
+          init: (params) => {
+            const [isTSX, setIsTSX] = createSignal(false);
+            params.group.api.onDidActivePanelChange((e) => {
+              if (!e) return;
+              setIsTSX(e.panel.id.endsWith('.tsx'));
+            });
+            createRoot((dispose) => {
+              disposer = dispose;
+
+              insert(element, () => (
+                <Show when={isTSX()}>
+                  <button
+                    class="cursor-pointer space-x-2 px-2 py-2"
+                    onClick={() => {
+                      const confirmReset = confirm('Are you sure you want to reset the editor?');
+                      if (!confirmReset) return;
+                      props.reset();
+                    }}
+                    title="Reset Editor"
+                  >
+                    <Icon path={trash} class="h-5" />
+                    <span class="sr-only">Reset Editor</span>
+                  </button>
+                </Show>
+              ));
+            });
+          },
+          dispose: () => disposer?.(),
         };
       },
       createComponent(options) {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
-        let disposer;
+        let disposer: () => void;
 
         let component: (params: GroupPanelPartInitParameters['params']) => JSX.Element = () => null;
 
@@ -400,7 +433,7 @@ export const Repl: ReplProps = (props) => {
               disposer = dispose;
             });
           },
-          dispose: () => disposer!(),
+          dispose: () => disposer?.(),
         };
       },
     });

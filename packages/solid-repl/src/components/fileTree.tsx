@@ -49,7 +49,7 @@ export const FileTree: Component<{
   const position = useFloating(() => menuButton() || undefined, floating);
 
   return (
-    <div class="relative h-full w-full rounded-xl overflow-hidden bg-white dark:bg-[#1e1e1e]">
+    <div class="relative h-full w-full overflow-hidden rounded-xl bg-white dark:bg-[#1e1e1e]">
       <div class="border-bord flex items-center justify-between border-b px-4 py-1 dark:bg-[#252526]">
         <h1>Files</h1>
         <button
@@ -108,7 +108,7 @@ export const FileTree: Component<{
           ref={setFloating}
         >
           <button
-            class="mx-2 my-1 block w-[100px] cursor-pointer dark:text-white"
+            class="mx-2 my-1 block w-[130px] cursor-pointer rounded p-1 hover:bg-[#e4e5e6] dark:text-white"
             onClick={() => {
               const file = selectedFile()!;
               setMenuButton(false);
