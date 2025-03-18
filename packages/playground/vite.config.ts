@@ -17,7 +17,6 @@ export default defineConfig((env) => ({
     UnoCSS(),
   ],
   define: {
-    'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',
     ...(env.command == 'build' ? {} : { global: 'globalThis' }),
   },

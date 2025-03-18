@@ -88,7 +88,7 @@ export const Header: ParentComponent<{
   }
 
   return (
-    <header class="dark:bg-darkbg border-b-1px border-bord sticky top-0 z-10 flex items-center bg-white text-sm">
+    <header class="dark:bg-darkerbg sticky top-0 z-10 flex items-center bg-lightbg text-sm">
       <A href="/">
         <img src={logo} alt="solid-js logo" class="mx-2 h-6" />
       </A>

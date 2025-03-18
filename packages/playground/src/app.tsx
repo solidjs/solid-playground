@@ -29,7 +29,7 @@ export const App = (): JSX.Element => {
   });
 
   return (
-    <div class="dark:bg-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
+    <div class="dark:bg-darkerbg relative flex h-screen flex-col overflow-auto bg-lightbg font-sans text-slate-900 dark:text-slate-50">
       <Router>
         <Route path={['/:user/:repl', '/scratchpad']} component={Edit} />
         <Route path="/:user" component={Home} />

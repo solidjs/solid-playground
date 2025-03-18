@@ -9,10 +9,9 @@ import { createMonacoTabs } from './editor/monacoTabs';
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
-import { DockviewComponent, GridviewComponent, Orientation, GroupPanelPartInitParameters } from 'dockview-core';
+import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeReplit } from 'dockview-core';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
 import { FileTree } from './fileTree';
-import { SolidGridPanelView } from '../dockview/solid';
 import { insert } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
 import { plus, trash } from 'solid-heroicons/outline';
@@ -146,108 +145,47 @@ export const Repl: ReplProps = (props) => {
   const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
   const currentModel = createMemo(() => monacoTabs().get(`file:///${props.id}/${props.current}`)!.model);
 
-  let grid!: HTMLDivElement;
+  let ref!: HTMLDivElement;
 
   const [reloadSignal, reload] = createSignal(false, { equals: false });
   const [devtoolsOpen, setDevtoolsOpen] = createSignal(!props.hideDevtools);
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
   onMount(() => {
-    let ref!: HTMLDivElement;
-    const frameworkComponents: Record<string, () => JSX.Element> = {
-      filetree: () => (
-        <FileTree
-          files={props.tabs.map((x) => ({ name: x.name }))}
-          folders={[]}
-          onClick={(name) => {
-            const panel = dockview.getGroupPanel(name);
-            if (panel) {
-              panel.focus();
-            } else {
-              dockview.addPanel({
-                id: name,
-                component: 'editor',
-                params: {
-                  currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
-                },
-              });
-            }
-          }}
-          deleteFile={(name) => {
-            if (name === 'main.tsx') return;
-            const newTabs = props.tabs.filter((tab) => tab.name !== name);
-            const panel = dockview.getGroupPanel(name);
-            panel?.api.close();
-            batch(() => {
-              props.setTabs(newTabs);
-              if (props.current === name) {
-                const panel = dockview.getGroupPanel('main.tsx')!;
-                panel.focus();
-                props.setCurrent('main.tsx');
-              }
-            });
-          }}
-          newFile={(name) => {
-            if (!name.trim()) return;
-            const newTab = {
-              name: name,
-              source: '',
-            };
-            batch(() => {
-              props.setTabs(props.tabs.concat(newTab));
-              props.setCurrent(newTab.name);
-            });
-            dockview.addPanel({
-              id: name,
-              component: 'editor',
-              params: {
-                currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
-              },
-            });
-          }}
-        />
-      ),
-      body(this: { element: HTMLDivElement }) {
-        ref = this.element;
-        return null;
-      },
-    };
-    const dockviewGrid = new GridviewComponent(grid, {
-      createComponent: ({ id, name }) => {
-        return new SolidGridPanelView(id, name, frameworkComponents[name]);
-      },
-      proportionalLayout: false,
-      orientation: Orientation.HORIZONTAL,
-    });
-    dockviewGrid.fromJSON({
-      grid: {
-        root: {
-          type: 'branch',
-          data: [
-            { type: 'leaf', data: { component: 'filetree', id: 'filetree', minimumWidth: 150, snap: true } },
-            { type: 'leaf', data: { component: 'body', id: 'body' } },
-          ],
+    const newFile = (name: string) => {
+      if (!name.trim()) return;
+      const newTab = {
+        name: name,
+        source: '',
+      };
+      batch(() => {
+        props.setTabs(props.tabs.concat(newTab));
+        props.setCurrent(newTab.name);
+      });
+      dockview.addPanel({
+        id: name,
+        component: 'editor',
+        params: {
+          currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
         },
-        width: 800,
-        height: 600,
-        orientation: Orientation.HORIZONTAL,
-      },
-    });
+      });
+    };
 
     props.setToggleVisible(() => {
-      const panel = dockviewGrid.getPanel('filetree')!;
-      const visible = dockviewGrid.isVisible(panel);
-      dockviewGrid.setVisible(panel, !visible);
+      const panel = dockview.getPanel('filetree')!;
+      const visible = panel.isVisible
+      dockview.setVisible(panel, !visible);
     });
 
     const dockview = new DockviewComponent(ref, {
+      theme: themeReplit,
       createLeftHeaderActionComponent: () => {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
         let disposer: () => void;
 
         return {
           element,
-          init: (params) => {
+          init: () => {
             createRoot((dispose) => {
               disposer = dispose;
 
@@ -255,14 +193,13 @@ export const Repl: ReplProps = (props) => {
                 <button
                   class="cursor-pointer space-x-2 px-2 py-2"
                   onClick={() => {
-                    const confirmReload = confirm('Are you sure you want to reload the preview?');
-                    if (!confirmReload) return;
-                    reload();
+                    const tabName = `tab${props.tabs.length + 1}.tsx`;
+                    newFile(tabName);
                   }}
-                  title="Reload Preview"
+                  title="New Tab"
                 >
                   <Icon path={plus} class="h-5" />
-                  <span class="sr-only">Reload Preview</span>
+                  <span class="sr-only">New tab</span>
                 </button>
               ));
             });
@@ -313,6 +250,43 @@ export const Repl: ReplProps = (props) => {
         let component: (params: GroupPanelPartInitParameters['params']) => JSX.Element = () => null;
 
         switch (options.name) {
+          case 'filetree':
+            component = () => (
+              <FileTree
+                files={props.tabs.map((x) => ({ name: x.name }))}
+                folders={[]}
+                onClick={(name) => {
+                  const panel = dockview.getGroupPanel(name);
+                  if (panel) {
+                    panel.focus();
+                  } else {
+                    dockview.addPanel({
+                      id: name,
+                      component: 'editor',
+                      params: {
+                        currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+                      },
+                    });
+                  }
+                }}
+                deleteFile={(name) => {
+                  if (name === 'main.tsx') return;
+                  const newTabs = props.tabs.filter((tab) => tab.name !== name);
+                  const panel = dockview.getGroupPanel(name);
+                  panel?.api.close();
+                  batch(() => {
+                    props.setTabs(newTabs);
+                    if (props.current === name) {
+                      const panel = dockview.getGroupPanel('main.tsx')!;
+                      panel.focus();
+                      props.setCurrent('main.tsx');
+                    }
+                  });
+                }}
+                newFile={newFile}
+              />
+            );
+            break;
           case 'editor':
             component = (params) => (
               <Editor
@@ -443,7 +417,8 @@ export const Repl: ReplProps = (props) => {
         root: {
           type: 'branch',
           data: [
-            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 800 },
+            { type: 'leaf', data: { views: ['filetree'], activeView: 'filetree', id: 'filetree' ,locked: true}, size: 150 },
+            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 150 },
             { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 550 },
           ],
           size: 480,
@@ -454,15 +429,16 @@ export const Repl: ReplProps = (props) => {
       },
       activeGroup: '1',
       panels: {
-        'File Tree': {
+        filetree: {
           id: 'File Tree',
           contentComponent: 'filetree',
+          minimumWidth: 150,
         },
-        'Output': {
+        Output: {
           id: 'Output',
           contentComponent: 'output',
         },
-        'Preview': {
+        Preview: {
           id: 'Preview',
           contentComponent: 'preview',
           tabComponent: '',
@@ -488,10 +464,7 @@ export const Repl: ReplProps = (props) => {
 
   return (
     <>
-      <div
-        ref={grid}
-        class="dockview-theme-replit flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans text-black dark:text-white"
-      >
+      <div ref={ref} class="flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans text-black dark:text-white">
         <Show when={error()}>
           <Error message={error()} onDismiss={() => setError('')} />
         </Show>

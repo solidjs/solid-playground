@@ -240,7 +240,7 @@ export const Edit = () => {
         )}
       </Header>
       <div class="flex h-full w-full overflow-hidden">
-        <div class="border-r-1 border-bord flex h-full w-[40px] flex-col items-center">
+        <div class="flex h-full w-[40px] flex-col items-center">
           <HeaderButton title="Folder tree" onClick={() => toggleVisible?.()}>
             <Icon path={folder} class="w-5" />
           </HeaderButton>

@@ -4,6 +4,7 @@ import { transformerDirectives, defineConfig } from 'unocss';
 export default defineConfig({
   theme: {
     colors: {
+      lightbg: '#ebeced',
       darkbg: '#1e1e1e',
       darkLighterBg: '#444444',
       darkgray: '#252525',

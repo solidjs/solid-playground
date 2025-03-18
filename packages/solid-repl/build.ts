@@ -9,7 +9,6 @@ build({
   bundle: true,
   external: ['/Gordita-Medium.woff', '/Gordita-Regular.woff', '/Gordita-Bold.woff'],
   define: {
-    'process.env.BABEL_TYPES_8_BREAKING': 'true',
     'process.env.NODE_DEBUG': 'false',
     'preventAssignment': 'true',
   },

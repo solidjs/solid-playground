@@ -5,7 +5,7 @@ import * as prettierPluginEstree from 'prettier/plugins/estree';
 function format(code: string) {
   return prettierFormat(code, {
     parser: 'babel-ts',
-    plugins: [prettierPluginBabel, prettierPluginEstree],
+    plugins: [prettierPluginBabel, prettierPluginEstree as any],
   });
 }
 
