@@ -120,7 +120,7 @@ export const Repl: ReplProps = (props) => {
         tabs: unwrap(userTabs()),
       });
     }
-    if (outputVisible()) {
+    if (outputVisible() && props.current?.endsWith('.tsx')) {
       let compileOpts = mode();
       if (compileOpts === compileMode.UNIVERSAL) {
         compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
@@ -418,8 +418,8 @@ export const Repl: ReplProps = (props) => {
           type: 'branch',
           data: [
             { type: 'leaf', data: { views: ['filetree'], activeView: 'filetree', id: 'filetree' ,locked: true}, size: 150 },
-            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 150 },
-            { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 550 },
+            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 400 },
+            { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 250 },
           ],
           size: 480,
         },
