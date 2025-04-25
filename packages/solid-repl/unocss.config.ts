@@ -1,4 +1,4 @@
-import { presetWind, theme } from '@unocss/preset-wind';
+import { presetWind, theme } from '@unocss/preset-wind3';
 import { transformerDirectives, defineConfig } from 'unocss';
 
 export default defineConfig({
