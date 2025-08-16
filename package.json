@@ -22,7 +22,10 @@
   "pnpm": {
     "patchedDependencies": {
       "monaco-editor": "patches/monaco-editor.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "packageManager": "pnpm@10.14.0"
 }
