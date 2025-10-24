@@ -91,6 +91,7 @@ const Editor: Component<{
       minimap: {
         enabled: props.withMinimap,
       },
+      editContext: false,
     });
 
     createEffect(() => {
