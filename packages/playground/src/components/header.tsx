@@ -3,7 +3,7 @@ import { A } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { unwrap } from 'solid-js/store';
 import { onCleanup, createSignal, Show, ParentComponent } from 'solid-js';
-import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
+import { share, link, arrowDownTray, arrowUpTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
@@ -14,6 +14,7 @@ export const Header: ParentComponent<{
   compiler?: Worker;
   fork?: () => void;
   share: () => Promise<string>;
+  onImport?: (files: { name: string; source: string }[]) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
@@ -21,6 +22,36 @@ export const Header: ParentComponent<{
   const [showProfile, setShowProfile] = createSignal(false);
   let menuBtnEl!: HTMLButtonElement;
   let profileBtn!: HTMLButtonElement;
+  let fileInput!: HTMLInputElement;
+
+  function handleFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const files = Array.from(input.files);
+    Promise.allSettled(
+      files.map((file) => {
+        return new Promise<{ name: string; source: string }>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            resolve({
+              name: file.name,
+              source: (e.target?.result as string) || '',
+            });
+          };
+          reader.readAsText(file);
+        });
+      }),
+    ).then((results) => {
+      const resolved = results.filter((result) => result.status === 'fulfilled');
+      const rejected = results.filter((result) => result.status === 'rejected');
+      if (rejected.length > 0) {
+        console.error(rejected);
+      }
+      props.onImport?.(resolved.map((result) => result.value));
+      input.value = '';
+    });
+  }
 
   function shareLink() {
     props.share().then((url) => {
@@ -78,6 +109,26 @@ export const Header: ParentComponent<{
         </button>
 
         <Show when={context.tabs()}>
+          <button
+            type="button"
+            onClick={() => fileInput.click()}
+            class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
+            classList={{
+              'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),
+            }}
+            title="Import File"
+          >
+            <Icon path={arrowUpTray} class="h-6" style={{ margin: '0' }} />
+            <span class="text-xs md:sr-only">Import</span>
+            <input
+              type="file"
+              multiple
+              class="hidden"
+              ref={fileInput}
+              onChange={handleFileChange}
+              accept=".js,.jsx,.ts,.tsx,.css,.json,.html"
+            />
+          </button>
           <button
             type="button"
             onClick={() => exportToZip(unwrap(context.tabs())!)}

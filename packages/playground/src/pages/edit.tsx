@@ -14,6 +14,7 @@ import { defaultTabs } from 'solid-repl/src';
 import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
+import { DropTarget } from '../components/dropTarget';
 
 const Repl = lazy(() => import('../components/setupSolid'));
 
@@ -167,11 +168,40 @@ export const Edit = () => {
     !!scratchpad() ? 10 : 1000,
   );
 
+  const handleImport = (files: { name: string; source: string }[]) => {
+    let currentTabs = tabs();
+
+    if (files.length === 1 && files[0].name.endsWith('.json')) {
+      try {
+        const json = JSON.parse(files[0].source);
+        if (json.files && Array.isArray(json.files)) {
+          const projectFiles = json.files.map((f: any) => ({ name: f.name, source: f.content }));
+          setTabs(projectFiles);
+          setCurrent(projectFiles[0].name);
+          return;
+        }
+      } catch { }
+    }
+
+    const newTabs: (InternalTab | Tab)[] = [...currentTabs];
+    files.forEach((f) => {
+      const existing = newTabs.find((t) => t.name === f.name);
+      if (existing) {
+        existing.source = f.source;
+      } else {
+        newTabs.push({ name: f.name, source: f.source });
+      }
+    });
+    setTabs(newTabs);
+    if (files.length > 0) setCurrent(files[0].name);
+  };
+
   return (
     <>
       <Header
         compiler={compiler}
-        fork={() => {}}
+        fork={() => { }}
+        onImport={handleImport}
         share={async () => {
           if (scratchpad()) {
             const newRepl = {
@@ -250,19 +280,21 @@ export const Edit = () => {
         }
       >
         <Show when={resource()}>
-          <Repl
-            compiler={compiler}
-            formatter={formatter}
-            linter={linter}
-            isHorizontal={searchParams.isHorizontal != undefined}
-            dark={context.dark()}
-            tabs={tabs()}
-            setTabs={setTabs}
-            reset={reset}
-            current={current()}
-            setCurrent={setCurrent}
-            id="repl"
-          />
+          <DropTarget handleImport={handleImport} class="flex h-full">
+            <Repl
+              compiler={compiler}
+              formatter={formatter}
+              linter={linter}
+              isHorizontal={searchParams.isHorizontal != undefined}
+              dark={context.dark()}
+              tabs={tabs()}
+              setTabs={setTabs}
+              reset={reset}
+              current={current()}
+              setCurrent={setCurrent}
+              id="repl"
+            />
+          </DropTarget>
         </Show>
       </Suspense>
     </>
