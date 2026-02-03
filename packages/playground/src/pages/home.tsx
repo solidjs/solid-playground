@@ -131,7 +131,7 @@ export const Home = () => {
             </p>
           </div>
         </Show>
-        <table class="w-200 mx-auto max-w-full">
+        <table class="mx-auto w-200 max-w-full">
           <thead>
             <tr class="border-b border-neutral-600 font-medium">
               <th class="w-1/2 p-1 text-left">Title</th>
@@ -221,7 +221,7 @@ export const Home = () => {
       </div>
       <Show when={!!open()}>
         <div
-          class="fixed left-0 top-0 z-10 flex h-full w-full items-center bg-gray-500/50"
+          class="fixed top-0 left-0 z-10 flex h-full w-full items-center bg-gray-500/50"
           onClick={(e) => {
             if (e.target !== e.currentTarget) return;
             setOpen(undefined);

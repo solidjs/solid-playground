@@ -21,7 +21,6 @@ declare module 'solid-repl/dist/repl' {
     reset: () => void;
     current: string | undefined;
     setCurrent: (tabId: string) => void;
-    setToggleVisible: (toggle: () => void) => void;
     onEditorReady?: (
       editor: import('monaco-editor').editor.IStandaloneCodeEditor,
       monaco: {
@@ -37,6 +36,5 @@ declare module 'solid-repl/dist/repl' {
 interface Window {
   MonacoEnvironment: {
     getWorker: (_moduleId: unknown, label: string) => Worker;
-    onigasm: string;
   };
 }

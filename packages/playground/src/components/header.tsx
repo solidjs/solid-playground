@@ -88,7 +88,7 @@ export const Header: ParentComponent<{
   }
 
   return (
-    <header class="dark:bg-darkerbg sticky top-0 z-10 flex items-center bg-lightbg text-sm">
+    <header class="dark:bg-darkerbg bg-lightbg sticky top-0 z-10 flex items-center text-sm">
       <A href="/">
         <img src={logo} alt="solid-js logo" class="mx-2 h-6" />
       </A>
@@ -168,7 +168,7 @@ export const Header: ParentComponent<{
             <img crossOrigin="anonymous" src={context.user()?.avatar} class="h-6 w-6 rounded-full" />
           </button>
           <Dismiss menuButton={profileBtn} open={showProfile} setOpen={setShowProfile}>
-            <div class="dark:bg-darkbg border-bord absolute right-0 top-[30px] flex flex-col items-center rounded border bg-white">
+            <div class="dark:bg-darkbg border-bord absolute top-[30px] right-0 flex flex-col items-center rounded border bg-white">
               <a class="p-2 hover:bg-gray-300 dark:hover:bg-gray-800" href="/">
                 {context.user()?.display}
               </a>

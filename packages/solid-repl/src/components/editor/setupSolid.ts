@@ -1,58 +1,54 @@
-import { languages, editor } from 'monaco-editor';
-import vsDark from './vs_dark_good.json';
-import vsLight from './vs_light_good.json';
-import { loadWASM } from 'onigasm';
-import { Registry } from 'monaco-textmate';
-import { wireTmGrammars } from 'monaco-editor-textmate';
-import typescriptReactTM from './TypeScriptReact.tmLanguage.json';
-import cssTM from './css.tmLanguage.json';
+import { languages, editor, typescript } from 'monaco-editor';
+import { shikiToMonaco } from '@shikijs/monaco';
+import { createHighlighterCoreSync } from 'shiki/core';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+import darkPlus from '@shikijs/themes/dark-plus';
+import lightPlus from '@shikijs/themes/light-plus';
+import tsx from '@shikijs/langs/tsx';
+import css from '@shikijs/langs/css';
+import html from '@shikijs/langs/html';
+import json from '@shikijs/langs/json';
 
-const compilerOptions: languages.typescript.CompilerOptions = {
+const jsEngine = createJavaScriptRegexEngine();
+
+const compilerOptions: typescript.CompilerOptions = {
   strict: true,
-  target: languages.typescript.ScriptTarget.ESNext,
-  module: languages.typescript.ModuleKind.ESNext,
-  moduleResolution: languages.typescript.ModuleResolutionKind.NodeJs,
-  jsx: languages.typescript.JsxEmit.Preserve,
+  target: typescript.ScriptTarget.ESNext,
+  module: typescript.ModuleKind.ESNext,
+  moduleResolution: typescript.ModuleResolutionKind.NodeJs,
+  jsx: typescript.JsxEmit.Preserve,
   jsxImportSource: 'solid-js',
   allowNonTsExtensions: true,
 };
 
-languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
-languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
+typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
+typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
 
-let loadingWasm: Promise<void>;
-
-const registry = new Registry({
-  async getGrammarDefinition(scopeName) {
-    return {
-      format: 'json',
-      content: scopeName === 'source.tsx' ? typescriptReactTM : cssTM,
-    };
-  },
+const loader = createHighlighterCoreSync({
+  themes: [darkPlus, lightPlus],
+  langs: [tsx, css, html, json],
+  engine: jsEngine,
 });
 
-const grammars = new Map();
-grammars.set('typescript', 'source.tsx');
-grammars.set('javascript', 'source.tsx');
-grammars.set('css', 'source.css');
+languages.register({ id: 'tsx' });
+languages.register({ id: 'css' });
+languages.register({ id: 'html' });
+languages.register({ id: 'json' });
 
-// monaco's built-in themes aren't powereful enough to handle TM tokens
-// https://github.com/Nishkalkashyap/monaco-vscode-textmate-theme-converter#monaco-vscode-textmate-theme-converter
-editor.defineTheme('vs-dark-plus', vsDark as editor.IStandaloneThemeData);
-editor.defineTheme('vs-light-plus', vsLight as editor.IStandaloneThemeData);
-
-const hookLanguages = languages.setLanguageConfiguration;
-
-languages.setLanguageConfiguration = (languageId: string, configuration: languages.LanguageConfiguration) => {
-  liftOff();
-  return hookLanguages(languageId, configuration);
-};
-
-export async function liftOff(): Promise<void> {
-  if (!loadingWasm) loadingWasm = loadWASM(window.MonacoEnvironment.onigasm);
-  await loadingWasm;
-
-  // wireTmGrammars only cares about the language part, but asks for all of monaco
-  // we fool it by just passing in an object with languages
-  await wireTmGrammars({ languages } as any, registry, grammars);
+export function register() {
+  shikiToMonaco(loader, {
+    editor,
+    languages: {
+      ...languages,
+      setTokensProvider: (id: string, provider: any) => {
+        if (id === 'tsx') {
+          languages.setTokensProvider('tsx', provider);
+          languages.setTokensProvider('typescript', provider);
+          languages.setTokensProvider('javascript', provider);
+        } else languages.setTokensProvider(id, provider);
+      },
+    } as any,
+  });
 }
+
+register();

@@ -1,10 +1,10 @@
 import { Component, createEffect, onMount, onCleanup, Show } from 'solid-js';
-import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
-import { liftOff } from './setupSolid';
+import { Uri, languages, editor as mEditor, KeyMod, KeyCode, typescript } from 'monaco-editor';
 import { useZoom } from '../../hooks/useZoom';
 import { throttle } from '@solid-primitives/scheduled';
 import { Icon } from 'solid-heroicons';
 import { bell, bellSlash } from 'solid-heroicons/outline';
+import { register } from './setupSolid';
 
 const Editor: Component<{
   model: mEditor.ITextModel;
@@ -138,11 +138,11 @@ const Editor: Component<{
 
   createEffect(() => {
     editor.setModel(props.model);
-    liftOff();
+    register();
   });
 
   createEffect(() => {
-    mEditor.setTheme(props.isDark ? 'vs-dark-plus' : 'vs-light-plus');
+    mEditor.setTheme(props.isDark ? 'dark-plus' : 'light-plus');
   });
 
   createEffect(() => {
@@ -151,7 +151,7 @@ const Editor: Component<{
   });
 
   createEffect(() => {
-    languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: !props.displayErrors,
       noSyntaxValidation: !props.displayErrors,
     });
@@ -175,7 +175,7 @@ const Editor: Component<{
     <>
       <div class="min-h-0 min-w-0 flex-1 p-0" ref={parent} />
       <Show when={!props.disabled}>
-        <div class="border-t-1 border-bord flex h-[30px] w-full justify-between">
+        <div class="border-bord flex h-[30px] w-full justify-between border-t-1">
           <div></div>
           <div class="flex items-center">
             <button

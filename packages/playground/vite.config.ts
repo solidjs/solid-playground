@@ -5,14 +5,15 @@ import devtools from 'solid-devtools/vite';
 
 export default defineConfig((env) => ({
   plugins: [
-    devtools({
-      autoname: true,
-      locator: {
-        targetIDE: 'vscode',
-        componentLocation: true,
-        jsxLocation: true,
-      },
-    }),
+    env.mode !== 'production' &&
+      devtools({
+        autoname: true,
+        locator: {
+          targetIDE: 'vscode',
+          componentLocation: true,
+          jsxLocation: true,
+        },
+      }),
     solidPlugin(),
     UnoCSS(),
   ],
@@ -22,9 +23,8 @@ export default defineConfig((env) => ({
   },
   build: {
     target: 'esnext',
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {},
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,
         assetFileNames: `assets/[name].[ext]`,
@@ -32,7 +32,7 @@ export default defineConfig((env) => ({
     },
   },
   worker: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         entryFileNames: `assets/[name].js`,
       },

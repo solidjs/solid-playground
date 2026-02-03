@@ -63,7 +63,7 @@ const generateHTML = (isDark: boolean, importMap: string) => `
         }
       </style>
       <script type="importmap">${importMap}</script>
-      <script src="https://cdn.jsdelivr.net/npm/chobitsu"></script>
+      <script src="https://cdn.jsdelivr.net/npm/chobitsu@1.8.6/dist/chobitsu.min.js"></script>
       <script type="module">
         let finisher = undefined;
         window.addEventListener('message', ({ data }) => {
@@ -171,7 +171,7 @@ const useDevtoolsSrc = () => {
   </style>
   <meta name="referrer" content="no-referrer">
   <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.8.0/public/front_end/entrypoints/chii_app/chii_app.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.15.5/public/front_end/entrypoints/chii_app/chii_app.js"></script>
   <body class="undocked" id="-blink-dev-tools">`;
   const devtoolsRawUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
   onCleanup(() => URL.revokeObjectURL(devtoolsRawUrl));
@@ -214,9 +214,10 @@ export const Preview: Component<Props> = (props) => {
   const devtoolsSrc = useDevtoolsSrc();
 
   const styleScale = () => {
-    if (zoomState.scale === 100 || !zoomState.scaleIframe) return '';
+    const pointerEvents = props.pointerEvents ? 'inherit' : 'none';
+    if (zoomState.scale === 100 || !zoomState.scaleIframe) return `pointer-events: ${pointerEvents};`;
 
-    return `width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+    return `pointer-events: ${pointerEvents}; width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
@@ -245,6 +246,7 @@ export const Preview: Component<Props> = (props) => {
         <iframe
           title="Devtools"
           class="h-full min-h-0 w-full min-w-0"
+          style={`pointer-events: ${props.pointerEvents ? 'inherit' : 'none'}`}
           ref={devtoolsIframe}
           src={devtoolsSrc}
           onload={() => (devtoolsLoaded = true)}
@@ -319,4 +321,5 @@ type Props = {
   reloadSignal: boolean;
   devtools: boolean;
   isDark: boolean;
+  pointerEvents: boolean;
 };

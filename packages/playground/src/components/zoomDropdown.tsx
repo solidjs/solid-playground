@@ -104,24 +104,24 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         >
           <div class="flex">
             <button
-              class="border-1 border-bord rounded-l px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700"
+              class="border-bord rounded-l border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:hover:bg-neutral-700"
               aria-label="decrease font size"
               onClick={() => updateZoom('decrease')}
             >
               -
             </button>
-            <div class="border-1 border-bord w-20 px-3 py-1 text-center text-sm uppercase tracking-wide">
+            <div class="border-bord w-20 border-1 px-3 py-1 text-center text-sm tracking-wide uppercase">
               {zoomState.zoom}%
             </div>
             <button
-              class="border-1 border-bord mr-4 rounded-r px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700"
+              class="border-bord mr-4 rounded-r border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:hover:bg-neutral-700"
               aria-label="increase font size"
               onClick={() => updateZoom('increase')}
             >
               +
             </button>
             <button
-              class="border-1 border-bord rounded px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:hover:bg-neutral-700"
+              class="border-bord rounded border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:hover:bg-neutral-700"
               aria-label="reset font size"
               onClick={() => updateZoom('reset')}
             >

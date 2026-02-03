@@ -5,16 +5,16 @@ import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
 import { editor, Uri } from 'monaco-editor';
 import { createMonacoTabs } from './editor/monacoTabs';
+import { NewTab } from './newTab';
 
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
-import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeReplit } from 'dockview-core';
-import '../../node_modules/dockview-core/dist/styles/dockview.css';
-import { FileTree } from './fileTree';
+import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeAbyssSpaced } from 'dockview-core';
 import { insert } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
-import { plus, trash } from 'solid-heroicons/outline';
+import { plus, trash, pencil, xMark } from 'solid-heroicons/outline';
+import '../../node_modules/dockview-core/dist/styles/dockview.css';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -147,8 +147,8 @@ export const Repl: ReplProps = (props) => {
 
   let ref!: HTMLDivElement;
 
-  const [reloadSignal, reload] = createSignal(false, { equals: false });
-  const [devtoolsOpen, setDevtoolsOpen] = createSignal(!props.hideDevtools);
+  const [reloadSignal] = createSignal(false, { equals: false });
+  const [devtoolsOpen] = createSignal(!props.hideDevtools);
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
   onMount(() => {
@@ -164,6 +164,7 @@ export const Repl: ReplProps = (props) => {
       });
       dockview.addPanel({
         id: name,
+        tabComponent: 'file',
         component: 'editor',
         params: {
           currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
@@ -171,21 +172,70 @@ export const Repl: ReplProps = (props) => {
       });
     };
 
-    props.setToggleVisible(() => {
-      const panel = dockview.getPanel('filetree')!;
-      const visible = panel.isVisible
-      dockview.setVisible(panel, !visible);
-    });
+    const deleteFile = (name: string) => {
+      if (name === 'main.tsx') return;
+      const newTabs = props.tabs.filter((tab) => tab.name !== name);
+      const panel = dockview.getGroupPanel(name);
+      panel?.api.close();
+      batch(() => {
+        props.setTabs(newTabs);
+        if (props.current === name) {
+          const mainPanel = dockview.getGroupPanel('main.tsx');
+          mainPanel?.focus();
+          props.setCurrent('main.tsx');
+        }
+      });
+    };
+
+    const renameFile = (oldName: string, newName: string) => {
+      if (oldName === 'main.tsx') return;
+      if (newName === oldName) return;
+      if (!newName.trim()) return;
+      const exists = props.tabs.some((tab) => tab.name === newName);
+      if (exists) {
+        alert('A file with that name already exists');
+        return;
+      }
+
+      const tab = props.tabs.find((t) => t.name === oldName);
+      if (!tab) return;
+
+      const newTabs = props.tabs.map((t) => (t.name === oldName ? { ...t, name: newName } : t));
+
+      batch(() => {
+        props.setTabs(newTabs);
+        if (props.current === oldName) {
+          props.setCurrent(newName);
+        }
+      });
+
+      // Update Panel ID if it exists? Dockview often requires adding/removing for ID change.
+      // Easiest is to close old and open new at same position or just let user re-open.
+      // But we can try to keep it simple: if open, close and reopen.
+      const panel = dockview.getGroupPanel(oldName);
+      if (panel) {
+        panel.api.close();
+        dockview.addPanel({
+          id: newName,
+          tabComponent: 'file',
+          component: 'editor',
+          params: {
+            currentModel: monacoTabs().get(`file:///${props.id}/${newName}`)!.model,
+          },
+        });
+      }
+    };
 
     const dockview = new DockviewComponent(ref, {
-      theme: themeReplit,
+      theme: themeAbyssSpaced,
+      defaultTabComponent: 'default',
       createLeftHeaderActionComponent: () => {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
         let disposer: () => void;
 
         return {
           element,
-          init: () => {
+          init: (params) => {
             createRoot((dispose) => {
               disposer = dispose;
 
@@ -193,8 +243,18 @@ export const Repl: ReplProps = (props) => {
                 <button
                   class="cursor-pointer space-x-2 px-2 py-2"
                   onClick={() => {
-                    const tabName = `tab${props.tabs.length + 1}.tsx`;
-                    newFile(tabName);
+                    const panel = dockview.getPanel('newTab');
+                    if (panel) {
+                      panel.focus();
+                    } else {
+                      params.group.focus();
+                      dockview.addPanel({
+                        id: 'newTab',
+                        title: 'New Tab',
+                        tabComponent: 'default',
+                        component: 'newTab',
+                      });
+                    }
                   }}
                   title="New Tab"
                 >
@@ -203,6 +263,96 @@ export const Repl: ReplProps = (props) => {
                 </button>
               ));
             });
+          },
+          dispose: () => disposer?.(),
+        };
+      },
+      createTabComponent: (panel) => {
+        const element = (<div class="flex h-full items-center pl-2"></div>) as HTMLDivElement;
+        let disposer: () => void;
+
+        return {
+          element,
+          init: (params) => {
+            const [showMenu, setShowMenu] = createSignal(false);
+            const [menuPos, setMenuPos] = createSignal({ x: 0, y: 0 });
+
+            createRoot((dispose) => {
+              disposer = dispose;
+              const [panelTitle, setPanelTitle] = createSignal(params.title);
+              params.api.onDidTitleChange((e) => {
+                setPanelTitle(e.title);
+              });
+              const isFile = panel.name == 'file';
+
+              insert(element, () => (
+                <div
+                  class="group flex h-full items-center space-x-2"
+                  onContextMenu={(e) => {
+                    if (!isFile) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMenuPos({ x: e.clientX, y: e.clientY });
+                    setShowMenu(true);
+                  }}
+                >
+                  <span class="truncate text-xs">{panelTitle()}</span>
+
+                  <button
+                    class="ml-auto rounded-sm p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    onClick={(e) => {
+                      if (e.defaultPrevented) return;
+                      e.preventDefault();
+                      params.api.close();
+                    }}
+                    title="Close tab"
+                  >
+                    <Icon path={xMark} class="h-3 w-3 text-neutral-500" />
+                  </button>
+
+                  <Show when={isFile && showMenu()}>
+                    <div
+                      class="fixed z-[1000] w-32 rounded-lg border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-700 dark:bg-neutral-800"
+                      style={{
+                        top: `${menuPos().y}px`,
+                        left: `${menuPos().x}px`,
+                      }}
+                      onMouseEnter={() => setShowMenu(true)}
+                      onMouseLeave={() => setShowMenu(false)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        class="flex w-full items-center space-x-2 px-3 py-2 text-left text-xs hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                        onClick={() => {
+                          const newName = prompt('Rename file to:', panelTitle());
+                          if (newName) renameFile(panelTitle(), newName);
+                          setShowMenu(false);
+                        }}
+                      >
+                        <Icon path={pencil} class="h-3 w-3" />
+                        <span>Rename</span>
+                      </button>
+                      <button
+                        class="flex w-full items-center space-x-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => {
+                          if (confirm(`Delete ${panelTitle()}?`)) {
+                            deleteFile(panelTitle());
+                          }
+                          setShowMenu(false);
+                        }}
+                      >
+                        <Icon path={trash} class="h-3 w-3" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </Show>
+                </div>
+              ));
+            });
+
+            const hide = () => setShowMenu(false);
+            window.addEventListener('click', hide);
+            onCleanup(() => window.removeEventListener('click', hide));
           },
           dispose: () => disposer?.(),
         };
@@ -246,22 +396,39 @@ export const Repl: ReplProps = (props) => {
       createComponent(options) {
         const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
         let disposer: () => void;
+        let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
 
-        let component: (params: GroupPanelPartInitParameters['params']) => JSX.Element = () => null;
+        let component: (
+          params: GroupPanelPartInitParameters['params'],
+          x: GroupPanelPartInitParameters,
+        ) => JSX.Element = () => null;
 
         switch (options.name) {
-          case 'filetree':
-            component = () => (
-              <FileTree
-                files={props.tabs.map((x) => ({ name: x.name }))}
-                folders={[]}
-                onClick={(name) => {
+          case 'newTab':
+            component = (_, params) => (
+              <NewTab
+                tabs={props.tabs}
+                onOpenPane={(id) => {
+                  const panel = dockview.getGroupPanel(id);
+                  if (panel) {
+                    panel.focus();
+                  } else {
+                    dockview.addPanel({
+                      id,
+                      tabComponent: 'default',
+                      component: id.toLowerCase(),
+                      renderer: id === 'Preview' ? 'always' : undefined,
+                    });
+                  }
+                }}
+                onOpenFile={(name) => {
                   const panel = dockview.getGroupPanel(name);
                   if (panel) {
                     panel.focus();
                   } else {
                     dockview.addPanel({
                       id: name,
+                      tabComponent: 'file',
                       component: 'editor',
                       params: {
                         currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
@@ -269,21 +436,29 @@ export const Repl: ReplProps = (props) => {
                     });
                   }
                 }}
-                deleteFile={(name) => {
-                  if (name === 'main.tsx') return;
-                  const newTabs = props.tabs.filter((tab) => tab.name !== name);
-                  const panel = dockview.getGroupPanel(name);
-                  panel?.api.close();
+                onNewFile={newFile}
+                onUpload={(name: string, source: string) => {
+                  const newTab = { name, source };
                   batch(() => {
-                    props.setTabs(newTabs);
-                    if (props.current === name) {
-                      const panel = dockview.getGroupPanel('main.tsx')!;
-                      panel.focus();
-                      props.setCurrent('main.tsx');
-                    }
+                    props.setTabs(props.tabs.concat(newTab));
+                    props.setCurrent(newTab.name);
+                  });
+                  setTimeout(() => {
+                    dockview.addPanel({
+                      id: name,
+                      tabComponent: 'file',
+                      component: 'editor',
+                      params: {
+                        currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+                      },
+                    });
                   });
                 }}
-                newFile={newFile}
+                onDeleteFile={deleteFile}
+                onRenameFile={renameFile}
+                onClose={() => {
+                  params.api.close();
+                }}
               />
             );
             break;
@@ -313,6 +488,7 @@ export const Repl: ReplProps = (props) => {
             onCleanup(() => {
               setPreviewVisible(false);
             });
+            const [previewIsActive, setPreviewIsActive] = createSignal(false);
             component = () => (
               <Preview
                 importMap={importMap()}
@@ -320,8 +496,16 @@ export const Repl: ReplProps = (props) => {
                 reloadSignal={reloadSignal()}
                 devtools={devtoolsOpen()}
                 isDark={props.dark}
+                pointerEvents={previewIsActive()}
               />
             );
+            onInit = (params) => {
+              setPreviewIsActive(params.api.isActive);
+              const disposable = params.api.onDidActiveChange((e) => {
+                setPreviewIsActive(e.isActive);
+              });
+              return () => disposable.dispose();
+            };
             break;
           case 'output':
             setOutputVisible(true);
@@ -329,7 +513,7 @@ export const Repl: ReplProps = (props) => {
               setOutputVisible(false);
             });
             component = () => (
-              <section class="divide-y-1 relative flex min-h-0 min-w-0 flex-1 flex-col divide-slate-200 dark:divide-neutral-800">
+              <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-1 divide-slate-200 dark:divide-neutral-800">
                 <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
 
                 <div class="p-2">
@@ -397,17 +581,25 @@ export const Repl: ReplProps = (props) => {
                 </div>
               </section>
             );
+            break;
         }
+
+        let onInitDisposer: (() => void) | undefined;
 
         return {
           element,
           init: (params) => {
+            const result = onInit?.(params);
+            if (result) onInitDisposer = result;
             createRoot((dispose) => {
-              insert(element, () => component(params.params));
+              insert(element, () => component(params.params, params));
               disposer = dispose;
             });
           },
-          dispose: () => disposer?.(),
+          dispose: () => {
+            onInitDisposer?.();
+            disposer?.();
+          },
         };
       },
     });
@@ -417,7 +609,6 @@ export const Repl: ReplProps = (props) => {
         root: {
           type: 'branch',
           data: [
-            { type: 'leaf', data: { views: ['filetree'], activeView: 'filetree', id: 'filetree' ,locked: true}, size: 150 },
             { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 400 },
             { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 250 },
           ],
@@ -429,23 +620,20 @@ export const Repl: ReplProps = (props) => {
       },
       activeGroup: '1',
       panels: {
-        filetree: {
-          id: 'File Tree',
-          contentComponent: 'filetree',
-          minimumWidth: 150,
-        },
         Output: {
           id: 'Output',
+          tabComponent: 'default',
           contentComponent: 'output',
         },
         Preview: {
           id: 'Preview',
           contentComponent: 'preview',
-          tabComponent: '',
+          tabComponent: 'default',
           renderer: 'always',
         },
         [props.current!]: {
           id: props.current!,
+          tabComponent: 'file',
           contentComponent: 'editor',
           params: {
             currentModel: currentModel(),
@@ -464,7 +652,8 @@ export const Repl: ReplProps = (props) => {
 
   return (
     <>
-      <div ref={ref} class="flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans text-black dark:text-white">
+      <div class="flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans text-black dark:text-white">
+        <div ref={ref} class="flex h-full min-h-0 flex-1 flex-col overflow-hidden"></div>
         <Show when={error()}>
           <Error message={error()} onDismiss={() => setError('')} />
         </Show>
