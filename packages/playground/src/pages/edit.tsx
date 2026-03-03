@@ -104,7 +104,7 @@ export const Edit = () => {
           output = {
             files: defaultTabs.map((x) => ({
               name: x.name,
-              content: x.source,
+              content: context.solidVersion() === '2' ? x.source.replace('solid-js/web', '@solidjs/web') : x.source,
             })),
             version: context.solidVersion(),
           } as APIRepl;
@@ -135,7 +135,11 @@ export const Edit = () => {
 
   const reset = () => {
     batch(() => {
-      setTabs(mapTabs(defaultTabs));
+      const updatedTabs = defaultTabs.map(x => ({
+        ...x,
+        source: context.solidVersion() === '2' ? x.source.replace('solid-js/web', '@solidjs/web') : x.source
+      }));
+      setTabs(mapTabs(updatedTabs));
       setCurrent(defaultTabs[0].name);
     });
   };
@@ -147,11 +151,11 @@ export const Edit = () => {
 
     untrack(() => {
       const currentTabs = tabs();
+      let changed = false;
       const importMapTab = currentTabs.find(t => t.name === 'import_map.json');
       if (importMapTab) {
         try {
           const map = JSON.parse(importMapTab.source);
-          let changed = false;
           for (const key of Object.keys(map)) {
             if (map[key].startsWith('https://esm.sh/')) {
               if (key === 'solid-js/web') {
@@ -185,9 +189,28 @@ export const Edit = () => {
           }
           if (changed) {
             importMapTab.source = JSON.stringify(map, null, 2);
-            setTabs([...currentTabs]); // Trigger solid's reactivity
           }
         } catch (e) {}
+      }
+
+      currentTabs.forEach((tab) => {
+        if (!tab.name.endsWith('.json') && !tab.name.endsWith('.css')) {
+          if (version === '2') {
+            if (tab.source.includes('solid-js/web')) {
+              tab.source = tab.source.replaceAll('solid-js/web', '@solidjs/web');
+              changed = true;
+            }
+          } else {
+            if (tab.source.includes('@solidjs/web')) {
+              tab.source = tab.source.replaceAll('@solidjs/web', 'solid-js/web');
+              changed = true;
+            }
+          }
+        }
+      });
+
+      if (changed) {
+        setTabs([...currentTabs]); // Trigger solid's reactivity
       }
     });
   });

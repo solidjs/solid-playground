@@ -53,7 +53,7 @@ export const Home = () => {
         JSON.stringify({
           files: initialTabs.map((x) => ({
             name: x.name,
-            content: x.source,
+            content: (initialTabs === defaultTabs && context.solidVersion() === '2') ? x.source.replace('solid-js/web', '@solidjs/web') : x.source,
           })),
         }),
       );
@@ -110,7 +110,10 @@ export const Home = () => {
                     public: true,
                     labels: [],
                     version: context.solidVersion(),
-                    files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
+                    files: defaultTabs.map((x) => ({
+                      name: x.name, 
+                      content: context.solidVersion() === '2' ? x.source.replace('solid-js/web', '@solidjs/web') : x.source 
+                    })),
                   }),
                 });
                 if (!result.ok) {
