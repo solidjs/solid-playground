@@ -106,6 +106,7 @@ export const Edit = () => {
               name: x.name,
               content: x.source,
             })),
+            version: context.solidVersion(),
           } as APIRepl;
           localStorage.setItem('scratchpad', JSON.stringify(output));
         } else {
@@ -118,6 +119,8 @@ export const Edit = () => {
       }
 
       batch(() => {
+        const initialVersion = output.version?.startsWith('2') ? '2' : '1';
+        context.setSolidVersion(initialVersion);
         setTabs(
           output.files.map((x) => {
             return { name: x.name, source: x.content };
@@ -194,12 +197,12 @@ export const Edit = () => {
       const files = tabs().map((x) => ({ name: x.name, content: x.source }));
 
       if (readonly()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
+        localStorage.setItem('scratchpad', JSON.stringify({ files, version: context.solidVersion() }));
         disableFetch = true;
         navigate('/scratchpad');
         return;
       } else if (scratchpad()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
+        localStorage.setItem('scratchpad', JSON.stringify({ files, version: context.solidVersion() }));
       }
 
       const repl = resource.latest;
@@ -215,7 +218,7 @@ export const Edit = () => {
           body: JSON.stringify({
             ...(localStorage.getItem(params.repl) ? { write_token: localStorage.getItem(params.repl) } : {}),
             title: repl.title,
-            version: repl.version,
+            version: context.solidVersion(),
             public: repl.public,
             labels: repl.labels,
             files,
@@ -237,7 +240,7 @@ export const Edit = () => {
               title: context.user()?.display ? `${context.user()!.display}'s Scratchpad` : 'Anonymous Scratchpad',
               public: true,
               labels: [],
-              version: '1.0',
+              version: context.solidVersion(),
               files: tabs().map((x) => ({ name: x.name, content: x.source })),
             };
             const response = await fetch(`${API}/repl`, {

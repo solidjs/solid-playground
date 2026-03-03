@@ -109,7 +109,7 @@ export const Home = () => {
                     title: 'Counter Example',
                     public: true,
                     labels: [],
-                    version: '1.0',
+                    version: context.solidVersion(),
                     files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
                   }),
                 });
