@@ -87,10 +87,12 @@ function transformImportee(fileName: string) {
     if (fileName.includes('://')) return fileName;
     else {
       let esmFileName = fileName;
-      if (fileName === 'solid-js' || fileName.startsWith('solid-js/')) {
-        esmFileName = fileName.replace('solid-js', 'solid-js@2.0.0-experimental.16');
+      if (fileName === 'solid-js/web') {
+        esmFileName = '@solidjs/web@2.0.0-beta.0';
+      } else if (fileName === 'solid-js' || fileName.startsWith('solid-js/')) {
+        esmFileName = fileName.replace('solid-js', 'solid-js@2.0.0-beta.0');
       } else if (fileName === '@solidjs/web' || fileName.startsWith('@solidjs/web/')) {
-        esmFileName = fileName.replace('@solidjs/web', '@solidjs/web@2.0.0-experimental.16');
+        esmFileName = fileName.replace('@solidjs/web', '@solidjs/web@2.0.0-beta.0');
       }
       dataToReturn[fileName] = `https://esm.sh/${esmFileName}`;
       return fileName;

@@ -139,6 +139,9 @@ export const Edit = () => {
 
   createEffect(() => {
     const version = context.solidVersion();
+    const isLoaded = !!resource();
+    if (!isLoaded) return;
+
     untrack(() => {
       const currentTabs = tabs();
       const importMapTab = currentTabs.find(t => t.name === 'import_map.json');
@@ -148,10 +151,18 @@ export const Edit = () => {
           let changed = false;
           for (const key of Object.keys(map)) {
             if (map[key].startsWith('https://esm.sh/')) {
-              if (key === 'solid-js' || key.startsWith('solid-js/')) {
+              if (key === 'solid-js/web') {
+                const newValue = version === '2'
+                  ? `https://esm.sh/@solidjs/web@2.0.0-beta.0`
+                  : `https://esm.sh/solid-js/web`;
+                if (map[key] !== newValue) {
+                  map[key] = newValue;
+                  changed = true;
+                }
+              } else if (key === 'solid-js' || key.startsWith('solid-js/')) {
                 const suffix = key === 'solid-js' ? '' : key.slice('solid-js'.length);
                 const newValue = version === '2' 
-                  ? `https://esm.sh/solid-js@2.0.0-experimental.16${suffix}` 
+                  ? `https://esm.sh/solid-js@2.0.0-beta.0${suffix}` 
                   : `https://esm.sh/solid-js${suffix}`;
                 if (map[key] !== newValue) {
                   map[key] = newValue;
@@ -160,7 +171,7 @@ export const Edit = () => {
               } else if (key === '@solidjs/web' || key.startsWith('@solidjs/web/')) {
                 const suffix = key === '@solidjs/web' ? '' : key.slice('@solidjs/web'.length);
                 const newValue = version === '2' 
-                  ? `https://esm.sh/@solidjs/web@2.0.0-experimental.16${suffix}` 
+                  ? `https://esm.sh/@solidjs/web@2.0.0-beta.0${suffix}` 
                   : `https://esm.sh/@solidjs/web${suffix}`;
                 if (map[key] !== newValue) {
                   map[key] = newValue;

@@ -288,8 +288,8 @@ importers:
         specifier: ^0.11.1
         version: 0.11.1
       '@solidjs/web':
-        specifier: 2.0.0-experimental.16
-        version: 2.0.0-experimental.16(solid-js@2.0.0-experimental.16)
+        specifier: 2.0.0-beta.0
+        version: 2.0.0-beta.0(solid-js@2.0.0-experimental.16)
       '@types/babel__standalone':
         specifier: ^7.1.9
         version: 7.1.9
@@ -309,7 +309,7 @@ importers:
         specifier: ^66.5.3
         version: 66.5.3
       babel-preset-solid:
-        specifier: ^2.0.0-experimental.16
+        specifier: ^2.0.0-beta.0
         version: 2.0.0-experimental.16(@babel/core@7.28.4)(solid-js@2.0.0-experimental.16)
       esbuild:
         specifier: ^0.25.10
@@ -330,7 +330,7 @@ importers:
         specifier: ^3.6.2
         version: 3.6.2
       solid-js:
-        specifier: ^2.0.0-experimental.16
+        specifier: ^2.0.0-beta.0
         version: 2.0.0-experimental.16
       typescript:
         specifier: ^5.9.3
@@ -1063,10 +1063,10 @@ packages:
   '@solidjs/signals@0.11.1':
     resolution: {integrity: sha512-//nvM/Vjmp34utkMtf3l99+zuiT9gEF9709cGA5xHIsJgkKd4xhfU0getn8gujnypijddcS0VMTZrUhWsqoDfA==}
 
-  '@solidjs/web@2.0.0-experimental.16':
-    resolution: {integrity: sha512-TcgvLKOYN2cIExX307SRxvd1aXj5eLaQUlGDLdQoQBqDHhuDdeZUfKLYrn/JOzWs1u5DYNOc+gR0SaG17vYsng==}
+  '@solidjs/web@2.0.0-beta.0':
+    resolution: {integrity: sha512-eBmPNbzR6/GBrkNho2rQ89frd5Y/BKGqUQstM5mHBNs4s+pdHMn9Y7n6wcBbmfoSwJZRa4QxOl3K9Q7MkCZBNg==}
     peerDependencies:
-      solid-js: ^2.0.0-experimental.16
+      solid-js: ^2.0.0-beta.0
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2949,7 +2949,7 @@ snapshots:
 
   '@solidjs/signals@0.11.1': {}
 
-  '@solidjs/web@2.0.0-experimental.16(solid-js@2.0.0-experimental.16)':
+  '@solidjs/web@2.0.0-beta.0(solid-js@2.0.0-experimental.16)':
     dependencies:
       seroval: 1.5.0
       seroval-plugins: 1.5.0(seroval@1.5.0)
