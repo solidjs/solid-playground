@@ -15,7 +15,9 @@
     "solid-dismiss": "^1.8.2",
     "solid-heroicons": "^3.2.4",
     "solid-js": "1.9.9",
-    "solid-repl": "workspace:*"
+    "solid-repl": "workspace:*",
+    "solid-v1-repl": "workspace:*",
+    "solid-v2-repl": "workspace:*"
   },
   "devDependencies": {
     "@amoutonbrady/lz-string": "^0.1.0",

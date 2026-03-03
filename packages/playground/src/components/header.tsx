@@ -62,6 +62,16 @@ export const Header: ParentComponent<{
         setOpen={setShowMenu}
         show
       >
+        <div class="flex items-center px-2 py-2 md:px-1">
+          <select
+            class="bg-transparent text-sm font-medium focus:outline-none dark:text-white"
+            value={context.solidVersion()}
+            onChange={(e) => context.setSolidVersion(e.currentTarget.value as '1' | '2')}
+          >
+            <option value="1">Solid v1</option>
+            <option value="2">Solid v2</option>
+          </select>
+        </div>
         <button
           type="button"
           onClick={context.toggleDark}

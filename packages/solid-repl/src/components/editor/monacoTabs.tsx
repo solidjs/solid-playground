@@ -1,5 +1,5 @@
 import { createMemo, onCleanup } from 'solid-js';
-import type { Tab } from 'solid-repl';
+import type { Tab } from 'solid-v1-repl';
 import { Uri, editor, IDisposable } from 'monaco-editor';
 
 export const createMonacoTabs = (folder: string, tabs: () => Tab[]) => {

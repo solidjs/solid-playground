@@ -1,6 +1,6 @@
 {
   "version": "0.26.0",
-  "name": "solid-repl",
+  "name": "solid-v2-repl",
   "description": "Quickly discover what the solid compiler will generate from your JSX template",
   "repository": {
     "type": "git",
@@ -14,25 +14,33 @@
   "module": "dist/repl.jsx",
   "types": "src/types.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && unocss \"./src/**\" && jiti build.ts",
-    "tsc": "tsc"
+    "build": "jiti build.ts"
   },
   "peerDependencies": {
-    "solid-js": ">=1.7.0"
+    "solid-js": ">=2.0.0-experimental.16"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/plugin-syntax-jsx": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
+    "@babel/standalone": "^7.28.4",
+    "@babel/types": "^7.28.4",
+    "@solidjs/signals": "^0.11.1",
+    "@solidjs/web": "2.0.0-experimental.16",
+    "@types/babel__standalone": "^7.1.9",
     "@types/dedent": "^0.7.2",
     "@types/fs-extra": "^11.0.4",
     "@unocss/cli": "^66.5.3",
     "@unocss/preset-wind3": "^66.5.3",
     "@unocss/reset": "^66.5.3",
+    "babel-preset-solid": "^2.0.0-experimental.16",
     "esbuild": "^0.25.10",
-    "eslint-solid-standalone": "<0.14.0",
+    "eslint-solid-standalone": "^0.13.2",
     "fs-extra": "^11.3.2",
     "jiti": "^2.6.1",
     "monaco-editor": "^0.54.0",
     "prettier": "^3.6.2",
-    "solid-js": "1.9.9",
+    "solid-js": "^2.0.0-experimental.16",
     "typescript": "^5.9.3",
     "unocss": "^66.5.3"
   },
@@ -45,6 +53,7 @@
     "monaco-textmate": "^3.0.1",
     "onigasm": "^2.2.5",
     "solid-dismiss": "^1.8.2",
-    "solid-heroicons": "^3.2.4"
+    "solid-heroicons": "^3.2.4",
+    "solid-repl": "workspace:*"
   }
 }

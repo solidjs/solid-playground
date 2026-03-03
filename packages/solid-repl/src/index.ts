@@ -1,4 +1,7 @@
-import type { Tab } from 'solid-repl';
+export interface Tab {
+  name: string;
+  source: string;
+}
 
 const indexTSX = `import { render } from "solid-js/web";
 import { createSignal } from "solid-js";

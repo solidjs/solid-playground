@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { copyFileSync } from 'fs-extra';
 
 build({
-  entryPoints: ['./repl/compiler.ts', './repl/formatter.ts', './repl/linter.ts', './repl/main.css'],
+  entryPoints: ['./src/main.css'],
   outdir: './dist',
   minify: true,
   bundle: true,

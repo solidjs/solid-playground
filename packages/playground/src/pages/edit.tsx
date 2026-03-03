@@ -2,11 +2,14 @@ import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import CompilerWorker from 'solid-repl/repl/compiler?worker';
-import FormatterWorker from 'solid-repl/repl/formatter?worker';
-import LinterWorker from 'solid-repl/repl/linter?worker';
+import CompilerWorker from 'solid-v1-repl/repl/compiler?worker';
+import FormatterWorker from 'solid-v1-repl/repl/formatter?worker';
+import LinterWorker from 'solid-v1-repl/repl/linter?worker';
+import CompilerWorkerV2 from 'solid-v2-repl/repl/compiler?worker';
+import FormatterWorkerV2 from 'solid-v2-repl/repl/formatter?worker';
+import LinterWorkerV2 from 'solid-v2-repl/repl/linter?worker';
 import onigasm from 'onigasm/lib/onigasm.wasm?url';
-import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense, createEffect, untrack } from 'solid-js';
 import { useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
@@ -15,7 +18,8 @@ import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 
-const Repl = lazy(() => import('../components/setupSolid'));
+const ReplV1 = lazy(() => import('../components/setupSolidV1'));
+const ReplV2 = lazy(() => import('../components/setupSolidV2'));
 
 window.MonacoEnvironment = {
   getWorker(_moduleId: unknown, label: string) {
@@ -41,9 +45,12 @@ interface InternalTab extends Tab {
 export const Edit = () => {
   const [searchParams] = useSearchParams();
   const scratchpad = useMatch(() => '/scratchpad');
-  const compiler = new CompilerWorker();
-  const formatter = new FormatterWorker();
-  const linter = new LinterWorker();
+  const compilerV1 = new CompilerWorker();
+  const formatterV1 = new FormatterWorker();
+  const linterV1 = new LinterWorker();
+  const compilerV2 = new CompilerWorkerV2();
+  const formatterV2 = new FormatterWorkerV2();
+  const linterV2 = new LinterWorkerV2();
 
   const params = useParams();
   const context = useAppContext()!;
@@ -130,6 +137,47 @@ export const Edit = () => {
     });
   };
 
+  createEffect(() => {
+    const version = context.solidVersion();
+    untrack(() => {
+      const currentTabs = tabs();
+      const importMapTab = currentTabs.find(t => t.name === 'import_map.json');
+      if (importMapTab) {
+        try {
+          const map = JSON.parse(importMapTab.source);
+          let changed = false;
+          for (const key of Object.keys(map)) {
+            if (map[key].startsWith('https://esm.sh/')) {
+              if (key === 'solid-js' || key.startsWith('solid-js/')) {
+                const suffix = key === 'solid-js' ? '' : key.slice('solid-js'.length);
+                const newValue = version === '2' 
+                  ? `https://esm.sh/solid-js@2.0.0-experimental.16${suffix}` 
+                  : `https://esm.sh/solid-js${suffix}`;
+                if (map[key] !== newValue) {
+                  map[key] = newValue;
+                  changed = true;
+                }
+              } else if (key === '@solidjs/web' || key.startsWith('@solidjs/web/')) {
+                const suffix = key === '@solidjs/web' ? '' : key.slice('@solidjs/web'.length);
+                const newValue = version === '2' 
+                  ? `https://esm.sh/@solidjs/web@2.0.0-experimental.16${suffix}` 
+                  : `https://esm.sh/@solidjs/web${suffix}`;
+                if (map[key] !== newValue) {
+                  map[key] = newValue;
+                  changed = true;
+                }
+              }
+            }
+          }
+          if (changed) {
+            importMapTab.source = JSON.stringify(map, null, 2);
+            setTabs([...currentTabs]); // Trigger solid's reactivity
+          }
+        } catch (e) {}
+      }
+    });
+  });
+
   const updateRepl = debounce(
     () => {
       const files = tabs().map((x) => ({ name: x.name, content: x.source }));
@@ -170,7 +218,7 @@ export const Edit = () => {
   return (
     <>
       <Header
-        compiler={compiler}
+        compiler={context.solidVersion() === '1' ? compilerV1 : compilerV2}
         fork={() => {}}
         share={async () => {
           if (scratchpad()) {
@@ -250,19 +298,36 @@ export const Edit = () => {
         }
       >
         <Show when={resource()}>
-          <Repl
-            compiler={compiler}
-            formatter={formatter}
-            linter={linter}
-            isHorizontal={searchParams.isHorizontal != undefined}
-            dark={context.dark()}
-            tabs={tabs()}
-            setTabs={setTabs}
-            reset={reset}
-            current={current()}
-            setCurrent={setCurrent}
-            id="repl"
-          />
+          <Show when={context.solidVersion() === '1'}>
+            <ReplV1
+              compiler={compilerV1}
+              formatter={formatterV1}
+              linter={linterV1}
+              isHorizontal={searchParams.isHorizontal != undefined}
+              dark={context.dark()}
+              tabs={tabs()}
+              setTabs={setTabs}
+              reset={reset}
+              current={current()}
+              setCurrent={setCurrent}
+              id="repl"
+            />
+          </Show>
+          <Show when={context.solidVersion() === '2'}>
+            <ReplV2
+              compiler={compilerV2}
+              formatter={formatterV2}
+              linter={linterV2}
+              isHorizontal={searchParams.isHorizontal != undefined}
+              dark={context.dark()}
+              tabs={tabs()}
+              setTabs={setTabs}
+              reset={reset}
+              current={current()}
+              setCurrent={setCurrent}
+              id="repl"
+            />
+          </Show>
         </Show>
       </Suspense>
     </>

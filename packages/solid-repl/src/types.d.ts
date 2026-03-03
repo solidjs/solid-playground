@@ -1,13 +1,11 @@
-declare module 'solid-repl' {
-  export interface Tab {
-    name: string;
-    source: string;
-  }
-
-  export const defaultTabs: Tab[];
+export interface Tab {
+  name: string;
+  source: string;
 }
 
-declare module 'solid-repl/dist/repl' {
+export const defaultTabs: Tab[];
+
+declare module 'solid-v1-repl/dist/repl' {
   export type Repl = import('solid-js').Component<{
     compiler: Worker;
     formatter: Worker;
