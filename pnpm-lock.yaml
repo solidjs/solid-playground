@@ -284,9 +284,18 @@ importers:
       '@babel/types':
         specifier: ^7.28.4
         version: 7.28.4
+      '@solidjs/h':
+        specifier: 2.0.0-beta.0
+        version: 2.0.0-beta.0(@solidjs/web@2.0.0-beta.0(solid-js@2.0.0-experimental.16))
+      '@solidjs/html':
+        specifier: 2.0.0-beta.0
+        version: 2.0.0-beta.0(@solidjs/web@2.0.0-beta.0(solid-js@2.0.0-experimental.16))
       '@solidjs/signals':
         specifier: ^0.11.1
         version: 0.11.1
+      '@solidjs/universal':
+        specifier: 2.0.0-beta.0
+        version: 2.0.0-beta.0(solid-js@2.0.0-experimental.16)
       '@solidjs/web':
         specifier: 2.0.0-beta.0
         version: 2.0.0-beta.0(solid-js@2.0.0-experimental.16)
@@ -1055,6 +1064,16 @@ packages:
     peerDependencies:
       solid-js: ^1.6.12
 
+  '@solidjs/h@2.0.0-beta.0':
+    resolution: {integrity: sha512-QPy8jwRBgLHTRj65dYYOnNH0qrTVRlsSCVlDbznSZ4ZVBh01fZ1h7Zv6Ji/RntH75ZR8ADnj/fGF79VraYSgRA==}
+    peerDependencies:
+      '@solidjs/web': ^2.0.0-beta.0
+
+  '@solidjs/html@2.0.0-beta.0':
+    resolution: {integrity: sha512-bp2L/aU0RYfJhyRcaT4K6VnNGxDZ3RkYTI6x3IfYE7sMaD8Vu4USQiKz/zLgenaWHnz6UidEoz781LvgpX7weA==}
+    peerDependencies:
+      '@solidjs/web': ^2.0.0-beta.0
+
   '@solidjs/router@0.15.3':
     resolution: {integrity: sha512-iEbW8UKok2Oio7o6Y4VTzLj+KFCmQPGEpm1fS3xixwFBdclFVBvaQVeibl1jys4cujfAK5Kn6+uG2uBm3lxOMw==}
     peerDependencies:
@@ -1062,6 +1081,11 @@ packages:
 
   '@solidjs/signals@0.11.1':
     resolution: {integrity: sha512-//nvM/Vjmp34utkMtf3l99+zuiT9gEF9709cGA5xHIsJgkKd4xhfU0getn8gujnypijddcS0VMTZrUhWsqoDfA==}
+
+  '@solidjs/universal@2.0.0-beta.0':
+    resolution: {integrity: sha512-M01Mi/KE+3eauCi4XztgPgqzxd208Tkt4tEYXoSC+Qu6SAJokg6IGp+rKL88FYOmv5lrtUotTVjQbPvsuwr0fA==}
+    peerDependencies:
+      solid-js: ^2.0.0-beta.0
 
   '@solidjs/web@2.0.0-beta.0':
     resolution: {integrity: sha512-eBmPNbzR6/GBrkNho2rQ89frd5Y/BKGqUQstM5mHBNs4s+pdHMn9Y7n6wcBbmfoSwJZRa4QxOl3K9Q7MkCZBNg==}
@@ -2943,11 +2967,23 @@ snapshots:
     dependencies:
       solid-js: 2.0.0-experimental.16
 
+  '@solidjs/h@2.0.0-beta.0(@solidjs/web@2.0.0-beta.0(solid-js@2.0.0-experimental.16))':
+    dependencies:
+      '@solidjs/web': 2.0.0-beta.0(solid-js@2.0.0-experimental.16)
+
+  '@solidjs/html@2.0.0-beta.0(@solidjs/web@2.0.0-beta.0(solid-js@2.0.0-experimental.16))':
+    dependencies:
+      '@solidjs/web': 2.0.0-beta.0(solid-js@2.0.0-experimental.16)
+
   '@solidjs/router@0.15.3(solid-js@1.9.9)':
     dependencies:
       solid-js: 1.9.9
 
   '@solidjs/signals@0.11.1': {}
+
+  '@solidjs/universal@2.0.0-beta.0(solid-js@2.0.0-experimental.16)':
+    dependencies:
+      solid-js: 2.0.0-experimental.16
 
   '@solidjs/web@2.0.0-beta.0(solid-js@2.0.0-experimental.16)':
     dependencies:

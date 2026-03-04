@@ -90,7 +90,7 @@ export const Header: ParentComponent<{
         <Show when={context.tabs()}>
           <button
             type="button"
-            onClick={() => exportToZip(unwrap(context.tabs())!)}
+            onClick={() => exportToZip(unwrap(context.tabs())!, context.solidVersion())}
             class="flex flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
             classList={{
               'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': showMenu(),

@@ -1,5 +1,5 @@
 import pkg from '../../package.json';
-import type { Tab } from 'solid-v1-repl';
+import type { Tab } from 'solid-repl';
 import dedent from 'dedent';
 
 const viteConfigFile = dedent`
@@ -55,11 +55,22 @@ const indexHTML = (tabs: Tab[]) => dedent`
  * package.json by using the imports list provided by the bundler,
  * and then generating the package.json itself, for the export
  */
-function packageJSON(imports: string[]): string {
-  const deps = imports.reduce(
+function packageJSON(map: Record<string, string>, version: '1' | '2'): string {
+  const deps = Object.keys(map).reduce(
     (acc, importPath): Record<string, string> => {
-      const name = importPath.split('/')[0];
-      if (!acc[name]) acc[name] = '*';
+      const name = importPath.startsWith('@') ? importPath.split('/').slice(0, 2).join('/') : importPath.split('/')[0];
+      
+      let ver = '*';
+      const match = map[importPath] ? map[importPath].match(/@([\d\.\-a-zA-Z]+)(?=\/|$)/) : null;
+      if (match && match[1]) {
+        ver = '^' + match[1];
+      }
+
+      if (version === '2' && name === 'solid-js' && ver === '*') {
+          ver = '^2.0.0-beta.0';
+      }
+
+      if (!acc[name] || acc[name] === '*') acc[name] = ver;
       return acc;
     },
     {} as Record<string, string>,
@@ -74,7 +85,7 @@ function packageJSON(imports: string[]): string {
       dependencies: deps,
       devDependencies: {
         'vite': pkg.devDependencies['vite'],
-        'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'],
+        'vite-plugin-solid': version === '2' ? '^3.0.0-next.0' : pkg.devDependencies['vite-plugin-solid'],
       },
     },
     null,
@@ -86,7 +97,7 @@ function packageJSON(imports: string[]): string {
  * This function will convert the tabs of the playground
  * into a ZIP formatted playground that can then be reimported later on
  */
-export async function exportToZip(tabs: Tab[]): Promise<void> {
+export async function exportToZip(tabs: Tab[], version: '1' | '2'): Promise<void> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
@@ -98,7 +109,12 @@ export async function exportToZip(tabs: Tab[]): Promise<void> {
 
   for (const tab of tabs) {
     if (tab.name == 'import_map.json') {
-      zip.file('package.json', packageJSON(Object.keys(JSON.parse(tab.source))));
+      let map = {};
+      try {
+        const parsed = JSON.parse(tab.source);
+        map = parsed.imports || parsed;
+      } catch(e) {}
+      zip.file('package.json', packageJSON(map, version));
     } else {
       zip.file(`src/${tab.name}`, tab.source);
     }

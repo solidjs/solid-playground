@@ -196,14 +196,31 @@ export const Edit = () => {
       currentTabs.forEach((tab) => {
         if (!tab.name.endsWith('.json') && !tab.name.endsWith('.css')) {
           if (version === '2') {
-            if (tab.source.includes('solid-js/web')) {
-              tab.source = tab.source.replaceAll('solid-js/web', '@solidjs/web');
-              changed = true;
+            const v1ToV2: Record<string, string> = {
+              'solid-js/web': '@solidjs/web',
+              'solid-js/h': '@solidjs/h',
+              'solid-js/html': '@solidjs/html',
+              'solid-js/universal': '@solidjs/universal',
+              'solid-js/store': 'solid-js'
+            };
+            for (const [v1, v2] of Object.entries(v1ToV2)) {
+               if (tab.source.includes(v1)) {
+                 tab.source = tab.source.replaceAll(v1, v2);
+                 changed = true;
+               }
             }
           } else {
-            if (tab.source.includes('@solidjs/web')) {
-              tab.source = tab.source.replaceAll('@solidjs/web', 'solid-js/web');
-              changed = true;
+            const v2ToV1: Record<string, string> = {
+              '@solidjs/web': 'solid-js/web',
+              '@solidjs/h': 'solid-js/h',
+              '@solidjs/html': 'solid-js/html',
+              '@solidjs/universal': 'solid-js/universal'
+            };
+            for (const [v2, v1] of Object.entries(v2ToV1)) {
+               if (tab.source.includes(v2)) {
+                 tab.source = tab.source.replaceAll(v2, v1);
+                 changed = true;
+               }
             }
           }
         }
