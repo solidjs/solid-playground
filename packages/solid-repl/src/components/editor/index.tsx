@@ -1,8 +1,10 @@
-import { Component, createEffect, onMount, onCleanup } from 'solid-js';
-import { Uri, languages, editor as mEditor, KeyMod, KeyCode } from 'monaco-editor';
-import { liftOff } from './setupSolid';
+import { Component, createEffect, onMount, onCleanup, Show } from 'solid-js';
+import { Uri, languages, editor as mEditor, KeyMod, KeyCode, typescript } from 'monaco-editor';
 import { useZoom } from '../../hooks/useZoom';
 import { throttle } from '@solid-primitives/scheduled';
+import { Icon } from 'solid-heroicons';
+import { bell, bellSlash } from 'solid-heroicons/outline';
+import { register } from './setupSolid';
 
 const Editor: Component<{
   model: mEditor.ITextModel;
@@ -12,6 +14,7 @@ const Editor: Component<{
   formatter?: Worker;
   linter?: Worker;
   displayErrors?: boolean;
+  setDisplayErrors?: (value: boolean) => void;
   onDocChange?: (code: string) => void;
   onEditorReady?: (
     editor: mEditor.IStandaloneCodeEditor,
@@ -91,6 +94,9 @@ const Editor: Component<{
       minimap: {
         enabled: props.withMinimap,
       },
+      dropIntoEditor: {
+        enabled: false,
+      },
     });
 
     createEffect(() => {
@@ -133,11 +139,11 @@ const Editor: Component<{
 
   createEffect(() => {
     editor.setModel(props.model);
-    liftOff();
+    register();
   });
 
   createEffect(() => {
-    mEditor.setTheme(props.isDark ? 'vs-dark-plus' : 'vs-light-plus');
+    mEditor.setTheme(props.isDark ? 'dark-plus' : 'light-plus');
   });
 
   createEffect(() => {
@@ -146,7 +152,7 @@ const Editor: Component<{
   });
 
   createEffect(() => {
-    languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: !props.displayErrors,
       noSyntaxValidation: !props.displayErrors,
     });
@@ -166,7 +172,31 @@ const Editor: Component<{
     props.onEditorReady?.(editor, { Uri, editor: mEditor });
   });
 
-  return <div class="min-h-0 min-w-0 flex-1 p-0" ref={parent} />;
+  return (
+    <>
+      <div class="min-h-0 min-w-0 flex-1 p-0" ref={parent} />
+      <Show when={!props.disabled}>
+        <div class="border-bord flex h-[30px] w-full justify-between border-t-1">
+          <div></div>
+          <div class="flex items-center">
+            <button
+              class="mx-1 rounded p-1 text-xs hover:bg-gray-200"
+              onClick={() => props.setDisplayErrors?.(!props.displayErrors)}
+            >
+              <Icon path={props.displayErrors ? bell : bellSlash} class="h-4" />
+            </button>
+            <button
+              class="mx-1 rounded p-1 text-xs hover:bg-gray-200"
+              onClick={() => editor.getAction('editor.action.formatDocument')?.run()}
+            >
+              {'{ }'}
+            </button>
+            <button class="mx-1 rounded p-1 text-xs hover:bg-gray-200">TypeScript</button>
+          </div>
+        </div>
+      </Show>
+    </>
+  );
 };
 
 export default Editor;

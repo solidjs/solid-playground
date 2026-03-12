@@ -36,6 +36,5 @@ declare module 'solid-repl/dist/repl' {
 interface Window {
   MonacoEnvironment: {
     getWorker: (_moduleId: unknown, label: string) => Worker;
-    onigasm: string;
   };
 }

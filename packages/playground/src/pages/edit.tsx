@@ -5,7 +5,6 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import onigasm from 'onigasm/lib/onigasm.wasm?url';
 import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
@@ -31,7 +30,6 @@ window.MonacoEnvironment = {
         return new editorWorker();
     }
   },
-  onigasm,
 };
 
 interface InternalTab extends Tab {
@@ -45,7 +43,7 @@ export const Edit = () => {
   const formatter = new FormatterWorker();
   const linter = new LinterWorker();
 
-  const params = useParams();
+  const params = useParams<{ user: string; repl: string }>();
   const context = useAppContext()!;
   const navigate = useNavigate();
 
@@ -82,7 +80,7 @@ export const Edit = () => {
   onCleanup(() => context.setTabs(undefined));
 
   const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
-  const [resource, { mutate }] = createResource<APIRepl, { repl: string; scratchpad: boolean }>(
+  const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
     () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
     async ({ repl, scratchpad }): Promise<APIRepl> => {
       if (disableFetch) {
@@ -146,7 +144,9 @@ export const Edit = () => {
       const repl = resource.latest;
       if (!repl) return;
 
-      if ((context.token && context.user()?.display == params.user) || localStorage.getItem(params.repl)) {
+      const loggedIn = context.token && params.user && context.user()?.display == params.user;
+
+      if (loggedIn || localStorage.getItem(params.repl)) {
         fetch(`${API}/repl/${params.repl}`, {
           method: 'PUT',
           headers: {

@@ -28,3 +28,40 @@ div[contenteditable='true']:focus {
 .dark {
   color-scheme: dark;
 }
+
+textarea.monaco-mouse-cursor-text:focus {
+  box-shadow: unset;
+}
+
+.hover-visible-button:hover button {
+  display: block;
+}
+
+#app .dockview-theme-abyss-spaced {
+  padding-top: 0;
+  --dv-color-abyss-dark: theme('colors.lightbg');
+  --dv-color-abyss: #ffffff;
+  --dv-color-abyss-light: #ffffff;
+  --dv-color-abyss-lighter: theme('colors.lightgray');
+  --dv-color-abyss-accent: theme('colors.medium');
+  --dv-color-abyss-primary-text: theme('colors.gray');
+  --dv-color-abyss-secondary-text: theme('colors.mediumgray');
+}
+
+.dark #app .dockview-theme-abyss-spaced {
+  --dv-color-abyss-dark: theme('colors.darkerbg');
+  --dv-color-abyss: theme('colors.darkbg');
+  --dv-color-abyss-light: theme('colors.neutral.800/50');
+  --dv-color-abyss-lighter: theme('colors.neutral.800/50');
+  --dv-color-abyss-accent: theme('colors.medium');
+  --dv-color-abyss-primary-text: theme('colors.lightgray');
+  --dv-color-abyss-secondary-text: theme('colors.mediumgray');
+}
+
+#app .dockview-theme-abyss-spaced .dv-groupview.dv-active-group {
+  border: 2px solid var(--dv-color-abyss-accent);
+}
+
+#app .dockview-theme-abyss-spaced .dv-groupview.dv-inactive-group {
+  border: 2px solid transparent;
+}

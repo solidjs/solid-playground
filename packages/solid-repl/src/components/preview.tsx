@@ -1,6 +1,7 @@
-import { Component, JSX, Show, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import { Component, createEffect, createMemo, JSX, onCleanup, onMount, untrack } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
-import { GridResizer } from './gridResizer';
+import { Orientation, SplitviewComponent } from 'dockview-core';
+import { SolidPanelView } from '../dockview/solid';
 
 const dispatchKeyboardEventToParentZoomState = () => `
   document.addEventListener('keydown', (e) => {
@@ -26,8 +27,8 @@ const generateHTML = (isDark: boolean, importMap: string) => `
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-      <link href="https://unpkg.com/modern-normalize@1.1.0/modern-normalize.css" rel="stylesheet">
-      <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+      <link href="https://ga.jspm.io/npm:modern-normalize@3.0.1/modern-normalize.css" rel="stylesheet">
+      <script async src="https://ga.jspm.io/npm:es-module-shims@2.8.0/dist/es-module-shims.js"></script>
       <style>
         html, body {
           position: relative;
@@ -79,7 +80,7 @@ const generateHTML = (isDark: boolean, importMap: string) => `
         }
       </style>
       <script type="importmap">${importMap}</script>
-      <script src="https://cdn.jsdelivr.net/npm/chobitsu"></script>
+      <script src="https://cdn.jsdelivr.net/npm/chobitsu@1.8.6/dist/chobitsu.min.js"></script>
       <script type="module">
         let finisher = undefined;
         window.addEventListener('message', ({ data }) => {
@@ -193,7 +194,7 @@ const useDevtoolsSrc = () => {
   </script>
   <meta name="referrer" content="no-referrer">
   <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.12.3/public/front_end/entrypoints/chii_app/chii_app.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.15.5/public/front_end/entrypoints/chii_app/chii_app.js"></script>
   <body class="undocked" id="-blink-dev-tools">`;
   const devtoolsRawUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
   onCleanup(() => URL.revokeObjectURL(devtoolsRawUrl));
@@ -205,7 +206,6 @@ export const Preview: Component<Props> = (props) => {
 
   let iframe!: HTMLIFrameElement;
   let devtoolsIframe!: HTMLIFrameElement;
-  let resizer!: HTMLDivElement;
   let outerContainer!: HTMLDivElement;
 
   let devtoolsLoaded = false;
@@ -228,83 +228,29 @@ export const Preview: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    const dark = props.isDark;
-
-    if (!isIframeReady) return;
-
-    iframe.contentDocument!.documentElement.classList.toggle('dark', dark);
-  });
-
-  createEffect(() => {
     if (!props.reloadSignal) return;
 
     isIframeReady = false;
     iframe.src = untrack(iframeSrcUrl);
   });
 
-  createEffect(() => {
-    const code = props.code;
-
-    if (!isIframeReady) return;
-
-    iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: code }, '*');
-  });
-
   const devtoolsSrc = useDevtoolsSrc();
 
-  const messageListener = (event: MessageEvent) => {
-    if (event.source === iframe.contentWindow) {
-      devtoolsIframe.contentWindow!.postMessage(event.data, '*');
-    }
-    if (event.source === devtoolsIframe.contentWindow) {
-      iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, '*');
-    }
-  };
-  window.addEventListener('message', messageListener);
-  onCleanup(() => window.removeEventListener('message', messageListener));
+  const styleScale = () => {
+    const pointerEvents = props.pointerEvents ? 'inherit' : 'none';
+    if (zoomState.scale === 100 || !zoomState.scaleIframe) return `pointer-events: ${pointerEvents};`;
 
-  const styleScale = (): JSX.CSSProperties => {
-    if (zoomState.scale === 100 || !zoomState.scaleIframe) return {};
-
-    const sizePercentage = `${zoomState.scale}%`;
-    const width = sizePercentage;
-    const height = sizePercentage;
-    const transform = `scale(${zoomState.zoom / 100})`;
-    const transformOrigin = `0 0`;
-
-    return {
-      width,
-      height,
-      transform,
-      'transform-origin': transformOrigin,
-    };
+    return `pointer-events: ${pointerEvents}; width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+      zoomState.zoom / 100
+    }); transform-origin: 0 0;`;
   };
 
-  const [iframeHeight, setIframeHeight] = createSignal<number>(0.625);
-
-  const changeIframeHeight = (clientY: number) => {
-    let position: number;
-    let size: number;
-
-    const rect = outerContainer.getBoundingClientRect();
-
-    position = clientY - rect.top - resizer.offsetHeight / 2;
-    size = outerContainer.offsetHeight - resizer.offsetHeight;
-    const percentage = position / size;
-
-    setIframeHeight(percentage);
-  };
-
-  createEffect(() => {
-    localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '"default"');
-    devtoolsIframe.contentWindow!.location.reload();
-  });
-  return (
-    <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}>
-      <div class="relative" style={`flex: ${props.devtools ? iframeHeight() : '1 1 100%'};`}>
+  onMount(() => {
+    const frameworkComponents: Record<string, () => JSX.Element> = {
+      preview: () => (
         <iframe
           title="Solid REPL"
-          class="dark:bg-other absolute inset-0 block h-full w-full overflow-scroll bg-white p-0"
+          class="dark:bg-darkbg block h-full min-h-0 w-full min-w-0 overflow-scroll bg-white p-0"
           style={styleScale()}
           ref={iframe}
           src={iframeSrcUrl()}
@@ -313,34 +259,80 @@ export const Preview: Component<Props> = (props) => {
 
             if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
             if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
-            iframe.contentDocument!.documentElement.classList.toggle('dark', props.isDark);
+            iframe.contentDocument?.documentElement.classList.toggle('dark', props.isDark);
           }}
           // @ts-ignore
           sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
         />
-      </div>
-      <Show when={props.devtools}>
-        <GridResizer
-          ref={resizer}
-          isHorizontal={true}
-          onResize={(_, y) => {
-            changeIframeHeight(y);
-          }}
-        />
-      </Show>
-      <div class="relative" style={`flex: ${1 - iframeHeight()};`}>
+      ),
+      devtools: () => (
         <iframe
           title="Devtools"
-          class="absolute inset-0 block h-full w-full"
-          style={styleScale()}
+          class="h-full min-h-0 w-full min-w-0"
+          style={`pointer-events: ${props.pointerEvents ? 'inherit' : 'none'}`}
           ref={devtoolsIframe}
           src={devtoolsSrc}
           onload={() => (devtoolsLoaded = true)}
           classList={{ block: props.devtools, hidden: !props.devtools }}
         />
-      </div>
-    </div>
-  );
+      ),
+    };
+    const splitview = new SplitviewComponent(outerContainer, {
+      orientation: Orientation.VERTICAL,
+
+      createComponent: ({ id, name }) => {
+        return new SolidPanelView(id, name, frameworkComponents[name]);
+      },
+    });
+    splitview.addPanel({
+      id: 'preview',
+      component: 'preview',
+      minimumSize: 100,
+    });
+    splitview.addPanel({
+      id: 'devtools',
+      component: 'devtools',
+      minimumSize: 100,
+      snap: true,
+    });
+
+    createEffect(() => {
+      const dark = props.isDark;
+
+      if (!isIframeReady) return;
+
+      iframe.contentDocument?.documentElement.classList.toggle('dark', dark);
+    });
+
+    createEffect(() => {
+      const code = props.code;
+
+      if (!isIframeReady) return;
+
+      iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: code }, '*');
+    });
+
+    const messageListener = (event: MessageEvent) => {
+      if (event.source === iframe.contentWindow) {
+        devtoolsIframe.contentWindow!.postMessage(event.data, '*');
+      }
+      if (event.source === devtoolsIframe.contentWindow) {
+        iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, '*');
+      }
+    };
+    window.addEventListener('message', messageListener);
+    onCleanup(() => window.removeEventListener('message', messageListener));
+
+    createEffect(() => {
+      localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '"default"');
+
+      if (!devtoolsLoaded) return;
+
+      devtoolsIframe.contentWindow!.location.reload();
+    });
+  });
+
+  return <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}></div>;
 };
 
 type Props = {
@@ -352,4 +344,5 @@ type Props = {
   reloadSignal: boolean;
   devtools: boolean;
   isDark: boolean;
+  pointerEvents: boolean;
 };

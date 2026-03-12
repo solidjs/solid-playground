@@ -64,7 +64,7 @@ export const Home = () => {
   });
 
   const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
-  const [resourceRepls] = createResource<Repls, { user: string }>(
+  const [resourceRepls] = createResource<Repls, { user: string | undefined }>(
     () => ({ user: params.user }),
     async ({ user }) => {
       if (!user && !context.token) return { total: 0, list: [] };
@@ -97,7 +97,7 @@ export const Home = () => {
         <Show when={!params.user} fallback={<h1 class="mb-4 text-center text-3xl">{`${params.user}'s`} Repls</h1>}>
           <div class="mb-8 flex flex-col align-middle">
             <button
-              class="bg-solid-lightgray mx-auto flex items-center justify-center rounded-xl border border-gray-600 p-3 text-xl shadow-md dark:bg-neutral-800"
+              class="bg-solid-lightgray mx-auto flex items-center rounded-xl border border-gray-600 p-3 text-xl shadow-md dark:bg-neutral-800"
               onClick={async () => {
                 const result = await fetch(`${API}/repl`, {
                   method: 'POST',
@@ -131,7 +131,7 @@ export const Home = () => {
             </p>
           </div>
         </Show>
-        <table class="w-200 mx-auto max-w-full">
+        <table class="mx-auto w-200 max-w-full">
           <thead>
             <tr class="border-b border-neutral-600 font-medium">
               <th class="w-1/2 p-1 text-left">Title</th>
@@ -221,7 +221,7 @@ export const Home = () => {
       </div>
       <Show when={!!open()}>
         <div
-          class="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-gray-500/50"
+          class="fixed top-0 left-0 z-10 flex h-full w-full items-center bg-gray-500/50"
           onClick={(e) => {
             if (e.target !== e.currentTarget) return;
             setOpen(undefined);
@@ -229,13 +229,13 @@ export const Home = () => {
           role="presentation"
         >
           <div
-            class="dark:bg-solid-darkbg w-96 rounded-lg bg-white p-4 shadow dark:text-white"
+            class="dark:bg-darkbg w-96 rounded-lg bg-white p-4 shadow dark:text-white"
             role="dialog"
             aria-modal="true"
             tabindex="-1"
           >
             <p>Are you sure you want to delete that?</p>
-            <div class="mt-2 flex justify-end gap-2">
+            <div class="mt-2 flex gap-2">
               <button
                 class="rounded border px-2 py-1"
                 onclick={() => {

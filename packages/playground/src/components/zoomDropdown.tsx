@@ -100,7 +100,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       </button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="dark:bg-solid-darkbg absolute z-10 w-min rounded border-2 border-slate-200 bg-white p-6 shadow-md dark:border-neutral-800"
+          class="dark:bg-darkbg absolute z-10 w-min rounded border-2 border-slate-200 bg-white p-6 shadow-md dark:border-neutral-800"
           classList={{
             'left-1/4': props.showMenu,
           }}
@@ -110,24 +110,24 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         >
           <div class="flex">
             <button
-              class="border-1 rounded-l px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
+              class="rounded-l border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
               aria-label="decrease font size"
               onClick={() => updateZoom('decrease')}
             >
               -
             </button>
-            <div class="border-1 w-20 px-3 py-1 text-center text-sm uppercase tracking-wide dark:border-gray-700">
+            <div class="w-20 border-1 px-3 py-1 text-center text-sm tracking-wide uppercase dark:border-gray-700">
               {zoomState.zoom}%
             </div>
             <button
-              class="border-1 mr-4 rounded-r px-3 py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
+              class="mr-4 rounded-r border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
               aria-label="increase font size"
               onClick={() => updateZoom('increase')}
             >
               +
             </button>
             <button
-              class="border-1 rounded px-3  py-1 text-sm uppercase tracking-wide hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
+              class="rounded border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
               aria-label="reset font size"
               onClick={() => updateZoom('reset')}
             >

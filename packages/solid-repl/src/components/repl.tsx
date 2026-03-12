@@ -1,19 +1,20 @@
-import { Show, For, createSignal, createEffect, batch, Match, Switch, onCleanup, createMemo } from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { arrowPath, commandLine, trash, inboxStack, bell, bellSlash } from 'solid-heroicons/outline';
+import { createSignal, createEffect, batch, onCleanup, createMemo, onMount, Show, createRoot, JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
-import { TabItem, TabList } from './tabs';
-import { GridResizer } from './gridResizer';
 import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
-import { createMediaQuery } from '@solid-primitives/media';
 import { editor, Uri } from 'monaco-editor';
 import { createMonacoTabs } from './editor/monacoTabs';
+import { NewTab } from './newTab';
 
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
+import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeAbyssSpaced } from 'dockview-core';
+import { insert } from 'solid-js/web';
+import { Icon } from 'solid-heroicons';
+import { plus, trash, pencil, xMark } from 'solid-heroicons/outline';
+import '../../node_modules/dockview-core/dist/styles/dockview.css';
 
 const compileMode = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -22,12 +23,6 @@ const compileMode = {
   UNIVERSAL: { generate: 'universal', hydratable: false, moduleName: 'solid-universal-module' as string },
 } as const;
 
-const findExtension = (str: string): '.tsx' | '.jsx' => {
-  for (const ext of ['.tsx', '.jsx'] as const) {
-    if (str.endsWith(ext)) return ext;
-  }
-  return '.jsx';
-};
 const getImportMap = (tabs: Tab[]): Record<string, string> => {
   try {
     const rawImportMap = tabs.find((tab) => tab.name === 'import_map.json');
@@ -41,65 +36,15 @@ export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
   let now: number;
 
-  const tabRefs = new Map<number, HTMLSpanElement>();
-
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal('');
   const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
   const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
 
   const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
-  const tabExtension = findExtension(props.tabs[0].name);
 
-  function setCurrentTab(current: string) {
-    const idx = props.tabs.findIndex((tab) => tab.name === current);
-    if (idx < 0) return;
-    props.setCurrent(current);
-  }
-  function setCurrentName(newName: string) {
-    const tabs = props.tabs;
-    tabs.find((tab) => tab.name === props.current).name = newName;
-    batch(() => {
-      props.setTabs([...tabs]);
-      props.setCurrent(newName);
-    });
-  }
-  function removeTab(name: string) {
-    const tabs = props.tabs;
-    const idx = tabs.findIndex((tab) => tab.name === name);
-    const tab = tabs[idx];
-
-    if (!tab) return;
-
-    const confirmDeletion = confirm(`Are you sure you want to delete ${tab.name}?`);
-    if (!confirmDeletion) return;
-
-    batch(() => {
-      props.setTabs([...tabs.slice(0, idx), ...tabs.slice(idx + 1)]);
-      // We want to redirect to another tab if we are deleting the current one
-      if (props.current === name) {
-        props.setCurrent(tabs[idx - 1].name);
-      }
-    });
-  }
-  function addTab() {
-    const newTab = {
-      name: `tab${userTabs().length}${tabExtension}`,
-      source: '',
-    };
-    batch(() => {
-      props.setTabs(props.tabs.concat(newTab));
-      props.setCurrent(newTab.name);
-    });
-  }
-  function resetTabs() {
-    const confirmReset = confirm('Are you sure you want to reset the editor?');
-    if (!confirmReset) return;
-    props.reset();
-  }
-
-  const [edit, setEdit] = createSignal(-1);
-  const [outputTab, setOutputTab] = createSignal(0);
+  const [outputVisible, setOutputVisible] = createSignal(false);
+  const [previewVisible, setPreviewVisible] = createSignal(false);
   const [importMap, setImportMap] = createSignal(getImportMap(props.tabs), {
     equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
   });
@@ -117,7 +62,6 @@ export const Repl: ReplProps = (props) => {
 
     if (event === 'BABEL') {
       outputModel.setValue(compiled);
-      setOutput('');
     }
 
     if (event === 'ROLLUP') {
@@ -165,29 +109,32 @@ export const Repl: ReplProps = (props) => {
    * it takes ~15ms to compile with the web worker...
    * Also, real time feedback can be stressful
    */
-  const applyCompilation = throttle((message: any) => {
+  const sendCompile = (message: any) => {
     now = performance.now();
 
     compiler.postMessage(message);
-  }, 250);
+  };
+  const applyRollupCompilation = throttle(sendCompile, 250);
+  const applyBabelCompilation = throttle(sendCompile, 250);
 
   const compile = () => {
-    let compileOpts = mode();
-    if (compileOpts === compileMode.UNIVERSAL) {
-      compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
+    if (previewVisible()) {
+      applyRollupCompilation({
+        event: 'ROLLUP',
+        tabs: unwrap(userTabs()),
+      });
     }
-    applyCompilation(
-      outputTab() == 0
-        ? {
-            event: 'ROLLUP',
-            tabs: unwrap(userTabs()),
-          }
-        : {
-            event: 'BABEL',
-            tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
-            compileOpts,
-          },
-    );
+    if (outputVisible() && props.current?.endsWith('.tsx')) {
+      let compileOpts = mode();
+      if (compileOpts === compileMode.UNIVERSAL) {
+        compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
+      }
+      applyBabelCompilation({
+        event: 'BABEL',
+        tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
+        compileOpts,
+      });
+    }
   };
 
   /**
@@ -199,308 +146,520 @@ export const Repl: ReplProps = (props) => {
 
     compile();
   });
-
   const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
   const currentModel = createMemo(() => monacoTabs().get(`file:///${props.id}/${props.current}`)!.model);
 
-  let grid!: HTMLDivElement;
-  let resizer!: HTMLDivElement;
-  const [left, setLeft] = createSignal(0.625);
+  let ref!: HTMLDivElement;
 
-  const isLarge = createMediaQuery('(min-width: 768px)');
-  const isHorizontal = () => props.isHorizontal || !isLarge();
-
-  const changeLeft = (clientX: number, clientY: number) => {
-    let position: number;
-    let size: number;
-
-    const rect = grid.getBoundingClientRect();
-
-    if (isHorizontal()) {
-      position = clientY - rect.top - resizer.offsetHeight / 2;
-      size = grid.offsetHeight - resizer.offsetHeight;
-    } else {
-      position = clientX - rect.left - resizer.offsetWidth / 2;
-      size = grid.offsetWidth - resizer.offsetWidth;
-    }
-    const percentage = position / size;
-    const percentageAdjusted = Math.min(Math.max(percentage, 0.25), 0.75);
-
-    setLeft(percentageAdjusted);
-  };
-
-  const [reloadSignal, reload] = createSignal(false, { equals: false });
-  const [devtoolsOpen, setDevtoolsOpen] = createSignal(!props.hideDevtools);
+  const [reloadSignal] = createSignal(false, { equals: false });
+  const [devtoolsOpen] = createSignal(!props.hideDevtools);
   const [displayErrors, setDisplayErrors] = createSignal(true);
 
-  return (
-    <div
-      ref={grid}
-      class="dark:bg-solid-darkbg flex h-full min-h-0 flex-1 flex-col bg-white font-sans text-black dark:text-white"
-      classList={{
-        'md:flex-row': !props.isHorizontal,
-        'dark': props.dark,
-      }}
-    >
-      <div class="flex min-h-0 min-w-0 flex-col" style={`flex: ${left()}`}>
-        <TabList>
-          <For each={userTabs()}>
-            {(tab, index) => (
-              <TabItem active={props.current === tab.name} class="mr-2">
-                <div
-                  ref={(el) => tabRefs.set(index(), el)}
-                  class="cursor-pointer select-none rounded border border-solid border-transparent px-3 py-2 transition"
-                  classList={{
-                    'border-transparent': edit() !== index(),
-                    'border-blue-600 outline-none': edit() === index(),
-                  }}
-                  contentEditable={edit() == index()}
-                  onBlur={(e) => {
-                    if (edit() !== index()) return;
-                    setEdit(-1);
-                    setCurrentName(e.currentTarget.textContent!);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.code === 'Space') e.preventDefault();
-                    if (e.code !== 'Enter') return;
-                    if (edit() === index()) {
-                      setEdit(-1);
-                      setCurrentName(e.currentTarget.textContent!);
-                      e.currentTarget.blur();
+  onMount(() => {
+    const newFile = (name: string) => {
+      if (!name.trim()) return;
+      const newTab = {
+        name: name,
+        source: '',
+      };
+      batch(() => {
+        props.setTabs(props.tabs.concat(newTab));
+        props.setCurrent(newTab.name);
+      });
+      dockview.addPanel({
+        id: name,
+        tabComponent: 'file',
+        component: 'editor',
+        params: {
+          currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+        },
+      });
+    };
+
+    const deleteFile = (name: string) => {
+      if (name === 'main.tsx') return;
+      const newTabs = props.tabs.filter((tab) => tab.name !== name);
+      const panel = dockview.getGroupPanel(name);
+      panel?.api.close();
+      batch(() => {
+        props.setTabs(newTabs);
+        if (props.current === name) {
+          const mainPanel = dockview.getGroupPanel('main.tsx');
+          mainPanel?.focus();
+          props.setCurrent('main.tsx');
+        }
+      });
+    };
+
+    const renameFile = (oldName: string, newName: string) => {
+      if (oldName === 'main.tsx') return;
+      if (newName === oldName) return;
+      if (!newName.trim()) return;
+      const exists = props.tabs.some((tab) => tab.name === newName);
+      if (exists) {
+        alert('A file with that name already exists');
+        return;
+      }
+
+      const tab = props.tabs.find((t) => t.name === oldName);
+      if (!tab) return;
+
+      const newTabs = props.tabs.map((t) => (t.name === oldName ? { ...t, name: newName } : t));
+
+      batch(() => {
+        props.setTabs(newTabs);
+        if (props.current === oldName) {
+          props.setCurrent(newName);
+        }
+      });
+
+      // Update Panel ID if it exists? Dockview often requires adding/removing for ID change.
+      // Easiest is to close old and open new at same position or just let user re-open.
+      // But we can try to keep it simple: if open, close and reopen.
+      const panel = dockview.getGroupPanel(oldName);
+      if (panel) {
+        panel.api.close();
+        dockview.addPanel({
+          id: newName,
+          tabComponent: 'file',
+          component: 'editor',
+          params: {
+            currentModel: monacoTabs().get(`file:///${props.id}/${newName}`)!.model,
+          },
+        });
+      }
+    };
+
+    const dockview = new DockviewComponent(ref, {
+      theme: themeAbyssSpaced,
+      defaultTabComponent: 'default',
+      createLeftHeaderActionComponent: () => {
+        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        let disposer: () => void;
+
+        return {
+          element,
+          init: (params) => {
+            createRoot((dispose) => {
+              disposer = dispose;
+
+              insert(element, () => (
+                <button
+                  class="cursor-pointer space-x-2 px-2 py-2"
+                  onClick={() => {
+                    const panel = dockview.getPanel('newTab');
+                    if (panel) {
+                      panel.focus();
                     } else {
-                      setCurrentTab(tab.name);
+                      params.group.focus();
+                      dockview.addPanel({
+                        id: 'newTab',
+                        title: 'New Tab',
+                        tabComponent: 'default',
+                        component: 'newTab',
+                      });
                     }
                   }}
-                  onClick={() => setCurrentTab(tab.name)}
-                  onDblClick={(e) => {
-                    e.preventDefault();
-                    setEdit(index());
-                    tabRefs.get(index())?.focus();
-                  }}
-                  title={tab.name}
-                  role="button"
-                  tabindex="0"
+                  title="New Tab"
                 >
-                  {tab.name}
-                </div>
+                  <Icon path={plus} class="h-5" />
+                  <span class="sr-only">New tab</span>
+                </button>
+              ));
+            });
+          },
+          dispose: () => disposer?.(),
+        };
+      },
+      createTabComponent: (panel) => {
+        const element = (<div class="flex h-full items-center pl-2"></div>) as HTMLDivElement;
+        let disposer: () => void;
 
-                <Show when={index() > 0}>
+        return {
+          element,
+          init: (params) => {
+            const [showMenu, setShowMenu] = createSignal(false);
+            const [menuPos, setMenuPos] = createSignal({ x: 0, y: 0 });
+
+            createRoot((dispose) => {
+              disposer = dispose;
+              const [panelTitle, setPanelTitle] = createSignal(params.title);
+              params.api.onDidTitleChange((e) => {
+                setPanelTitle(e.title);
+              });
+              const isFile = panel.name == 'file';
+
+              insert(element, () => (
+                <div
+                  class="group flex h-full items-center space-x-2"
+                  onContextMenu={(e) => {
+                    if (!isFile) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMenuPos({ x: e.clientX, y: e.clientY });
+                    setShowMenu(true);
+                  }}
+                >
+                  <span class="truncate text-xs">{panelTitle()}</span>
+
                   <button
-                    type="button"
-                    class="cursor-pointer"
-                    onClick={() => {
-                      removeTab(tab.name);
+                    class="ml-auto rounded-sm p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    onClick={(e) => {
+                      if (e.defaultPrevented) return;
+                      e.preventDefault();
+                      params.api.close();
                     }}
+                    title="Close tab"
                   >
-                    <span class="sr-only">Delete this tab</span>
-                    <svg style="stroke: currentColor; fill: none;" class="h-4 opacity-60" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon path={xMark} class="h-3 w-3 text-neutral-500" />
+                  </button>
+
+                  <Show when={isFile && showMenu()}>
+                    <div
+                      class="fixed z-[1000] w-32 rounded-lg border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-700 dark:bg-neutral-800"
+                      style={{
+                        top: `${menuPos().y}px`,
+                        left: `${menuPos().x}px`,
+                      }}
+                      onMouseEnter={() => setShowMenu(true)}
+                      onMouseLeave={() => setShowMenu(false)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        class="flex w-full items-center space-x-2 px-3 py-2 text-left text-xs hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                        onClick={() => {
+                          const newName = prompt('Rename file to:', panelTitle());
+                          if (newName) renameFile(panelTitle(), newName);
+                          setShowMenu(false);
+                        }}
+                      >
+                        <Icon path={pencil} class="h-3 w-3" />
+                        <span>Rename</span>
+                      </button>
+                      <button
+                        class="flex w-full items-center space-x-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => {
+                          if (confirm(`Delete ${panelTitle()}?`)) {
+                            deleteFile(panelTitle());
+                          }
+                          setShowMenu(false);
+                        }}
+                      >
+                        <Icon path={trash} class="h-3 w-3" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </Show>
+                </div>
+              ));
+            });
+
+            const hide = () => setShowMenu(false);
+            window.addEventListener('click', hide);
+            onCleanup(() => window.removeEventListener('click', hide));
+          },
+          dispose: () => disposer?.(),
+        };
+      },
+      createRightHeaderActionComponent: () => {
+        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        let disposer: () => void;
+
+        return {
+          element,
+          init: (params) => {
+            const [isTSX, setIsTSX] = createSignal(false);
+            params.group.api.onDidActivePanelChange((e) => {
+              if (!e) return;
+              setIsTSX(e.panel.id.endsWith('.tsx'));
+            });
+            createRoot((dispose) => {
+              disposer = dispose;
+
+              insert(element, () => (
+                <Show when={isTSX()}>
+                  <button
+                    class="cursor-pointer space-x-2 px-2 py-2"
+                    onClick={() => {
+                      const confirmReset = confirm('Are you sure you want to reset the editor?');
+                      if (!confirmReset) return;
+                      props.reset();
+                    }}
+                    title="Reset Editor"
+                  >
+                    <Icon path={trash} class="h-5" />
+                    <span class="sr-only">Reset Editor</span>
                   </button>
                 </Show>
-              </TabItem>
-            )}
-          </For>
+              ));
+            });
+          },
+          dispose: () => disposer?.(),
+        };
+      },
+      createComponent(options) {
+        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        let disposer: () => void;
+        let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
 
-          <TabItem class="select-none" active={props.current === 'import_map.json'}>
-            <label
-              class="cursor-pointer space-x-2 px-3 py-2"
-              onclick={() => props.setCurrent('import_map.json')}
-              onKeyDown={(e) => {
-                if (e.code === 'Enter') props.setCurrent('import_map.json');
-              }}
-              title="Import Map"
-              role="button"
-              tabindex="0"
-            >
-              <Icon path={inboxStack} class="h-5" />
-              <span class="sr-only">Import Map</span>
-            </label>
-          </TabItem>
-          <li class="m-0 inline-flex items-center border-b-2 border-transparent">
-            <button type="button" onClick={addTab} title="Add a new tab">
-              <span class="sr-only">Add a new tab</span>
-              <svg
-                viewBox="0 0 24 24"
-                style="stroke: currentColor; fill: none;"
-                class="text-brand-default h-5 dark:text-slate-50"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </button>
-          </li>
-          <TabItem class="ml-auto justify-self-end">
-            <button class="cursor-pointer space-x-2 px-2 py-2" onclick={resetTabs} title="Reset Editor">
-              <Icon path={trash} class="h-5" />
-              <span class="sr-only">Reset Editor</span>
-            </button>
-          </TabItem>
-          <TabItem class="select-none justify-self-end">
-            <label class="cursor-pointer px-3 py-2" title="Display Errors">
-              <input
-                type="checkbox"
-                hidden
-                checked={displayErrors()}
-                onChange={(event) => setDisplayErrors(event.currentTarget.checked)}
+        let component: (
+          params: GroupPanelPartInitParameters['params'],
+          x: GroupPanelPartInitParameters,
+        ) => JSX.Element = () => null;
+
+        switch (options.name) {
+          case 'newTab':
+            component = (_, params) => (
+              <NewTab
+                tabs={props.tabs}
+                onOpenPane={(id) => {
+                  const panel = dockview.getGroupPanel(id);
+                  if (panel) {
+                    panel.focus();
+                  } else {
+                    dockview.addPanel({
+                      id,
+                      tabComponent: 'default',
+                      component: id.toLowerCase(),
+                      renderer: id === 'Preview' ? 'always' : undefined,
+                    });
+                  }
+                }}
+                onOpenFile={(name) => {
+                  const panel = dockview.getGroupPanel(name);
+                  if (panel) {
+                    panel.focus();
+                  } else {
+                    dockview.addPanel({
+                      id: name,
+                      tabComponent: 'file',
+                      component: 'editor',
+                      params: {
+                        currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+                      },
+                    });
+                  }
+                }}
+                onNewFile={newFile}
+                onUpload={(name: string, source: string) => {
+                  const newTab = { name, source };
+                  batch(() => {
+                    props.setTabs(props.tabs.concat(newTab));
+                    props.setCurrent(newTab.name);
+                  });
+                  setTimeout(() => {
+                    dockview.addPanel({
+                      id: name,
+                      tabComponent: 'file',
+                      component: 'editor',
+                      params: {
+                        currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
+                      },
+                    });
+                  });
+                }}
+                onDeleteFile={deleteFile}
+                onRenameFile={renameFile}
+                onClose={() => {
+                  params.api.close();
+                }}
               />
-              <Icon path={displayErrors() ? bell : bellSlash} class="h-5" />
-              <span class="sr-only">Display Errors</span>
-            </label>
-          </TabItem>
-        </TabList>
+            );
+            break;
+          case 'editor':
+            component = (params) => (
+              <Editor
+                model={params.currentModel}
+                onDocChange={(code: string) => {
+                  if (params.currentModel.uri.path.includes('import_map.json')) {
+                    const newImportMap = JSON.parse(code);
+                    setImportMap(newImportMap);
+                  } else {
+                    compile();
+                  }
+                }}
+                formatter={formatter}
+                linter={linter}
+                isDark={props.dark}
+                withMinimap={false}
+                displayErrors={displayErrors()}
+                setDisplayErrors={setDisplayErrors}
+              />
+            );
+            break;
+          case 'preview':
+            setPreviewVisible(true);
+            onCleanup(() => {
+              setPreviewVisible(false);
+            });
+            const [previewIsActive, setPreviewIsActive] = createSignal(false);
+            component = () => (
+              <Preview
+                importMap={importMap()}
+                code={output()}
+                reloadSignal={reloadSignal()}
+                devtools={devtoolsOpen()}
+                isDark={props.dark}
+                pointerEvents={previewIsActive()}
+              />
+            );
+            onInit = (params) => {
+              setPreviewIsActive(params.api.isActive);
+              const disposable = params.api.onDidActiveChange((e) => {
+                setPreviewIsActive(e.isActive);
+              });
+              return () => disposable.dispose();
+            };
+            break;
+          case 'output':
+            setOutputVisible(true);
+            onCleanup(() => {
+              setOutputVisible(false);
+            });
+            component = () => (
+              <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-1 divide-slate-200 dark:divide-neutral-800">
+                <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
 
-        <Show when={props.current}>
-          <Editor
-            model={currentModel()}
-            onDocChange={(code: string) => {
-              if (props.current == 'import_map.json') {
-                const newImportMap = JSON.parse(code);
-                setImportMap(newImportMap);
-              } else {
-                compile();
-              }
-            }}
-            formatter={formatter}
-            linter={linter}
-            isDark={props.dark}
-            withMinimap={false}
-            onEditorReady={props.onEditorReady}
-            displayErrors={displayErrors()}
-          />
-        </Show>
+                <div class="p-2">
+                  <label class="text-sm font-semibold uppercase">Compile mode</label>
 
-        <Show when={displayErrors() && error()}>
-          <Error onDismiss={() => setError('')} message={error()} />
-        </Show>
-      </div>
+                  <div class="mt-1 space-y-1 text-sm">
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.DOM}
+                        value="DOM"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.DOM]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Client side rendering</span>
+                    </label>
 
-      <GridResizer ref={resizer} isHorizontal={isHorizontal()} onResize={changeLeft} />
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.SSR}
+                        value="SSR"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.SSR]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Server side rendering</span>
+                    </label>
 
-      <div class="flex min-h-0 min-w-0 flex-col" style={`flex: ${1 - left()}`}>
-        <TabList>
-          <TabItem>
-            <button
-              type="button"
-              title="Refresh the page"
-              class="px-3 py-2 active:animate-spin disabled:animate-none disabled:cursor-not-allowed disabled:opacity-25"
-              onClick={[reload, true]}
-              disabled={outputTab() != 0}
-            >
-              <span class="sr-only">Refresh the page</span>
-              <Icon path={arrowPath} class="h-5" />
-            </button>
-          </TabItem>
-          <TabItem>
-            <button
-              type="button"
-              title={`${devtoolsOpen() ? 'Close' : 'Open'} the devtools`}
-              class="px-3 py-2 disabled:cursor-not-allowed disabled:opacity-25"
-              onClick={() => setDevtoolsOpen(!devtoolsOpen())}
-              disabled={outputTab() != 0}
-            >
-              <span class="sr-only">{devtoolsOpen() ? 'Close' : 'Open'} the devtools</span>
-              <Icon path={commandLine} class="h-5" />
-            </button>
-          </TabItem>
-          <TabItem class="flex-1" active={outputTab() == 0}>
-            <button type="button" class="-mb-0.5 w-full py-2" onClick={[setOutputTab, 0]}>
-              Result
-            </button>
-          </TabItem>
-          <TabItem class="flex-1" active={outputTab() == 1}>
-            <button
-              type="button"
-              class="-mb-0.5 w-full py-2"
-              onClick={() => {
-                setOutputTab(1);
-              }}
-            >
-              Output
-            </button>
-          </TabItem>
-        </TabList>
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.HYDRATABLE}
+                        value="HYDRATABLE"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.HYDRATABLE]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Client side rendering with hydration</span>
+                    </label>
 
-        <Switch>
-          <Match when={outputTab() == 0}>
-            <Preview
-              importMap={importMap()}
-              code={output()}
-              reloadSignal={reloadSignal()}
-              devtools={devtoolsOpen()}
-              isDark={props.dark}
-            />
-          </Match>
-          <Match when={outputTab() == 1}>
-            <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-2 divide-slate-200 dark:divide-neutral-800">
-              <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
-
-              <div class="p-5">
-                <label class="text-sm font-semibold uppercase">Compile mode</label>
-
-                <div class="mt-1 space-y-1 text-sm">
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.DOM}
-                      value="DOM"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.DOM]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Client side rendering</span>
-                  </label>
-
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.SSR}
-                      value="SSR"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.SSR]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Server side rendering</span>
-                  </label>
-
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.HYDRATABLE}
-                      value="HYDRATABLE"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.HYDRATABLE]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Client side rendering with hydration</span>
-                  </label>
-
-                  <label class="mr-auto block cursor-pointer space-x-2">
-                    <input
-                      checked={mode() === compileMode.UNIVERSAL}
-                      value="UNIVERSAL"
-                      class="text-brand-default"
-                      onChange={[setMode, compileMode.UNIVERSAL]}
-                      type="radio"
-                      name="dom"
-                    />
-                    <span>Universal Rendering & moduleName:</span>
-                    <input
-                      onFocus={[setMode, compileMode.UNIVERSAL]}
-                      onInput={(e) => {
-                        setUniversalModuleName(e.target.value);
-                      }}
-                      class="p-2.5"
-                      type="text"
-                      value={universalModuleName()}
-                      name="moduleName"
-                    />
-                  </label>
+                    <label class="mr-auto block cursor-pointer space-x-2">
+                      <input
+                        checked={mode() === compileMode.UNIVERSAL}
+                        value="UNIVERSAL"
+                        class="text-brand-default"
+                        onChange={[setMode, compileMode.UNIVERSAL]}
+                        type="radio"
+                        name="dom"
+                      />
+                      <span>Universal Rendering & moduleName:</span>
+                      <input
+                        onFocus={[setMode, compileMode.UNIVERSAL]}
+                        onInput={(e) => {
+                          setUniversalModuleName(e.target.value);
+                        }}
+                        class="p-2.5"
+                        type="text"
+                        value={universalModuleName()}
+                        name="moduleName"
+                      />
+                    </label>
+                  </div>
                 </div>
-              </div>
-            </section>
-          </Match>
-        </Switch>
-      </div>
+              </section>
+            );
+            break;
+        }
+
+        let onInitDisposer: (() => void) | undefined;
+
+        return {
+          element,
+          init: (params) => {
+            const result = onInit?.(params);
+            if (result) onInitDisposer = result;
+            createRoot((dispose) => {
+              insert(element, () => component(params.params, params));
+              disposer = dispose;
+            });
+          },
+          dispose: () => {
+            onInitDisposer?.();
+            disposer?.();
+          },
+        };
+      },
+    });
+
+    dockview.fromJSON({
+      grid: {
+        root: {
+          type: 'branch',
+          data: [
+            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 400 },
+            { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 250 },
+          ],
+          size: 480,
+        },
+        width: 1600,
+        height: 480,
+        orientation: Orientation.HORIZONTAL,
+      },
+      activeGroup: '1',
+      panels: {
+        Output: {
+          id: 'Output',
+          tabComponent: 'default',
+          contentComponent: 'output',
+        },
+        Preview: {
+          id: 'Preview',
+          contentComponent: 'preview',
+          tabComponent: 'default',
+          renderer: 'always',
+        },
+        [props.current!]: {
+          id: props.current!,
+          tabComponent: 'file',
+          contentComponent: 'editor',
+          params: {
+            currentModel: currentModel(),
+          },
+        },
+      },
+    });
+
+    dockview.onDidActivePanelChange((e) => {
+      if (!e) return;
+      if ('currentModel' in (e.params ?? {})) {
+        props.setCurrent(e.id);
+      }
+    });
+  });
+
+  return (
+    <div class="flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans text-black dark:text-white">
+      <div ref={ref} class="flex h-full min-h-0 flex-1 flex-col overflow-hidden"></div>
+      <Show when={error()}>
+        <Error message={error()} onDismiss={() => setError('')} />
+      </Show>
     </div>
   );
 };

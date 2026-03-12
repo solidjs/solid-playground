@@ -1,5 +1,5 @@
 import { Show, JSX, Suspense } from 'solid-js';
-import { Router, Route } from '@solidjs/router';
+import { Route, Router } from '@solidjs/router';
 import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from 'solid-repl/src/hooks/useZoom';
@@ -30,7 +30,7 @@ export const App = (): JSX.Element => {
   });
 
   return (
-    <div class="dark:bg-solid-darkbg relative flex h-screen flex-col overflow-auto bg-white font-sans text-slate-900 dark:text-slate-50">
+    <div class="dark:bg-darkerbg bg-lightbg relative flex h-screen flex-col overflow-auto font-sans text-slate-900 dark:text-slate-50">
       <Router
         root={(props) => (
           <AppContextProvider>
