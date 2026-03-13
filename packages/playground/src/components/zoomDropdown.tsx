@@ -3,6 +3,8 @@ import { magnifyingGlassPlus } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
 import { Component, createSignal, createEffect } from 'solid-js';
 import { useZoom } from 'solid-repl/src/hooks/useZoom';
+import { Button } from 'solid-repl/src/components/ui/Button';
+import { Checkbox } from 'solid-repl/src/components/ui/Checkbox';
 
 export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   const [open, setOpen] = createSignal(false);
@@ -85,9 +87,8 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       ref={containerEl}
       tabindex="-1"
     >
-      <button
+      <Button
         type="button"
-        class="flex w-full flex-row items-center space-x-2 rounded px-2 py-2 opacity-80 hover:opacity-100 md:px-1"
         classList={{
           'rounded-none active:bg-gray-300 hover:bg-gray-300 dark:hover:text-black': props.showMenu,
           'bg-gray-300 dark:text-black': open() && props.showMenu,
@@ -97,10 +98,10 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       >
         <Icon class="h-6" path={magnifyingGlassPlus} />
         <span class="text-xs md:sr-only">Scale Editor</span>
-      </button>
+      </Button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="dark:bg-darkbg absolute z-10 w-min rounded border-2 border-slate-200 bg-white p-6 shadow-md dark:border-neutral-800"
+          class="z-10 w-min border-slate-200 bg-white p-6 dark:border-neutral-800 absolute rounded border-2 shadow-md dark:bg-darkbg"
           classList={{
             'left-1/4': props.showMenu,
           }}
@@ -108,26 +109,26 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             transform: 'translateX(calc(2rem - 100%))',
           }}
         >
-          <div class="flex">
+          <div class="space-x-0.5 flex items-center">
             <button
-              class="rounded-l border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
+              class="px-3 py-1 hover:bg-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded-l border text-sm uppercase tracking-wide"
               aria-label="decrease font size"
               onClick={() => updateZoom('decrease')}
             >
               -
             </button>
-            <div class="w-20 border-1 px-3 py-1 text-center text-sm tracking-wide uppercase dark:border-gray-700">
+            <div class="w-20 px-3 py-1 dark:border-neutral-700 border text-center text-sm uppercase tracking-wide">
               {zoomState.zoom}%
             </div>
             <button
-              class="mr-4 rounded-r border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
+              class="mr-4 px-3 py-1 hover:bg-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded-r border text-sm uppercase tracking-wide"
               aria-label="increase font size"
               onClick={() => updateZoom('increase')}
             >
               +
             </button>
             <button
-              class="rounded border-1 px-3 py-1 text-sm tracking-wide uppercase hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-neutral-700"
+              class="px-3 py-1 hover:bg-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded border text-sm uppercase tracking-wide"
               aria-label="reset font size"
               onClick={() => updateZoom('reset')}
             >
@@ -135,24 +136,16 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             </button>
           </div>
           <div class="mt-10">
-            <label class="my-3 block cursor-pointer dark:text-white">
-              <input
-                type="checkbox"
-                class="mr-4 cursor-pointer"
-                checked={zoomState.overrideNative}
-                onChange={(e) => setZoomState('overrideNative', e.currentTarget.checked)}
-              />
-              Override browser zoom keyboard shortcut
-            </label>
-            <label class="my-3 block cursor-pointer dark:text-white">
-              <input
-                type="checkbox"
-                class="mr-4 cursor-pointer"
-                checked={zoomState.scaleIframe}
-                onChange={(e) => setZoomState('scaleIframe', e.currentTarget.checked)}
-              />
-              Scale iframe <strong>Result</strong>
-            </label>
+            <Checkbox
+              label="Override browser zoom keyboard shortcut"
+              checked={zoomState.overrideNative}
+              onChange={(e) => setZoomState('overrideNative', e.currentTarget.checked)}
+            />
+            <Checkbox
+              label="Scale iframe Result"
+              checked={zoomState.scaleIframe}
+              onChange={(e) => setZoomState('scaleIframe', e.currentTarget.checked)}
+            />
           </div>
         </div>
       </Dismiss>

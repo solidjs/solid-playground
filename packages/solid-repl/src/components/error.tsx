@@ -1,7 +1,8 @@
 import { Component, createEffect, createSignal } from 'solid-js';
 
 import { Icon } from 'solid-heroicons';
-import { chevronDown, chevronRight } from 'solid-heroicons/solid';
+import { chevronDown, chevronRight, xMark } from 'solid-heroicons/solid';
+import { IconButton } from './ui/IconButton';
 
 function doSomethingWithError(message: string) {
   const [firstLine, setFirstLine] = createSignal('');
@@ -24,18 +25,23 @@ export const Error: Component<{
   const [isOpen, setIsOpen] = createSignal(false);
 
   return (
-    <details
-      class="border-t-2 border-red-300 bg-red-200 p-2 text-red-800"
-      onToggle={(event) => setIsOpen(event.currentTarget.open)}
-    >
-      <summary class="flex cursor-pointer">
-        <Icon class="h-7 opacity-70" path={isOpen() ? chevronDown : chevronRight} />
-        <code innerText={firstLine()}></code>
-      </summary>
+    <div class="border-red-300 bg-red-50 p-2 dark:bg-red-900/20 relative border-t-2">
+      <details class="text-red-800 dark:text-red-300" onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+        <summary class="pr-8 flex cursor-pointer items-center">
+          <Icon class="mr-1 h-5 w-5 opacity-70" path={isOpen() ? chevronDown : chevronRight} />
+          <code class="text-sm font-medium" innerText={firstLine()}></code>
+        </summary>
 
-      <pre class="whitespace-pre-line">
-        <code innerText={stackTrace()}></code>
-      </pre>
-    </details>
+        <pre class="mt-2 ml-6 overflow-auto whitespace-pre-line text-xs opacity-80">
+          <code innerText={stackTrace()}></code>
+        </pre>
+      </details>
+      <IconButton
+        icon={xMark}
+        class="top-2 right-2 hover:bg-red-200 dark:hover:bg-red-800/50 text-red-800 dark:text-red-300 absolute"
+        size="sm"
+        onClick={() => props.onDismiss()}
+      />
+    </div>
   );
 };

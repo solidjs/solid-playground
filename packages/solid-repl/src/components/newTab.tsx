@@ -1,4 +1,4 @@
-import { Component, createSignal, For, createMemo, onMount, Show } from 'solid-js';
+import { Component, createSignal, For, createMemo, Show } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import {
   magnifyingGlass,
@@ -10,6 +10,13 @@ import {
   ellipsisHorizontal,
 } from 'solid-heroicons/outline';
 import type { Tab } from 'solid-repl';
+import { Input } from './ui/Input';
+import { IconButton } from './ui/IconButton';
+import { Label } from './ui/Label';
+import { ListItem } from './ui/ListItem';
+import { Menu, MenuItem } from './ui/Menu';
+import { pencil, trash as trashIcon } from 'solid-heroicons/outline';
+import Dismiss from 'solid-dismiss';
 
 interface NewTabProps {
   tabs: Tab[];
@@ -29,35 +36,21 @@ export const NewTab: Component<NewTabProps> = (props) => {
   let inputRef!: HTMLInputElement;
   let fileInputRef!: HTMLInputElement;
 
-  onMount(() => {
-    inputRef.focus();
-  });
-
   const categories = createMemo(() => {
     const q = query().toLowerCase();
     const sections: { title: string; items: any[] }[] = [];
     let count = 0;
 
-    // Actions
-    const actions = [];
-    if (q === '' || 'upload file'.includes(q)) {
-      actions.push({ type: 'action', id: 'upload', label: 'Upload File', icon: arrowUpTray });
-    }
-    if (q !== '' && !props.tabs.some((t) => t.name.toLowerCase() === q)) {
-      actions.push({ type: 'new', id: q, label: `Create "${query()}"`, icon: documentPlus });
-    }
-
-    if (actions.length > 0) {
-      sections.push({
-        title: 'Actions',
-        items: actions.map((item) => ({ ...item, globalIndex: count++ })),
-      });
-    }
-
     // Panes - Always show Preview and Output
     const paneItems = ['Preview', 'Output']
       .filter((p) => p.toLowerCase().includes(q))
-      .map((p) => ({ type: 'pane', id: p, label: p, icon: square_2Stack, globalIndex: count++ }));
+      .map((p) => ({
+        type: 'pane',
+        id: p,
+        label: p,
+        icon: square_2Stack,
+        globalIndex: count++,
+      }));
     if (paneItems.length) {
       sections.push({ title: 'Panes', items: paneItems });
     }
@@ -74,6 +67,32 @@ export const NewTab: Component<NewTabProps> = (props) => {
           icon: documentIcon,
           globalIndex: count++,
         })),
+      });
+    }
+
+    // Actions
+    const actions = [];
+    if (q === '' || 'upload file'.includes(q)) {
+      actions.push({
+        type: 'action',
+        id: 'upload',
+        label: 'Upload File',
+        icon: arrowUpTray,
+      });
+    }
+    if (q !== '' && !props.tabs.some((t) => t.name.toLowerCase() === q)) {
+      actions.push({
+        type: 'new',
+        id: q,
+        label: `Create "${query()}"`,
+        icon: documentPlus,
+      });
+    }
+
+    if (actions.length > 0) {
+      sections.push({
+        title: 'Actions',
+        items: actions.map((item) => ({ ...item, globalIndex: count++ })),
       });
     }
 
@@ -129,20 +148,19 @@ export const NewTab: Component<NewTabProps> = (props) => {
   const [activeMenu, setActiveMenu] = createSignal<string | null>(null);
 
   return (
-    <div class="flex h-full w-full flex-col bg-white p-6 pb-0 dark:bg-neutral-900" onClick={() => setActiveMenu(null)}>
+    <div class="h-full w-full bg-white px-6 dark:bg-neutral-900 pb-30 flex flex-col overflow-y-scroll">
       <input type="file" ref={fileInputRef} class="hidden" onChange={handleFileUpload} />
-      <div
-        class="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col text-black dark:text-white"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div class="relative mb-6 shrink-0">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-            <Icon path={magnifyingGlass} class="h-5 w-5 text-neutral-400" />
-          </div>
-          <input
+      <div class="w-full mx-auto max-w-2xl">
+        <div class="top-0 z-20 bg-white py-6 dark:bg-neutral-900 sticky shrink-0">
+          <Icon
+            path={magnifyingGlass}
+            class="left-4 h-5 w-5 text-neutral-400 pointer-events-none absolute top-1/2 -translate-y-1/2"
+          />
+          <Input
             ref={inputRef}
+            autofocus
             type="text"
-            class="focus:border-brand-default dark:focus:border-brand-default block w-full border-b border-neutral-200 bg-transparent py-3 pr-4 pl-10 text-lg focus:outline-none dark:border-neutral-700"
+            class="w-full pl-10"
             placeholder="Search panes, files, or type a new filename..."
             value={query()}
             onInput={(e) => {
@@ -153,131 +171,116 @@ export const NewTab: Component<NewTabProps> = (props) => {
           />
         </div>
 
-        <div class="flex min-h-0 flex-1 flex-col space-y-4 overflow-y-auto pr-2">
-          <For each={categories()}>
-            {(category) => (
-              <div class="flex flex-col space-y-1">
-                <div class="px-3 text-xs font-semibold tracking-wider text-neutral-400 uppercase">{category.title}</div>
-                <For each={category.items}>
-                  {(item) => (
-                    <div class="group relative">
-                      <Show
-                        when={renamingFile() === item.id}
-                        fallback={
-                          <button
-                            class="flex w-full shrink-0 items-center rounded-lg p-2 text-left transition-colors"
-                            classList={{
-                              'bg-neutral-100 dark:bg-neutral-800': item.globalIndex === selectedIndex(),
-                              'hover:bg-neutral-50 dark:hover:bg-neutral-800/50': item.globalIndex !== selectedIndex(),
-                            }}
+        <For each={categories()}>
+          {(category) => (
+            <div class="space-y-1 flex flex-col">
+              <Label class="z-10 bg-white px-3 py-2 dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 sticky top-[84px] border-b">
+                {category.title}
+              </Label>
+              <For each={category.items}>
+                {(item) => {
+                  let btnRef: HTMLButtonElement | undefined;
+                  return (
+                    <Show
+                      when={renamingFile() === item.id}
+                      fallback={
+                        <div class="relative">
+                          <ListItem
+                            label={item.label}
+                            type={item.type === 'file' ? undefined : item.type}
+                            icon={item.icon}
+                            active={item.globalIndex === selectedIndex()}
                             onClick={() => handleSelect(item)}
-                          >
-                            <div
-                              class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                              classList={{
-                                'bg-brand-default/10 text-brand-default': item.globalIndex === selectedIndex(),
-                                'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400':
-                                  item.globalIndex !== selectedIndex(),
-                              }}
-                            >
-                              <Icon path={item.icon} class="h-4 w-4" />
-                            </div>
-                            <div class="min-w-0 flex-1 text-black dark:text-white">
-                              <div class="truncate text-sm font-medium">{item.label}</div>
-                              <Show when={item.type !== 'file'}>
-                                <div class="text-[10px] text-neutral-500 capitalize dark:text-neutral-400">
-                                  {item.type}
-                                </div>
-                              </Show>
-                            </div>
-                            <div class="flex shrink-0 items-center space-x-1">
+                            endIcon={item.globalIndex === selectedIndex() ? chevronRight : undefined}
+                            actions={
                               <Show when={item.type === 'file'}>
-                                <button
-                                  class="rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                <IconButton
+                                  ref={btnRef}
+                                  icon={ellipsisHorizontal}
+                                  class="p-1 opacity-0 group-hover:opacity-100"
+                                  size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setActiveMenu(activeMenu() === item.id ? null : item.id);
                                   }}
-                                >
-                                  <Icon path={ellipsisHorizontal} class="h-4 w-4 text-neutral-400" />
-                                </button>
+                                />
                               </Show>
-                              <Show when={item.globalIndex === selectedIndex()}>
-                                <Icon path={chevronRight} class="text-brand-default h-4 w-4" />
-                              </Show>
-                            </div>
-                          </button>
-                        }
-                      >
-                        <div class="flex items-center p-2">
-                          <input
-                            autofocus
-                            class="border-brand-default flex-1 border-b bg-transparent text-sm font-medium focus:outline-none"
-                            value={item.label}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.stopPropagation();
-                                if (renamingFile() === item.id) {
-                                  setRenamingFile(null);
-                                  props.onRenameFile(item.id, e.currentTarget.value);
-                                }
-                              } else if (e.key === 'Escape') {
-                                setRenamingFile(null);
-                              }
-                            }}
-                            onBlur={(e) => {
+                            }
+                          />
+                          <Show when={item.type === 'file'}>
+                            <Dismiss
+                              open={() => activeMenu() === item.id}
+                              setOpen={(val) => {
+                                if (!val) setActiveMenu(null);
+                              }}
+                              menuButton={btnRef}
+                            >
+                              <Menu class="right-0 mt-1 absolute top-full" onClose={() => setActiveMenu(null)}>
+                                <MenuItem
+                                  label="Open"
+                                  onClick={() => {
+                                    handleSelect(item);
+                                    setActiveMenu(null);
+                                  }}
+                                />
+                                <MenuItem
+                                  label="Rename"
+                                  icon={pencil}
+                                  onClick={() => {
+                                    setRenamingFile(item.id);
+                                    setActiveMenu(null);
+                                  }}
+                                />
+                                <MenuItem
+                                  label="Delete"
+                                  icon={trashIcon}
+                                  variant="danger"
+                                  onClick={() => {
+                                    if (confirm(`Delete ${item.label}?`)) {
+                                      props.onDeleteFile(item.id);
+                                    }
+                                    setActiveMenu(null);
+                                  }}
+                                />
+                              </Menu>
+                            </Dismiss>
+                          </Show>
+                        </div>
+                      }
+                    >
+                      <div class="p-2 flex items-center">
+                        <Input
+                          autofocus
+                          class="w-full py-1 flex-1 text-sm font-medium"
+                          value={item.label}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.stopPropagation();
                               if (renamingFile() === item.id) {
                                 setRenamingFile(null);
                                 props.onRenameFile(item.id, e.currentTarget.value);
                               }
-                            }}
-                          />
-                        </div>
-                      </Show>
-
-                      <Show when={activeMenu() === item.id}>
-                        <div class="absolute top-full right-0 z-20 mt-1 flex w-32 flex-col rounded-lg border border-neutral-100 bg-white py-1 text-xs shadow-xl dark:border-neutral-700 dark:bg-neutral-800">
-                          <button
-                            class="px-3 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                            onClick={() => {
-                              handleSelect(item);
-                              setActiveMenu(null);
-                            }}
-                          >
-                            Open
-                          </button>
-                          <button
-                            class="px-3 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                            onClick={() => {
-                              setRenamingFile(item.id);
-                              setActiveMenu(null);
-                            }}
-                          >
-                            Rename
-                          </button>
-                          <button
-                            class="px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            onClick={() => {
-                              if (confirm(`Delete ${item.label}?`)) {
-                                props.onDeleteFile(item.id);
-                              }
-                              setActiveMenu(null);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </Show>
-                    </div>
-                  )}
-                </For>
-              </div>
-            )}
-          </For>
-        </div>
-
+                            } else if (e.key === 'Escape') {
+                              setRenamingFile(null);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            if (renamingFile() === item.id) {
+                              setRenamingFile(null);
+                              props.onRenameFile(item.id, e.currentTarget.value);
+                            }
+                          }}
+                        />
+                      </div>
+                    </Show>
+                  );
+                }}
+              </For>
+            </div>
+          )}
+        </For>
         <Show when={categories().length === 0}>
-          <div class="mt-8 shrink-0 text-center text-sm text-neutral-500">
+          <div class="mt-8 text-neutral-500 shrink-0 text-center text-sm">
             <p>No results found for "{query()}"</p>
           </div>
         </Show>

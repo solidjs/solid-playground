@@ -1,20 +1,7 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "allowSyntheticDefaultImports": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "moduleResolution": "bundler",
-    "jsx": "preserve",
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "jsxImportSource": "solid-js"
+    "noEmit": true
   },
   "include": ["./src/**/*", "repl/**/*"],
   "exclude": ["node_modules/"]

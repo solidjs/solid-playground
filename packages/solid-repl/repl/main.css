@@ -33,10 +33,6 @@ textarea.monaco-mouse-cursor-text:focus {
   box-shadow: unset;
 }
 
-.hover-visible-button:hover button {
-  display: block;
-}
-
 #app .dockview-theme-abyss-spaced {
   padding-top: 0;
   --dv-color-abyss-dark: theme('colors.lightbg');

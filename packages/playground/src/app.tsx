@@ -30,7 +30,7 @@ export const App = (): JSX.Element => {
   });
 
   return (
-    <div class="dark:bg-darkerbg bg-lightbg relative flex h-screen flex-col overflow-auto font-sans text-slate-900 dark:text-slate-50">
+    <div class="text-slate-900 dark:text-slate-50 relative flex h-screen flex-col overflow-auto bg-lightbg font-sans dark:bg-darkerbg">
       <Router
         root={(props) => (
           <AppContextProvider>

@@ -11,15 +11,15 @@ export const Update: Component<{
 
   return (
     <Portal mount={mount!}>
-      <div class="text-brand-default z-10 max-w-sm rounded border border-blue-400 bg-blue-200 px-6 py-4 shadow">
-        <button title="close" onClick={props.onDismiss} class="absolute top-1 right-1 hover:text-blue-900">
+      <div class="z-10 border-blue-400 bg-blue-200 px-6 py-4 max-w-sm rounded border text-solidc shadow">
+        <button title="close" onClick={props.onDismiss} class="top-1 right-1 hover:text-blue-900 absolute">
           <Icon path={xMark} class="h-6" />
         </button>
         <p class="font-semibold">There's a new update available.</p>
         <p class="mt-2">Refresh your browser or click the button below to get the latest update of the REPL.</p>
         <button
           onClick={() => location.reload()}
-          class="mt-4 rounded bg-blue-800 px-3 py-1 text-sm tracking-wide text-blue-200 uppercase hover:bg-blue-900"
+          class="mt-4 bg-blue-800 px-3 py-1 text-blue-200 hover:bg-blue-900 rounded text-sm uppercase tracking-wide"
         >
           Refresh
         </button>

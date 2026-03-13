@@ -1,0 +1,8 @@
+{
+  "jsPlugins": ["./scripts/oxlint-plugin-unocss.ts"],
+  "rules": {
+    "unocss/valid-class": "error",
+    "unocss/no-conflicting-classes": "error",
+    "eslint/no-unassigned-vars": "off"
+  }
+}

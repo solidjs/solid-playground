@@ -1,28 +1,35 @@
 {
   "name": "solid-playground-restructured",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "description": "",
-  "scripts": {
-    "start": "cd packages/playground && pnpm start",
-    "build": "cd packages/playground && pnpm build",
-    "dev": "cd packages/playground && pnpm dev",
-    "format": "prettier -w ."
-  },
   "keywords": [],
   "author": "",
   "workspaces": [
     "./packages/*"
   ],
+  "type": "module",
+  "scripts": {
+    "start": "cd packages/playground && pnpm start",
+    "build": "cd packages/playground && pnpm build",
+    "dev": "cd packages/playground && pnpm dev",
+    "format": "oxfmt .",
+    "lint": "oxlint ."
+  },
   "devDependencies": {
     "@changesets/cli": "2.30.0",
-    "prettier": "^3.8.1",
-    "prettier-plugin-tailwindcss": "^0.7.2"
+    "@oxlint/plugins": "^1.55.0",
+    "@unocss/preset-wind3": "^66.6.6",
+    "jiti": "^2.6.1",
+    "oxfmt": "^0.40.0",
+    "oxlint": "^1.55.0",
+    "synckit": "^0.11.12",
+    "unocss": "^66.0.0"
   },
+  "packageManager": "pnpm@10.32.1",
   "pnpm": {
     "patchedDependencies": {
       "monaco-editor": "patches/monaco-editor.patch"
     }
-  },
-  "packageManager": "pnpm@10.32.1"
+  }
 }

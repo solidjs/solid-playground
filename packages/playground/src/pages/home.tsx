@@ -97,7 +97,7 @@ export const Home = () => {
         <Show when={!params.user} fallback={<h1 class="mb-4 text-center text-3xl">{`${params.user}'s`} Repls</h1>}>
           <div class="mb-8 flex flex-col align-middle">
             <button
-              class="bg-solid-lightgray mx-auto flex items-center rounded-xl border border-gray-600 p-3 text-xl shadow-md dark:bg-neutral-800"
+              class="border-gray-600 p-3 dark:bg-neutral-800 mx-auto flex items-center rounded-xl border bg-lightgray text-xl shadow-md"
               onClick={async () => {
                 const result = await fetch(`${API}/repl`, {
                   method: 'POST',
@@ -123,17 +123,17 @@ export const Home = () => {
             >
               <Icon path={plus} class="w-6" /> Create new REPL
             </button>
-            <p class="pt-1 text-center text-sm text-gray-800 dark:text-gray-300">
+            <p class="pt-1 text-gray-800 dark:text-gray-300 text-center text-sm">
               or{' '}
-              <A href="/scratchpad" class="text-solid-medium dark:text-solid-darkdefault hover:underline">
+              <A href="/scratchpad" class="text-medium hover:underline">
                 open my scratchpad
               </A>
             </p>
           </div>
         </Show>
-        <table class="mx-auto w-200 max-w-full">
+        <table class="w-200 max-w-full mx-auto">
           <thead>
-            <tr class="border-b border-neutral-600 font-medium">
+            <tr class="border-neutral-600 border-b font-medium">
               <th class="w-1/2 p-1 text-left">Title</th>
               <th class="w-32 p-1 text-left last:text-right">Edited</th>
               <Show when={!params.user}>
@@ -148,7 +148,7 @@ export const Home = () => {
                 <tr class="h-10">
                   <td colspan="3" class="text-center">
                     <svg
-                      class="mx-auto mt-8 h-8 w-8 animate-spin text-white"
+                      class="mt-8 h-8 w-8 animate-spin text-white mx-auto"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -182,7 +182,7 @@ export const Home = () => {
                       <td class="space-x-1 p-1 pr-0 text-right">
                         <Icon
                           path={repl.public ? eye : eyeSlash}
-                          class="inline w-6 cursor-pointer"
+                          class="w-6 inline cursor-pointer"
                           onClick={async (e) => {
                             e.stopPropagation();
                             fetch(`${API}/repl/${repl.id}`, {
@@ -204,7 +204,7 @@ export const Home = () => {
                         />
                         <Icon
                           path={xMark}
-                          class="inline w-6 cursor-pointer text-red-700"
+                          class="w-6 text-red-700 inline cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpen(repl.id);
@@ -221,7 +221,7 @@ export const Home = () => {
       </div>
       <Show when={!!open()}>
         <div
-          class="fixed top-0 left-0 z-10 flex h-full w-full items-center bg-gray-500/50"
+          class="top-0 left-0 z-10 h-full w-full bg-gray-500/50 fixed flex items-center"
           onClick={(e) => {
             if (e.target !== e.currentTarget) return;
             setOpen(undefined);
@@ -229,15 +229,15 @@ export const Home = () => {
           role="presentation"
         >
           <div
-            class="dark:bg-darkbg w-96 rounded-lg bg-white p-4 shadow dark:text-white"
+            class="w-96 bg-white p-4 dark:text-white rounded-lg shadow dark:bg-darkbg"
             role="dialog"
             aria-modal="true"
             tabindex="-1"
           >
             <p>Are you sure you want to delete that?</p>
-            <div class="mt-2 flex gap-2">
+            <div class="mt-2 gap-2 flex">
               <button
-                class="rounded border px-2 py-1"
+                class="px-2 py-1 rounded border"
                 onclick={() => {
                   fetch(`${API}/repl/${open()}`, {
                     method: 'DELETE',
@@ -254,7 +254,7 @@ export const Home = () => {
               >
                 Yes
               </button>
-              <button class="rounded border px-2 py-1" onClick={() => setOpen(undefined)}>
+              <button class="px-2 py-1 rounded border" onClick={() => setOpen(undefined)}>
                 No
               </button>
             </div>

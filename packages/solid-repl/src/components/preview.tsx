@@ -250,7 +250,7 @@ export const Preview: Component<Props> = (props) => {
       preview: () => (
         <iframe
           title="Solid REPL"
-          class="dark:bg-darkbg block h-full min-h-0 w-full min-w-0 overflow-scroll bg-white p-0"
+          class="h-full min-h-0 w-full min-w-0 bg-white p-0 block overflow-scroll dark:bg-darkbg"
           style={styleScale()}
           ref={iframe}
           src={iframeSrcUrl()}
@@ -332,7 +332,7 @@ export const Preview: Component<Props> = (props) => {
     });
   });
 
-  return <div class="flex min-h-0 flex-1 flex-col" ref={outerContainer} classList={props.classList}></div>;
+  return <div class="min-h-0 flex flex-1 flex-col" ref={outerContainer} classList={props.classList}></div>;
 };
 
 type Props = {

@@ -1,22 +1,9 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import UnoCSS from 'unocss/vite';
-import devtools from 'solid-devtools/vite';
 
 export default defineConfig((env) => ({
-  plugins: [
-    env.mode !== 'production' &&
-      devtools({
-        autoname: true,
-        locator: {
-          targetIDE: 'vscode',
-          componentLocation: true,
-          jsxLocation: true,
-        },
-      }),
-    solidPlugin(),
-    UnoCSS(),
-  ],
+  plugins: [solidPlugin(), UnoCSS()],
   define: {
     'process.env.NODE_DEBUG': 'false',
     ...(env.command == 'build' ? {} : { global: 'globalThis' }),

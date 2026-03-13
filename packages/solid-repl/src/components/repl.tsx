@@ -6,6 +6,8 @@ import { throttle } from '@solid-primitives/scheduled';
 import { editor, Uri } from 'monaco-editor';
 import { createMonacoTabs } from './editor/monacoTabs';
 import { NewTab } from './newTab';
+import { CompileMode, compileOptions } from './CompileMode';
+import { IconButton } from './ui/IconButton';
 
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
@@ -15,19 +17,14 @@ import { insert } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
 import { plus, trash, pencil, xMark } from 'solid-heroicons/outline';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
-
-const compileMode = {
-  SSR: { generate: 'ssr', hydratable: true },
-  DOM: { generate: 'dom', hydratable: false },
-  HYDRATABLE: { generate: 'dom', hydratable: true },
-  UNIVERSAL: { generate: 'universal', hydratable: false, moduleName: 'solid-universal-module' as string },
-} as const;
+import { Menu, MenuItem } from './ui/Menu';
+import Dismiss from 'solid-dismiss';
 
 const getImportMap = (tabs: Tab[]): Record<string, string> => {
   try {
     const rawImportMap = tabs.find((tab) => tab.name === 'import_map.json');
     return JSON.parse(rawImportMap?.source ?? '{}');
-  } catch (e) {
+  } catch {
     return {};
   }
 };
@@ -39,7 +36,7 @@ export const Repl: ReplProps = (props) => {
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal('');
   const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
-  const [mode, setMode] = createSignal<(typeof compileMode)[keyof typeof compileMode]>(compileMode.DOM);
+  const [mode, setMode] = createSignal<(typeof compileOptions)[keyof typeof compileOptions]>(compileOptions.DOM);
 
   const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
 
@@ -126,8 +123,12 @@ export const Repl: ReplProps = (props) => {
     }
     if (outputVisible() && props.current?.endsWith('.tsx')) {
       let compileOpts = mode();
-      if (compileOpts === compileMode.UNIVERSAL) {
-        compileOpts = { generate: 'universal', hydratable: false, moduleName: universalModuleName() };
+      if (compileOpts === compileOptions.UNIVERSAL) {
+        compileOpts = {
+          generate: 'universal',
+          hydratable: false,
+          moduleName: universalModuleName(),
+        };
       }
       applyBabelCompilation({
         event: 'BABEL',
@@ -234,7 +235,7 @@ export const Repl: ReplProps = (props) => {
       theme: themeAbyssSpaced,
       defaultTabComponent: 'default',
       createLeftHeaderActionComponent: () => {
-        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        const element = (<div class="h-full px-1 flex items-center"></div>) as HTMLDivElement;
         let disposer: () => void;
 
         return {
@@ -244,8 +245,10 @@ export const Repl: ReplProps = (props) => {
               disposer = dispose;
 
               insert(element, () => (
-                <button
-                  class="cursor-pointer space-x-2 px-2 py-2"
+                <IconButton
+                  icon={plus}
+                  class="h-[28px]"
+                  size="sm"
                   onClick={() => {
                     const panel = dockview.getPanel('newTab');
                     if (panel) {
@@ -262,9 +265,8 @@ export const Repl: ReplProps = (props) => {
                   }}
                   title="New Tab"
                 >
-                  <Icon path={plus} class="h-5" />
                   <span class="sr-only">New tab</span>
-                </button>
+                </IconButton>
               ));
             });
           },
@@ -272,7 +274,7 @@ export const Repl: ReplProps = (props) => {
         };
       },
       createTabComponent: (panel) => {
-        const element = (<div class="flex h-full items-center pl-2"></div>) as HTMLDivElement;
+        const element = (<div class="h-full pl-2 flex items-center"></div>) as HTMLDivElement;
         let disposer: () => void;
 
         return {
@@ -288,10 +290,12 @@ export const Repl: ReplProps = (props) => {
                 setPanelTitle(e.title);
               });
               const isFile = panel.name == 'file';
+              let containerRef: HTMLDivElement | undefined;
 
               insert(element, () => (
                 <div
-                  class="group flex h-full items-center space-x-2"
+                  ref={containerRef}
+                  class="h-full space-x-2 group flex items-center"
                   onContextMenu={(e) => {
                     if (!isFile) return;
                     e.preventDefault();
@@ -303,7 +307,7 @@ export const Repl: ReplProps = (props) => {
                   <span class="truncate text-xs">{panelTitle()}</span>
 
                   <button
-                    class="ml-auto rounded-sm p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    class="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 ml-auto rounded-sm opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={(e) => {
                       if (e.defaultPrevented) return;
                       e.preventDefault();
@@ -315,40 +319,40 @@ export const Repl: ReplProps = (props) => {
                   </button>
 
                   <Show when={isFile && showMenu()}>
-                    <div
-                      class="fixed z-[1000] w-32 rounded-lg border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-700 dark:bg-neutral-800"
-                      style={{
-                        top: `${menuPos().y}px`,
-                        left: `${menuPos().x}px`,
+                    <Dismiss
+                      open={() => true}
+                      setOpen={(val) => {
+                        if (!val) setShowMenu(false);
                       }}
-                      onMouseEnter={() => setShowMenu(true)}
-                      onMouseLeave={() => setShowMenu(false)}
-                      onClick={(e) => e.stopPropagation()}
+                      show
+                      menuButton={containerRef}
                     >
-                      <button
-                        class="flex w-full items-center space-x-2 px-3 py-2 text-left text-xs hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                        onClick={() => {
-                          const newName = prompt('Rename file to:', panelTitle());
-                          if (newName) renameFile(panelTitle(), newName);
-                          setShowMenu(false);
-                        }}
+                      <Menu
+                        style={{ top: `${menuPos().y}px`, left: `${menuPos().x}px` }}
+                        onClose={() => setShowMenu(false)}
                       >
-                        <Icon path={pencil} class="h-3 w-3" />
-                        <span>Rename</span>
-                      </button>
-                      <button
-                        class="flex w-full items-center space-x-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        onClick={() => {
-                          if (confirm(`Delete ${panelTitle()}?`)) {
-                            deleteFile(panelTitle());
-                          }
-                          setShowMenu(false);
-                        }}
-                      >
-                        <Icon path={trash} class="h-3 w-3" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
+                        <MenuItem
+                          label="Rename"
+                          icon={pencil}
+                          onClick={() => {
+                            const newName = prompt('Rename file to:', panelTitle());
+                            if (newName) renameFile(panelTitle(), newName);
+                            setShowMenu(false);
+                          }}
+                        />
+                        <MenuItem
+                          label="Delete"
+                          icon={trash}
+                          variant="danger"
+                          onClick={() => {
+                            if (confirm(`Delete ${panelTitle()}?`)) {
+                              deleteFile(panelTitle());
+                            }
+                            setShowMenu(false);
+                          }}
+                        />
+                      </Menu>
+                    </Dismiss>
                   </Show>
                 </div>
               ));
@@ -362,7 +366,7 @@ export const Repl: ReplProps = (props) => {
         };
       },
       createRightHeaderActionComponent: () => {
-        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        const element = (<div class="h-full px-1 flex items-center justify-end"></div>) as HTMLDivElement;
         let disposer: () => void;
 
         return {
@@ -378,8 +382,10 @@ export const Repl: ReplProps = (props) => {
 
               insert(element, () => (
                 <Show when={isTSX()}>
-                  <button
-                    class="cursor-pointer space-x-2 px-2 py-2"
+                  <IconButton
+                    icon={trash}
+                    class="h-[28px]"
+                    size="sm"
                     onClick={() => {
                       const confirmReset = confirm('Are you sure you want to reset the editor?');
                       if (!confirmReset) return;
@@ -387,9 +393,8 @@ export const Repl: ReplProps = (props) => {
                     }}
                     title="Reset Editor"
                   >
-                    <Icon path={trash} class="h-5" />
                     <span class="sr-only">Reset Editor</span>
-                  </button>
+                  </IconButton>
                 </Show>
               ));
             });
@@ -398,7 +403,7 @@ export const Repl: ReplProps = (props) => {
         };
       },
       createComponent(options) {
-        const element = (<div class="flex h-full flex-col"></div>) as HTMLDivElement;
+        const element = (<div class="h-full flex flex-col"></div>) as HTMLDivElement;
         let disposer: () => void;
         let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
 
@@ -517,72 +522,15 @@ export const Repl: ReplProps = (props) => {
               setOutputVisible(false);
             });
             component = () => (
-              <section class="relative flex min-h-0 min-w-0 flex-1 flex-col divide-y-1 divide-slate-200 dark:divide-neutral-800">
+              <section class="min-h-0 min-w-0 divide-y-1 divide-slate-200 dark:divide-neutral-800 relative flex flex-1 flex-col">
                 <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
 
-                <div class="p-2">
-                  <label class="text-sm font-semibold uppercase">Compile mode</label>
-
-                  <div class="mt-1 space-y-1 text-sm">
-                    <label class="mr-auto block cursor-pointer space-x-2">
-                      <input
-                        checked={mode() === compileMode.DOM}
-                        value="DOM"
-                        class="text-brand-default"
-                        onChange={[setMode, compileMode.DOM]}
-                        type="radio"
-                        name="dom"
-                      />
-                      <span>Client side rendering</span>
-                    </label>
-
-                    <label class="mr-auto block cursor-pointer space-x-2">
-                      <input
-                        checked={mode() === compileMode.SSR}
-                        value="SSR"
-                        class="text-brand-default"
-                        onChange={[setMode, compileMode.SSR]}
-                        type="radio"
-                        name="dom"
-                      />
-                      <span>Server side rendering</span>
-                    </label>
-
-                    <label class="mr-auto block cursor-pointer space-x-2">
-                      <input
-                        checked={mode() === compileMode.HYDRATABLE}
-                        value="HYDRATABLE"
-                        class="text-brand-default"
-                        onChange={[setMode, compileMode.HYDRATABLE]}
-                        type="radio"
-                        name="dom"
-                      />
-                      <span>Client side rendering with hydration</span>
-                    </label>
-
-                    <label class="mr-auto block cursor-pointer space-x-2">
-                      <input
-                        checked={mode() === compileMode.UNIVERSAL}
-                        value="UNIVERSAL"
-                        class="text-brand-default"
-                        onChange={[setMode, compileMode.UNIVERSAL]}
-                        type="radio"
-                        name="dom"
-                      />
-                      <span>Universal Rendering & moduleName:</span>
-                      <input
-                        onFocus={[setMode, compileMode.UNIVERSAL]}
-                        onInput={(e) => {
-                          setUniversalModuleName(e.target.value);
-                        }}
-                        class="p-2.5"
-                        type="text"
-                        value={universalModuleName()}
-                        name="moduleName"
-                      />
-                    </label>
-                  </div>
-                </div>
+                <CompileMode
+                  mode={mode()}
+                  setMode={setMode}
+                  universalModuleName={universalModuleName()}
+                  setUniversalModuleName={setUniversalModuleName}
+                />
               </section>
             );
             break;
@@ -613,8 +561,16 @@ export const Repl: ReplProps = (props) => {
         root: {
           type: 'branch',
           data: [
-            { type: 'leaf', data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' }, size: 400 },
-            { type: 'leaf', data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' }, size: 250 },
+            {
+              type: 'leaf',
+              data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' },
+              size: 400,
+            },
+            {
+              type: 'leaf',
+              data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' },
+              size: 250,
+            },
           ],
           size: 480,
         },
@@ -655,8 +611,7 @@ export const Repl: ReplProps = (props) => {
   });
 
   return (
-    <div class="flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans text-black dark:text-white">
-      <div ref={ref} class="flex h-full min-h-0 flex-1 flex-col overflow-hidden"></div>
+    <div ref={ref} class="h-full min-h-0 text-black dark:text-white flex flex-1 flex-col overflow-hidden font-sans">
       <Show when={error()}>
         <Error message={error()} onDismiss={() => setError('')} />
       </Show>

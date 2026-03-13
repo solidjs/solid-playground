@@ -1,7 +1,9 @@
 {
-  "version": "0.26.0",
   "name": "solid-repl",
+  "version": "0.26.0",
   "description": "Quickly discover what the solid compiler will generate from your JSX template",
+  "homepage": "https://playground.solidjs.com",
+  "author": "Alexandre Mouton-Brady",
   "repository": {
     "type": "git",
     "url": "https://github.com/solidjs/solid-playground.git"
@@ -9,16 +11,23 @@
   "files": [
     "dist"
   ],
-  "homepage": "https://playground.solidjs.com",
-  "author": "Alexandre Mouton-Brady",
   "module": "dist/repl.jsx",
   "types": "src/types.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json && unocss \"./src/**\" && jiti build.ts",
     "tsc": "tsc"
   },
-  "peerDependencies": {
-    "solid-js": ">=1.7.0"
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
+    "@shikijs/monaco": "^4.0.2",
+    "@solid-primitives/media": "^2.3.5",
+    "@solid-primitives/scheduled": "^1.5.3",
+    "dedent": "^1.7.2",
+    "dockview-core": "^5.1.0",
+    "shiki": "^4.0.2",
+    "solid-dismiss": "^1.8.2",
+    "solid-floating-ui": "^0.3.1",
+    "solid-heroicons": "^3.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -45,16 +54,7 @@
     "typescript": "^5.9.3",
     "unocss": "^66.6.6"
   },
-  "dependencies": {
-    "@floating-ui/dom": "^1.7.6",
-    "@shikijs/monaco": "^4.0.2",
-    "@solid-primitives/media": "^2.3.5",
-    "@solid-primitives/scheduled": "^1.5.3",
-    "dedent": "^1.7.2",
-    "dockview-core": "^5.1.0",
-    "shiki": "^4.0.2",
-    "solid-dismiss": "^1.8.2",
-    "solid-floating-ui": "^0.3.1",
-    "solid-heroicons": "^3.2.4"
+  "peerDependencies": {
+    "solid-js": ">=1.7.0"
   }
 }

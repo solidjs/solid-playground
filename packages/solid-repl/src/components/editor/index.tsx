@@ -2,9 +2,10 @@ import { Component, createEffect, onMount, onCleanup, Show } from 'solid-js';
 import { Uri, languages, editor as mEditor, KeyMod, KeyCode, typescript } from 'monaco-editor';
 import { useZoom } from '../../hooks/useZoom';
 import { throttle } from '@solid-primitives/scheduled';
-import { Icon } from 'solid-heroicons';
-import { bell, bellSlash } from 'solid-heroicons/outline';
+import { bell, bellSlash, codeBracket } from 'solid-heroicons/outline';
 import { register } from './setupSolid';
+import { IconButton } from '../ui/IconButton';
+import { Button } from '../ui/Button';
 
 const Editor: Component<{
   model: mEditor.ITextModel;
@@ -174,24 +175,28 @@ const Editor: Component<{
 
   return (
     <>
-      <div class="min-h-0 min-w-0 flex-1 p-0" ref={parent} />
+      <div class="min-h-0 min-w-0 p-0 flex-1" ref={parent} />
       <Show when={!props.disabled}>
-        <div class="border-bord flex h-[30px] w-full justify-between border-t-1">
+        <div class="w-full border-t-1 bg-white px-2 dark:bg-neutral-900 flex h-[30px] items-center justify-between border-bord">
           <div></div>
-          <div class="flex items-center">
-            <button
-              class="mx-1 rounded p-1 text-xs hover:bg-gray-200"
+          <div class="space-x-1 flex items-center">
+            <IconButton
+              icon={props.displayErrors ? bell : bellSlash}
+              class="!p-1"
+              size="sm"
+              title={props.displayErrors ? 'Disable error reporting' : 'Enable error reporting'}
               onClick={() => props.setDisplayErrors?.(!props.displayErrors)}
-            >
-              <Icon path={props.displayErrors ? bell : bellSlash} class="h-4" />
-            </button>
-            <button
-              class="mx-1 rounded p-1 text-xs hover:bg-gray-200"
+            />
+            <IconButton
+              icon={codeBracket}
+              class="!p-1"
+              size="sm"
+              title="Format Document"
               onClick={() => editor.getAction('editor.action.formatDocument')?.run()}
-            >
-              {'{ }'}
-            </button>
-            <button class="mx-1 rounded p-1 text-xs hover:bg-gray-200">TypeScript</button>
+            />
+            <Button variant="ghost" class="h-6 !px-2 !py-0 !rounded-lg text-[10px]" onClick={() => {}}>
+              TypeScript
+            </Button>
           </div>
         </div>
       </Show>

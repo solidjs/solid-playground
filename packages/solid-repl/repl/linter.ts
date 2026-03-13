@@ -44,5 +44,3 @@ self.addEventListener('message', ({ data }: MessageEvent<LinterWorkerPayload>) =
     self.postMessage({ event: 'ERROR' as const, error: e });
   }
 });
-
-export {};
