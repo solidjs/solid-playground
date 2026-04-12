@@ -13,6 +13,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
-    "jsxImportSource": "solid-js"
+    "jsxImportSource": "solid-js",
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }
