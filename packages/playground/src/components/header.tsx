@@ -146,7 +146,7 @@ export const Header: ParentComponent<{
             when={context.user()?.avatar}
             fallback={
               <a
-                class="mx-1 px-3 py-1 text-slate-50 bg-solid rounded text-sm"
+                class="mx-1 px-3 py-1 text-slate-50 bg-solidc rounded text-sm"
                 href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`}
                 rel="external"
               >
