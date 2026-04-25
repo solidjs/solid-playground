@@ -34,7 +34,7 @@ export const Repl: ReplProps = (props) => {
   let now: number;
 
   const [error, setError] = createSignal('');
-  const [output, setOutput] = createSignal('');
+  const [output, setOutput] = createSignal<Record<string, string>>({});
   const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
   const [mode, setMode] = createSignal<(typeof compileOptions)[keyof typeof compileOptions]>(compileOptions.DOM);
 
@@ -51,7 +51,7 @@ export const Repl: ReplProps = (props) => {
   onCleanup(() => outputModel.dispose());
 
   const onCompilerMessage = ({ data }: any) => {
-    const { event, compiled, error } = data;
+    const { event, compiled, externals, error } = data;
     if (event === 'ERROR') {
       console.error(error);
       return setError(error.message);
@@ -68,13 +68,13 @@ export const Repl: ReplProps = (props) => {
         if (currentMap[file] === `https://jspm.dev/${file}`) {
           currentMap[file] = `https://esm.sh/${file}`;
         }
-        if (!(file in compiled) && currentMap[file] === `https://esm.sh/${file}`) {
+        if (!(file in externals) && currentMap[file] === `https://esm.sh/${file}`) {
           delete currentMap[file];
         }
       }
-      for (const file in compiled) {
-        if (!(file in currentMap) && !file.startsWith('./')) {
-          currentMap[file] = compiled[file];
+      for (const file in externals) {
+        if (!(file in currentMap)) {
+          currentMap[file] = externals[file];
         }
       }
       console.log(`Compilation took: ${performance.now() - now}ms`);
@@ -93,7 +93,7 @@ export const Repl: ReplProps = (props) => {
           model.setValue(tab.source);
         }
 
-        setOutput(compiled['./main']);
+        setOutput(compiled);
         setImportMap(currentMap);
       });
     }

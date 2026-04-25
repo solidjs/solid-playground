@@ -6,40 +6,39 @@ import babelPresetSolid from 'babel-preset-solid';
 
 import dd from 'dedent';
 
-let files: Record<string, string> = {};
-let cache: Record<string, string> = {};
-let dataToReturn: Record<string, string> = {};
-
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
 
-function babelTransform(filename: string, code: string) {
+function babelTransform(filename: string, code: string, externals: Record<string, string>) {
+  const handleImportee = (node: { value: string } | null | undefined) => {
+    if (!node || typeof node.value !== 'string') return;
+    const importee = node.value;
+    if (importee.startsWith('.')) {
+      node.value = 'solidrepl:' + importee;
+    } else if (!importee.includes('://')) {
+      if (!(importee in externals)) externals[importee] = `https://esm.sh/${importee}`;
+    }
+  };
+
   let { code: transformedCode } = transform(code, {
     plugins: [
-      // Babel plugin to get file import names
-      function importGetter() {
+      function importRewriter() {
         return {
           visitor: {
             Import(path: any) {
-              const importee: string = path.parent.arguments[0].value;
-              cache[importee] = path.parent.arguments[0].value = transformImportee(importee);
+              handleImportee(path.parent.arguments[0]);
             },
             ImportDeclaration(path: any) {
-              const importee: string = path.node.source.value;
-              cache[importee] = path.node.source.value = transformImportee(importee);
+              handleImportee(path.node.source);
             },
             ExportAllDeclaration(path: any) {
-              const importee: string = path.node.source.value;
-              cache[importee] = path.node.source.value = transformImportee(importee);
+              handleImportee(path.node.source);
             },
             ExportNamedDeclaration(path: any) {
-              const importee: string = path.node.source?.value;
-              if (importee) {
-                cache[importee] = path.node.source.value = transformImportee(importee);
-              }
+              handleImportee(path.node.source);
             },
           },
         };
@@ -55,87 +54,34 @@ function babelTransform(filename: string, code: string) {
   return transformedCode!.replace('render(', 'window.dispose = render(');
 }
 
-// Returns new import URL
-function transformImportee(fileName: string) {
-  // There's no point re-visiting a node again, as it's already been processed
-  if (fileName in cache) {
-    return cache[fileName];
+function transformTab(tab: Tab, externals: Record<string, string>): string {
+  if (tab.name.endsWith('.css')) {
+    const id = uid(tab.name);
+    return dd`
+      (() => {
+        let stylesheet = document.getElementById('${id}');
+        if (!stylesheet) {
+          stylesheet = document.createElement('style')
+          stylesheet.setAttribute('id', '${id}')
+          document.head.appendChild(stylesheet)
+        }
+        const styles = document.createTextNode(\`${tab.source.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}\`)
+        stylesheet.innerHTML = ''
+        stylesheet.appendChild(styles)
+      })()
+    `;
   }
-  if (!fileName) {
-    return '';
-  }
-
-  // Base cases
-  if (fileName.includes('://') || !fileName.startsWith('.')) {
-    if (fileName.endsWith('.css')) {
-      const id = uid(fileName);
-      const js = dd`
-        (() => {
-          let link = document.getElementById('${id}');
-          if (!link) {
-            link = document.createElement('link')
-            link.setAttribute('id', ${id})
-            document.head.appendChild(link)
-          }
-          link.setAttribute('rel', 'stylesheet')
-          link.setAttribute('href', '${fileName}')
-        })()
-      `;
-      const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
-      return url;
-    }
-    if (fileName.includes('://')) return fileName;
-    else {
-      dataToReturn[fileName] = `https://esm.sh/${fileName}`;
-      return fileName;
-    }
-  }
-  if (fileName.endsWith('.css')) {
-    const contents = files[fileName];
-    const id = uid(fileName);
-    const js = dd`
-    (() => {
-      let stylesheet = document.getElementById('${id}');
-      if (!stylesheet) {
-        stylesheet = document.createElement('style')
-        stylesheet.setAttribute('id', ${id})
-        document.head.appendChild(stylesheet)
-      }
-      const styles = document.createTextNode(\`${contents}\`)
-      stylesheet.innerHTML = ''
-      stylesheet.appendChild(styles)
-    })()
-  `;
-    const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
-    return url;
-  }
-
-  // Parse file and all its children through recursion
-  cache[fileName] = ''; // Prevent infinite recursion
-  const js = babelTransform(fileName, files[fileName]);
-  const url = URL.createObjectURL(new Blob([js], { type: 'application/javascript' }));
-  return url;
-}
-
-function bundle(entryPoint: string, fileRecord: Record<string, string>) {
-  files = fileRecord;
-  for (let out in dataToReturn) {
-    const url = dataToReturn[out];
-    if (url.startsWith('blob:')) URL.revokeObjectURL(dataToReturn[out]);
-  }
-  cache = {};
-  dataToReturn = {};
-  dataToReturn[entryPoint] = transformImportee(entryPoint);
-  return dataToReturn;
+  return babelTransform(tab.name, tab.source, externals);
 }
 
 function compile(tabs: Tab[], event: string) {
-  const tabsRecord: Record<string, string> = {};
+  const externals: Record<string, string> = {};
+  const compiled: Record<string, string> = {};
   for (const tab of tabs) {
-    tabsRecord[`./${tab.name.replace(/.(tsx|jsx)$/, '')}`] = tab.source;
+    const key = `./${tab.name.replace(/\.(tsx|jsx)$/, '')}`;
+    compiled[key] = transformTab(tab, externals);
   }
-  const bundled = bundle('./main', tabsRecord);
-  return { event, compiled: bundled };
+  return { event, compiled, externals };
 }
 
 function babel(tab: Tab, compileOpts: any) {

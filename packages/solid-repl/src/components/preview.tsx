@@ -1,180 +1,205 @@
-import { Component, createEffect, createMemo, JSX, onCleanup, onMount, untrack } from 'solid-js';
+import { Component, createEffect, JSX, onCleanup, onMount } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { Orientation, SplitviewComponent } from 'dockview-core';
 import { SolidPanelView } from '../dockview/solid';
 
-const dispatchKeyboardEventToParentZoomState = () => `
+const dispatchZoomKeyToParent = `
   document.addEventListener('keydown', (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
     if (!['=', '-'].includes(e.key)) return;
-
-    const options = {
-      key: e.key,
-      ctrlKey: e.ctrlKey,
-      metaKey: e.metaKey,
-    };
-    const keyboardEvent = new KeyboardEvent('keydown', options);
-    window.parent.document.dispatchEvent(keyboardEvent);
-
+    window.parent.postMessage({ event: 'ZOOM_KEY', value: { key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey } }, '*');
     e.preventDefault();
   }, true);
 `;
 
-const generateHTML = (isDark: boolean, importMap: string) => `
-  <!doctype html>
-  <html${isDark ? ' class="dark"' : ''}>
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+// Sandboxed iframes get a unique opaque origin, which causes two problems for chobitsu:
+//   1. localStorage / sessionStorage throw on access (opaque origins have no storage).
+//   2. chobitsu's getUrl()/getOrigin() fall back to parent.location.{href,origin} for
+//      "about:" / "null"-origin pages, and that read is cross-origin and throws — which
+//      blanks out Page.getResourceTree, so chii's Sources panel stays empty.
+// We install in-memory storage shims and replace `parent` with a thin object that returns
+// the iframe's own location while forwarding postMessage to the real parent (so we can
+// still talk to the playground).
+const sandboxShim = `
+  (() => {
+    const make = () => {
+      const m = new Map();
+      return {
+        getItem: (k) => (m.has(k) ? m.get(k) : null),
+        setItem: (k, v) => { m.set(k, String(v)); },
+        removeItem: (k) => { m.delete(k); },
+        clear: () => { m.clear(); },
+        key: (i) => Array.from(m.keys())[i] ?? null,
+        get length() { return m.size; },
+      };
+    };
+    Object.defineProperty(window, 'localStorage', { value: make(), configurable: true });
+    Object.defineProperty(window, 'sessionStorage', { value: make(), configurable: true });
+    const realParent = window.parent;
+    window.parent = {
+      location: { href: location.href, origin: location.origin || 'about:srcdoc' },
+      postMessage: (msg, target, transfer) => realParent.postMessage(msg, target, transfer),
+    };
+  })();
+`;
 
-      <link href="https://ga.jspm.io/npm:modern-normalize@3.0.1/modern-normalize.css" rel="stylesheet">
-      <script async src="https://ga.jspm.io/npm:es-module-shims@2.8.0/dist/es-module-shims.js"></script>
-      <style>
-        html, body {
-          position: relative;
-          width: 100%;
-          height: 100%;
+const mainIframeScript = `
+  (() => {
+    let finisher = undefined;
+    let cache = {};
+
+    const buildModule = (name, source, sources) => {
+      if (cache[name]) return cache[name];
+      cache[name] = 'error:cyclic import';
+      const out = source.replace(/(['"])solidrepl:([^'"]+)\\1/g, (_, q, rel) => {
+        if (sources[rel] == null) return q + rel + q;
+        return q + buildModule(rel, sources[rel], sources) + q;
+      });
+      const blob = new Blob([out], { type: 'text/javascript' });
+      cache[name] = URL.createObjectURL(blob);
+      return cache[name];
+    };
+
+    const handleCodeUpdate = (sources) => {
+      if (!sources || typeof sources['./main'] !== 'string') return;
+
+      window.dispose?.();
+      window.dispose = undefined;
+
+      if (document.getElementById('app')) document.getElementById('app').innerHTML = '';
+
+      console.clear();
+
+      document.getElementById('appsrc')?.remove();
+
+      for (const url of Object.values(cache)) {
+        if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url);
+      }
+      cache = {};
+
+      const script = document.createElement('script');
+      script.id = 'appsrc';
+      script.type = 'module';
+      finisher = () => {};
+      script.onload = () => {
+        if (finisher) finisher();
+        finisher = undefined;
+      };
+      script.src = buildModule('./main', sources['./main'], sources);
+      document.body.appendChild(script);
+
+      const load = document.getElementById('load');
+      if (load) load.remove();
+    };
+
+    const sendToDevtools = (message) => {
+      window.parent.postMessage(JSON.stringify(message), '*');
+    };
+    let id = 0;
+    const sendToChobitsu = (message) => {
+      message.id = 'tmp' + ++id;
+      chobitsu.sendRawMessage(JSON.stringify(message));
+    };
+    chobitsu.setOnMessage((message) => {
+      if (message.includes('"id":"tmp')) return;
+      window.parent.postMessage(message, '*');
+    });
+
+    let pageSource = '';
+    const pageDomain = chobitsu.domain('Page');
+    if (pageDomain) {
+      pageDomain.getResourceContent = (params) => {
+        if (params.frameId === '1') {
+          return Promise.resolve({ base64Encoded: false, content: pageSource });
         }
+        return Promise.resolve({ base64Encoded: false, content: '' });
+      };
+    }
 
-        body {
-          color: #333;
-          margin: 0;
-          padding: 8px;
-          box-sizing: border-box;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-          max-width: 100%;
+    const handle = (data) => {
+      try {
+        const { event, value } = data;
+        if (event === 'CODE_UPDATE') {
+          const next = () => handleCodeUpdate(value);
+          if (finisher !== undefined) finisher = next;
+          else next();
+        } else if (event === 'IMPORT_MAP') {
+          document.getElementById('importmap')?.remove();
+          const importMap = document.createElement('script');
+          importMap.id = 'importmap';
+          importMap.type = 'importmap';
+          importMap.textContent = JSON.stringify({ imports: value });
+          document.head.appendChild(importMap);
+        } else if (event === 'DARK') {
+          document.documentElement.classList.toggle('dark', value);
+        } else if (event === 'PAGE_SOURCE') {
+          pageSource = value;
+        } else if (event === 'DEV') {
+          chobitsu.sendRawMessage(data.data);
+        } else if (event === 'LOADED') {
+          sendToDevtools({
+            method: 'Page.frameNavigated',
+            params: {
+              frame: { id: '1', mimeType: 'text/html', securityOrigin: parent.location.origin, url: parent.location.href },
+              type: 'Navigation',
+            },
+          });
+          sendToChobitsu({ method: 'Network.enable' });
+          sendToDevtools({ method: 'Runtime.executionContextsCleared' });
+          sendToChobitsu({ method: 'Runtime.enable' });
+          sendToChobitsu({ method: 'Debugger.enable' });
+          sendToChobitsu({ method: 'DOMStorage.enable' });
+          sendToChobitsu({ method: 'DOM.enable' });
+          sendToChobitsu({ method: 'CSS.enable' });
+          sendToChobitsu({ method: 'Overlay.enable' });
+          sendToDevtools({ method: 'DOM.documentUpdated' });
         }
+      } catch (e) {
+        console.error(e);
+      }
+    };
 
-        .dark body {
-          color: #e5e7eb;
-        }
+    window.addEventListener('message', (e) => handle(e.data));
 
-        .dark {
-          color-scheme: dark;
-        }
+    ${dispatchZoomKeyToParent}
+  })();
+`;
 
-        input, button, select, textarea {
-          padding: 0.4em;
-          margin: 0 0 0.5em 0;
-          box-sizing: border-box;
-          border: 1px solid #ccc;
-          border-radius: 2px;
-        }
-
-        button {
-          color: #333;
-          background-color: #f4f4f4;
-          outline: none;
-        }
-
-        button:disabled {
-          color: #999;
-        }
-
-        button:not(:disabled):active {
-          background-color: #ddd;
-        }
-
-        button:focus {
-          border-color: #666;
-        }
-      </style>
-      <script type="importmap">${importMap}</script>
-      <script src="https://cdn.jsdelivr.net/npm/chobitsu@1.8.6/dist/chobitsu.min.js"></script>
-      <script type="module">
-        let finisher = undefined;
-        window.addEventListener('message', ({ data }) => {
-          const { event, value } = data;
-
-          if (event !== 'CODE_UPDATE') return;
-
-          const next = () => {
-            window.dispose?.();
-            window.dispose = undefined;
-            
-            if(document.getElementById('app'))
-              document.getElementById('app').innerHTML = "";
-
-            console.clear();
-
-            document.getElementById('appsrc')?.remove();
-            const script = document.createElement('script');
-            script.id = 'appsrc';
-            script.type = 'module';
-            finisher = () => {};
-            script.onload = () => {
-              if (finisher) finisher();
-              finisher = undefined;
-            };
-            script.src = value;
-            document.body.appendChild(script);
-
-            const load = document.getElementById('load');
-            if (load) load.remove();
-          }
-          if (finisher !== undefined) {
-            finisher = next;
-          } else {
-            next();
-          }
-        });
-
-        const sendToDevtools = (message) => {
-          window.parent.postMessage(JSON.stringify(message), '*');
-        };
-        let id = 0;
-        const sendToChobitsu = (message) => {
-          message.id = 'tmp' + ++id;
-          chobitsu.sendRawMessage(JSON.stringify(message));
-        };
-        chobitsu.setOnMessage((message) => {
-          if (message.includes('"id":"tmp')) return;
-          window.parent.postMessage(message, '*');
-        });
-        window.addEventListener('message', ({ data }) => {
-          try {
-            const { event, value } = data;
-            if (event === 'DEV') {
-              chobitsu.sendRawMessage(data.data);
-            } else if (event === 'LOADED') {
-              sendToDevtools({
-                method: 'Page.frameNavigated',
-                params: {
-                  frame: {
-                    id: '1',
-                    mimeType: 'text/html',
-                    securityOrigin: location.origin,
-                    url: location.href,
-                  },
-                  type: 'Navigation',
-                },
-              });
-              sendToChobitsu({ method: 'Network.enable' });
-              sendToDevtools({ method: 'Runtime.executionContextsCleared' });
-              sendToChobitsu({ method: 'Runtime.enable' });
-              sendToChobitsu({ method: 'Debugger.enable' });
-              sendToChobitsu({ method: 'DOMStorage.enable' });
-              sendToChobitsu({ method: 'DOM.enable' });
-              sendToChobitsu({ method: 'CSS.enable' });
-              sendToChobitsu({ method: 'Overlay.enable' });
-              sendToDevtools({ method: 'DOM.documentUpdated' });
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        });
-
-        ${dispatchKeyboardEventToParentZoomState()}
-      </script>
-    </head>
-    <body>
-      <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center;">
-        <p style="font-size: 1.5rem">Loading the playground...</p>
-      </div>
-      <div id="app"></div>
-      <script id="appsrc" type="module"></script>
-    </body>
-  </html>`;
+const iframeHtml = `<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://ga.jspm.io/npm:modern-normalize@3.0.1/modern-normalize.css" rel="stylesheet" />
+    <style>
+      html, body { position: relative; width: 100%; height: 100%; }
+      body {
+        color: #333; margin: 0; padding: 8px; box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        max-width: 100%;
+      }
+      .dark body { color: #e5e7eb; }
+      .dark { color-scheme: dark; }
+      input, button, select, textarea {
+        padding: 0.4em; margin: 0 0 0.5em 0; box-sizing: border-box;
+        border: 1px solid #ccc; border-radius: 2px;
+      }
+      button { color: #333; background-color: #f4f4f4; outline: none; }
+      button:disabled { color: #999; }
+      button:not(:disabled):active { background-color: #ddd; }
+      button:focus { border-color: #666; }
+    </style>
+    <script>${sandboxShim}</script>
+    <script src="https://cdn.jsdelivr.net/npm/chobitsu@1.8.6/dist/chobitsu.min.js"></script>
+    <script>${mainIframeScript}</script>
+  </head>
+  <body>
+    <div id="load" style="display: flex; height: 80vh; align-items: center; justify-content: center">
+      <p style="font-size: 1.5rem">Loading the playground...</p>
+    </div>
+    <div id="app"></div>
+  </body>
+</html>`;
 
 const useDevtoolsSrc = () => {
   const html = `
@@ -189,9 +214,7 @@ const useDevtoolsSrc = () => {
       }
     }
   </style>
-  <script>
-    ${dispatchKeyboardEventToParentZoomState()}
-  </script>
+  <script>${dispatchZoomKeyToParent}</script>
   <meta name="referrer" content="no-referrer">
   <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.15.5/public/front_end/entrypoints/chii_app/chii_app.js"></script>
@@ -211,27 +234,16 @@ export const Preview: Component<Props> = (props) => {
   let devtoolsLoaded = false;
   let isIframeReady = false;
 
-  // This is the createWriteable paradigm in action
-  // We have that the iframe src is entangled with its loading state
-  const iframeSrcUrl = createMemo(() => {
-    const html = generateHTML(
-      untrack(() => props.isDark),
-      JSON.stringify({ imports: props.importMap }),
-    );
-    const url = URL.createObjectURL(
-      new Blob([html], {
-        type: 'text/html',
-      }),
-    );
-    onCleanup(() => URL.revokeObjectURL(url));
-    return url;
-  });
+  const sendToIframe = (msg: any) => {
+    if (!isIframeReady) return;
+    iframe.contentWindow!.postMessage(msg, '*');
+  };
 
   createEffect(() => {
     if (!props.reloadSignal) return;
 
     isIframeReady = false;
-    iframe.src = untrack(iframeSrcUrl);
+    iframe.srcdoc = iframeHtml;
   });
 
   const devtoolsSrc = useDevtoolsSrc();
@@ -253,16 +265,18 @@ export const Preview: Component<Props> = (props) => {
           class="h-full min-h-0 w-full min-w-0 bg-white p-0 block overflow-scroll dark:bg-darkbg"
           style={styleScale()}
           ref={iframe}
-          src={iframeSrcUrl()}
+          srcdoc={iframeHtml}
           onload={() => {
             isIframeReady = true;
 
-            if (devtoolsLoaded) iframe.contentWindow!.postMessage({ event: 'LOADED' }, '*');
-            if (props.code) iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: props.code }, '*');
-            iframe.contentDocument?.documentElement.classList.toggle('dark', props.isDark);
+            if (devtoolsLoaded) sendToIframe({ event: 'LOADED' });
+            sendToIframe({ event: 'PAGE_SOURCE', value: iframeHtml });
+            sendToIframe({ event: 'IMPORT_MAP', value: props.importMap });
+            if (props.code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: props.code });
+            sendToIframe({ event: 'DARK', value: props.isDark });
           }}
           // @ts-ignore
-          sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals allow-same-origin"
+          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-pointer-lock"
         />
       ),
       devtools: () => (
@@ -297,22 +311,23 @@ export const Preview: Component<Props> = (props) => {
     });
 
     createEffect(() => {
-      const dark = props.isDark;
-
-      if (!isIframeReady) return;
-
-      iframe.contentDocument?.documentElement.classList.toggle('dark', dark);
+      sendToIframe({ event: 'DARK', value: props.isDark });
     });
 
     createEffect(() => {
-      const code = props.code;
+      sendToIframe({ event: 'IMPORT_MAP', value: props.importMap });
+    });
 
-      if (!isIframeReady) return;
-
-      iframe.contentWindow!.postMessage({ event: 'CODE_UPDATE', value: code }, '*');
+    createEffect(() => {
+      if (!props.code['./main']) return;
+      sendToIframe({ event: 'CODE_UPDATE', value: props.code });
     });
 
     const messageListener = (event: MessageEvent) => {
+      if (event.data?.event === 'ZOOM_KEY') {
+        document.dispatchEvent(new KeyboardEvent('keydown', event.data.value));
+        return;
+      }
       if (event.source === iframe.contentWindow) {
         devtoolsIframe.contentWindow!.postMessage(event.data, '*');
       }
@@ -340,7 +355,7 @@ type Props = {
   classList?: {
     [k: string]: boolean | undefined;
   };
-  code: string;
+  code: Record<string, string>;
   reloadSignal: boolean;
   devtools: boolean;
   isDark: boolean;
