@@ -1,11 +1,11 @@
 import { ParentComponent, JSX, splitProps } from 'solid-js';
 
 const baseClasses =
-  'flex items-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-solidc disabled:pointer-events-none disabled:opacity-50 space-x-2';
+  'flex items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-solidc disabled:pointer-events-none disabled:opacity-50 space-x-2';
 
 const variants = {
   primary: 'bg-solidc text-white hover:bg-solidc/90 px-4 py-2 justify-center',
-  ghost: 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 px-2 py-1.5',
+  ghost: 'hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 px-2 py-1.5',
 };
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {

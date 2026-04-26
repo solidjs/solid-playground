@@ -30,7 +30,7 @@ export const App = (): JSX.Element => {
   });
 
   return (
-    <div class="text-slate-900 dark:text-slate-50 relative flex h-screen flex-col overflow-auto bg-lightbg font-sans dark:bg-darkerbg">
+    <div class="text-neutral-900 dark:text-neutral-50 bg-neutral-100 dark:bg-neutral-950 relative flex h-screen flex-col overflow-auto font-sans">
       <Router
         root={(props) => (
           <AppContextProvider>
@@ -38,9 +38,8 @@ export const App = (): JSX.Element => {
           </AppContextProvider>
         )}
       >
-        <Route path={['/:user/:repl', '/scratchpad']} component={Edit} />
+        <Route path={['/', '/:user/:repl']} component={Edit} />
         <Route path="/:user" component={Home} />
-        <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
       </Router>
 

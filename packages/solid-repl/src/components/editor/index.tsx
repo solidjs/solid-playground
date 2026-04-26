@@ -5,7 +5,6 @@ import { throttle } from '@solid-primitives/scheduled';
 import { bell, bellSlash, codeBracket } from 'solid-heroicons/outline';
 import { register } from './setupSolid';
 import { IconButton } from '../ui/IconButton';
-import { Button } from '../ui/Button';
 
 const Editor: Component<{
   model: mEditor.ITextModel;
@@ -17,6 +16,7 @@ const Editor: Component<{
   displayErrors?: boolean;
   setDisplayErrors?: (value: boolean) => void;
   onDocChange?: (code: string) => void;
+  onUserEdit?: () => void;
   onEditorReady?: (
     editor: mEditor.IStandaloneCodeEditor,
     monaco: {
@@ -130,10 +130,11 @@ const Editor: Component<{
       editor.focus();
     });
 
-    editor.onDidChangeModelContent(() => {
+    editor.onDidChangeModelContent((e) => {
       const code = editor.getValue();
       props.onDocChange?.(code);
       runLinter(code);
+      if (!e.isFlush) props.onUserEdit?.();
     });
   });
   onCleanup(() => editor.dispose());
@@ -153,6 +154,7 @@ const Editor: Component<{
   });
 
   createEffect(() => {
+    if (props.disabled) return;
     typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: !props.displayErrors,
       noSyntaxValidation: !props.displayErrors,
@@ -177,26 +179,22 @@ const Editor: Component<{
     <>
       <div class="min-h-0 min-w-0 p-0 flex-1" ref={parent} />
       <Show when={!props.disabled}>
-        <div class="w-full border-t-1 bg-white px-2 dark:bg-neutral-900 flex h-[30px] items-center justify-between border-bord">
+        <div class="w-full border-t-1 border-neutral-200 bg-white px-2 dark:border-neutral-700 dark:bg-neutral-900 flex h-[30px] items-center justify-between">
           <div></div>
           <div class="space-x-1 flex items-center">
             <IconButton
               icon={props.displayErrors ? bell : bellSlash}
-              class="!p-1"
               size="sm"
               title={props.displayErrors ? 'Disable error reporting' : 'Enable error reporting'}
               onClick={() => props.setDisplayErrors?.(!props.displayErrors)}
             />
             <IconButton
               icon={codeBracket}
-              class="!p-1"
               size="sm"
               title="Format Document"
               onClick={() => editor.getAction('editor.action.formatDocument')?.run()}
             />
-            <Button variant="ghost" class="h-6 !px-2 !py-0 !rounded-lg text-[10px]" onClick={() => {}}>
-              TypeScript
-            </Button>
+            <span class="text-neutral-500 dark:text-neutral-400 px-2 text-sm">TypeScript</span>
           </div>
         </div>
       </Show>

@@ -4,12 +4,7 @@ export const Label: ParentComponent<JSX.LabelHTMLAttributes<HTMLLabelElement>> =
   const [local, others] = splitProps(props, ['class', 'children']);
 
   return (
-    <label
-      {...others}
-      class={`text-neutral-500 dark:text-neutral-400 text-sm font-semibold uppercase tracking-wide ${
-        local.class || ''
-      }`}
-    >
+    <label {...others} class={`text-neutral-500 dark:text-neutral-400 text-sm font-semibold ${local.class || ''}`}>
       {local.children}
     </label>
   );

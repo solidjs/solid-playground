@@ -15,7 +15,7 @@ const getLS = () => {
 };
 
 const ls = getLS();
-const initFontSize = 15;
+const initFontSize = 14;
 const initScale = 100;
 
 const [zoomState, setZoomStateInternal] = createStore<ZoomState>({

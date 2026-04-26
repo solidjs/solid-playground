@@ -33,7 +33,7 @@ export const IconButton: Component<IconButtonProps> = (props) => {
       onClick={props.onClick}
       title={props.title}
       disabled={props.disabled}
-      class={`hover:bg-neutral-100 dark:hover:bg-neutral-800 inline-flex items-center justify-center rounded-md opacity-80 transition-all hover:opacity-100 disabled:pointer-events-none disabled:opacity-50 ${
+      class={`hover:bg-neutral-200 dark:hover:bg-neutral-700 inline-flex items-center justify-center rounded-md opacity-80 transition-all hover:opacity-100 disabled:pointer-events-none disabled:opacity-50 ${
         sizes[props.size || 'md']
       } ${props.class || ''}`}
       classList={{

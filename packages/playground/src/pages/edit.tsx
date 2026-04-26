@@ -5,14 +5,24 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import { batch, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
+import { batch, createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
+import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { defaultTabs } from 'solid-repl/src';
 import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
+import { Button } from 'solid-repl/src/components/ui/Button';
+
+function parseHash<T>(hash: string, fallback: T): T {
+  try {
+    return JSON.parse(decompressFromURL(hash) || '');
+  } catch {
+    return fallback;
+  }
+}
 
 const Repl = lazy(() => import('../components/setupSolid'));
 
@@ -38,7 +48,7 @@ interface InternalTab extends Tab {
 }
 export const Edit = () => {
   const [searchParams] = useSearchParams();
-  const scratchpad = useMatch(() => '/scratchpad');
+  const scratchpad = useMatch(() => '/');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
   const linter = new LinterWorker();
@@ -46,10 +56,27 @@ export const Edit = () => {
   const params = useParams<{ user: string; repl: string }>();
   const context = useAppContext()!;
   const navigate = useNavigate();
+  const location = useLocation();
 
   let disableFetch: true | undefined;
 
-  let readonly = () => !scratchpad() && context.user()?.display != params.user && !localStorage.getItem(params.repl);
+  let readonly = () => !scratchpad() && context.profile() != params.user && !localStorage.getItem(params.repl);
+
+  createEffect(() => {
+    if (!scratchpad()) return;
+    if (location.query.hash) {
+      navigate(`/anonymous/${location.query.hash}`);
+    } else if (location.hash) {
+      const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
+      localStorage.setItem(
+        'scratchpad',
+        JSON.stringify({
+          files: initialTabs.map((x) => ({ name: x.name, content: x.source })),
+        }),
+      );
+      navigate('/', { replace: true });
+    }
+  });
 
   const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
     toMap.map((tab) => {
@@ -128,23 +155,74 @@ export const Edit = () => {
     });
   };
 
+  const publishScratchpad = async (title: string) => {
+    const newRepl = {
+      title,
+      public: true,
+      labels: [] as string[],
+      version: '1.0',
+      files: tabs().map((x) => ({ name: x.name, content: x.source })),
+    };
+    const response = await fetch(`${API}/repl`, {
+      method: 'POST',
+      headers: {
+        'authorization': context.token ? `Bearer ${context.token}` : '',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newRepl),
+    });
+    if (response.status >= 400) {
+      throw new Error(response.statusText);
+    }
+    const { id, write_token } = await response.json();
+    if (write_token) {
+      localStorage.setItem(id, write_token);
+      const repls = localStorage.getItem('repls');
+      if (repls) {
+        localStorage.setItem('repls', JSON.stringify([...JSON.parse(repls), id]));
+      } else {
+        localStorage.setItem('repls', JSON.stringify([id]));
+      }
+    }
+    mutate(() => ({
+      id,
+      title: newRepl.title,
+      labels: newRepl.labels,
+      files: newRepl.files,
+      version: newRepl.version,
+      public: newRepl.public,
+      size: 0,
+      created_at: '',
+    }));
+    const url = `/${context.profile()}/${id}`;
+    disableFetch = true;
+    navigate(url);
+    return url;
+  };
+
+  const [forkPromptFor, setForkPromptFor] = createSignal<string | null>(null);
+  const [forkDeclinedFor, setForkDeclinedFor] = createSignal<string | null>(null);
+  const forkPromptOpen = () => forkPromptFor() === params.repl;
+  const forkDeclined = () => forkDeclinedFor() === params.repl;
+
+  const onUserEdit = () => {
+    if (!readonly() || forkDeclined()) return;
+    setForkPromptFor(params.repl);
+  };
+
   const updateRepl = debounce(
     () => {
+      if (readonly()) return;
       const files = tabs().map((x) => ({ name: x.name, content: x.source }));
 
-      if (readonly()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
-        disableFetch = true;
-        navigate('/scratchpad');
-        return;
-      } else if (scratchpad()) {
+      if (scratchpad()) {
         localStorage.setItem('scratchpad', JSON.stringify({ files }));
       }
 
       const repl = resource.latest;
       if (!repl) return;
 
-      const loggedIn = context.token && params.user && context.user()?.display == params.user;
+      const loggedIn = context.token && params.user && context.profile() == params.user;
 
       if (loggedIn || localStorage.getItem(params.repl)) {
         fetch(`${API}/repl/${params.repl}`, {
@@ -174,68 +252,41 @@ export const Edit = () => {
         fork={() => {}}
         share={async () => {
           if (scratchpad()) {
-            const newRepl = {
-              title: context.user()?.display ? `${context.user()!.display}'s Scratchpad` : 'Anonymous Scratchpad',
-              public: true,
-              labels: [],
-              version: '1.0',
-              files: tabs().map((x) => ({ name: x.name, content: x.source })),
-            };
-            const response = await fetch(`${API}/repl`, {
-              method: 'POST',
-              headers: {
-                'authorization': context.token ? `Bearer ${context.token}` : '',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(newRepl),
-            });
-            if (response.status >= 400) {
-              throw new Error(response.statusText);
-            }
-            const { id, write_token } = await response.json();
-            if (write_token) {
-              localStorage.setItem(id, write_token);
-              const repls = localStorage.getItem('repls');
-              if (repls) {
-                localStorage.setItem('repls', JSON.stringify([...JSON.parse(repls), id]));
-              } else {
-                localStorage.setItem('repls', JSON.stringify([id]));
-              }
-            }
-            mutate(() => ({
-              id,
-              title: newRepl.title,
-              labels: newRepl.labels,
-              files: newRepl.files,
-              version: newRepl.version,
-              public: newRepl.public,
-              size: 0,
-              created_at: '',
-            }));
-            const url = `/${context.user()?.display || 'anonymous'}/${id}`;
-            disableFetch = true;
-            navigate(url);
+            const url = await publishScratchpad(`${context.user()?.display || 'Anonymous'}'s Scratchpad`);
+            return `${window.location.origin}${url}`;
+          } else if (readonly()) {
+            const original = resource.latest;
+            const url = await publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
             return `${window.location.origin}${url}`;
           } else {
-            return location.href;
+            return window.location.href;
           }
         }}
       >
-        {resource()?.title && (
+        <Show when={resource() && (resource()?.title || (scratchpad() && context.token))}>
           <input
-            class="w-96 border-transparent bg-transparent px-3 py-1.5 focus:border-blue-600 shrink rounded border border-solid transition focus:outline-none"
-            value={resource()?.title}
+            class="w-96 border-transparent bg-transparent px-3 py-1.5 shrink rounded-md border transition focus:border-solidc focus:outline-none"
+            value={resource()?.title ?? ''}
+            placeholder={scratchpad() ? 'Name this repl to save it' : ''}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
             onChange={(e) => {
-              mutate((x) => x && { ...x, title: e.currentTarget.value });
-              updateRepl();
+              const title = e.currentTarget.value;
+              if (scratchpad() || readonly()) {
+                if (title) publishScratchpad(title);
+              } else {
+                mutate((x) => x && { ...x, title });
+                updateRepl();
+              }
             }}
           />
-        )}
+        </Show>
       </Header>
       <Suspense
         fallback={
           <svg
-            class="h-12 w-12 animate-spin text-white m-auto"
+            class="h-12 w-12 animate-spin text-neutral-500 m-auto"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -261,10 +312,46 @@ export const Edit = () => {
             reset={reset}
             current={current()}
             setCurrent={setCurrent}
+            onUserEdit={onUserEdit}
             id="repl"
           />
         </Show>
       </Suspense>
+      <Show when={forkPromptOpen()}>
+        <div class="top-0 left-0 z-10 h-full w-full bg-black/50 fixed flex items-center justify-center">
+          <div
+            class="w-96 border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:text-white rounded-lg border shadow-lg dark:bg-neutral-900"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+          >
+            <p class="font-semibold">Fork this repl?</p>
+            <p class="mt-2 text-sm opacity-80">
+              You're editing someone else's repl. Fork it to a new copy you can save.
+            </p>
+            <div class="mt-3 gap-2 flex justify-end">
+              <Button
+                onClick={() => {
+                  setForkPromptFor(null);
+                  setForkDeclinedFor(params.repl);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setForkPromptFor(null);
+                  const original = resource.latest;
+                  publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
+                }}
+              >
+                Fork
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Show>
     </>
   );
 };

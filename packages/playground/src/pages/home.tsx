@@ -1,21 +1,12 @@
-import { A, useLocation, useNavigate, useParams } from '@solidjs/router';
+import { A, useParams } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeSlash, plus, xMark } from 'solid-heroicons/outline';
-import { createEffect, createResource, createSignal, For, Show, Suspense } from 'solid-js';
+import { createResource, createSignal, For, Show, Suspense } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
-import { defaultTabs } from 'solid-repl/src';
 import { API, useAppContext } from '../context';
-import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { Header } from '../components/header';
 import { timeAgo } from '../utils/date';
-
-function parseHash<T>(hash: string, fallback: T): T {
-  try {
-    return JSON.parse(decompressFromURL(hash) || '');
-  } catch {
-    return fallback;
-  }
-}
+import { Button } from 'solid-repl/src/components/ui/Button';
 
 interface ReplFile {
   name: string;
@@ -40,28 +31,6 @@ interface Repls {
 export const Home = () => {
   const params = useParams();
   const context = useAppContext()!;
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  createEffect(() => {
-    if (location.query.hash) {
-      navigate(`/anonymous/${location.query.hash}`);
-    } else if (location.hash) {
-      const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
-      localStorage.setItem(
-        'scratchpad',
-        JSON.stringify({
-          files: initialTabs.map((x) => ({
-            name: x.name,
-            content: x.source,
-          })),
-        }),
-      );
-      navigate(`/scratchpad`);
-    } else if (!context.token && !params.user) {
-      navigate(`/scratchpad`);
-    }
-  });
 
   const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
   const [resourceRepls] = createResource<Repls, { user: string | undefined }>(
@@ -89,55 +58,33 @@ export const Home = () => {
       <Header
         share={async () => {
           const url = new URL(document.location.origin);
-          url.pathname = params.user || context.user.latest!.display;
+          url.pathname = `/${params.user || context.profile()}`;
           return url.toString();
         }}
       />
       <div class="m-8">
-        <Show when={!params.user} fallback={<h1 class="mb-4 text-center text-3xl">{`${params.user}'s`} Repls</h1>}>
+        <Show
+          when={params.user === context.profile()}
+          fallback={<h1 class="mb-4 text-center text-sm">{`${params.user}'s`} Repls</h1>}
+        >
           <div class="mb-8 flex flex-col align-middle">
-            <button
-              class="border-gray-600 p-3 dark:bg-neutral-800 mx-auto flex items-center rounded-xl border bg-lightgray text-xl shadow-md"
-              onClick={async () => {
-                const result = await fetch(`${API}/repl`, {
-                  method: 'POST',
-                  headers: {
-                    'authorization': `Bearer ${context.token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    title: 'Counter Example',
-                    public: true,
-                    labels: [],
-                    version: '1.0',
-                    files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
-                  }),
-                });
-                if (!result.ok) {
-                  alert('Failed to create repl');
-                  throw new Error(result.statusText);
-                }
-                const { id } = await result.json();
-                navigate(`/${context.user()?.display}/${id}`);
-              }}
+            <A
+              href="/"
+              class="border-neutral-200 px-4 py-3 hover:bg-neutral-300 dark:border-neutral-700 dark:hover:bg-neutral-800 bg-neutral-200 dark:bg-neutral-900 mx-auto flex items-center rounded-lg border text-sm"
             >
-              <Icon path={plus} class="w-6" /> Create new REPL
-            </button>
-            <p class="pt-1 text-gray-800 dark:text-gray-300 text-center text-sm">
-              or{' '}
-              <A href="/scratchpad" class="text-medium hover:underline">
-                open my scratchpad
-              </A>
-            </p>
+              <Icon path={plus} class="mr-1 w-6" /> Create new REPL
+            </A>
           </div>
         </Show>
-        <table class="w-200 max-w-full mx-auto">
+        <table class="w-200 max-w-full border-spacing-0 mx-auto border-separate text-sm">
           <thead>
-            <tr class="border-neutral-600 border-b font-medium">
-              <th class="w-1/2 p-1 text-left">Title</th>
-              <th class="w-32 p-1 text-left last:text-right">Edited</th>
-              <Show when={!params.user}>
-                <th class="w-20 p-1 text-right">Options</th>
+            <tr class="font-medium">
+              <th class="w-1/2 border-neutral-200 px-3 py-2 dark:border-neutral-700 border-b text-left">Title</th>
+              <th class="w-32 border-neutral-200 px-3 py-2 dark:border-neutral-700 border-b text-left last:text-right">
+                Edited
+              </th>
+              <Show when={params.user === context.profile()}>
+                <th class="w-20 border-neutral-200 px-3 py-2 dark:border-neutral-700 border-b text-right">Options</th>
               </Show>
             </tr>
           </thead>
@@ -148,7 +95,7 @@ export const Home = () => {
                 <tr class="h-10">
                   <td colspan="3" class="text-center">
                     <svg
-                      class="mt-8 h-8 w-8 animate-spin text-white mx-auto"
+                      class="mt-8 h-8 w-8 animate-spin text-neutral-500 mx-auto"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -167,19 +114,19 @@ export const Home = () => {
               <For each={get(repls.list)}>
                 {(repl, i) => (
                   <tr
-                    class="hover:bg-gray-400/10"
+                    class="group cursor-pointer"
                     onclick={(e) => {
                       if (e.target.tagName !== 'A') e.currentTarget.querySelector('a')!.click();
                     }}
                   >
-                    <td class="p-1">
-                      <A href={`${params.user || context.user()?.display}/${repl.id}`}>{repl.title}</A>
+                    <td class="px-3 py-2 group-hover:bg-neutral-200 dark:group-hover:bg-neutral-800 first:rounded-l-lg last:rounded-r-lg">
+                      <A href={`/${params.user || context.profile()}/${repl.id}`}>{repl.title}</A>
                     </td>
-                    <td class="p-1 last:text-right">
+                    <td class="px-3 py-2 group-hover:bg-neutral-200 dark:group-hover:bg-neutral-800 first:rounded-l-lg last:rounded-r-lg last:text-right">
                       {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}
                     </td>
-                    <Show when={!params.user}>
-                      <td class="space-x-1 p-1 pr-0 text-right">
+                    <Show when={params.user === context.profile()}>
+                      <td class="space-x-1 px-3 py-2 group-hover:bg-neutral-200 dark:group-hover:bg-neutral-800 text-right first:rounded-l-lg last:rounded-r-lg">
                         <Icon
                           path={repl.public ? eye : eyeSlash}
                           class="w-6 inline cursor-pointer"
@@ -221,7 +168,7 @@ export const Home = () => {
       </div>
       <Show when={!!open()}>
         <div
-          class="top-0 left-0 z-10 h-full w-full bg-gray-500/50 fixed flex items-center"
+          class="top-0 left-0 z-10 h-full w-full bg-black/50 fixed flex items-center justify-center"
           onClick={(e) => {
             if (e.target !== e.currentTarget) return;
             setOpen(undefined);
@@ -229,16 +176,17 @@ export const Home = () => {
           role="presentation"
         >
           <div
-            class="w-96 bg-white p-4 dark:text-white rounded-lg shadow dark:bg-darkbg"
+            class="w-96 border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:text-white dark:bg-neutral-900 rounded-lg border shadow-lg"
             role="dialog"
             aria-modal="true"
             tabindex="-1"
           >
             <p>Are you sure you want to delete that?</p>
-            <div class="mt-2 gap-2 flex">
-              <button
-                class="px-2 py-1 rounded border"
-                onclick={() => {
+            <div class="mt-3 gap-2 flex justify-end">
+              <Button onClick={() => setOpen(undefined)}>No</Button>
+              <Button
+                class="text-red-700 dark:text-red-400"
+                onClick={() => {
                   fetch(`${API}/repl/${open()}`, {
                     method: 'DELETE',
                     headers: {
@@ -252,11 +200,8 @@ export const Home = () => {
                   setOpen(undefined);
                 }}
               >
-                Yes
-              </button>
-              <button class="px-2 py-1 rounded border" onClick={() => setOpen(undefined)}>
-                No
-              </button>
+                Delete
+              </Button>
             </div>
           </div>
         </div>

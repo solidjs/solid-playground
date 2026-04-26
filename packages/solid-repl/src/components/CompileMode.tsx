@@ -59,7 +59,9 @@ export const CompileMode: Component<CompileModeProps> = (props) => {
             onInput={(e) => {
               props.setUniversalModuleName(e.currentTarget.value);
             }}
-            class="!py-1 ml-2 border-b-1 inline-block w-auto !text-xs"
+            size="sm"
+            inline
+            class="ml-2"
             type="text"
             value={props.universalModuleName}
             name="moduleName"

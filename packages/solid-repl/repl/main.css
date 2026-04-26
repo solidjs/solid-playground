@@ -35,23 +35,23 @@ textarea.monaco-mouse-cursor-text:focus {
 
 #app .dockview-theme-abyss-spaced {
   padding-top: 0;
-  --dv-color-abyss-dark: theme('colors.lightbg');
+  --dv-color-abyss-dark: theme('colors.neutral.100');
   --dv-color-abyss: #ffffff;
-  --dv-color-abyss-light: #ffffff;
-  --dv-color-abyss-lighter: theme('colors.lightgray');
+  --dv-color-abyss-light: theme('colors.neutral.100');
+  --dv-color-abyss-lighter: theme('colors.neutral.100');
   --dv-color-abyss-accent: theme('colors.medium');
-  --dv-color-abyss-primary-text: theme('colors.gray');
-  --dv-color-abyss-secondary-text: theme('colors.mediumgray');
+  --dv-color-abyss-primary-text: theme('colors.neutral.800');
+  --dv-color-abyss-secondary-text: theme('colors.neutral.400');
 }
 
 .dark #app .dockview-theme-abyss-spaced {
-  --dv-color-abyss-dark: theme('colors.darkerbg');
-  --dv-color-abyss: theme('colors.darkbg');
+  --dv-color-abyss-dark: theme('colors.neutral.950');
+  --dv-color-abyss: theme('colors.neutral.900');
   --dv-color-abyss-light: theme('colors.neutral.800/50');
   --dv-color-abyss-lighter: theme('colors.neutral.800/50');
   --dv-color-abyss-accent: theme('colors.medium');
-  --dv-color-abyss-primary-text: theme('colors.lightgray');
-  --dv-color-abyss-secondary-text: theme('colors.mediumgray');
+  --dv-color-abyss-primary-text: theme('colors.neutral.100');
+  --dv-color-abyss-secondary-text: theme('colors.neutral.400');
 }
 
 #app .dockview-theme-abyss-spaced .dv-groupview.dv-active-group {

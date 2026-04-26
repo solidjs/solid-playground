@@ -1,5 +1,5 @@
 import { Icon } from 'solid-heroicons';
-import { magnifyingGlassPlus } from 'solid-heroicons/outline';
+import { magnifyingGlassPlus, minus, plus } from 'solid-heroicons/outline';
 import Dismiss from 'solid-dismiss';
 import { Component, createSignal, createEffect } from 'solid-js';
 import { useZoom } from 'solid-repl/src/hooks/useZoom';
@@ -97,11 +97,11 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         ref={btnEl}
       >
         <Icon class="h-6" path={magnifyingGlassPlus} />
-        <span class="text-xs md:sr-only">Scale Editor</span>
+        <span class="text-sm md:sr-only">Scale Editor</span>
       </Button>
       <Dismiss menuButton={btnEl} open={open} setOpen={setOpen}>
         <div
-          class="z-10 w-min border-slate-200 bg-white p-6 dark:border-neutral-800 absolute rounded border-2 shadow-md dark:bg-darkbg"
+          class="z-10 w-min border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900 absolute rounded-lg border shadow-lg"
           classList={{
             'left-1/4': props.showMenu,
           }}
@@ -109,40 +109,40 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
             transform: 'translateX(calc(2rem - 100%))',
           }}
         >
-          <div class="space-x-0.5 flex items-center">
+          <div class="flex items-center">
             <button
-              class="px-3 py-1 hover:bg-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded-l border text-sm uppercase tracking-wide"
+              class="border-neutral-200 p-1.5 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 inline-flex items-center justify-center rounded-l-md border"
               aria-label="decrease font size"
               onClick={() => updateZoom('decrease')}
             >
-              -
+              <Icon path={minus} class="h-4 w-4" />
             </button>
-            <div class="w-20 px-3 py-1 dark:border-neutral-700 border text-center text-sm uppercase tracking-wide">
+            <div class="w-20 border-neutral-200 px-3 py-1 dark:border-neutral-700 border-y text-center text-sm tabular-nums">
               {zoomState.zoom}%
             </div>
             <button
-              class="mr-4 px-3 py-1 hover:bg-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded-r border text-sm uppercase tracking-wide"
+              class="mr-4 border-neutral-200 p-1.5 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 inline-flex items-center justify-center rounded-r-md border"
               aria-label="increase font size"
               onClick={() => updateZoom('increase')}
             >
-              +
+              <Icon path={plus} class="h-4 w-4" />
             </button>
             <button
-              class="px-3 py-1 hover:bg-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded border text-sm uppercase tracking-wide"
+              class="border-neutral-200 px-3 py-1 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 rounded-md border text-sm"
               aria-label="reset font size"
               onClick={() => updateZoom('reset')}
             >
               Reset
             </button>
           </div>
-          <div class="mt-10">
+          <div class="mt-3 space-y-2">
             <Checkbox
               label="Override browser zoom keyboard shortcut"
               checked={zoomState.overrideNative}
               onChange={(e) => setZoomState('overrideNative', e.currentTarget.checked)}
             />
             <Checkbox
-              label="Scale iframe Result"
+              label="Scale iframe result"
               checked={zoomState.scaleIframe}
               onChange={(e) => setZoomState('scaleIframe', e.currentTarget.checked)}
             />

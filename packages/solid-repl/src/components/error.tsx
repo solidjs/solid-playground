@@ -1,27 +1,16 @@
-import { Component, createEffect, createSignal } from 'solid-js';
+import { Component, createMemo, createSignal } from 'solid-js';
 
 import { Icon } from 'solid-heroicons';
 import { chevronDown, chevronRight, xMark } from 'solid-heroicons/solid';
 import { IconButton } from './ui/IconButton';
 
-function doSomethingWithError(message: string) {
-  const [firstLine, setFirstLine] = createSignal('');
-  const [stackTrace, setStackTrace] = createSignal('');
-
-  createEffect(() => {
-    const [first, ...stack] = message.split('\n');
-    setFirstLine(first);
-    setStackTrace(stack.join('\n'));
-  });
-
-  return [firstLine, stackTrace] as const;
-}
-
 export const Error: Component<{
   onDismiss: (...args: unknown[]) => unknown;
   message: string;
 }> = (props) => {
-  const [firstLine, stackTrace] = doSomethingWithError(props.message);
+  const lines = createMemo(() => props.message.split('\n'));
+  const firstLine = () => lines()[0] ?? '';
+  const stackTrace = () => lines().slice(1).join('\n');
   const [isOpen, setIsOpen] = createSignal(false);
 
   return (
@@ -32,7 +21,7 @@ export const Error: Component<{
           <code class="text-sm font-medium" innerText={firstLine()}></code>
         </summary>
 
-        <pre class="mt-2 ml-6 overflow-auto whitespace-pre-line text-xs opacity-80">
+        <pre class="mt-2 ml-6 overflow-auto whitespace-pre text-sm opacity-80">
           <code innerText={stackTrace()}></code>
         </pre>
       </details>

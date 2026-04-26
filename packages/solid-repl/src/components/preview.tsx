@@ -262,7 +262,7 @@ export const Preview: Component<Props> = (props) => {
       preview: () => (
         <iframe
           title="Solid REPL"
-          class="h-full min-h-0 w-full min-w-0 bg-white p-0 block overflow-scroll dark:bg-darkbg"
+          class="h-full min-h-0 w-full min-w-0 bg-white p-0 dark:bg-neutral-900 block overflow-scroll"
           style={styleScale()}
           ref={iframe}
           srcdoc={iframeHtml}

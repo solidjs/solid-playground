@@ -5,6 +5,7 @@ import { isDarkTheme } from './utils/isDarkTheme';
 interface AppContextType {
   token: string;
   user: Resource<{ display: string; avatar: string } | undefined>;
+  profile: Accessor<string>;
   tabs: Accessor<Tab[] | undefined>;
   setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
   dark: Accessor<boolean>;
@@ -52,6 +53,7 @@ export const AppContextProvider: ParentComponent = (props) => {
           localStorage.setItem('token', x);
         },
         user,
+        profile: () => user()?.display || 'anonymous',
         tabs() {
           const tabs = tabsGetter();
           if (!tabs) return undefined;

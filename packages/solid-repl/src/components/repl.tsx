@@ -304,7 +304,7 @@ export const Repl: ReplProps = (props) => {
                     setShowMenu(true);
                   }}
                 >
-                  <span class="truncate text-xs">{panelTitle()}</span>
+                  <span class="truncate text-sm">{panelTitle()}</span>
 
                   <button
                     class="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 ml-auto rounded-sm opacity-0 transition-opacity group-hover:opacity-100"
@@ -483,6 +483,7 @@ export const Repl: ReplProps = (props) => {
                     compile();
                   }
                 }}
+                onUserEdit={props.onUserEdit}
                 formatter={formatter}
                 linter={linter}
                 isDark={props.dark}
@@ -611,7 +612,8 @@ export const Repl: ReplProps = (props) => {
   });
 
   return (
-    <div ref={ref} class="h-full min-h-0 text-black dark:text-white flex flex-1 flex-col overflow-hidden font-sans">
+    <div class="h-full min-h-0 text-black dark:text-white flex flex-1 flex-col overflow-hidden font-sans">
+      <div ref={ref} class="min-h-0 flex flex-1 flex-col" />
       <Show when={error()}>
         <Error message={error()} onDismiss={() => setError('')} />
       </Show>

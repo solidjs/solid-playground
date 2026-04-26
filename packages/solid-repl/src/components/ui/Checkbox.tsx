@@ -9,15 +9,15 @@ export const Checkbox: Component<CheckboxProps> = (props) => {
 
   return (
     <label
-      class={`my-3 space-x-4 dark:text-white flex cursor-pointer items-center ${local.class || ''}`}
+      class={`space-x-2 dark:text-white flex cursor-pointer items-center ${local.class || ''}`}
       classList={local.classList}
     >
       <input
         type="checkbox"
         {...others}
-        class="h-4 w-4 shrink-0 border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 cursor-pointer rounded text-solidc focus:ring-solidc"
+        class="h-4 w-4 border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 shrink-0 cursor-pointer rounded-sm text-solidc focus:ring-solidc"
       />
-      <span class="text-sm font-medium">{local.label}</span>
+      <span class="text-sm">{local.label}</span>
     </label>
   );
 };
