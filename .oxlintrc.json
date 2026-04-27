@@ -1,8 +1,16 @@
 {
-  "jsPlugins": ["./scripts/oxlint-plugin-unocss.ts"],
+  "jsPlugins": ["@pandacss/eslint-plugin"],
   "rules": {
-    "unocss/valid-class": "error",
-    "unocss/no-conflicting-classes": "error",
+    "@pandacss/file-not-included": "error",
+    "@pandacss/no-config-function-in-source": "error",
+    "@pandacss/no-debug": "warn",
+    "@pandacss/no-dynamic-styling": "warn",
+    "@pandacss/no-hardcoded-color": "warn",
+    "@pandacss/no-invalid-nesting": "error",
+    "@pandacss/no-invalid-token-paths": "error",
+    "@pandacss/no-property-renaming": "warn",
+    "@pandacss/no-unsafe-token-fn-usage": "warn",
+    "@pandacss/no-deprecated-tokens": "warn",
     "eslint/no-unassigned-vars": "off"
   }
 }

@@ -9,8 +9,5 @@
   "trailingComma": "all",
   "useTabs": false,
   "quoteProps": "consistent",
-  "ignorePatterns": ["node_modules/", "dist/", "pnpm-lock.yaml"],
-  "sortTailwindcss": {
-    "config": "uno.config.js"
-  }
+  "ignorePatterns": ["node_modules/", "dist/", "pnpm-lock.yaml"]
 }

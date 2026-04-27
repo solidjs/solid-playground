@@ -15,6 +15,9 @@
     "skipLibCheck": true,
     "jsxImportSource": "solid-js",
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "styled-system/*": ["./styled-system/*"]
+    }
   }
 }

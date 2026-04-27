@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": {
+      "styled-system/*": ["../../styled-system/*"]
+    }
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules/"]

@@ -1,9 +1,16 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import UnoCSS from 'unocss/vite';
+import { resolve } from 'node:path';
+
+const styledSystemPath = resolve(import.meta.dirname, '../../styled-system');
 
 export default defineConfig((env) => ({
-  plugins: [solidPlugin(), UnoCSS()],
+  plugins: [solidPlugin()],
+  resolve: {
+    alias: {
+      'styled-system': styledSystemPath,
+    },
+  },
   define: {
     'process.env.NODE_DEBUG': 'false',
     ...(env.command == 'build' ? {} : { global: 'globalThis' }),

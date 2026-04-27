@@ -10,21 +10,20 @@
   ],
   "type": "module",
   "scripts": {
+    "prepare": "panda codegen",
     "start": "cd packages/playground && pnpm start",
     "build": "cd packages/playground && pnpm build",
     "dev": "cd packages/playground && pnpm dev",
+    "panda:watch": "panda codegen --watch",
     "format": "oxfmt .",
     "lint": "oxlint ."
   },
   "devDependencies": {
     "@changesets/cli": "2.31.0",
-    "@oxlint/plugins": "^1.61.0",
-    "@unocss/preset-wind3": "^66.6.8",
-    "jiti": "^2.6.1",
+    "@pandacss/dev": "^1.10.0",
+    "@pandacss/eslint-plugin": "^0.3.2",
     "oxfmt": "^0.46.0",
-    "oxlint": "^1.61.0",
-    "synckit": "^0.11.12",
-    "unocss": "^66.6.8"
+    "oxlint": "^1.61.0"
   },
   "packageManager": "pnpm@10.33.2",
   "pnpm": {

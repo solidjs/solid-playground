@@ -7,14 +7,21 @@ import { Edit } from './pages/edit';
 import { Home } from './pages/home';
 import { Login } from './pages/login';
 import { AppContextProvider } from './context';
+import { css } from 'styled-system/css';
+
+const shell = css({
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  h: 'screen',
+  overflow: 'auto',
+  fontFamily: 'sans',
+  color: 'neutral.900',
+  bg: 'neutral.100',
+  _dark: { color: 'neutral.50', bg: 'neutral.950' },
+});
 
 export const App = (): JSX.Element => {
-  /**
-   * Those next three lines are useful to display a popup
-   * if the client code has been updated. This trigger a signal
-   * via an EventBus initiated in the service worker and
-   * the couple line above.
-   */
   const { zoomState, updateZoom } = useZoom();
   document.addEventListener('keydown', (e) => {
     if (!zoomState.overrideNative) return;
@@ -30,7 +37,7 @@ export const App = (): JSX.Element => {
   });
 
   return (
-    <div class="text-neutral-900 dark:text-neutral-50 bg-neutral-100 dark:bg-neutral-950 relative flex h-screen flex-col overflow-auto font-sans">
+    <div class={shell}>
       <Router
         root={(props) => (
           <AppContextProvider>

@@ -1,6 +1,7 @@
-import { Component, Setter } from 'solid-js';
+import { Component, For, Setter } from 'solid-js';
 import { Label } from './ui/Label';
 import { Input } from './ui/Input';
+import { css } from 'styled-system/css';
 
 export const compileOptions = {
   SSR: { generate: 'ssr', hydratable: true },
@@ -13,6 +14,19 @@ export const compileOptions = {
   },
 } as const;
 
+const labels = {
+  DOM: 'Client side rendering',
+  SSR: 'Server side rendering',
+  HYDRATABLE: 'Client side rendering with hydration',
+} as const;
+
+const radioRow = css({
+  'display': 'block',
+  'cursor': 'pointer',
+  'mr': 'auto',
+  '& > * + *': { ml: 2 },
+});
+
 interface CompileModeProps {
   mode: (typeof compileOptions)[keyof typeof compileOptions];
   setMode: Setter<(typeof compileOptions)[keyof typeof compileOptions]>;
@@ -22,33 +36,29 @@ interface CompileModeProps {
 
 export const CompileMode: Component<CompileModeProps> = (props) => {
   return (
-    <div class="p-2">
-      <Label class="mb-1 block">Compile mode</Label>
+    <div class={css({ p: 2 })}>
+      <Label class={css({ mb: 1, display: 'block' })}>Compile mode</Label>
 
-      <div class="mt-1 space-y-1 text-sm">
-        {(['DOM', 'SSR', 'HYDRATABLE'] as const).map((m) => (
-          <label class="space-x-2 mr-auto block cursor-pointer">
-            <input
-              checked={props.mode === compileOptions[m]}
-              class="text-solidc"
-              onChange={[props.setMode, compileOptions[m]]}
-              type="radio"
-              name="dom"
-            />
-            <span>
-              {m === 'DOM'
-                ? 'Client side rendering'
-                : m === 'SSR'
-                  ? 'Server side rendering'
-                  : 'Client side rendering with hydration'}
-            </span>
-          </label>
-        ))}
+      <div class={css({ 'mt': 1, 'fontSize': 'sm', '& > * + *': { mt: 1 } })}>
+        <For each={['DOM', 'SSR', 'HYDRATABLE'] as const}>
+          {(m) => (
+            <label class={radioRow}>
+              <input
+                checked={props.mode === compileOptions[m]}
+                class={css({ accentColor: 'solidc' })}
+                onChange={[props.setMode, compileOptions[m]]}
+                type="radio"
+                name="dom"
+              />
+              <span>{labels[m]}</span>
+            </label>
+          )}
+        </For>
 
-        <label class="space-x-2 mr-auto block cursor-pointer">
+        <label class={radioRow}>
           <input
             checked={props.mode.generate === 'universal'}
-            class="text-solidc"
+            class={css({ accentColor: 'solidc' })}
             onChange={[props.setMode, compileOptions.UNIVERSAL]}
             type="radio"
             name="dom"
@@ -56,12 +66,10 @@ export const CompileMode: Component<CompileModeProps> = (props) => {
           <span>Universal Rendering & moduleName:</span>
           <Input
             onFocus={[props.setMode, compileOptions.UNIVERSAL]}
-            onInput={(e) => {
-              props.setUniversalModuleName(e.currentTarget.value);
-            }}
+            onInput={(e) => props.setUniversalModuleName(e.currentTarget.value)}
             size="sm"
             inline
-            class="ml-2"
+            class={css({ ml: 2 })}
             type="text"
             value={props.universalModuleName}
             name="moduleName"

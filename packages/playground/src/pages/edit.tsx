@@ -15,6 +15,8 @@ import type { Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { Button } from 'solid-repl/src/components/ui/Button';
+import { useDialog } from 'solid-repl/src/components/ui/Dialog';
+import { css } from 'styled-system/css';
 
 function parseHash<T>(hash: string, fallback: T): T {
   try {
@@ -42,10 +44,27 @@ window.MonacoEnvironment = {
   },
 };
 
+const titleInput = css({
+  width: 96,
+  px: 3,
+  py: 1.5,
+  rounded: 'md',
+  bg: 'transparent',
+  borderWidth: '1px',
+  borderColor: 'transparent',
+  transition: 'all',
+  _focus: { borderColor: 'solidc', outline: 'none' },
+});
+
+const spinner = css({ h: 12, w: 12, m: 'auto', color: 'neutral.500', animation: 'spin 1s linear infinite' });
+
+const dialogActions = css({ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 });
+
 interface InternalTab extends Tab {
   _source: string;
   _name: string;
 }
+
 export const Edit = () => {
   const [searchParams] = useSearchParams();
   const scratchpad = useMatch(() => '/');
@@ -120,10 +139,7 @@ export const Edit = () => {
         const myScratchpad = localStorage.getItem('scratchpad');
         if (!myScratchpad) {
           output = {
-            files: defaultTabs.map((x) => ({
-              name: x.name,
-              content: x.source,
-            })),
+            files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
           } as APIRepl;
           localStorage.setItem('scratchpad', JSON.stringify(output));
         } else {
@@ -136,11 +152,7 @@ export const Edit = () => {
       }
 
       batch(() => {
-        setTabs(
-          output.files.map((x) => {
-            return { name: x.name, source: x.content };
-          }),
-        );
+        setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
         setCurrent(output.files[0].name);
       });
 
@@ -171,18 +183,13 @@ export const Edit = () => {
       },
       body: JSON.stringify(newRepl),
     });
-    if (response.status >= 400) {
-      throw new Error(response.statusText);
-    }
+    if (response.status >= 400) throw new Error(response.statusText);
+
     const { id, write_token } = await response.json();
     if (write_token) {
       localStorage.setItem(id, write_token);
       const repls = localStorage.getItem('repls');
-      if (repls) {
-        localStorage.setItem('repls', JSON.stringify([...JSON.parse(repls), id]));
-      } else {
-        localStorage.setItem('repls', JSON.stringify([id]));
-      }
+      localStorage.setItem('repls', JSON.stringify(repls ? [...JSON.parse(repls), id] : [id]));
     }
     mutate(() => ({
       id,
@@ -209,6 +216,13 @@ export const Edit = () => {
     if (!readonly() || forkDeclined()) return;
     setForkPromptFor(params.repl);
   };
+
+  const forkDialog = useDialog({
+    open: forkPromptOpen,
+    onOpenChange: (open) => {
+      if (!open) setForkPromptFor(null);
+    },
+  });
 
   const updateRepl = debounce(
     () => {
@@ -265,7 +279,7 @@ export const Edit = () => {
       >
         <Show when={resource() && (resource()?.title || (scratchpad() && context.token))}>
           <input
-            class="w-96 border-transparent bg-transparent px-3 py-1.5 shrink rounded-md border transition focus:border-solidc focus:outline-none"
+            class={titleInput}
             value={resource()?.title ?? ''}
             placeholder={scratchpad() ? 'Name this repl to save it' : ''}
             onKeyDown={(e) => {
@@ -285,18 +299,13 @@ export const Edit = () => {
       </Header>
       <Suspense
         fallback={
-          <svg
-            class="h-12 w-12 animate-spin text-neutral-500 m-auto"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <svg class={spinner} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class={css({ opacity: 0.25 })} cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path
-              class="opacity-75"
+              class={css({ opacity: 0.75 })}
               fill="currentColor"
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
+            />
           </svg>
         }
       >
@@ -317,41 +326,32 @@ export const Edit = () => {
           />
         </Show>
       </Suspense>
-      <Show when={forkPromptOpen()}>
-        <div class="top-0 left-0 z-10 h-full w-full bg-black/50 fixed flex items-center justify-center">
-          <div
-            class="w-96 border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:text-white rounded-lg border shadow-lg dark:bg-neutral-900"
-            role="dialog"
-            aria-modal="true"
-            tabindex="-1"
+      <forkDialog.Root>
+        <p class={css({ fontWeight: 'semibold' })}>Fork this repl?</p>
+        <p class={css({ mt: 2, fontSize: 'sm', opacity: 0.8 })}>
+          You're editing someone else's repl. Fork it to a new copy you can save.
+        </p>
+        <div class={dialogActions}>
+          <Button
+            onClick={() => {
+              setForkPromptFor(null);
+              setForkDeclinedFor(params.repl);
+            }}
           >
-            <p class="font-semibold">Fork this repl?</p>
-            <p class="mt-2 text-sm opacity-80">
-              You're editing someone else's repl. Fork it to a new copy you can save.
-            </p>
-            <div class="mt-3 gap-2 flex justify-end">
-              <Button
-                onClick={() => {
-                  setForkPromptFor(null);
-                  setForkDeclinedFor(params.repl);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setForkPromptFor(null);
-                  const original = resource.latest;
-                  publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
-                }}
-              >
-                Fork
-              </Button>
-            </div>
-          </div>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setForkPromptFor(null);
+              const original = resource.latest;
+              publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
+            }}
+          >
+            Fork
+          </Button>
         </div>
-      </Show>
+      </forkDialog.Root>
     </>
   );
 };

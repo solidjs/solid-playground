@@ -5,6 +5,22 @@ import { throttle } from '@solid-primitives/scheduled';
 import { bell, bellSlash, codeBracket } from 'solid-heroicons/outline';
 import { register } from './setupSolid';
 import { IconButton } from '../ui/IconButton';
+import { css } from 'styled-system/css';
+
+const editorContainer = css({ flex: 1, p: 0, minH: 0, minW: 0 });
+
+const footer = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+  h: '30px',
+  px: 2,
+  borderTopWidth: '1px',
+  borderColor: 'neutral.200',
+  bg: 'white',
+  _dark: { borderColor: 'neutral.700', bg: 'neutral.900' },
+});
 
 const Editor: Component<{
   model: mEditor.ITextModel;
@@ -81,7 +97,6 @@ const Editor: Component<{
     }
   }, 250);
 
-  // Initialize Monaco
   onMount(() => {
     editor = mEditor.create(parent, {
       model: null,
@@ -92,12 +107,8 @@ const Editor: Component<{
       lineDecorationsWidth: 5,
       lineNumbersMinChars: 3,
       padding: { top: 15 },
-      minimap: {
-        enabled: props.withMinimap,
-      },
-      dropIntoEditor: {
-        enabled: false,
-      },
+      minimap: { enabled: props.withMinimap },
+      dropIntoEditor: { enabled: false },
     });
 
     createEffect(() => {
@@ -123,9 +134,7 @@ const Editor: Component<{
     }
 
     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
-      // auto-format
       editor.getAction('editor.action.formatDocument')?.run();
-      // auto-fix problems
       props.displayErrors && editor.getAction('eslint.executeAutofix')?.run();
       editor.focus();
     });
@@ -149,8 +158,7 @@ const Editor: Component<{
   });
 
   createEffect(() => {
-    const fontSize = zoomState.fontSize;
-    editor.updateOptions({ fontSize });
+    editor.updateOptions({ fontSize: zoomState.fontSize });
   });
 
   createEffect(() => {
@@ -163,10 +171,8 @@ const Editor: Component<{
 
   createEffect(() => {
     if (props.displayErrors) {
-      // run on mount and when displayLintMessages is turned on
       runLinter(editor.getValue());
     } else {
-      // reset eslint markers when displayLintMessages is turned off
       mEditor.setModelMarkers(props.model, 'eslint', []);
     }
   });
@@ -177,11 +183,11 @@ const Editor: Component<{
 
   return (
     <>
-      <div class="min-h-0 min-w-0 p-0 flex-1" ref={parent} />
+      <div class={editorContainer} ref={parent} />
       <Show when={!props.disabled}>
-        <div class="w-full border-t-1 border-neutral-200 bg-white px-2 dark:border-neutral-700 dark:bg-neutral-900 flex h-[30px] items-center justify-between">
-          <div></div>
-          <div class="space-x-1 flex items-center">
+        <div class={footer}>
+          <div />
+          <div class={css({ display: 'flex', alignItems: 'center', gap: 1 })}>
             <IconButton
               icon={props.displayErrors ? bell : bellSlash}
               size="sm"
@@ -194,7 +200,9 @@ const Editor: Component<{
               title="Format Document"
               onClick={() => editor.getAction('editor.action.formatDocument')?.run()}
             />
-            <span class="text-neutral-500 dark:text-neutral-400 px-2 text-sm">TypeScript</span>
+            <span class={css({ px: 2, fontSize: 'sm', color: 'neutral.500', _dark: { color: 'neutral.400' } })}>
+              TypeScript
+            </span>
           </div>
         </div>
       </Show>

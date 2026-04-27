@@ -1,47 +1,61 @@
-import { Component, JSX } from 'solid-js';
+import { Component, JSX, splitProps } from 'solid-js';
 import { Icon } from 'solid-heroicons';
+import { css, cva, cx } from 'styled-system/css';
 
-export interface IconButtonProps {
-  ref?: HTMLButtonElement;
+const iconButton = cva({
+  base: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    rounded: 'md',
+    opacity: 0.8,
+    transition: 'all',
+    _hover: { bg: 'neutral.200', opacity: 1 },
+    _disabled: { pointerEvents: 'none', opacity: 0.5 },
+    _dark: { _hover: { bg: 'neutral.700' } },
+  },
+  variants: {
+    size: {
+      sm: { p: 1 },
+      md: { p: 1.5 },
+      lg: { p: 2 },
+    },
+    active: {
+      true: {
+        bg: 'neutral.200',
+        opacity: 1,
+        _dark: { bg: 'neutral.700' },
+      },
+    },
+  },
+  defaultVariants: {
+    size: 'md',
+  },
+});
+
+const iconSizeStyles = {
+  sm: css({ h: 4, w: 4 }),
+  md: css({ h: 5, w: 5 }),
+  lg: css({ h: 6, w: 6 }),
+} as const;
+
+export interface IconButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: any;
-  onClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>;
-  title?: string;
   active?: boolean;
-  disabled?: boolean;
-  class?: string;
   size?: 'sm' | 'md' | 'lg';
-  children?: JSX.Element;
 }
 
-const sizes = {
-  sm: 'p-1',
-  md: 'p-1.5',
-  lg: 'p-2',
-};
-
-const iconSizes = {
-  sm: 'h-4 w-4',
-  md: 'h-5 w-5',
-  lg: 'h-6 w-6',
-};
-
 export const IconButton: Component<IconButtonProps> = (props) => {
+  const [local, rest] = splitProps(props, ['icon', 'active', 'size', 'class', 'children']);
+  const size = () => local.size ?? 'md';
   return (
     <button
-      ref={props.ref}
       type="button"
-      onClick={props.onClick}
-      title={props.title}
-      disabled={props.disabled}
-      class={`hover:bg-neutral-200 dark:hover:bg-neutral-700 inline-flex items-center justify-center rounded-md opacity-80 transition-all hover:opacity-100 disabled:pointer-events-none disabled:opacity-50 ${
-        sizes[props.size || 'md']
-      } ${props.class || ''}`}
-      classList={{
-        'bg-neutral-200 dark:bg-neutral-700 opacity-100': props.active,
-      }}
+      {...rest}
+      class={cx(iconButton({ size: size(), active: local.active }), local.class)}
     >
-      <Icon path={props.icon} class={iconSizes[props.size || 'md']} />
-      {props.children}
+      <Icon path={local.icon} class={iconSizeStyles[size()]} />
+      {local.children}
     </button>
   );
 };

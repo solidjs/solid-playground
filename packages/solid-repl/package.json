@@ -14,7 +14,7 @@
   "module": "dist/repl.jsx",
   "types": "src/types.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && unocss \"./src/**\" && jiti build.ts",
+    "build": "tsc -p tsconfig.build.json && tsdown",
     "tsc": "tsc"
   },
   "dependencies": {
@@ -22,10 +22,13 @@
     "@shikijs/monaco": "^4.0.2",
     "@solid-primitives/media": "^2.3.5",
     "@solid-primitives/scheduled": "^1.5.3",
+    "@zag-js/dialog": "^1.27.0",
+    "@zag-js/menu": "^1.27.0",
+    "@zag-js/popover": "^1.27.0",
+    "@zag-js/solid": "^1.27.0",
     "dedent": "^1.7.2",
     "dockview-core": "^5.2.0",
     "shiki": "^4.0.2",
-    "solid-dismiss": "^1.8.2",
     "solid-floating-ui": "^0.3.1",
     "solid-heroicons": "^3.2.4"
   },
@@ -35,24 +38,19 @@
     "@babel/preset-typescript": "^7.28.5",
     "@babel/standalone": "^7.29.2",
     "@babel/types": "^7.29.0",
+    "@pandacss/dev": "^1.10.0",
     "@shikijs/langs": "^4.0.2",
+    "@tsdown/css": "^0.21.10",
     "@shikijs/themes": "^4.0.2",
     "@types/babel__standalone": "^7.1.9",
     "@types/dedent": "^0.7.2",
-    "@types/fs-extra": "^11.0.4",
-    "@unocss/cli": "^66.6.8",
-    "@unocss/preset-wind3": "^66.6.8",
-    "@unocss/reset": "^66.6.8",
     "babel-preset-solid": "^1.9.12",
-    "esbuild": "^0.28.0",
     "eslint-solid-standalone": "<0.14.0",
-    "fs-extra": "^11.3.4",
-    "jiti": "^2.6.1",
     "monaco-editor": "^0.55.1",
     "prettier": "^3.8.3",
     "solid-js": "1.9.12",
-    "typescript": "^6.0.3",
-    "unocss": "^66.6.8"
+    "tsdown": "^0.21.10",
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "solid-js": ">=1.7.0"

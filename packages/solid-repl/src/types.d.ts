@@ -39,3 +39,5 @@ interface Window {
     getWorker: (_moduleId: unknown, label: string) => Worker;
   };
 }
+
+declare module '*.css';

@@ -1,23 +1,38 @@
 import { Component, JSX, splitProps } from 'solid-js';
+import { css, cx } from 'styled-system/css';
+
+const wrapperStyles = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 2,
+  cursor: 'pointer',
+  _dark: { color: 'white' },
+});
+
+const inputStyles = css({
+  flexShrink: 0,
+  h: 4,
+  w: 4,
+  rounded: 'sm',
+  cursor: 'pointer',
+  color: 'solidc',
+  border: '1px solid',
+  borderColor: 'neutral.300',
+  _focus: { ringColor: 'solidc' },
+  _dark: { borderColor: 'neutral.700', bg: 'neutral.800' },
+});
 
 export interface CheckboxProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
   label: string;
 }
 
 export const Checkbox: Component<CheckboxProps> = (props) => {
-  const [local, others] = splitProps(props, ['label', 'class', 'classList']);
+  const [local, others] = splitProps(props, ['label', 'class']);
 
   return (
-    <label
-      class={`space-x-2 dark:text-white flex cursor-pointer items-center ${local.class || ''}`}
-      classList={local.classList}
-    >
-      <input
-        type="checkbox"
-        {...others}
-        class="h-4 w-4 border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 shrink-0 cursor-pointer rounded-sm text-solidc focus:ring-solidc"
-      />
-      <span class="text-sm">{local.label}</span>
+    <label class={cx(wrapperStyles, local.class)}>
+      <input type="checkbox" {...others} class={inputStyles} />
+      <span class={css({ fontSize: 'sm' })}>{local.label}</span>
     </label>
   );
 };

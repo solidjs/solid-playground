@@ -1,49 +1,147 @@
-import { ParentComponent, Component, Show } from 'solid-js';
+import { Component, For, JSX, Show, createMemo, createUniqueId } from 'solid-js';
 import { Icon } from 'solid-heroicons';
+import { Portal } from 'solid-js/web';
+import * as menu from '@zag-js/menu';
+import { useMachine, normalizeProps } from '@zag-js/solid';
+import { css, cva, cx } from 'styled-system/css';
 
-export interface MenuProps {
-  onClose: () => void;
-  class?: string;
-  style?: JSX.CSSProperties;
-}
+const menuStyles = css({
+  minWidth: 32,
+  borderWidth: '1px',
+  borderColor: 'neutral.200',
+  bg: 'white',
+  py: 1,
+  rounded: 'lg',
+  shadow: 'lg',
+  zIndex: 1000,
+  outline: 'none',
+  _dark: { borderColor: 'neutral.700', bg: 'neutral.800' },
+});
 
-export const Menu: ParentComponent<MenuProps> = (props) => {
-  return (
-    <div
-      class={`min-w-32 border-neutral-200 bg-white py-1 dark:border-neutral-700 dark:bg-neutral-800 z-[1000] rounded-lg border shadow-lg ${
-        props.class || 'fixed'
-      }`}
-      style={props.style}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {props.children}
-    </div>
-  );
-};
+const menuItem = cva({
+  base: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    px: 3,
+    py: 2,
+    gap: 2,
+    textAlign: 'left',
+    fontSize: 'sm',
+    transition: 'colors',
+    cursor: 'pointer',
+  },
+  variants: {
+    variant: {
+      default: {
+        '_hover': { bg: 'neutral.50' },
+        '&[data-highlighted]': { bg: 'neutral.50' },
+        '_dark': {
+          '_hover': { bg: 'neutral.700' },
+          '&[data-highlighted]': { bg: 'neutral.700' },
+        },
+      },
+      danger: {
+        'color': 'red.600',
+        '_hover': { bg: 'red.50' },
+        '&[data-highlighted]': { bg: 'red.50' },
+        '_dark': {
+          '_hover': { bg: 'red.900/20' },
+          '&[data-highlighted]': { bg: 'red.900/20' },
+        },
+      },
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
 
-export interface MenuItemProps {
+export interface MenuItemDef {
+  value: string;
   label: string;
   icon?: any;
-  onClick: () => void;
-  variant?: 'danger' | 'default';
+  variant?: 'default' | 'danger';
+  onSelect: () => void;
 }
 
-export const MenuItem: Component<MenuItemProps> = (props) => {
-  return (
-    <button
-      class="w-full space-x-2 px-3 py-2 flex items-center text-left text-sm transition-colors"
-      classList={{
-        'hover:bg-neutral-50 dark:hover:bg-neutral-700': props.variant !== 'danger',
-        'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20': props.variant === 'danger',
-      }}
-      onClick={() => {
-        props.onClick();
-      }}
-    >
-      <Show when={props.icon} fallback={<div class="h-3 w-3" />}>
-        <Icon path={props.icon} class="h-3 w-3" />
+export interface MenuOptions {
+  /** id used by zag (defaults to a unique id) */
+  id?: string;
+  /** controlled open state */
+  open?: () => boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** placement options */
+  positioning?: menu.PositioningOptions;
+  /** anchor point for context menus */
+  anchorPoint?: () => { x: number; y: number } | undefined;
+}
+
+/**
+ * useMenu wires a Zag.js menu machine and returns prop getters plus a
+ * pre-styled <Content/> component that renders the menu items.
+ */
+export function useMenu(items: () => MenuItemDef[], options: MenuOptions = {}) {
+  const id = options.id ?? createUniqueId();
+
+  const service = useMachine(menu.machine, () => ({
+    id,
+    open: options.open?.(),
+    anchorPoint: options.anchorPoint?.(),
+    positioning: options.positioning,
+    onOpenChange: ({ open }) => options.onOpenChange?.(open),
+    onSelect: ({ value }) => {
+      const item = items().find((i) => i.value === value);
+      item?.onSelect();
+    },
+  }));
+
+  const api = createMemo(() => menu.connect(service, normalizeProps));
+
+  const Content: Component<{ portal?: boolean }> = (props) => {
+    const body = (
+      <Show when={api().open}>
+        <div {...(api().getPositionerProps() as any)}>
+          <ul {...(api().getContentProps() as any)} class={menuStyles}>
+            <For each={items()}>
+              {(item) => (
+                <li
+                  {...(api().getItemProps({ value: item.value }) as any)}
+                  class={menuItem({ variant: item.variant ?? 'default' })}
+                >
+                  <Show when={item.icon} fallback={<div class={css({ h: 3, w: 3 })} />}>
+                    <Icon path={item.icon} class={css({ h: 3, w: 3 })} />
+                  </Show>
+                  <span>{item.label}</span>
+                </li>
+              )}
+            </For>
+          </ul>
+        </div>
       </Show>
-      <span>{props.label}</span>
-    </button>
-  );
-};
+    );
+
+    return props.portal ? <Portal>{body as JSX.Element}</Portal> : (body as JSX.Element);
+  };
+
+  return { api, Content };
+}
+
+/* Standalone, presentational versions still used by code that builds its own menu surface */
+export const Menu: Component<{ class?: string; style?: JSX.CSSProperties; children?: JSX.Element }> = (props) => (
+  <div class={cx(menuStyles, props.class)} style={props.style} onClick={(e) => e.stopPropagation()}>
+    {props.children}
+  </div>
+);
+
+export const MenuItem: Component<{
+  label: string;
+  icon?: any;
+  variant?: 'default' | 'danger';
+  onClick: () => void;
+}> = (props) => (
+  <button class={menuItem({ variant: props.variant ?? 'default' })} onClick={() => props.onClick()}>
+    <Show when={props.icon} fallback={<div class={css({ h: 3, w: 3 })} />}>
+      <Icon path={props.icon} class={css({ h: 3, w: 3 })} />
+    </Show>
+    <span>{props.label}</span>
+  </button>
+);

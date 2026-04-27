@@ -1,5 +1,36 @@
 @layer reset, base, tokens, recipes, utilities;
 
+@font-face {
+  font-family: 'Gordita';
+  src: url('/Gordita-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gordita';
+  src: url('/Gordita-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gordita';
+  src: url('/Gordita-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+}
+
+div[contenteditable='true']:focus {
+  outline: none !important;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+textarea.monaco-mouse-cursor-text:focus {
+  box-shadow: unset;
+}
+
 #app .dockview-theme-abyss-spaced {
   padding-top: 0;
   --dv-color-abyss-dark: var(--colors-neutral-100);

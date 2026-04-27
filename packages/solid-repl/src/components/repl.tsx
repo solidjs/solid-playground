@@ -8,6 +8,7 @@ import { createMonacoTabs } from './editor/monacoTabs';
 import { NewTab } from './newTab';
 import { CompileMode, compileOptions } from './CompileMode';
 import { IconButton } from './ui/IconButton';
+import { useMenu } from './ui/Menu';
 
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
@@ -16,9 +17,8 @@ import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeAbys
 import { insert } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
 import { plus, trash, pencil, xMark } from 'solid-heroicons/outline';
+import { css } from 'styled-system/css';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
-import { Menu, MenuItem } from './ui/Menu';
-import Dismiss from 'solid-dismiss';
 
 const getImportMap = (tabs: Tab[]): Record<string, string> => {
   try {
@@ -28,6 +28,50 @@ const getImportMap = (tabs: Tab[]): Record<string, string> => {
     return {};
   }
 };
+
+const replHost = css({
+  display: 'flex',
+  flex: 1,
+  flexDirection: 'column',
+  minH: 0,
+  h: 'full',
+  overflow: 'hidden',
+  fontFamily: 'sans',
+  color: 'black',
+  _dark: { color: 'white' },
+});
+
+const replBody = css({ display: 'flex', flex: 1, flexDirection: 'column', minH: 0 });
+
+const headerActions = css({ display: 'flex', alignItems: 'center', h: 'full', px: 1 });
+const tabBody = css({ display: 'flex', alignItems: 'center', h: 'full', pl: 2 });
+
+const tabLayout = css({
+  'display': 'flex',
+  'alignItems': 'center',
+  'h': 'full',
+  'gap': 2,
+  '& .tab-close': { opacity: 0, transition: 'opacity 0.15s' },
+  '_hover': { '& .tab-close': { opacity: 1 } },
+});
+
+const tabClose = css({
+  ml: 'auto',
+  p: 0.5,
+  rounded: 'sm',
+  _hover: { bg: 'neutral.200' },
+  _dark: { _hover: { bg: 'neutral.700' } },
+});
+
+const outputPane = css({
+  'position': 'relative',
+  'display': 'flex',
+  'flex': 1,
+  'flexDirection': 'column',
+  'minH': 0,
+  'minW': 0,
+  '& > * + *': { borderTopWidth: '1px', borderColor: 'slate.200', _dark: { borderColor: 'neutral.800' } },
+});
 
 export const Repl: ReplProps = (props) => {
   const { compiler, formatter, linter } = props;
@@ -64,7 +108,6 @@ export const Repl: ReplProps = (props) => {
     if (event === 'ROLLUP') {
       const currentMap = { ...importMap() };
       for (const file in currentMap) {
-        // Catch any `jspm.dev` URLs and migrate them to `esm.sh`
         if (currentMap[file] === `https://jspm.dev/${file}`) {
           currentMap[file] = `https://esm.sh/${file}`;
         }
@@ -101,14 +144,8 @@ export const Repl: ReplProps = (props) => {
   compiler.addEventListener('message', onCompilerMessage);
   onCleanup(() => compiler.removeEventListener('message', onCompilerMessage));
 
-  /**
-   * We need to debounce a bit the compilation because
-   * it takes ~15ms to compile with the web worker...
-   * Also, real time feedback can be stressful
-   */
   const sendCompile = (message: any) => {
     now = performance.now();
-
     compiler.postMessage(message);
   };
   const applyRollupCompilation = throttle(sendCompile, 250);
@@ -138,13 +175,8 @@ export const Repl: ReplProps = (props) => {
     }
   };
 
-  /**
-   * The heart of the playground. This recompile on
-   * every tab source changes.
-   */
   createEffect(() => {
     if (!props.tabs.length) return;
-
     compile();
   });
   const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
@@ -159,10 +191,7 @@ export const Repl: ReplProps = (props) => {
   onMount(() => {
     const newFile = (name: string) => {
       if (!name.trim()) return;
-      const newTab = {
-        name: name,
-        source: '',
-      };
+      const newTab = { name, source: '' };
       batch(() => {
         props.setTabs(props.tabs.concat(newTab));
         props.setCurrent(newTab.name);
@@ -196,8 +225,7 @@ export const Repl: ReplProps = (props) => {
       if (oldName === 'main.tsx') return;
       if (newName === oldName) return;
       if (!newName.trim()) return;
-      const exists = props.tabs.some((tab) => tab.name === newName);
-      if (exists) {
+      if (props.tabs.some((tab) => tab.name === newName)) {
         alert('A file with that name already exists');
         return;
       }
@@ -209,14 +237,9 @@ export const Repl: ReplProps = (props) => {
 
       batch(() => {
         props.setTabs(newTabs);
-        if (props.current === oldName) {
-          props.setCurrent(newName);
-        }
+        if (props.current === oldName) props.setCurrent(newName);
       });
 
-      // Update Panel ID if it exists? Dockview often requires adding/removing for ID change.
-      // Easiest is to close old and open new at same position or just let user re-open.
-      // But we can try to keep it simple: if open, close and reopen.
       const panel = dockview.getGroupPanel(oldName);
       if (panel) {
         panel.api.close();
@@ -235,7 +258,7 @@ export const Repl: ReplProps = (props) => {
       theme: themeAbyssSpaced,
       defaultTabComponent: 'default',
       createLeftHeaderActionComponent: () => {
-        const element = (<div class="h-full px-1 flex items-center"></div>) as HTMLDivElement;
+        const element = (<div class={headerActions} />) as HTMLDivElement;
         let disposer: () => void;
 
         return {
@@ -243,11 +266,10 @@ export const Repl: ReplProps = (props) => {
           init: (params) => {
             createRoot((dispose) => {
               disposer = dispose;
-
               insert(element, () => (
                 <IconButton
                   icon={plus}
-                  class="h-[28px]"
+                  class={css({ h: '28px' })}
                   size="sm"
                   onClick={() => {
                     const panel = dockview.getPanel('newTab');
@@ -265,7 +287,7 @@ export const Repl: ReplProps = (props) => {
                   }}
                   title="New Tab"
                 >
-                  <span class="sr-only">New tab</span>
+                  <span class={css({ srOnly: true })}>New tab</span>
                 </IconButton>
               ));
             });
@@ -274,40 +296,67 @@ export const Repl: ReplProps = (props) => {
         };
       },
       createTabComponent: (panel) => {
-        const element = (<div class="h-full pl-2 flex items-center"></div>) as HTMLDivElement;
+        const element = (<div class={tabBody} />) as HTMLDivElement;
         let disposer: () => void;
 
         return {
           element,
           init: (params) => {
-            const [showMenu, setShowMenu] = createSignal(false);
-            const [menuPos, setMenuPos] = createSignal({ x: 0, y: 0 });
+            const [menuOpen, setMenuOpen] = createSignal(false);
+            const [anchor, setAnchor] = createSignal<{ x: number; y: number }>();
 
             createRoot((dispose) => {
               disposer = dispose;
               const [panelTitle, setPanelTitle] = createSignal(params.title);
-              params.api.onDidTitleChange((e) => {
-                setPanelTitle(e.title);
-              });
+              params.api.onDidTitleChange((e) => setPanelTitle(e.title));
               const isFile = panel.name == 'file';
-              let containerRef: HTMLDivElement | undefined;
+
+              const { Content } = useMenu(
+                () => [
+                  {
+                    value: 'rename',
+                    label: 'Rename',
+                    icon: pencil,
+                    onSelect: () => {
+                      const newName = prompt('Rename file to:', panelTitle());
+                      if (newName) renameFile(panelTitle(), newName);
+                    },
+                  },
+                  {
+                    value: 'delete',
+                    label: 'Delete',
+                    icon: trash,
+                    variant: 'danger',
+                    onSelect: () => {
+                      if (confirm(`Delete ${panelTitle()}?`)) deleteFile(panelTitle());
+                    },
+                  },
+                ],
+                {
+                  open: menuOpen,
+                  onOpenChange: setMenuOpen,
+                  anchorPoint: anchor,
+                },
+              );
 
               insert(element, () => (
                 <div
-                  ref={containerRef}
-                  class="h-full space-x-2 group flex items-center"
+                  class={tabLayout}
                   onContextMenu={(e) => {
                     if (!isFile) return;
                     e.preventDefault();
                     e.stopPropagation();
-                    setMenuPos({ x: e.clientX, y: e.clientY });
-                    setShowMenu(true);
+                    setAnchor({ x: e.clientX, y: e.clientY });
+                    setMenuOpen(true);
                   }}
                 >
-                  <span class="truncate text-sm">{panelTitle()}</span>
-
+                  <span
+                    class={css({ fontSize: 'sm', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })}
+                  >
+                    {panelTitle()}
+                  </span>
                   <button
-                    class="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 ml-auto rounded-sm opacity-0 transition-opacity group-hover:opacity-100"
+                    class={`tab-close ${tabClose}`}
                     onClick={(e) => {
                       if (e.defaultPrevented) return;
                       e.preventDefault();
@@ -315,58 +364,18 @@ export const Repl: ReplProps = (props) => {
                     }}
                     title="Close tab"
                   >
-                    <Icon path={xMark} class="h-3 w-3 text-neutral-500" />
+                    <Icon path={xMark} class={css({ h: 3, w: 3, color: 'neutral.500' })} />
                   </button>
-
-                  <Show when={isFile && showMenu()}>
-                    <Dismiss
-                      open={() => true}
-                      setOpen={(val) => {
-                        if (!val) setShowMenu(false);
-                      }}
-                      show
-                      menuButton={containerRef}
-                    >
-                      <Menu
-                        style={{ top: `${menuPos().y}px`, left: `${menuPos().x}px` }}
-                        onClose={() => setShowMenu(false)}
-                      >
-                        <MenuItem
-                          label="Rename"
-                          icon={pencil}
-                          onClick={() => {
-                            const newName = prompt('Rename file to:', panelTitle());
-                            if (newName) renameFile(panelTitle(), newName);
-                            setShowMenu(false);
-                          }}
-                        />
-                        <MenuItem
-                          label="Delete"
-                          icon={trash}
-                          variant="danger"
-                          onClick={() => {
-                            if (confirm(`Delete ${panelTitle()}?`)) {
-                              deleteFile(panelTitle());
-                            }
-                            setShowMenu(false);
-                          }}
-                        />
-                      </Menu>
-                    </Dismiss>
-                  </Show>
+                  <Content portal />
                 </div>
               ));
             });
-
-            const hide = () => setShowMenu(false);
-            window.addEventListener('click', hide);
-            onCleanup(() => window.removeEventListener('click', hide));
           },
           dispose: () => disposer?.(),
         };
       },
       createRightHeaderActionComponent: () => {
-        const element = (<div class="h-full px-1 flex items-center justify-end"></div>) as HTMLDivElement;
+        const element = (<div class={`${headerActions} ${css({ justifyContent: 'flex-end' })}`} />) as HTMLDivElement;
         let disposer: () => void;
 
         return {
@@ -379,21 +388,19 @@ export const Repl: ReplProps = (props) => {
             });
             createRoot((dispose) => {
               disposer = dispose;
-
               insert(element, () => (
                 <Show when={isTSX()}>
                   <IconButton
                     icon={trash}
-                    class="h-[28px]"
+                    class={css({ h: '28px' })}
                     size="sm"
                     onClick={() => {
-                      const confirmReset = confirm('Are you sure you want to reset the editor?');
-                      if (!confirmReset) return;
+                      if (!confirm('Are you sure you want to reset the editor?')) return;
                       props.reset();
                     }}
                     title="Reset Editor"
                   >
-                    <span class="sr-only">Reset Editor</span>
+                    <span class={css({ srOnly: true })}>Reset Editor</span>
                   </IconButton>
                 </Show>
               ));
@@ -403,7 +410,9 @@ export const Repl: ReplProps = (props) => {
         };
       },
       createComponent(options) {
-        const element = (<div class="h-full flex flex-col"></div>) as HTMLDivElement;
+        const element = (
+          <div class={css({ display: 'flex', flexDirection: 'column', h: 'full' })} />
+        ) as HTMLDivElement;
         let disposer: () => void;
         let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
 
@@ -465,9 +474,7 @@ export const Repl: ReplProps = (props) => {
                 }}
                 onDeleteFile={deleteFile}
                 onRenameFile={renameFile}
-                onClose={() => {
-                  params.api.close();
-                }}
+                onClose={() => params.api.close()}
               />
             );
             break;
@@ -477,8 +484,7 @@ export const Repl: ReplProps = (props) => {
                 model={params.currentModel}
                 onDocChange={(code: string) => {
                   if (params.currentModel.uri.path.includes('import_map.json')) {
-                    const newImportMap = JSON.parse(code);
-                    setImportMap(newImportMap);
+                    setImportMap(JSON.parse(code));
                   } else {
                     compile();
                   }
@@ -495,9 +501,7 @@ export const Repl: ReplProps = (props) => {
             break;
           case 'preview':
             setPreviewVisible(true);
-            onCleanup(() => {
-              setPreviewVisible(false);
-            });
+            onCleanup(() => setPreviewVisible(false));
             const [previewIsActive, setPreviewIsActive] = createSignal(false);
             component = () => (
               <Preview
@@ -511,21 +515,16 @@ export const Repl: ReplProps = (props) => {
             );
             onInit = (params) => {
               setPreviewIsActive(params.api.isActive);
-              const disposable = params.api.onDidActiveChange((e) => {
-                setPreviewIsActive(e.isActive);
-              });
+              const disposable = params.api.onDidActiveChange((e) => setPreviewIsActive(e.isActive));
               return () => disposable.dispose();
             };
             break;
           case 'output':
             setOutputVisible(true);
-            onCleanup(() => {
-              setOutputVisible(false);
-            });
+            onCleanup(() => setOutputVisible(false));
             component = () => (
-              <section class="min-h-0 min-w-0 divide-y-1 divide-slate-200 dark:divide-neutral-800 relative flex flex-1 flex-col">
+              <section class={outputPane}>
                 <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
-
                 <CompileMode
                   mode={mode()}
                   setMode={setMode}
@@ -581,11 +580,7 @@ export const Repl: ReplProps = (props) => {
       },
       activeGroup: '1',
       panels: {
-        Output: {
-          id: 'Output',
-          tabComponent: 'default',
-          contentComponent: 'output',
-        },
+        Output: { id: 'Output', tabComponent: 'default', contentComponent: 'output' },
         Preview: {
           id: 'Preview',
           contentComponent: 'preview',
@@ -596,9 +591,7 @@ export const Repl: ReplProps = (props) => {
           id: props.current!,
           tabComponent: 'file',
           contentComponent: 'editor',
-          params: {
-            currentModel: currentModel(),
-          },
+          params: { currentModel: currentModel() },
         },
       },
     });
@@ -612,8 +605,8 @@ export const Repl: ReplProps = (props) => {
   });
 
   return (
-    <div class="h-full min-h-0 text-black dark:text-white flex flex-1 flex-col overflow-hidden font-sans">
-      <div ref={ref} class="min-h-0 flex flex-1 flex-col" />
+    <div class={replHost}>
+      <div ref={ref} class={replBody} />
       <Show when={error()}>
         <Error message={error()} onDismiss={() => setError('')} />
       </Show>

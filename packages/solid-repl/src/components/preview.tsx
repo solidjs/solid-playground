@@ -2,6 +2,33 @@ import { Component, createEffect, JSX, onCleanup, onMount } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { Orientation, SplitviewComponent } from 'dockview-core';
 import { SolidPanelView } from '../dockview/solid';
+import { css } from 'styled-system/css';
+
+const iframeStyles = css({
+  display: 'block',
+  h: 'full',
+  minH: 0,
+  w: 'full',
+  minW: 0,
+  p: 0,
+  overflow: 'scroll',
+  bg: 'white',
+  _dark: { bg: 'neutral.900' },
+});
+
+const devtoolsIframeStyles = css({
+  h: 'full',
+  minH: 0,
+  w: 'full',
+  minW: 0,
+});
+
+const previewContainer = css({
+  display: 'flex',
+  flex: 1,
+  flexDirection: 'column',
+  minH: 0,
+});
 
 const dispatchZoomKeyToParent = `
   document.addEventListener('keydown', (e) => {
@@ -262,7 +289,7 @@ export const Preview: Component<Props> = (props) => {
       preview: () => (
         <iframe
           title="Solid REPL"
-          class="h-full min-h-0 w-full min-w-0 bg-white p-0 dark:bg-neutral-900 block overflow-scroll"
+          class={iframeStyles}
           style={styleScale()}
           ref={iframe}
           srcdoc={iframeHtml}
@@ -282,7 +309,7 @@ export const Preview: Component<Props> = (props) => {
       devtools: () => (
         <iframe
           title="Devtools"
-          class="h-full min-h-0 w-full min-w-0"
+          class={devtoolsIframeStyles}
           style={`pointer-events: ${props.pointerEvents ? 'inherit' : 'none'}`}
           ref={devtoolsIframe}
           src={devtoolsSrc}
@@ -347,7 +374,7 @@ export const Preview: Component<Props> = (props) => {
     });
   });
 
-  return <div class="min-h-0 flex flex-1 flex-col" ref={outerContainer} classList={props.classList}></div>;
+  return <div class={previewContainer} ref={outerContainer} classList={props.classList} />;
 };
 
 type Props = {
