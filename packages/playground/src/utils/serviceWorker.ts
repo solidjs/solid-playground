@@ -10,16 +10,17 @@ function registerServiceWorker(): void {
         updated() {
           setEventBus(true);
         },
-        ready(sw) {
-          sw.addEventListener('message', (event) => {
-            if (event.type == 'cache') {
-              setEventBus(true);
-            }
-          });
-        },
       });
     });
   }
+}
+
+if (import.meta.env.PROD) {
+  navigator.serviceWorker?.addEventListener('message', (event) => {
+    if (event.data.type == 'cache') {
+      setEventBus(true);
+    }
+  });
 }
 
 export { eventBus, setEventBus, registerServiceWorker };
