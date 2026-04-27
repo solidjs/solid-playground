@@ -28,7 +28,6 @@
     "@codemirror/search": "^6.7.0",
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.41.1",
-    "@floating-ui/dom": "^1.7.6",
     "@lezer/highlight": "^1.2.3",
     "@replit/codemirror-vscode-keymap": "^6.0.2",
     "@solid-primitives/media": "^2.3.5",
@@ -41,7 +40,6 @@
     "codemirror": "^6.0.2",
     "dedent": "^1.7.2",
     "dockview-core": "^5.2.0",
-    "solid-floating-ui": "^0.3.1",
     "solid-heroicons": "^3.2.4"
   },
   "devDependencies": {

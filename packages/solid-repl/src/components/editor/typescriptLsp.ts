@@ -115,63 +115,60 @@ const cmdHoverListeners = ViewPlugin.fromClass(
   class {
     active = false;
     last: { from: number; to: number } | null = null;
-    onMouseMove: (e: MouseEvent) => void;
     onKeyDown: (e: KeyboardEvent) => void;
     onKeyUp: (e: KeyboardEvent) => void;
     onBlur: () => void;
-    onMouseLeave: () => void;
 
     constructor(public view: EditorView) {
-      const set = (range: { from: number; to: number } | null) => {
-        if (
-          (range == null && this.last == null) ||
-          (range != null && this.last != null && range.from === this.last.from && range.to === this.last.to)
-        )
-          return;
-        this.last = range;
-        view.dispatch({ effects: setCmdHoverRange.of(range) });
-      };
-
-      this.onMouseMove = (e) => {
-        this.active = e.metaKey || e.ctrlKey;
-        if (!this.active) return set(null);
-        const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
-        if (pos == null || !view.coordsForChar(pos)) return set(null);
-        const node = syntaxTree(view.state).resolveInner(pos, 1);
-        if (!allowedNode.has(node.name)) return set(null);
-        set({ from: node.from, to: node.to });
+      this.onKeyDown = (e) => {
+        if (e.key === 'Meta' || e.key === 'Control') this.active = true;
       };
       this.onKeyUp = (e) => {
         if (e.key === 'Meta' || e.key === 'Control') {
           this.active = false;
-          set(null);
+          this.set(null);
         }
-      };
-      this.onKeyDown = (e) => {
-        if (e.key === 'Meta' || e.key === 'Control') this.active = true;
       };
       this.onBlur = () => {
         this.active = false;
-        set(null);
+        this.set(null);
       };
-      this.onMouseLeave = () => set(null);
-
-      const dom = view.dom;
-      dom.addEventListener('mousemove', this.onMouseMove);
-      dom.addEventListener('mouseleave', this.onMouseLeave);
       window.addEventListener('keydown', this.onKeyDown);
       window.addEventListener('keyup', this.onKeyUp);
       window.addEventListener('blur', this.onBlur);
     }
 
+    set(range: { from: number; to: number } | null) {
+      if (
+        (range == null && this.last == null) ||
+        (range != null && this.last != null && range.from === this.last.from && range.to === this.last.to)
+      )
+        return;
+      this.last = range;
+      this.view.dispatch({ effects: setCmdHoverRange.of(range) });
+    }
+
     destroy() {
-      const dom = this.view.dom;
-      dom.removeEventListener('mousemove', this.onMouseMove);
-      dom.removeEventListener('mouseleave', this.onMouseLeave);
       window.removeEventListener('keydown', this.onKeyDown);
       window.removeEventListener('keyup', this.onKeyUp);
       window.removeEventListener('blur', this.onBlur);
     }
+  },
+  {
+    eventHandlers: {
+      mousemove(event, view) {
+        this.active = event.metaKey || event.ctrlKey;
+        if (!this.active) return this.set(null);
+        const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+        if (pos == null || !view.coordsForChar(pos)) return this.set(null);
+        const node = syntaxTree(view.state).resolveInner(pos, 1);
+        if (!allowedNode.has(node.name)) return this.set(null);
+        this.set({ from: node.from, to: node.to });
+      },
+      mouseleave() {
+        this.set(null);
+      },
+    },
   },
 );
 

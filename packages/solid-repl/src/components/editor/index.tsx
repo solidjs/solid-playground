@@ -1,7 +1,7 @@
-import { Component, onMount, Show } from 'solid-js';
-import type { EditorView } from '@codemirror/view';
+import { Component, onMount } from 'solid-js';
 import { bell, bellSlash, codeBracket } from 'solid-heroicons/outline';
 import { IconButton } from '../ui/IconButton';
+import { useRepl } from '../replContext';
 import { css } from 'styled-system/css';
 
 const editorContainer = css({ flex: 1, p: 0, minH: 0, minW: 0, display: 'flex', overflow: 'hidden' });
@@ -19,46 +19,40 @@ const footer = css({
   _dark: { borderColor: 'neutral.700', bg: 'neutral.900' },
 });
 
-export const Editor: Component<{
-  view: EditorView;
-  showFooter?: boolean;
-  onFormat?: () => void;
-  displayErrors?: boolean;
-  setDisplayErrors?: (value: boolean) => void;
-}> = (props) => {
+export const Editor: Component<{ name: string }> = (props) => {
+  const api = useRepl();
+  const uri = api.uriFor(props.name);
   let parent!: HTMLDivElement;
 
-  onMount(() => {
-    parent.appendChild(props.view.dom);
-    if (!props.view.state.readOnly) props.view.focus();
-  });
+  onMount(() => api.editors.attach(uri, parent));
 
   return (
     <>
       <div class={editorContainer} ref={parent} />
-      <Show when={props.showFooter}>
-        <div class={footer}>
-          <div />
-          <div class={css({ display: 'flex', alignItems: 'center', gap: 1 })}>
-            <Show when={props.setDisplayErrors}>
-              <IconButton
-                icon={props.displayErrors ? bell : bellSlash}
-                size="sm"
-                title={props.displayErrors ? 'Disable error reporting' : 'Enable error reporting'}
-                onClick={() => props.setDisplayErrors?.(!props.displayErrors)}
-              />
-            </Show>
-            <Show when={props.onFormat}>
-              <IconButton icon={codeBracket} size="sm" title="Format Document" onClick={() => props.onFormat?.()} />
-            </Show>
-            <span class={css({ px: 2, fontSize: 'sm', color: 'neutral.500', _dark: { color: 'neutral.400' } })}>
-              TypeScript
-            </span>
-          </div>
+      <div class={footer}>
+        <div />
+        <div class={css({ display: 'flex', alignItems: 'center', gap: 1 })}>
+          <IconButton
+            icon={api.displayErrors() ? bell : bellSlash}
+            size="sm"
+            title={api.displayErrors() ? 'Disable error reporting' : 'Enable error reporting'}
+            onClick={() => api.setDisplayErrors(!api.displayErrors())}
+          />
+          <IconButton icon={codeBracket} size="sm" title="Format Document" onClick={() => api.editors.format(uri)} />
+          <span class={css({ px: 2, fontSize: 'sm', color: 'neutral.500', _dark: { color: 'neutral.400' } })}>
+            TypeScript
+          </span>
         </div>
-      </Show>
+      </div>
     </>
   );
+};
+
+export const OutputEditor: Component = () => {
+  const api = useRepl();
+  let parent!: HTMLDivElement;
+  onMount(() => api.editors.ensureOutputView().attach(parent));
+  return <div class={editorContainer} ref={parent} />;
 };
 
 export default Editor;

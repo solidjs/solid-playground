@@ -1,13 +1,13 @@
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import { batch, createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from '@solidjs/router';
+import { createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { defaultTabs } from 'solid-repl/src';
-import type { Tab } from 'solid-repl';
+import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { Button } from 'solid-repl/src/components/ui/Button';
@@ -20,6 +20,27 @@ function parseHash<T>(hash: string, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function readJson<T>(key: string): T | undefined {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeJson(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+function safeRemove(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {}
 }
 
 const Repl = lazy(() => import('solid-repl/src/repl'));
@@ -46,7 +67,6 @@ interface InternalTab extends Tab {
 }
 
 export const Edit = () => {
-  const [searchParams] = useSearchParams();
   const scratchpad = useMatch(() => '/');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
@@ -60,6 +80,17 @@ export const Edit = () => {
   let disableFetch: true | undefined;
 
   let readonly = () => !scratchpad() && context.profile() != params.user && !localStorage.getItem(params.repl);
+
+  const replStorage: ReplStorage = {
+    getLayout: () => readJson('solid-repl:layout'),
+    setLayout: (layout) => writeJson('solid-repl:layout', layout),
+    getEditorState: (uri) => readJson(`solid-repl:editorState:${uri}`),
+    setEditorState: (uri, state) => {
+      const key = `solid-repl:editorState:${uri}`;
+      if (state) writeJson(key, state);
+      else safeRemove(key);
+    },
+  };
 
   createEffect(() => {
     if (!scratchpad()) return;
@@ -105,7 +136,6 @@ export const Edit = () => {
   context.setTabs(tabs);
   onCleanup(() => context.setTabs(undefined));
 
-  const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
   const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
     () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
     async ({ repl, scratchpad }): Promise<APIRepl> => {
@@ -131,20 +161,14 @@ export const Edit = () => {
         }).then((r) => r.json());
       }
 
-      batch(() => {
-        setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
-        setCurrent(output.files[0].name);
-      });
+      setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
 
       return output;
     },
   );
 
   const reset = () => {
-    batch(() => {
-      setTabs(mapTabs(defaultTabs));
-      setCurrent(defaultTabs[0].name);
-    });
+    setTabs(mapTabs(defaultTabs));
   };
 
   const publishScratchpad = async (title: string) => {
@@ -294,14 +318,12 @@ export const Edit = () => {
             compiler={compiler}
             formatter={formatter}
             linter={linter}
-            isHorizontal={searchParams.isHorizontal != undefined}
             dark={context.dark()}
             tabs={tabs()}
             setTabs={setTabs}
             reset={reset}
-            current={current()}
-            setCurrent={setCurrent}
             onUserEdit={onUserEdit}
+            storage={replStorage}
             id="repl"
           />
         </Show>

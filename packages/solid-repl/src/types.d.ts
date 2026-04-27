@@ -7,23 +7,36 @@ declare module 'solid-repl' {
   }
 
   export const defaultTabs: Tab[];
+
+  export interface EditorPersistedState {
+    anchor: number;
+    head: number;
+    topPos: number;
+  }
+
+  export interface ReplStorage {
+    getLayout?(): import('dockview-core').SerializedDockview | undefined;
+    setLayout?(layout: import('dockview-core').SerializedDockview): void;
+    getEditorState?(uri: string): EditorPersistedState | undefined;
+    setEditorState?(uri: string, state: EditorPersistedState | null): void;
+  }
 }
 
 declare module 'solid-repl/dist/repl' {
+  import type { ReplStorage } from 'solid-repl';
+
   export type Repl = import('solid-js').Component<{
     compiler: Worker;
     formatter: Worker;
     linter: Worker;
-    isHorizontal: boolean;
     dark: boolean;
     tabs: Tab[];
     id: string;
     hideDevtools?: boolean;
     setTabs: (tab: Tab[]) => void;
     reset: () => void;
-    current: string | undefined;
-    setCurrent: (tabId: string) => void;
     onUserEdit?: () => void;
+    storage?: ReplStorage;
   }>;
   const Repl: Repl;
   export default Repl;

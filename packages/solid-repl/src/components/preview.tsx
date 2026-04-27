@@ -266,13 +266,6 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow!.postMessage(msg, '*');
   };
 
-  createEffect(() => {
-    if (!props.reloadSignal) return;
-
-    isIframeReady = false;
-    iframe.srcdoc = iframeHtml;
-  });
-
   const devtoolsSrc = useDevtoolsSrc();
 
   const styleScale = () => {
@@ -383,7 +376,6 @@ type Props = {
     [k: string]: boolean | undefined;
   };
   code: Record<string, string>;
-  reloadSignal: boolean;
   devtools: boolean;
   isDark: boolean;
   pointerEvents: boolean;

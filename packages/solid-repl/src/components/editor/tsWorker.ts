@@ -289,7 +289,10 @@ self.addEventListener('message', (e: MessageEvent) => {
       self.postMessage({
         jsonrpc: '2.0',
         id: msg.id,
-        error: { code: err?.message?.startsWith('Method not found') ? -32601 : -32603, message: err?.message ?? 'Internal error' },
+        error: {
+          code: err?.message?.startsWith('Method not found') ? -32601 : -32603,
+          message: err?.message ?? 'Internal error',
+        },
       });
     }
   } else if (msg.method) {

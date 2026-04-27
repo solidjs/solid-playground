@@ -1,6 +1,14 @@
 import { createEffect, createMemo, onCleanup } from 'solid-js';
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { EditorState, Compartment, type Extension } from '@codemirror/state';
+import { throttle } from '@solid-primitives/scheduled';
+import {
+  drawSelection,
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+} from '@codemirror/view';
+import { EditorSelection, EditorState, Compartment, type Extension } from '@codemirror/state';
 import { history } from '@codemirror/commands';
 import { bracketMatching, codeFolding, foldGutter, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
@@ -8,7 +16,7 @@ import { highlightSelectionMatches, search } from '@codemirror/search';
 import { forceLinting, lintGutter, linter, type Diagnostic } from '@codemirror/lint';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 import { json } from '@codemirror/lang-json';
-import type { Tab } from 'solid-repl';
+import type { EditorPersistedState, Tab } from 'solid-repl';
 
 import { typescript, typescriptLspTheme } from './typescriptLsp';
 import { createTypescriptSession, type TypescriptSession } from './setupTypescript';
@@ -22,12 +30,15 @@ export interface CodemirrorTabsOptions {
   linter?: Worker;
   onUserEdit?: () => void;
   onDocChange?: (uri: string, tab: Tab) => void;
+  loadEditorState?: (uri: string) => EditorPersistedState | undefined;
+  saveEditorState?: (uri: string, state: EditorPersistedState | null) => void;
 }
 
 interface TabLookup {
   view: EditorView;
   themeCompartment: Compartment;
   fontCompartment: Compartment;
+  attach: (parent: HTMLElement) => void;
   destroy: () => void;
 }
 
@@ -39,17 +50,18 @@ interface OutputEntry {
 
 export interface OutputView {
   view: EditorView;
+  attach: (parent: HTMLElement) => void;
   setDoc: (doc: string) => void;
   destroy: () => void;
 }
 
 export interface CodemirrorTabs {
-  get(uri: string): TabLookup | undefined;
+  attach(uri: string, parent: HTMLElement): void;
   setSource(uri: string, source: string): void;
-  format(view: EditorView): void;
-  fix(view: EditorView): void;
+  format(uri: string): void;
+  fix(uri: string): void;
+  ensureOutputView(): OutputView;
   session: TypescriptSession;
-  createOutputView(initialDoc: string): OutputView;
 }
 
 const fileExtension = (name: string) => name.split('.').pop() ?? '';
@@ -76,6 +88,7 @@ const baseExtensions = (): Extension => [
   highlightActiveLine(),
   highlightSelectionMatches(),
   search({ top: true }),
+  drawSelection(),
   EditorState.allowMultipleSelections.of(true),
   EditorView.lineWrapping,
   keymap.of(vscodeKeymap),
@@ -141,11 +154,7 @@ const markersToDiagnostics = (view: EditorView, markers: LintMarker[]): Diagnost
   });
 };
 
-const buildLintExtension = (
-  uri: string,
-  session: TypescriptSession,
-  opts: CodemirrorTabsOptions,
-): Extension => {
+const buildLintExtension = (uri: string, session: TypescriptSession, opts: CodemirrorTabsOptions): Extension => {
   const ext = fileExtension(uri);
   const isTs = tsExts.has(ext);
   if (!isTs && !opts.linter) return [];
@@ -188,7 +197,7 @@ export const createCodemirrorTabs = (
   opts: CodemirrorTabsOptions,
 ): CodemirrorTabs => {
   const session = createTypescriptSession();
-  const outputViews = new Set<OutputEntry>();
+  let outputEntry: (OutputEntry & { wrapper: OutputView }) | undefined;
 
   const replaceDoc = (view: EditorView, next: string) => {
     if (view.state.doc.toString() === next) return;
@@ -222,35 +231,72 @@ export const createCodemirrorTabs = (
   const buildLookup = (uri: string, tab: Tab): TabLookup => {
     const themeCompartment = new Compartment();
     const fontCompartment = new Compartment();
+    const saved = opts.loadEditorState?.(uri);
+    const docLength = tab.source.length;
+    const selection = saved
+      ? EditorSelection.single(Math.min(saved.anchor, docLength), Math.min(saved.head, docLength))
+      : undefined;
+
+    const initialTopPos = saved?.topPos != null ? Math.min(saved.topPos, docLength) : 0;
+    let lastTopPos = initialTopPos;
+
+    const writeState = () => {
+      opts.saveEditorState?.(uri, {
+        anchor: view.state.selection.main.anchor,
+        head: view.state.selection.main.head,
+        topPos: lastTopPos,
+      });
+    };
+    const persist = throttle(writeState, 500);
 
     const view = new EditorView({
-      doc: tab.source,
-      extensions: [
-        baseExtensions(),
-        saveKeymap,
-        themeCompartment.of(themeExtensions(opts.isDark())),
-        fontCompartment.of(fontExtension(opts.fontSize())),
-        buildLintExtension(uri, session, opts),
-        buildLanguageExtension(uri, session),
-        EditorView.updateListener.of((u) => {
-          if (!u.docChanged) return;
-          const next = u.state.doc.toString();
-          if (tab.source === next) return;
-          tab.source = next;
-          opts.onDocChange?.(uri, tab);
-          const userEdit = u.transactions.some(
-            (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
-          );
-          if (userEdit) opts.onUserEdit?.();
-        }),
-      ],
+      state: EditorState.create({
+        doc: tab.source,
+        selection,
+        extensions: [
+          baseExtensions(),
+          saveKeymap,
+          themeCompartment.of(themeExtensions(opts.isDark())),
+          fontCompartment.of(fontExtension(opts.fontSize())),
+          buildLintExtension(uri, session, opts),
+          buildLanguageExtension(uri, session),
+          EditorView.updateListener.of((u) => {
+            if (u.docChanged) {
+              const next = u.state.doc.toString();
+              if (tab.source !== next) {
+                tab.source = next;
+                opts.onDocChange?.(uri, tab);
+                const userEdit = u.transactions.some(
+                  (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
+                );
+                if (userEdit) opts.onUserEdit?.();
+              }
+            }
+            if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
+              lastTopPos = u.view.viewport.from;
+              persist();
+            } else if (u.docChanged || u.selectionSet) {
+              persist();
+            }
+          }),
+        ],
+      }),
+      scrollTo: initialTopPos > 0 ? EditorView.scrollIntoView(initialTopPos, { y: 'start' }) : undefined,
     });
 
     return {
       view,
       themeCompartment,
       fontCompartment,
+      attach(parent) {
+        parent.appendChild(view.dom);
+        if (lastTopPos > 0) {
+          view.dispatch({ effects: EditorView.scrollIntoView(lastTopPos, { y: 'start' }) });
+        }
+        if (!view.state.readOnly) view.focus();
+      },
       destroy: () => {
+        writeState();
         view.destroy();
       },
     };
@@ -267,7 +313,6 @@ export const createCodemirrorTabs = (
       next.set(`file:///${folder}/${tab.name}`, tab);
     }
 
-    // dispose lookups + close worker files for removed tabs
     for (const [uri, lookup] of lookups) {
       if (!next.has(uri)) {
         lookup.destroy();
@@ -281,6 +326,7 @@ export const createCodemirrorTabs = (
           params: { textDocument: { uri } },
         });
         registered.delete(uri);
+        opts.saveEditorState?.(uri, null);
       }
     }
 
@@ -309,10 +355,10 @@ export const createCodemirrorTabs = (
   });
 
   const ensureLookup = (uri: string): TabLookup | undefined => {
-    let lookup = lookups.get(uri);
-    if (lookup) return lookup;
     const tab = tabsByUri().get(uri);
     if (!tab) return undefined;
+    let lookup = lookups.get(uri);
+    if (lookup) return lookup;
     lookup = buildLookup(uri, tab);
     lookups.set(uri, lookup);
     return lookup;
@@ -323,8 +369,8 @@ export const createCodemirrorTabs = (
     for (const lookup of lookups.values()) {
       lookup.view.dispatch({ effects: lookup.themeCompartment.reconfigure(ext) });
     }
-    for (const out of outputViews) {
-      out.view.dispatch({ effects: out.themeCompartment.reconfigure(ext) });
+    if (outputEntry) {
+      outputEntry.view.dispatch({ effects: outputEntry.themeCompartment.reconfigure(ext) });
     }
   });
 
@@ -333,8 +379,8 @@ export const createCodemirrorTabs = (
     for (const lookup of lookups.values()) {
       lookup.view.dispatch({ effects: lookup.fontCompartment.reconfigure(ext) });
     }
-    for (const out of outputViews) {
-      out.view.dispatch({ effects: out.fontCompartment.reconfigure(ext) });
+    if (outputEntry) {
+      outputEntry.view.dispatch({ effects: outputEntry.fontCompartment.reconfigure(ext) });
     }
   });
 
@@ -348,50 +394,61 @@ export const createCodemirrorTabs = (
   onCleanup(() => {
     for (const lookup of lookups.values()) lookup.destroy();
     lookups.clear();
-    for (const out of outputViews) out.view.destroy();
-    outputViews.clear();
+    outputEntry?.view.destroy();
+    outputEntry = undefined;
     session.client.disconnect();
     session.worker.terminate();
   });
 
+  const buildOutput = (): OutputEntry & { wrapper: OutputView } => {
+    const themeCompartment = new Compartment();
+    const fontCompartment = new Compartment();
+    const view = new EditorView({
+      doc: '',
+      extensions: [
+        baseExtensions(),
+        themeCompartment.of(themeExtensions(opts.isDark())),
+        fontCompartment.of(fontExtension(opts.fontSize())),
+        typescript({ jsx: true }),
+        EditorState.readOnly.of(true),
+      ],
+    });
+    const wrapper: OutputView = {
+      view,
+      attach(parent) {
+        parent.appendChild(view.dom);
+      },
+      setDoc(doc) {
+        replaceDoc(view, doc);
+      },
+      destroy() {
+        view.destroy();
+        outputEntry = undefined;
+      },
+    };
+    return { view, themeCompartment, fontCompartment, wrapper };
+  };
+
   return {
-    get(uri) {
-      // make sure the memo runs so registered files stay in sync
-      tabsByUri();
-      return ensureLookup(uri);
+    attach(uri, parent) {
+      ensureLookup(uri)?.attach(parent);
     },
     setSource(uri, source) {
       const lookup = lookups.get(uri);
       if (lookup) replaceDoc(lookup.view, source);
     },
-    format: formatView,
-    fix: fixView,
-    session,
-    createOutputView(initialDoc) {
-      const themeCompartment = new Compartment();
-      const fontCompartment = new Compartment();
-      const view = new EditorView({
-        doc: initialDoc,
-        extensions: [
-          baseExtensions(),
-          themeCompartment.of(themeExtensions(opts.isDark())),
-          fontCompartment.of(fontExtension(opts.fontSize())),
-          typescript({ jsx: true }),
-          EditorState.readOnly.of(true),
-        ],
-      });
-      const entry: OutputEntry = { view, themeCompartment, fontCompartment };
-      outputViews.add(entry);
-      return {
-        view,
-        setDoc(doc) {
-          replaceDoc(view, doc);
-        },
-        destroy() {
-          outputViews.delete(entry);
-          view.destroy();
-        },
-      };
+    format(uri) {
+      const view = lookups.get(uri)?.view;
+      if (view) formatView(view);
     },
+    fix(uri) {
+      const view = lookups.get(uri)?.view;
+      if (view) fixView(view);
+    },
+    ensureOutputView() {
+      if (!outputEntry) outputEntry = buildOutput();
+      return outputEntry.wrapper;
+    },
+    session,
   };
 };

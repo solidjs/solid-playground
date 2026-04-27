@@ -3,14 +3,15 @@ import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
-import { createCodemirrorTabs, type OutputView } from './editor/codemirrorTabs';
+import { createCodemirrorTabs } from './editor/codemirrorTabs';
 import { useZoom } from '../hooks/useZoom';
 import { NewTab } from './newTab';
 import { CompileMode, compileOptions } from './CompileMode';
 import { IconButton } from './ui/IconButton';
 import { useMenu } from './ui/Menu';
+import { ReplContext, type ReplApi } from './replContext';
 
-import Editor from './editor';
+import Editor, { OutputEditor } from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
 import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeAbyssSpaced } from 'dockview-core';
@@ -104,21 +105,34 @@ export const Repl: ReplProps = (props) => {
       if (tab.name === 'import_map.json') {
         try {
           setImportMap(JSON.parse(tab.source));
-        } catch {
-          /* invalid json — ignore */
-        }
+        } catch {}
       } else {
         compile();
       }
     },
+    loadEditorState: (uri) => props.storage?.getEditorState?.(uri),
+    saveEditorState: (uri, state) => props.storage?.setEditorState?.(uri, state),
   });
 
-  let outputView: OutputView | undefined;
-  const ensureOutputView = () => {
-    if (!outputView) outputView = cmTabs.createOutputView('');
-    return outputView;
+  const [activeName, setActiveName] = createSignal<string | undefined>();
+
+  const api: ReplApi = {
+    tabs: () => props.tabs,
+    setTabs: props.setTabs,
+    current: activeName,
+    reset: () => props.reset(),
+    onUserEdit: props.onUserEdit,
+    isDark: () => !!props.dark,
+    fontSize: () => zoomState.fontSize,
+    displayErrors,
+    setDisplayErrors,
+    compiler,
+    formatter,
+    linter,
+    editors: cmTabs,
+    folder: props.id,
+    uriFor: (name) => `file:///${props.id}/${name}`,
   };
-  onCleanup(() => outputView?.destroy());
 
   const onCompilerMessage = ({ data }: any) => {
     const { event, compiled, externals, error } = data;
@@ -128,7 +142,7 @@ export const Repl: ReplProps = (props) => {
     } else setError('');
 
     if (event === 'BABEL') {
-      ensureOutputView().setDoc(compiled);
+      cmTabs.ensureOutputView().setDoc(compiled);
     }
 
     if (event === 'ROLLUP') {
@@ -183,7 +197,8 @@ export const Repl: ReplProps = (props) => {
         tabs: unwrap(userTabs()),
       });
     }
-    if (outputVisible() && props.current?.endsWith('.tsx')) {
+    const active = activeName();
+    if (outputVisible() && active?.endsWith('.tsx')) {
       let compileOpts = mode();
       if (compileOpts === compileOptions.UNIVERSAL) {
         compileOpts = {
@@ -194,7 +209,7 @@ export const Repl: ReplProps = (props) => {
       }
       applyBabelCompilation({
         event: 'BABEL',
-        tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
+        tab: unwrap(props.tabs.find((tab) => tab.name == active)),
         compileOpts,
       });
     }
@@ -205,42 +220,24 @@ export const Repl: ReplProps = (props) => {
     compile();
   });
 
-  const viewForTab = (name: string) => cmTabs.get(`file:///${props.id}/${name}`)!.view;
-
   let ref!: HTMLDivElement;
-
-  const [reloadSignal] = createSignal(false, { equals: false });
-  const [devtoolsOpen] = createSignal(!props.hideDevtools);
 
   onMount(() => {
     const newFile = (name: string) => {
       if (!name.trim()) return;
-      const newTab = { name, source: '' };
-      batch(() => {
-        props.setTabs(props.tabs.concat(newTab));
-        props.setCurrent(newTab.name);
-      });
+      props.setTabs(props.tabs.concat({ name, source: '' }));
       dockview.addPanel({
         id: name,
         tabComponent: 'file',
         component: 'editor',
-        params: { view: viewForTab(name) },
       });
     };
 
     const deleteFile = (name: string) => {
       if (name === 'main.tsx') return;
-      const newTabs = props.tabs.filter((tab) => tab.name !== name);
-      const panel = dockview.getGroupPanel(name);
-      panel?.api.close();
-      batch(() => {
-        props.setTabs(newTabs);
-        if (props.current === name) {
-          const mainPanel = dockview.getGroupPanel('main.tsx');
-          mainPanel?.focus();
-          props.setCurrent('main.tsx');
-        }
-      });
+      dockview.getGroupPanel(name)?.api.close();
+      props.setTabs(props.tabs.filter((tab) => tab.name !== name));
+      if (activeName() === name) dockview.getGroupPanel('main.tsx')?.focus();
     };
 
     const renameFile = (oldName: string, newName: string) => {
@@ -255,12 +252,7 @@ export const Repl: ReplProps = (props) => {
       const tab = props.tabs.find((t) => t.name === oldName);
       if (!tab) return;
 
-      const newTabs = props.tabs.map((t) => (t.name === oldName ? { ...t, name: newName } : t));
-
-      batch(() => {
-        props.setTabs(newTabs);
-        if (props.current === oldName) props.setCurrent(newName);
-      });
+      props.setTabs(props.tabs.map((t) => (t.name === oldName ? { ...t, name: newName } : t)));
 
       const panel = dockview.getGroupPanel(oldName);
       if (panel) {
@@ -269,7 +261,6 @@ export const Repl: ReplProps = (props) => {
           id: newName,
           tabComponent: 'file',
           component: 'editor',
-          params: { view: viewForTab(newName) },
         });
       }
     };
@@ -468,23 +459,17 @@ export const Repl: ReplProps = (props) => {
                       id: name,
                       tabComponent: 'file',
                       component: 'editor',
-                      params: { view: viewForTab(name) },
                     });
                   }
                 }}
                 onNewFile={newFile}
                 onUpload={(name: string, source: string) => {
-                  const newTab = { name, source };
-                  batch(() => {
-                    props.setTabs(props.tabs.concat(newTab));
-                    props.setCurrent(newTab.name);
-                  });
+                  props.setTabs(props.tabs.concat({ name, source }));
                   setTimeout(() => {
                     dockview.addPanel({
                       id: name,
                       tabComponent: 'file',
                       component: 'editor',
-                      params: { view: viewForTab(name) },
                     });
                   });
                 }}
@@ -495,18 +480,7 @@ export const Repl: ReplProps = (props) => {
             );
             break;
           case 'editor':
-            component = (params) => {
-              const view = params.view;
-              return (
-                <Editor
-                  view={view}
-                  showFooter
-                  onFormat={() => cmTabs.format(view)}
-                  displayErrors={displayErrors()}
-                  setDisplayErrors={setDisplayErrors}
-                />
-              );
-            };
+            component = (_, params) => <Editor name={params.api.id} />;
             break;
           case 'preview':
             setPreviewVisible(true);
@@ -516,8 +490,7 @@ export const Repl: ReplProps = (props) => {
               <Preview
                 importMap={importMap()}
                 code={output()}
-                reloadSignal={reloadSignal()}
-                devtools={devtoolsOpen()}
+                devtools={!props.hideDevtools}
                 isDark={props.dark}
                 pointerEvents={previewIsActive()}
               />
@@ -533,7 +506,7 @@ export const Repl: ReplProps = (props) => {
             onCleanup(() => setOutputVisible(false));
             component = () => (
               <section class={outputPane}>
-                <Editor view={ensureOutputView().view} />
+                <OutputEditor />
                 <CompileMode
                   mode={mode()}
                   setMode={setMode}
@@ -553,7 +526,9 @@ export const Repl: ReplProps = (props) => {
             const result = onInit?.(params);
             if (result) onInitDisposer = result;
             createRoot((dispose) => {
-              insert(element, () => component(params.params, params));
+              insert(element, () => (
+                <ReplContext.Provider value={api}>{component(params.params, params)}</ReplContext.Provider>
+              ));
               disposer = dispose;
             });
           },
@@ -565,18 +540,18 @@ export const Repl: ReplProps = (props) => {
       },
     });
 
-    dockview.fromJSON({
+    const defaultLayout = {
       grid: {
         root: {
-          type: 'branch',
+          type: 'branch' as const,
           data: [
             {
-              type: 'leaf',
+              type: 'leaf' as const,
               data: { views: ['main.tsx'], activeView: 'main.tsx', id: '1' },
               size: 400,
             },
             {
-              type: 'leaf',
+              type: 'leaf' as const,
               data: { views: ['Preview', 'Output'], activeView: 'Preview', id: '2' },
               size: 250,
             },
@@ -589,36 +564,57 @@ export const Repl: ReplProps = (props) => {
       },
       activeGroup: '1',
       panels: {
-        Output: { id: 'Output', tabComponent: 'default', contentComponent: 'output' },
-        Preview: {
+        'Output': { id: 'Output', tabComponent: 'default', contentComponent: 'output' },
+        'Preview': {
           id: 'Preview',
           contentComponent: 'preview',
           tabComponent: 'default',
-          renderer: 'always',
+          renderer: 'always' as const,
         },
-        [props.current!]: {
-          id: props.current!,
+        'main.tsx': {
+          id: 'main.tsx',
           tabComponent: 'file',
           contentComponent: 'editor',
-          params: { view: viewForTab(props.current!) },
         },
       },
-    });
+    };
+
+    let restored = false;
+    const stored = props.storage?.getLayout?.();
+    if (stored) {
+      try {
+        const validNames = new Set(props.tabs.map((t) => t.name).concat(['Output', 'Preview']));
+        for (const id in stored.panels) {
+          if (!validNames.has(id)) delete stored.panels[id];
+        }
+        dockview.fromJSON(stored);
+        restored = dockview.panels.length > 0;
+      } catch {}
+    }
+    if (!restored) dockview.fromJSON(defaultLayout);
+
+    if (props.storage?.setLayout) {
+      const saveLayout = throttle(() => props.storage!.setLayout!(dockview.toJSON()), 300);
+      const layoutDisp = dockview.onDidLayoutChange(saveLayout);
+      onCleanup(() => layoutDisp.dispose());
+    }
 
     dockview.onDidActivePanelChange((e) => {
       if (!e) return;
-      if ('view' in (e.params ?? {})) {
-        props.setCurrent(e.id);
+      if (props.tabs.some((tab) => tab.name === e.id)) {
+        setActiveName(e.id);
       }
     });
   });
 
   return (
-    <div class={replHost}>
-      <div ref={ref} class={replBody} />
-      <Show when={error()}>
-        <Error message={error()} onDismiss={() => setError('')} />
-      </Show>
-    </div>
+    <ReplContext.Provider value={api}>
+      <div class={replHost}>
+        <div ref={ref} class={replBody} />
+        <Show when={error()}>
+          <Error message={error()} onDismiss={() => setError('')} />
+        </Show>
+      </div>
+    </ReplContext.Provider>
   );
 };
