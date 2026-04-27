@@ -33,7 +33,6 @@
     "assert": "^2.1.0",
     "csstype": "^3.2.3",
     "jszip": "^3.10.1",
-    "monaco-editor": "^0.55.1",
     "register-service-worker": "^1.7.2",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",

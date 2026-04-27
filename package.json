@@ -25,10 +25,5 @@
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0"
   },
-  "packageManager": "pnpm@10.33.2",
-  "pnpm": {
-    "patchedDependencies": {
-      "monaco-editor": "patches/monaco-editor.patch"
-    }
-  }
+  "packageManager": "pnpm@10.33.2"
 }

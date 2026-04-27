@@ -1,10 +1,10 @@
-import { createSignal, createEffect, batch, onCleanup, createMemo, onMount, Show, createRoot, JSX } from 'solid-js';
+import { createSignal, createEffect, batch, onCleanup, onMount, Show, createRoot, JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { Preview } from './preview';
 import { Error } from './error';
 import { throttle } from '@solid-primitives/scheduled';
-import { editor, Uri } from 'monaco-editor';
-import { createMonacoTabs } from './editor/monacoTabs';
+import { createCodemirrorTabs, type OutputView } from './editor/codemirrorTabs';
+import { useZoom } from '../hooks/useZoom';
 import { NewTab } from './newTab';
 import { CompileMode, compileOptions } from './CompileMode';
 import { IconButton } from './ui/IconButton';
@@ -90,9 +90,35 @@ export const Repl: ReplProps = (props) => {
     equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
   });
 
-  const outputUri = Uri.parse(`file:///${props.id}/output_dont_import.ts`);
-  const outputModel = editor.createModel('', 'typescript', outputUri);
-  onCleanup(() => outputModel.dispose());
+  const [displayErrors, setDisplayErrors] = createSignal(true);
+  const { zoomState } = useZoom();
+
+  const cmTabs = createCodemirrorTabs(props.id, () => props.tabs, {
+    isDark: () => !!props.dark,
+    fontSize: () => zoomState.fontSize,
+    displayErrors,
+    formatter,
+    linter,
+    onUserEdit: () => props.onUserEdit?.(),
+    onDocChange: (_uri, tab) => {
+      if (tab.name === 'import_map.json') {
+        try {
+          setImportMap(JSON.parse(tab.source));
+        } catch {
+          /* invalid json — ignore */
+        }
+      } else {
+        compile();
+      }
+    },
+  });
+
+  let outputView: OutputView | undefined;
+  const ensureOutputView = () => {
+    if (!outputView) outputView = cmTabs.createOutputView('');
+    return outputView;
+  };
+  onCleanup(() => outputView?.destroy());
 
   const onCompilerMessage = ({ data }: any) => {
     const { event, compiled, externals, error } = data;
@@ -102,7 +128,7 @@ export const Repl: ReplProps = (props) => {
     } else setError('');
 
     if (event === 'BABEL') {
-      outputModel.setValue(compiled);
+      ensureOutputView().setDoc(compiled);
     }
 
     if (event === 'ROLLUP') {
@@ -132,8 +158,7 @@ export const Repl: ReplProps = (props) => {
           props.setTabs(props.tabs.concat(tab));
         } else {
           tab.source = JSON.stringify(currentMap, null, 2);
-          const { model } = monacoTabs().get(`file:///${props.id}/import_map.json`)!;
-          model.setValue(tab.source);
+          cmTabs.setSource(`file:///${props.id}/import_map.json`, tab.source);
         }
 
         setOutput(compiled);
@@ -179,14 +204,13 @@ export const Repl: ReplProps = (props) => {
     if (!props.tabs.length) return;
     compile();
   });
-  const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
-  const currentModel = createMemo(() => monacoTabs().get(`file:///${props.id}/${props.current}`)!.model);
+
+  const viewForTab = (name: string) => cmTabs.get(`file:///${props.id}/${name}`)!.view;
 
   let ref!: HTMLDivElement;
 
   const [reloadSignal] = createSignal(false, { equals: false });
   const [devtoolsOpen] = createSignal(!props.hideDevtools);
-  const [displayErrors, setDisplayErrors] = createSignal(true);
 
   onMount(() => {
     const newFile = (name: string) => {
@@ -200,9 +224,7 @@ export const Repl: ReplProps = (props) => {
         id: name,
         tabComponent: 'file',
         component: 'editor',
-        params: {
-          currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
-        },
+        params: { view: viewForTab(name) },
       });
     };
 
@@ -247,9 +269,7 @@ export const Repl: ReplProps = (props) => {
           id: newName,
           tabComponent: 'file',
           component: 'editor',
-          params: {
-            currentModel: monacoTabs().get(`file:///${props.id}/${newName}`)!.model,
-          },
+          params: { view: viewForTab(newName) },
         });
       }
     };
@@ -448,9 +468,7 @@ export const Repl: ReplProps = (props) => {
                       id: name,
                       tabComponent: 'file',
                       component: 'editor',
-                      params: {
-                        currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
-                      },
+                      params: { view: viewForTab(name) },
                     });
                   }
                 }}
@@ -466,9 +484,7 @@ export const Repl: ReplProps = (props) => {
                       id: name,
                       tabComponent: 'file',
                       component: 'editor',
-                      params: {
-                        currentModel: monacoTabs().get(`file:///${props.id}/${name}`)!.model,
-                      },
+                      params: { view: viewForTab(name) },
                     });
                   });
                 }}
@@ -479,25 +495,18 @@ export const Repl: ReplProps = (props) => {
             );
             break;
           case 'editor':
-            component = (params) => (
-              <Editor
-                model={params.currentModel}
-                onDocChange={(code: string) => {
-                  if (params.currentModel.uri.path.includes('import_map.json')) {
-                    setImportMap(JSON.parse(code));
-                  } else {
-                    compile();
-                  }
-                }}
-                onUserEdit={props.onUserEdit}
-                formatter={formatter}
-                linter={linter}
-                isDark={props.dark}
-                withMinimap={false}
-                displayErrors={displayErrors()}
-                setDisplayErrors={setDisplayErrors}
-              />
-            );
+            component = (params) => {
+              const view = params.view;
+              return (
+                <Editor
+                  view={view}
+                  showFooter
+                  onFormat={() => cmTabs.format(view)}
+                  displayErrors={displayErrors()}
+                  setDisplayErrors={setDisplayErrors}
+                />
+              );
+            };
             break;
           case 'preview':
             setPreviewVisible(true);
@@ -524,7 +533,7 @@ export const Repl: ReplProps = (props) => {
             onCleanup(() => setOutputVisible(false));
             component = () => (
               <section class={outputPane}>
-                <Editor model={outputModel} isDark={props.dark} disabled withMinimap={false} />
+                <Editor view={ensureOutputView().view} />
                 <CompileMode
                   mode={mode()}
                   setMode={setMode}
@@ -591,14 +600,14 @@ export const Repl: ReplProps = (props) => {
           id: props.current!,
           tabComponent: 'file',
           contentComponent: 'editor',
-          params: { currentModel: currentModel() },
+          params: { view: viewForTab(props.current!) },
         },
       },
     });
 
     dockview.onDidActivePanelChange((e) => {
       if (!e) return;
-      if ('currentModel' in (e.params ?? {})) {
+      if ('view' in (e.params ?? {})) {
         props.setCurrent(e.id);
       }
     });

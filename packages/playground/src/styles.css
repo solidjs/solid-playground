@@ -27,10 +27,6 @@ div[contenteditable='true']:focus {
   color-scheme: dark;
 }
 
-textarea.monaco-mouse-cursor-text:focus {
-  box-shadow: unset;
-}
-
 #app .dockview-theme-abyss-spaced {
   padding-top: 0;
   --dv-color-abyss-dark: var(--colors-neutral-100);

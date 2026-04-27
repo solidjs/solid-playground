@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 declare module 'solid-repl' {
   export interface Tab {
     name: string;
@@ -22,22 +24,9 @@ declare module 'solid-repl/dist/repl' {
     current: string | undefined;
     setCurrent: (tabId: string) => void;
     onUserEdit?: () => void;
-    onEditorReady?: (
-      editor: import('monaco-editor').editor.IStandaloneCodeEditor,
-      monaco: {
-        Uri: typeof import('monaco-editor').Uri;
-        editor: typeof import('monaco-editor').editor;
-      },
-    ) => void;
   }>;
   const Repl: Repl;
   export default Repl;
-}
-
-interface Window {
-  MonacoEnvironment: {
-    getWorker: (_moduleId: unknown, label: string) => Worker;
-  };
 }
 
 declare module '*.css';

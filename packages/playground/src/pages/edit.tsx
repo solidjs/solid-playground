@@ -1,7 +1,3 @@
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
@@ -26,23 +22,7 @@ function parseHash<T>(hash: string, fallback: T): T {
   }
 }
 
-const Repl = lazy(() => import('../components/setupSolid'));
-
-window.MonacoEnvironment = {
-  getWorker(_moduleId: unknown, label: string) {
-    switch (label) {
-      case 'css':
-        return new cssWorker();
-      case 'json':
-        return new jsonWorker();
-      case 'typescript':
-      case 'javascript':
-        return new tsWorker();
-      default:
-        return new editorWorker();
-    }
-  },
-};
+const Repl = lazy(() => import('solid-repl/src/repl'));
 
 const titleInput = css({
   width: 96,
