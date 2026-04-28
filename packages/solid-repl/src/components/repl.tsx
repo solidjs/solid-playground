@@ -313,42 +313,32 @@ export const Repl: ReplProps = (props) => {
         return {
           element,
           init: (params) => {
-            const [menuOpen, setMenuOpen] = createSignal(false);
-            const [anchor, setAnchor] = createSignal<{ x: number; y: number }>();
-
             createRoot((dispose) => {
               disposer = dispose;
               const [panelTitle, setPanelTitle] = createSignal(params.title);
               params.api.onDidTitleChange((e) => setPanelTitle(e.title));
               const isFile = panel.name == 'file';
 
-              const { Content } = useMenu(
-                () => [
-                  {
-                    value: 'rename',
-                    label: 'Rename',
-                    icon: pencil,
-                    onSelect: () => {
-                      const newName = prompt('Rename file to:', panelTitle());
-                      if (newName) renameFile(panelTitle(), newName);
-                    },
-                  },
-                  {
-                    value: 'delete',
-                    label: 'Delete',
-                    icon: trash,
-                    variant: 'danger',
-                    onSelect: () => {
-                      if (confirm(`Delete ${panelTitle()}?`)) deleteFile(panelTitle());
-                    },
-                  },
-                ],
+              const { Content, openAt } = useMenu(() => [
                 {
-                  open: menuOpen,
-                  onOpenChange: setMenuOpen,
-                  anchorPoint: anchor,
+                  value: 'rename',
+                  label: 'Rename',
+                  icon: pencil,
+                  onSelect: () => {
+                    const newName = prompt('Rename file to:', panelTitle());
+                    if (newName) renameFile(panelTitle(), newName);
+                  },
                 },
-              );
+                {
+                  value: 'delete',
+                  label: 'Delete',
+                  icon: trash,
+                  variant: 'danger',
+                  onSelect: () => {
+                    if (confirm(`Delete ${panelTitle()}?`)) deleteFile(panelTitle());
+                  },
+                },
+              ]);
 
               insert(element, () => (
                 <div
@@ -357,8 +347,7 @@ export const Repl: ReplProps = (props) => {
                     if (!isFile) return;
                     e.preventDefault();
                     e.stopPropagation();
-                    setAnchor({ x: e.clientX, y: e.clientY });
-                    setMenuOpen(true);
+                    openAt(e.clientX, e.clientY);
                   }}
                 >
                   <span

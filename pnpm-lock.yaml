@@ -150,6 +150,9 @@ importers:
       '@typescript/vfs':
         specifier: ^1.6.4
         version: 1.6.4(typescript@6.0.3)
+      '@zag-js/combobox':
+        specifier: ^1.40.0
+        version: 1.40.0
       '@zag-js/dialog':
         specifier: ^1.27.0
         version: 1.40.0
@@ -195,7 +198,7 @@ importers:
         version: 1.10.0(typescript@6.0.3)
       '@tsdown/css':
         specifier: ^0.21.10
-        version: 0.21.10(jiti@2.6.1)(postcss@8.5.10)(tsdown@0.21.10)(tsx@4.19.2)
+        version: 0.21.10(jiti@2.6.1)(postcss@8.5.6)(tsdown@0.21.10)(tsx@4.19.2)
       '@types/babel__standalone':
         specifier: ^7.1.9
         version: 7.1.9
@@ -1975,6 +1978,12 @@ packages:
   '@zag-js/aria-hidden@1.40.0':
     resolution: {integrity: sha512-lNWujEIlfGKwMQIcgfXuOZSsJD2avrgPsQHrXNVF9mkXygjLFcIRKz2pEexTSCqFh/HuUZJ6rG4pM/hJ/BiVCw==}
 
+  '@zag-js/collection@1.40.0':
+    resolution: {integrity: sha512-+3o1nvbcA9Kz2hDDFf8Kngpd+of33S4TS5Tb9KvrHlU5ieQdvEUtc7/pWG2aCTkGpmgda+j91akB6ZB8+oVkvA==}
+
+  '@zag-js/combobox@1.40.0':
+    resolution: {integrity: sha512-5IVCDrB8m7XrKBu28j7bIRE5KiyKJLPDZB3AJ+PLJyL69D+9z1anhLDmkUYcPseyCasszLKzIejby+kYQJgHlA==}
+
   '@zag-js/core@1.40.0':
     resolution: {integrity: sha512-0YcqCh7TmhSonkbKM/7NWolxlaQgvvXgqedocW9oeRYiDJIpBZyRqnHPoGAS2XwbBPkCnrqSosxSF5yBjhZpgw==}
 
@@ -1995,6 +2004,9 @@ packages:
 
   '@zag-js/interact-outside@1.40.0':
     resolution: {integrity: sha512-Fws+O4uD9vS0I5KVcf3U2tNjLKvqlv+RExFbTywckDLOCJ145M/pMQWTr1FHil04jk5PFyM1iGfsbom8tozHpQ==}
+
+  '@zag-js/live-region@1.40.0':
+    resolution: {integrity: sha512-i1Dx02KGcQOAZGNhkFe8kz26gYJcn7KsT/M1UovjS9RTbl9diY8ShiyfIAhqruoaHQyqsHMRh/f7Idu45HdiDA==}
 
   '@zag-js/menu@1.40.0':
     resolution: {integrity: sha512-FRBqwsOjxBi0eSwqwrOw2td1rd0Xxl0f41J2lGc8E7z+2PabbBcJ/poqSiEn8YoaCT4mAWNjt4QQU/Pe1bRJ/g==}
@@ -5638,14 +5650,14 @@ snapshots:
       path-browserify: 1.0.1
       tinyglobby: 0.2.16
 
-  '@tsdown/css@0.21.10(jiti@2.6.1)(postcss@8.5.10)(tsdown@0.21.10)(tsx@4.19.2)':
+  '@tsdown/css@0.21.10(jiti@2.6.1)(postcss@8.5.6)(tsdown@0.21.10)(tsx@4.19.2)':
     dependencies:
       lightningcss: 1.32.0
-      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.10)(tsx@4.19.2)
+      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.19.2)
       rolldown: 1.0.0-rc.17
       tsdown: 0.21.10(@tsdown/css@0.21.10)(@vitejs/devtools@0.1.15)(publint@0.3.18)(synckit@0.11.12)(typescript@6.0.3)
     optionalDependencies:
-      postcss: 8.5.10
+      postcss: 8.5.6
     transitivePeerDependencies:
       - jiti
       - tsx
@@ -6000,6 +6012,23 @@ snapshots:
     dependencies:
       '@zag-js/dom-query': 1.40.0
 
+  '@zag-js/collection@1.40.0':
+    dependencies:
+      '@zag-js/utils': 1.40.0
+
+  '@zag-js/combobox@1.40.0':
+    dependencies:
+      '@zag-js/anatomy': 1.40.0
+      '@zag-js/collection': 1.40.0
+      '@zag-js/core': 1.40.0
+      '@zag-js/dismissable': 1.40.0
+      '@zag-js/dom-query': 1.40.0
+      '@zag-js/focus-visible': 1.40.0
+      '@zag-js/live-region': 1.40.0
+      '@zag-js/popper': 1.40.0
+      '@zag-js/types': 1.40.0
+      '@zag-js/utils': 1.40.0
+
   '@zag-js/core@1.40.0':
     dependencies:
       '@zag-js/dom-query': 1.40.0
@@ -6039,6 +6068,8 @@ snapshots:
     dependencies:
       '@zag-js/dom-query': 1.40.0
       '@zag-js/utils': 1.40.0
+
+  '@zag-js/live-region@1.40.0': {}
 
   '@zag-js/menu@1.40.0':
     dependencies:
@@ -7482,12 +7513,12 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
-  postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.10)(tsx@4.19.2):
+  postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.19.2):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 2.6.1
-      postcss: 8.5.10
+      postcss: 8.5.6
       tsx: 4.19.2
 
   postcss-minify-selectors@7.0.5(postcss@8.5.6):
@@ -7927,7 +7958,7 @@ snapshots:
       unconfig-core: 7.5.0
       unrun: 0.2.37(synckit@0.11.12)
     optionalDependencies:
-      '@tsdown/css': 0.21.10(jiti@2.6.1)(postcss@8.5.10)(tsdown@0.21.10)(tsx@4.19.2)
+      '@tsdown/css': 0.21.10(jiti@2.6.1)(postcss@8.5.6)(tsdown@0.21.10)(tsx@4.19.2)
       '@vitejs/devtools': 0.1.15(@pnpm/logger@1001.0.1)(typescript@6.0.3)(vite@8.0.10)
       publint: 0.3.18
       typescript: 6.0.3

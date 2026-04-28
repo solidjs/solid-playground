@@ -101,6 +101,7 @@ const handleRequest = (method: string, params: any) => {
           signatureHelpProvider: { triggerCharacters: ['(', ','], retriggerCharacters: [')'] },
           definitionProvider: true,
           referencesProvider: true,
+          renameProvider: { prepareProvider: true },
         },
       };
 
@@ -236,6 +237,49 @@ const handleRequest = (method: string, params: any) => {
           },
         };
       });
+    }
+
+    case 'textDocument/prepareRename': {
+      const uri = params.textDocument.uri;
+      const { posToOffset, offsetToPos } = positionConverters(env, uri);
+      const offset = posToOffset(params.position);
+      const info = env.languageService.getRenameInfo(uri, offset, { allowRenameOfImportPath: false });
+      if (!info.canRename) return null;
+      return {
+        range: {
+          start: offsetToPos(info.triggerSpan.start),
+          end: offsetToPos(info.triggerSpan.start + info.triggerSpan.length),
+        },
+        placeholder: info.displayName,
+      };
+    }
+
+    case 'textDocument/rename': {
+      const uri = params.textDocument.uri;
+      const { posToOffset } = positionConverters(env, uri);
+      const offset = posToOffset(params.position);
+      const info = env.languageService.getRenameInfo(uri, offset, { allowRenameOfImportPath: false });
+      if (!info.canRename) return null;
+      const locations = env.languageService.findRenameLocations(uri, offset, false, false, {});
+      if (!locations) return null;
+      const newName: string = params.newName;
+      const changes: Record<string, { range: { start: Position; end: Position }; newText: string }[]> = {};
+      const converters = new Map<string, ReturnType<typeof positionConverters>>();
+      for (const loc of locations) {
+        let conv = converters.get(loc.fileName);
+        if (!conv) {
+          conv = positionConverters(env, loc.fileName);
+          converters.set(loc.fileName, conv);
+        }
+        (changes[loc.fileName] ||= []).push({
+          range: {
+            start: conv.offsetToPos(loc.textSpan.start),
+            end: conv.offsetToPos(loc.textSpan.start + loc.textSpan.length),
+          },
+          newText: (loc.prefixText ?? '') + newName + (loc.suffixText ?? ''),
+        });
+      }
+      return { changes };
     }
 
     case 'playground/diagnostics': {

@@ -33,6 +33,7 @@
     "@solid-primitives/media": "^2.3.5",
     "@solid-primitives/scheduled": "^1.5.3",
     "@typescript/vfs": "^1.6.4",
+    "@zag-js/combobox": "^1.40.0",
     "@zag-js/dialog": "^1.27.0",
     "@zag-js/menu": "^1.27.0",
     "@zag-js/popover": "^1.27.0",

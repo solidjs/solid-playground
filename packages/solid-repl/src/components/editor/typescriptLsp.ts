@@ -1,21 +1,8 @@
 import { javascript, javascriptLanguage } from '@codemirror/lang-javascript';
 import { type LanguageSupport, syntaxTree } from '@codemirror/language';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, keymap } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin } from '@codemirror/view';
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import {
-  LSPClient,
-  type Transport,
-  findReferences,
-  findReferencesKeymap,
-  formatKeymap,
-  hoverTooltips,
-  jumpToDefinition,
-  jumpToDefinitionKeymap,
-  renameKeymap,
-  serverCompletionSource,
-  signatureHelp,
-} from '@codemirror/lsp-client';
-import { autocompletion } from '@codemirror/autocomplete';
+import { LSPClient, type Transport, jumpToDefinition, languageServerExtensions } from '@codemirror/lsp-client';
 
 export const typescript = ({ jsx }: { jsx: boolean } = { jsx: false }): LanguageSupport => {
   return javascript({ typescript: true, jsx });
@@ -181,33 +168,24 @@ const cmdHoverTheme = EditorView.theme({
 
 const cmdHover: Extension = [cmdHoverField, cmdHoverListeners, cmdHoverTheme];
 
+export const typescriptLspExtras: Extension = [
+  cmdHover,
+  EditorView.domEventHandlers({
+    mousedown(event, view) {
+      if (!event.metaKey && !event.ctrlKey) return false;
+      const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+      if (pos == null) return false;
+      event.preventDefault();
+      view.dispatch({ selection: { anchor: pos } });
+      jumpToDefinition(view);
+      return true;
+    },
+  }),
+];
+
 export function createTypescriptLSPClient(transport: Transport): LSPClient {
   const client = new LSPClient({
-    extensions: [
-      autocompletion({ override: [serverCompletionSource] }),
-      hoverTooltips(),
-      signatureHelp(),
-      cmdHover,
-      keymap.of([
-        ...formatKeymap,
-        ...renameKeymap,
-        ...jumpToDefinitionKeymap,
-        ...findReferencesKeymap,
-        { key: 'Mod-b', run: jumpToDefinition, preventDefault: true },
-        { key: 'Mod-Shift-b', run: findReferences, preventDefault: true },
-      ]),
-      EditorView.domEventHandlers({
-        mousedown(event, view) {
-          if (!event.metaKey && !event.ctrlKey) return false;
-          const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
-          if (pos == null) return false;
-          event.preventDefault();
-          view.dispatch({ selection: { anchor: pos } });
-          jumpToDefinition(view);
-          return true;
-        },
-      }),
-    ],
+    extensions: languageServerExtensions(),
     highlightLanguage: (name) =>
       name === 'typescript' || name === 'javascript' || name === 'ts' || name === 'js' ? javascriptLanguage : null,
   });

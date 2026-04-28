@@ -18,7 +18,7 @@ import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 import { json } from '@codemirror/lang-json';
 import type { EditorPersistedState, Tab } from 'solid-repl';
 
-import { typescript, typescriptLspTheme } from './typescriptLsp';
+import { typescript, typescriptLspExtras, typescriptLspTheme } from './typescriptLsp';
 import { createTypescriptSession, type TypescriptSession } from './setupTypescript';
 import { darkTheme, lightTheme, darkHighlightStyle, lightHighlightStyle } from './themes';
 
@@ -60,6 +60,7 @@ export interface CodemirrorTabs {
   setSource(uri: string, source: string): void;
   format(uri: string): void;
   fix(uri: string): void;
+  getView(uri: string): EditorView | undefined;
   ensureOutputView(): OutputView;
   session: TypescriptSession;
 }
@@ -99,10 +100,20 @@ const tsExts = new Set(['tsx', 'jsx', 'ts', 'js', 'mts', 'cts', 'mjs', 'cjs']);
 const buildLanguageExtension = (uri: string, session: TypescriptSession): Extension => {
   const ext = fileExtension(uri);
   if (ext === 'tsx' || ext === 'jsx') {
-    return [typescript({ jsx: true }), session.client.plugin(uri, 'typescript'), typescriptLspTheme];
+    return [
+      typescript({ jsx: true }),
+      session.client.plugin(uri, 'typescript'),
+      typescriptLspExtras,
+      typescriptLspTheme,
+    ];
   }
   if (tsExts.has(ext)) {
-    return [typescript({ jsx: false }), session.client.plugin(uri, 'typescript'), typescriptLspTheme];
+    return [
+      typescript({ jsx: false }),
+      session.client.plugin(uri, 'typescript'),
+      typescriptLspExtras,
+      typescriptLspTheme,
+    ];
   }
   if (ext === 'json') {
     return [json(), autocompletion()];
@@ -444,6 +455,9 @@ export const createCodemirrorTabs = (
     fix(uri) {
       const view = lookups.get(uri)?.view;
       if (view) fixView(view);
+    },
+    getView(uri) {
+      return lookups.get(uri)?.view;
     },
     ensureOutputView() {
       if (!outputEntry) outputEntry = buildOutput();

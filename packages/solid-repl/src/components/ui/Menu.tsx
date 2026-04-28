@@ -34,21 +34,13 @@ const menuItem = cva({
   variants: {
     variant: {
       default: {
-        '_hover': { bg: 'neutral.50' },
-        '&[data-highlighted]': { bg: 'neutral.50' },
-        '_dark': {
-          '_hover': { bg: 'neutral.700' },
-          '&[data-highlighted]': { bg: 'neutral.700' },
-        },
+        '&[data-highlighted]': { bg: 'neutral.200' },
+        '_dark': { '&[data-highlighted]': { bg: 'neutral.700' } },
       },
       danger: {
         'color': 'red.600',
-        '_hover': { bg: 'red.50' },
-        '&[data-highlighted]': { bg: 'red.50' },
-        '_dark': {
-          '_hover': { bg: 'red.900/20' },
-          '&[data-highlighted]': { bg: 'red.900/20' },
-        },
+        '&[data-highlighted]': { bg: 'red.100' },
+        '_dark': { '&[data-highlighted]': { bg: 'red.900/20' } },
       },
     },
   },
@@ -64,30 +56,16 @@ export interface MenuItemDef {
 }
 
 export interface MenuOptions {
-  /** id used by zag (defaults to a unique id) */
   id?: string;
-  /** controlled open state */
-  open?: () => boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** placement options */
   positioning?: menu.PositioningOptions;
-  /** anchor point for context menus */
-  anchorPoint?: () => { x: number; y: number } | undefined;
 }
 
-/**
- * useMenu wires a Zag.js menu machine and returns prop getters plus a
- * pre-styled <Content/> component that renders the menu items.
- */
 export function useMenu(items: () => MenuItemDef[], options: MenuOptions = {}) {
   const id = options.id ?? createUniqueId();
 
   const service = useMachine(menu.machine, () => ({
     id,
-    open: options.open?.(),
-    anchorPoint: options.anchorPoint?.(),
     positioning: options.positioning,
-    onOpenChange: ({ open }) => options.onOpenChange?.(open),
     onSelect: ({ value }) => {
       const item = items().find((i) => i.value === value);
       item?.onSelect();
@@ -95,6 +73,10 @@ export function useMenu(items: () => MenuItemDef[], options: MenuOptions = {}) {
   }));
 
   const api = createMemo(() => menu.connect(service, normalizeProps));
+
+  const openAt = (x: number, y: number) => {
+    service.send({ type: 'CONTEXT_MENU', point: { x, y } });
+  };
 
   const Content: Component<{ portal?: boolean }> = (props) => {
     const body = (
@@ -122,10 +104,9 @@ export function useMenu(items: () => MenuItemDef[], options: MenuOptions = {}) {
     return props.portal ? <Portal>{body as JSX.Element}</Portal> : (body as JSX.Element);
   };
 
-  return { api, Content };
+  return { api, Content, openAt };
 }
 
-/* Standalone, presentational versions still used by code that builds its own menu surface */
 export const Menu: Component<{ class?: string; style?: JSX.CSSProperties; children?: JSX.Element }> = (props) => (
   <div class={cx(menuStyles, props.class)} style={props.style} onClick={(e) => e.stopPropagation()}>
     {props.children}
