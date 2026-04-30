@@ -1,5 +1,7 @@
 @layer reset, base, tokens, recipes, utilities;
 
+@import 'solid-repl/repl/main.css';
+
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Regular.woff') format('woff');
@@ -25,33 +27,4 @@ div[contenteditable='true']:focus {
 
 .dark {
   color-scheme: dark;
-}
-
-#app .dockview-theme-abyss-spaced {
-  padding-top: 0;
-  --dv-color-abyss-dark: var(--colors-neutral-100);
-  --dv-color-abyss: #ffffff;
-  --dv-color-abyss-light: var(--colors-neutral-100);
-  --dv-color-abyss-lighter: var(--colors-neutral-100);
-  --dv-color-abyss-accent: var(--colors-medium);
-  --dv-color-abyss-primary-text: var(--colors-neutral-800);
-  --dv-color-abyss-secondary-text: var(--colors-neutral-400);
-}
-
-.dark #app .dockview-theme-abyss-spaced {
-  --dv-color-abyss-dark: var(--colors-neutral-950);
-  --dv-color-abyss: var(--colors-neutral-900);
-  --dv-color-abyss-light: rgb(38 38 38 / 0.5);
-  --dv-color-abyss-lighter: rgb(38 38 38 / 0.5);
-  --dv-color-abyss-accent: var(--colors-medium);
-  --dv-color-abyss-primary-text: var(--colors-neutral-100);
-  --dv-color-abyss-secondary-text: var(--colors-neutral-400);
-}
-
-#app .dockview-theme-abyss-spaced .dv-groupview.dv-active-group {
-  border: 2px solid var(--dv-color-abyss-accent);
-}
-
-#app .dockview-theme-abyss-spaced .dv-groupview.dv-inactive-group {
-  border: 2px solid transparent;
 }
