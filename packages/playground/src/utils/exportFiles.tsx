@@ -1,5 +1,5 @@
 import pkg from '../../package.json';
-import type { Tab } from 'solid-repl';
+import type { SolidVersion, Tab } from 'solid-repl';
 import dedent from 'dedent';
 
 const viteConfigFile = dedent`
@@ -14,26 +14,27 @@ export default defineConfig({
   },
 });
 `;
-const tsConfig = JSON.stringify(
-  {
-    compilerOptions: {
-      strict: true,
-      module: 'ESNext',
-      target: 'ESNext',
-      jsx: 'preserve',
-      esModuleInterop: true,
-      sourceMap: true,
-      allowJs: true,
-      lib: ['es6', 'dom'],
-      rootDir: 'src',
-      moduleResolution: 'node',
-      jsxImportSource: 'solid-js',
-      types: ['solid-js', 'solid-js/dom'],
+const tsConfig = (solidVersion: SolidVersion) =>
+  JSON.stringify(
+    {
+      compilerOptions: {
+        strict: true,
+        module: 'ESNext',
+        target: 'ESNext',
+        jsx: 'preserve',
+        esModuleInterop: true,
+        sourceMap: true,
+        allowJs: true,
+        lib: ['es6', 'dom'],
+        rootDir: 'src',
+        moduleResolution: 'node',
+        jsxImportSource: solidVersion === 'v2' ? '@solidjs/web' : 'solid-js',
+        types: solidVersion === 'v2' ? ['@solidjs/web', 'solid-js'] : ['solid-js', 'solid-js/dom'],
+      },
     },
-  },
-  null,
-  2,
-);
+    null,
+    2,
+  );
 
 const indexHTML = (tabs: Tab[]) => dedent`
 <html>
@@ -55,15 +56,24 @@ const indexHTML = (tabs: Tab[]) => dedent`
  * package.json by using the imports list provided by the bundler,
  * and then generating the package.json itself, for the export
  */
-function packageJSON(imports: string[]): string {
+const packageName = (importPath: string) => {
+  if (importPath.startsWith('@')) return importPath.split('/').slice(0, 2).join('/');
+  return importPath.split('/')[0];
+};
+
+function packageJSON(imports: string[], solidVersion: SolidVersion): string {
   const deps = imports.reduce(
     (acc, importPath): Record<string, string> => {
-      const name = importPath.split('/')[0];
+      const name = packageName(importPath);
       if (!acc[name]) acc[name] = '*';
       return acc;
     },
     {} as Record<string, string>,
   );
+  deps['solid-js'] = solidVersion === 'v2' ? '2.0.0-beta.10' : deps['solid-js'];
+  if (solidVersion === 'v2') {
+    deps['@solidjs/web'] = '2.0.0-beta.10';
+  }
 
   return JSON.stringify(
     {
@@ -74,7 +84,7 @@ function packageJSON(imports: string[]): string {
       dependencies: deps,
       devDependencies: {
         'vite': pkg.devDependencies['vite'],
-        'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'],
+        'vite-plugin-solid': solidVersion === 'v2' ? '3.0.0-next.5' : pkg.devDependencies['vite-plugin-solid'],
       },
     },
     null,
@@ -86,19 +96,19 @@ function packageJSON(imports: string[]): string {
  * This function will convert the tabs of the playground
  * into a ZIP formatted playground that can then be reimported later on
  */
-export async function exportToZip(tabs: Tab[]): Promise<void> {
+export async function exportToZip(tabs: Tab[], solidVersion: SolidVersion = 'v1'): Promise<void> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
   // basic structure
   zip.file('index.html', indexHTML(tabs));
   zip.file('vite.config.ts', viteConfigFile);
-  zip.file('tsconfig.json', tsConfig);
+  zip.file('tsconfig.json', tsConfig(solidVersion));
   zip.folder('src');
 
   for (const tab of tabs) {
     if (tab.name == 'import_map.json') {
-      zip.file('package.json', packageJSON(Object.keys(JSON.parse(tab.source))));
+      zip.file('package.json', packageJSON(Object.keys(JSON.parse(tab.source)), solidVersion));
     } else {
       zip.file(`src/${tab.name}`, tab.source);
     }

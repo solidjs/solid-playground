@@ -290,6 +290,7 @@ export const Edit = () => {
       <Header
         compiler={compiler}
         fork={() => {}}
+        solidVersion={solidVersion()}
         share={async () => {
           if (scratchpad()) {
             const url = await publishScratchpad(`${context.user()?.display || 'Anonymous'}'s Scratchpad`);
