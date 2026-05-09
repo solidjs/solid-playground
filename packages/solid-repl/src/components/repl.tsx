@@ -11,7 +11,7 @@ import { IconButton } from './ui/IconButton';
 
 import Editor from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
-import type { Tab } from 'solid-repl';
+import type { SolidVersion, Tab } from 'solid-repl';
 import { DockviewComponent, Orientation, GroupPanelPartInitParameters, themeAbyssSpaced } from 'dockview-core';
 import { insert } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
@@ -27,6 +27,35 @@ const getImportMap = (tabs: Tab[]): Record<string, string> => {
   } catch {
     return {};
   }
+};
+
+const solidPackages = {
+  v1: {
+    solid: 'solid-js@1.9.12',
+    web: 'solid-js@1.9.12/web',
+  },
+  v2: {
+    solid: 'solid-js@2.0.0-beta.10',
+    web: '@solidjs/web@2.0.0-beta.10?deps=solid-js@2.0.0-beta.10',
+  },
+} as const;
+
+const solidCoreImportMap = (version: SolidVersion): Record<string, string> => {
+  const packages = solidPackages[version];
+  return {
+    'solid-js': `https://esm.sh/${packages.solid}`,
+    'solid-js/': `https://esm.sh/${packages.solid}/`,
+    'solid-js/web': `https://esm.sh/${packages.web}`,
+    '@solidjs/web': `https://esm.sh/${packages.web}`,
+  };
+};
+
+const withSolidCoreImportMap = (map: Record<string, string>, version: SolidVersion) => {
+  const next = { ...map };
+  for (const key of ['solid-js', 'solid-js/', 'solid-js/web', '@solidjs/web']) {
+    delete next[key];
+  }
+  return { ...next, ...solidCoreImportMap(version) };
 };
 
 export const Repl: ReplProps = (props) => {
@@ -62,7 +91,7 @@ export const Repl: ReplProps = (props) => {
     }
 
     if (event === 'ROLLUP') {
-      const currentMap = { ...importMap() };
+      const currentMap = withSolidCoreImportMap(importMap(), props.solidVersion);
       for (const file in currentMap) {
         // Catch any `jspm.dev` URLs and migrate them to `esm.sh`
         if (currentMap[file] === `https://jspm.dev/${file}`) {
@@ -80,19 +109,7 @@ export const Repl: ReplProps = (props) => {
       console.log(`Compilation took: ${performance.now() - now}ms`);
 
       batch(() => {
-        let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
-        if (!tab) {
-          tab = {
-            name: 'import_map.json',
-            source: JSON.stringify(currentMap, null, 2),
-          };
-          props.setTabs(props.tabs.concat(tab));
-        } else {
-          tab.source = JSON.stringify(currentMap, null, 2);
-          const { model } = monacoTabs().get(`file:///${props.id}/import_map.json`)!;
-          model.setValue(tab.source);
-        }
-
+        syncImportMapTab(currentMap);
         setOutput(compiled);
         setImportMap(currentMap);
       });
@@ -119,6 +136,7 @@ export const Repl: ReplProps = (props) => {
       applyRollupCompilation({
         event: 'ROLLUP',
         tabs: unwrap(userTabs()),
+        solidVersion: props.solidVersion,
       });
     }
     if (outputVisible() && props.current?.endsWith('.tsx')) {
@@ -134,6 +152,7 @@ export const Repl: ReplProps = (props) => {
         event: 'BABEL',
         tab: unwrap(props.tabs.find((tab) => tab.name == props.current)),
         compileOpts,
+        solidVersion: props.solidVersion,
       });
     }
   };
@@ -149,6 +168,37 @@ export const Repl: ReplProps = (props) => {
   });
   const monacoTabs = createMonacoTabs(props.id, () => props.tabs);
   const currentModel = createMemo(() => monacoTabs().get(`file:///${props.id}/${props.current}`)!.model);
+
+  const syncImportMapTab = (map: Record<string, string>) => {
+    const source = JSON.stringify(map, null, 2);
+    let tab = props.tabs.find((tab) => tab.name === 'import_map.json');
+    if (!tab) {
+      tab = {
+        name: 'import_map.json',
+        source,
+      };
+      props.setTabs(props.tabs.concat(tab));
+      return;
+    }
+
+    tab.source = source;
+    const model = monacoTabs().get(`file:///${props.id}/import_map.json`)?.model;
+    model?.setValue(source);
+  };
+
+  let lastSolidVersion = props.solidVersion;
+  createEffect(() => {
+    const version = props.solidVersion;
+    if (version === lastSolidVersion) return;
+
+    lastSolidVersion = version;
+    const nextImportMap = withSolidCoreImportMap(importMap(), version);
+    batch(() => {
+      syncImportMapTab(nextImportMap);
+      setImportMap(nextImportMap);
+    });
+    compile();
+  });
 
   let ref!: HTMLDivElement;
 

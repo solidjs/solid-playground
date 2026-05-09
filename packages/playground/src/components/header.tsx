@@ -8,6 +8,7 @@ import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { API, useAppContext } from '../context';
 import { Button, LinkButton } from 'solid-repl/src/components/ui/Button';
+import type { SolidVersion } from 'solid-repl';
 
 import logo from '../assets/logo.svg?url';
 
@@ -15,6 +16,7 @@ export const Header: ParentComponent<{
   compiler?: Worker;
   fork?: () => void;
   share: () => Promise<string>;
+  solidVersion?: SolidVersion;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
@@ -79,7 +81,7 @@ export const Header: ParentComponent<{
 
           <Show when={context.tabs()}>
             <Button
-              onClick={() => exportToZip(unwrap(context.tabs())!)}
+              onClick={() => exportToZip(unwrap(context.tabs())!, props.solidVersion)}
               classList={menuButtonClasses(showMenu())}
               title="Export to Zip"
             >
