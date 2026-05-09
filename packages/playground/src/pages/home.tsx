@@ -7,6 +7,7 @@ import { API, useAppContext } from '../context';
 import { Header } from '../components/header';
 import { timeAgo } from '../utils/date';
 import { Button } from 'solid-repl/src/components/ui/Button';
+import type { SolidVersion } from 'solid-repl';
 
 interface ReplFile {
   name: string;
@@ -18,6 +19,7 @@ export interface APIRepl {
   labels: string[];
   files: ReplFile[];
   version: string;
+  solidVersion?: SolidVersion;
   public: boolean;
   size: number;
   created_at: string;

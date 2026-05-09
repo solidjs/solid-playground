@@ -11,7 +11,7 @@ import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { defaultTabs } from 'solid-repl/src';
-import type { Tab } from 'solid-repl';
+import type { SolidVersion, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { Button } from 'solid-repl/src/components/ui/Button';
@@ -23,6 +23,18 @@ function parseHash<T>(hash: string, fallback: T): T {
     return fallback;
   }
 }
+
+const normalizeSolidVersion = (version: unknown): SolidVersion => (version === 'v2' ? 'v2' : 'v1');
+
+const solidWebImport = {
+  v1: 'solid-js/web',
+  v2: '@solidjs/web',
+} as const;
+
+const updateSolidWebImport = (source: string, version: SolidVersion) =>
+  source.replace(/from\s+(['"])(solid-js\/web|@solidjs\/web)\1/g, (_match, quote) => {
+    return `from ${quote}${solidWebImport[version]}${quote}`;
+  });
 
 const Repl = lazy(() => import('../components/setupSolid'));
 
@@ -71,6 +83,7 @@ export const Edit = () => {
       localStorage.setItem(
         'scratchpad',
         JSON.stringify({
+          solidVersion: 'v1',
           files: initialTabs.map((x) => ({ name: x.name, content: x.source })),
         }),
       );
@@ -106,6 +119,8 @@ export const Edit = () => {
   context.setTabs(tabs);
   onCleanup(() => context.setTabs(undefined));
 
+  const [solidVersion, trueSetSolidVersion] = createSignal<SolidVersion>('v1');
+
   const [current, setCurrent] = createSignal<string | undefined>(undefined, { equals: false });
   const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
     () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
@@ -120,6 +135,7 @@ export const Edit = () => {
         const myScratchpad = localStorage.getItem('scratchpad');
         if (!myScratchpad) {
           output = {
+            solidVersion: 'v1',
             files: defaultTabs.map((x) => ({
               name: x.name,
               content: x.source,
@@ -136,6 +152,7 @@ export const Edit = () => {
       }
 
       batch(() => {
+        trueSetSolidVersion(normalizeSolidVersion(output.solidVersion));
         setTabs(
           output.files.map((x) => {
             return { name: x.name, source: x.content };
@@ -150,7 +167,14 @@ export const Edit = () => {
 
   const reset = () => {
     batch(() => {
-      setTabs(mapTabs(defaultTabs));
+      setTabs(
+        mapTabs(
+          defaultTabs.map((tab) => ({
+            ...tab,
+            source: updateSolidWebImport(tab.source, solidVersion()),
+          })),
+        ),
+      );
       setCurrent(defaultTabs[0].name);
     });
   };
@@ -161,6 +185,7 @@ export const Edit = () => {
       public: true,
       labels: [] as string[],
       version: '1.0',
+      solidVersion: solidVersion(),
       files: tabs().map((x) => ({ name: x.name, content: x.source })),
     };
     const response = await fetch(`${API}/repl`, {
@@ -190,6 +215,7 @@ export const Edit = () => {
       labels: newRepl.labels,
       files: newRepl.files,
       version: newRepl.version,
+      solidVersion: newRepl.solidVersion,
       public: newRepl.public,
       size: 0,
       created_at: '',
@@ -216,7 +242,7 @@ export const Edit = () => {
       const files = tabs().map((x) => ({ name: x.name, content: x.source }));
 
       if (scratchpad()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
+        localStorage.setItem('scratchpad', JSON.stringify({ solidVersion: solidVersion(), files }));
       }
 
       const repl = resource.latest;
@@ -235,6 +261,7 @@ export const Edit = () => {
             ...(localStorage.getItem(params.repl) ? { write_token: localStorage.getItem(params.repl) } : {}),
             title: repl.title,
             version: repl.version,
+            solidVersion: solidVersion(),
             public: repl.public,
             labels: repl.labels,
             files,
@@ -244,6 +271,19 @@ export const Edit = () => {
     },
     !!scratchpad() ? 10 : 1000,
   );
+
+  const setSolidVersion = (version: SolidVersion) => {
+    batch(() => {
+      trueSetSolidVersion(version);
+      setTabs(
+        tabs().map((tab) => ({
+          name: tab.name,
+          source: tab.name === 'import_map.json' ? tab.source : updateSolidWebImport(tab.source, version),
+        })),
+      );
+    });
+    updateRepl();
+  };
 
   return (
     <>
@@ -263,6 +303,17 @@ export const Edit = () => {
           }
         }}
       >
+        <label class="ml-2 flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300">
+          <span>Solid</span>
+          <select
+            class="border-neutral-200 bg-transparent px-2 py-1 dark:border-neutral-700 rounded-md border text-sm transition focus:border-solidc focus:outline-none"
+            value={solidVersion()}
+            onChange={(e) => setSolidVersion(e.currentTarget.value as SolidVersion)}
+          >
+            <option value="v1">v1</option>
+            <option value="v2">v2</option>
+          </select>
+        </label>
         <Show when={resource() && (resource()?.title || (scratchpad() && context.token))}>
           <input
             class="w-96 border-transparent bg-transparent px-3 py-1.5 shrink rounded-md border transition focus:border-solidc focus:outline-none"
@@ -310,6 +361,8 @@ export const Edit = () => {
             tabs={tabs()}
             setTabs={setTabs}
             reset={reset}
+            solidVersion={solidVersion()}
+            setSolidVersion={setSolidVersion}
             current={current()}
             setCurrent={setCurrent}
             onUserEdit={onUserEdit}

@@ -1,4 +1,4 @@
-import { ParentComponent, Component, Show } from 'solid-js';
+import { ParentComponent, Component, Show, type JSX } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 
 export interface MenuProps {

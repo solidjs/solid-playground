@@ -1,4 +1,6 @@
 declare module 'solid-repl' {
+  export type SolidVersion = 'v1' | 'v2';
+
   export interface Tab {
     name: string;
     source: string;
@@ -19,6 +21,8 @@ declare module 'solid-repl/dist/repl' {
     hideDevtools?: boolean;
     setTabs: (tab: Tab[]) => void;
     reset: () => void;
+    solidVersion: import('solid-repl').SolidVersion;
+    setSolidVersion: (version: import('solid-repl').SolidVersion) => void;
     current: string | undefined;
     setCurrent: (tabId: string) => void;
     onUserEdit?: () => void;
@@ -33,6 +37,8 @@ declare module 'solid-repl/dist/repl' {
   const Repl: Repl;
   export default Repl;
 }
+
+declare module '*.css';
 
 interface Window {
   MonacoEnvironment: {
