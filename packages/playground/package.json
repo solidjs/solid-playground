@@ -10,24 +10,24 @@
   },
   "dependencies": {
     "@solid-primitives/scheduled": "^1.5.3",
-    "@solidjs/router": "^0.16.1",
-    "@zag-js/dialog": "^1.27.0",
-    "@zag-js/menu": "^1.27.0",
-    "@zag-js/popover": "^1.27.0",
-    "@zag-js/solid": "^1.27.0",
+    "@solidjs/router": "^0.16.2",
+    "@zag-js/dialog": "^1.42.0",
+    "@zag-js/menu": "^1.42.0",
+    "@zag-js/popover": "^1.42.0",
+    "@zag-js/solid": "^1.42.0",
     "dedent": "^1.7.2",
     "solid-heroicons": "^3.2.4",
-    "solid-js": "1.9.12",
+    "solid-js": "1.9.14",
     "solid-repl": "workspace:*"
   },
   "devDependencies": {
     "@amoutonbrady/lz-string": "^0.1.0",
-    "@babel/core": "^7.29.0",
-    "@babel/plugin-syntax-jsx": "^7.28.6",
-    "@babel/preset-typescript": "^7.28.5",
-    "@babel/types": "^7.29.0",
-    "@pandacss/dev": "^1.10.0",
-    "@solidjs/router": "^0.16.1",
+    "@babel/core": "^8.0.1",
+    "@babel/plugin-syntax-jsx": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
+    "@babel/types": "^8.0.4",
+    "@pandacss/dev": "^1.11.5",
+    "@solidjs/router": "^0.16.2",
     "@types/babel__standalone": "^7.1.9",
     "@types/dedent": "^0.7.2",
     "assert": "^2.1.0",
@@ -35,7 +35,7 @@
     "jszip": "^3.10.1",
     "register-service-worker": "^1.7.2",
     "typescript": "^6.0.3",
-    "vite": "^8.0.10",
-    "vite-plugin-solid": "^2.11.12"
+    "vite": "^8.1.5",
+    "vite-plugin-solid": "^2.11.13"
   }
 }

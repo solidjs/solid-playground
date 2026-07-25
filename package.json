@@ -19,11 +19,11 @@
     "lint": "oxlint ."
   },
   "devDependencies": {
-    "@changesets/cli": "2.31.0",
-    "@pandacss/dev": "^1.10.0",
+    "@changesets/cli": "2.31.1",
+    "@pandacss/dev": "^1.11.5",
     "@pandacss/eslint-plugin": "^0.3.2",
-    "oxfmt": "^0.46.0",
-    "oxlint": "^1.61.0"
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0"
   },
-  "packageManager": "pnpm@10.33.2"
+  "packageManager": "pnpm@11.17.0"
 }

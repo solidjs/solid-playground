@@ -23,6 +23,11 @@ const dark = {
   toggleActiveBorder: '#007fd4',
   iconFg: '#cccccc',
   tooltipBg: '#252526',
+  completionSelectedBg: '#04395e',
+  completionSelectedFg: '#ffffff',
+  completionDetailFg: '#8c8c8c',
+  matchedText: '#2aaaff',
+  link: '#3794ff',
   matchBracket: '#bad0f847',
   searchMatch: '#72a1ff59',
   searchMatchOutline: '#457dff',
@@ -66,6 +71,11 @@ const light = {
   toggleActiveBorder: '#0090f1',
   iconFg: '#424242',
   tooltipBg: '#f3f3f3',
+  completionSelectedBg: '#cce4f7',
+  completionSelectedFg: '#000000',
+  completionDetailFg: '#717171',
+  matchedText: '#0066bf',
+  link: '#006ab1',
   matchBracket: '#0000004d',
   searchMatch: '#a8ac9433',
   searchMatchOutline: '#005a9e',
@@ -144,6 +154,24 @@ const buildEditorTheme = (c: typeof dark, isDark: boolean) =>
         borderTopColor: c.tooltipBg,
         borderBottomColor: c.tooltipBg,
       },
+
+      '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+        backgroundColor: c.completionSelectedBg,
+        color: c.completionSelectedFg,
+      },
+      '.cm-completionMatchedText': { color: c.matchedText },
+      '.cm-completionDetail': { color: c.completionDetailFg },
+      '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail': {
+        color: 'inherit',
+      },
+      '.cm-lsp-hover-tooltip, .cm-lsp-signature-tooltip, .cm-lsp-completion-documentation': {
+        border: `1px solid ${c.panelBorder}`,
+      },
+      '.cm-lsp-hover-tooltip pre, .cm-lsp-completion-documentation pre': {
+        borderBottom: `1px solid ${c.panelBorder}`,
+      },
+      '.cm-lsp-signature-documentation': { borderTop: `1px solid ${c.panelBorder}` },
+      'a': { color: c.link },
 
       '.cm-panels.cm-panels-top': {
         position: 'relative',

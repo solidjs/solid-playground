@@ -15,7 +15,6 @@ export const typescriptLspTheme: Extension = EditorView.theme({
     'max-width': '700px',
     'max-height': '250px',
     'overflow': 'auto',
-    'border': '1px solid #454545',
     'padding': '0',
   },
   '.cm-lsp-completion-documentation': { 'max-width': '500px' },
@@ -24,7 +23,6 @@ export const typescriptLspTheme: Extension = EditorView.theme({
     'font-family': monospace,
     'margin': '0',
     'padding': '8px',
-    'border-bottom': '1px solid #454545',
   },
   '.cm-lsp-hover-tooltip > p, .cm-lsp-completion-documentation > p, .cm-lsp-signature-tooltip > p': {
     padding: '0 8px',
@@ -32,15 +30,10 @@ export const typescriptLspTheme: Extension = EditorView.theme({
   '.cm-lsp-signature-tooltip': { padding: '0' },
   '.cm-lsp-signature': { 'padding': '8px', 'font-family': monospace },
   '.cm-lsp-signature-tooltip .cm-lsp-documentation': { padding: '8px' },
-  '.cm-lsp-signature-documentation': { 'border-top': '1px solid #454545' },
   '.cm-lsp-documentation p:first-child': { 'margin-top': '0' },
   '.cm-lsp-documentation p:last-child': { 'margin-bottom': '0' },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': { 'font-family': monospace },
-  '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: '#04395e',
-    color: 'unset',
-  },
-  '.cm-completionMatchedText': { 'text-decoration': 'none', 'color': '#2aaaff' },
+  '.cm-completionMatchedText': { 'text-decoration': 'none' },
   '.cm-completionDetail': {
     'text-overflow': 'ellipsis',
     'overflow': 'hidden',
@@ -49,7 +42,7 @@ export const typescriptLspTheme: Extension = EditorView.theme({
     'float': 'right',
   },
   '.cm-tooltip-hover': { 'z-index': '150' },
-  'a': { 'color': '#3794ff', 'text-decoration': 'inherit' },
+  'a': { 'text-decoration': 'inherit' },
 });
 
 export function createWorkerTransport(worker: Worker): Transport {

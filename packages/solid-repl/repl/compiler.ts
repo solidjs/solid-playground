@@ -3,6 +3,7 @@ import type { Tab } from 'solid-repl';
 import { transform } from '@babel/standalone';
 // @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
+import babelSyntaxJsx from '@babel/plugin-syntax-jsx';
 
 import dd from 'dedent';
 
@@ -25,6 +26,7 @@ function babelTransform(filename: string, code: string, externals: Record<string
 
   let { code: transformedCode } = transform(code, {
     plugins: [
+      babelSyntaxJsx,
       function importRewriter() {
         return {
           visitor: {
@@ -48,7 +50,7 @@ function babelTransform(filename: string, code: string, externals: Record<string
       [babelPresetSolid, { generate: 'dom', hydratable: false }],
       ['typescript', { onlyRemoveTypeImports: true }],
     ],
-    filename: filename + '.tsx',
+    filename,
   });
 
   return transformedCode!.replace('render(', 'window.dispose = render(');
@@ -86,6 +88,7 @@ function compile(tabs: Tab[], event: string) {
 
 function babel(tab: Tab, compileOpts: any) {
   const { code } = transform(tab.source, {
+    plugins: [babelSyntaxJsx],
     presets: [
       [babelPresetSolid, compileOpts],
       ['typescript', { onlyRemoveTypeImports: true }],

@@ -36,7 +36,7 @@ const replHost = css({
   flexDirection: 'column',
   minH: 0,
   h: 'full',
-  overflow: 'hidden',
+  overflow: 'clip',
   fontFamily: 'sans',
   color: 'black',
   _dark: { color: 'white' },
@@ -589,9 +589,9 @@ export const Repl: ReplProps = (props) => {
     }
 
     dockview.onDidActivePanelChange((e) => {
-      if (!e) return;
-      if (props.tabs.some((tab) => tab.name === e.id)) {
-        setActiveName(e.id);
+      if (!e.panel) return;
+      if (props.tabs.some((tab) => tab.name === e.panel!.id)) {
+        setActiveName(e.panel.id);
       }
     });
   });
