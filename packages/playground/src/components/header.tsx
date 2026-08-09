@@ -7,6 +7,7 @@ import * as popover from '@zag-js/popover';
 import { useMachine, normalizeProps } from '@zag-js/solid';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
+import { VersionDropdown } from './versionDropdown';
 import { API, useAppContext } from '../context';
 import { Button, LinkButton } from 'solid-repl/src/components/ui/Button';
 import { useMenu } from 'solid-repl/src/components/ui/Menu';
@@ -88,6 +89,8 @@ export const Header: ParentComponent<{
   compiler?: Worker;
   fork?: () => void;
   share: () => Promise<string>;
+  solidVersion?: string;
+  onSolidVersionChange?: (version: string) => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
@@ -147,19 +150,31 @@ export const Header: ParentComponent<{
           when={isMobile()}
           fallback={
             <div class={desktopMenuList}>
-              <HeaderMenuItems copy={copy()} shareLink={shareLink} showOnMobile={false} />
+              <HeaderMenuItems
+                copy={copy()}
+                shareLink={shareLink}
+                showOnMobile={false}
+                solidVersion={props.solidVersion}
+                onSolidVersionChange={props.onSolidVersionChange}
+              />
             </div>
           }
         >
           <Show when={mobileApi().open}>
-            <div {...(mobileApi().getPositionerProps() as any)}>
-              <div {...(mobileApi().getContentProps() as any)} class={mobileMenuPanel}>
-                <HeaderMenuItems copy={copy()} shareLink={shareLink} showOnMobile />
+            <div {...mobileApi().getPositionerProps()}>
+              <div {...mobileApi().getContentProps()} class={mobileMenuPanel}>
+                <HeaderMenuItems
+                  copy={copy()}
+                  shareLink={shareLink}
+                  showOnMobile
+                  solidVersion={props.solidVersion}
+                  onSolidVersionChange={props.onSolidVersionChange}
+                />
               </div>
             </div>
           </Show>
           <Button
-            {...(mobileApi().getTriggerProps() as any)}
+            {...mobileApi().getTriggerProps()}
             type="button"
             class={cx(mobileApi().open && css({ borderWidth: '1px', borderColor: 'white' }))}
             variant="ghost"
@@ -185,7 +200,7 @@ export const Header: ParentComponent<{
               </a>
             }
           >
-            <button {...(profile.api().getTriggerProps() as any)}>
+            <button {...profile.api().getTriggerProps()}>
               <img crossOrigin="anonymous" src={context.user()?.avatar} class={css({ h: 8, w: 8, rounded: 'full' })} />
             </button>
             <profile.Content />
@@ -200,6 +215,8 @@ const HeaderMenuItems: ParentComponent<{
   copy: boolean;
   shareLink: () => void;
   showOnMobile: boolean;
+  solidVersion?: string;
+  onSolidVersionChange?: (version: string) => void;
 }> = (props) => {
   const context = useAppContext()!;
   const mobileBtn = () => (props.showOnMobile ? menuButtonOnMobile : '');
@@ -217,6 +234,16 @@ const HeaderMenuItems: ParentComponent<{
           <Icon path={arrowDownTray} class={css({ h: 6, m: 0 })} />
           <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Export to Zip</span>
         </Button>
+      </Show>
+
+      <Show when={props.onSolidVersionChange}>
+        {(onChange) => (
+          <VersionDropdown
+            version={props.solidVersion ?? ''}
+            onChange={(v) => onChange()(v)}
+            showOnMobile={props.showOnMobile}
+          />
+        )}
       </Show>
 
       <ZoomDropdown showMenu={props.showOnMobile} />

@@ -3,6 +3,12 @@ import { Label } from './ui/Label';
 import { Input } from './ui/Input';
 import { css } from 'styled-system/css';
 
+export interface SolidCompileOptions {
+  generate: string;
+  hydratable: boolean;
+  moduleName?: string;
+}
+
 export const compileOptions = {
   SSR: { generate: 'ssr', hydratable: true },
   DOM: { generate: 'dom', hydratable: false },

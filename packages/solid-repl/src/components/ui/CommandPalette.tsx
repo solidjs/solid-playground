@@ -5,11 +5,12 @@ import { magnifyingGlass } from 'solid-heroicons/outline';
 import * as combobox from '@zag-js/combobox';
 import { useMachine, normalizeProps } from '@zag-js/solid';
 import { css, cva } from 'styled-system/css';
+import { IconSlot, type IconPath } from './icon';
 
 export interface CommandItem {
   id: string;
   label: string;
-  icon?: any;
+  icon?: IconPath;
   shortcut?: string;
   group?: string;
   onSelect: () => void;
@@ -17,20 +18,22 @@ export interface CommandItem {
 
 const itemStyle = cva({
   base: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
-    px: 3,
-    py: 1.5,
-    gap: 2,
-    textAlign: 'left',
-    fontSize: 'sm',
-    cursor: 'pointer',
-    color: 'inherit',
-    bg: 'transparent',
-    outline: 'none',
+    'display': 'flex',
+    'alignItems': 'center',
+    'width': '100%',
+    'px': 3,
+    'py': 1.5,
+    'gap': 2,
+    'textAlign': 'left',
+    'fontSize': 'sm',
+    'cursor': 'pointer',
+    'color': 'inherit',
+    'bg': 'transparent',
+    'outline': 'none',
+    '& svg': { color: 'neutral.500' },
     '&[data-highlighted]': { bg: 'neutral.200' },
-    _dark: {
+    '_dark': {
+      '& svg': { color: 'neutral.400' },
       '&[data-highlighted]': { bg: 'neutral.700' },
     },
   },
@@ -104,12 +107,12 @@ export function useCommandMenu(items: () => CommandItem[]) {
     <Portal>
       <Show when={api().open}>
         <div
-          {...(api().getRootProps() as any)}
+          {...api().getRootProps()}
           class={css({ position: 'fixed', zIndex: 2000 })}
           style={{ left: `${position().x}px`, top: `${position().y}px` }}
         >
           <div
-            {...(api().getContentProps() as any)}
+            {...api().getContentProps()}
             class={css({
               width: '320px',
               maxHeight: '480px',
@@ -128,7 +131,7 @@ export function useCommandMenu(items: () => CommandItem[]) {
             })}
           >
             <div
-              {...(api().getControlProps() as any)}
+              {...api().getControlProps()}
               class={css({
                 display: 'flex',
                 alignItems: 'center',
@@ -142,12 +145,12 @@ export function useCommandMenu(items: () => CommandItem[]) {
             >
               <Icon path={magnifyingGlass} class={css({ h: 4, w: 4, color: 'neutral.400' })} />
               <input
-                {...(api().getInputProps() as any)}
+                {...api().getInputProps()}
                 class={css({ flex: 1, bg: 'transparent', outline: 'none', fontSize: 'sm', color: 'inherit' })}
                 placeholder="Search actions"
               />
             </div>
-            <div {...(api().getListProps() as any)} class={css({ overflowY: 'auto', py: 1 })}>
+            <div {...api().getListProps()} class={css({ overflowY: 'auto', py: 1 })}>
               <Show
                 when={filtered().length > 0}
                 fallback={<div class={css({ p: 3, color: 'neutral.500', textAlign: 'center' })}>No results</div>}
@@ -171,10 +174,8 @@ export function useCommandMenu(items: () => CommandItem[]) {
                       </Show>
                       <For each={g.items}>
                         {(item) => (
-                          <div {...(api().getItemProps({ item }) as any)} class={itemStyle()}>
-                            <Show when={item.icon} fallback={<div class={css({ h: 4, w: 4 })} />}>
-                              <Icon path={item.icon} class={css({ h: 4, w: 4, color: 'neutral.500' })} />
-                            </Show>
+                          <div {...api().getItemProps({ item })} class={itemStyle()}>
+                            <IconSlot path={item.icon} />
                             <span class={css({ flex: 1 })}>{item.label}</span>
                             <Show when={item.shortcut}>
                               <kbd

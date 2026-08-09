@@ -1,11 +1,39 @@
 import type { Tab } from 'solid-repl';
 
 import { transform } from '@babel/standalone';
+import type { Visitor } from '@babel/core';
+import type { Node } from '@babel/types';
 // @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
 import babelSyntaxJsx from '@babel/plugin-syntax-jsx';
 
 import dd from 'dedent';
+
+import { serveWorker } from '../src/kernel/workerServer';
+import { moduleUrl, solidFamily } from '../src/kernel/importMap';
+import type { SolidCompileOptions } from '../src/components/CompileMode';
+
+// Stable preset patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.
+const presetSpecFor = (version: string) => (version.includes('-') ? version : version.split('.').slice(0, 2).join('.'));
+
+const presetCache = new Map<string, Promise<object>>();
+
+function loadPreset(version: string | undefined): Promise<object> {
+  if (!version) return Promise.resolve(babelPresetSolid);
+  let cached = presetCache.get(version);
+  if (!cached) {
+    const spec = presetSpecFor(version);
+    cached = import(/* @vite-ignore */ `https://esm.sh/babel-preset-solid@${spec}`).then(
+      (m) => m.default ?? m,
+      (e) => {
+        presetCache.delete(version);
+        throw new Error(`Failed to load babel-preset-solid@${spec}: ${e instanceof Error ? e.message : e}`);
+      },
+    );
+    presetCache.set(version, cached);
+  }
+  return cached;
+}
 
 function uid(str: string) {
   return Array.from(str)
@@ -13,33 +41,39 @@ function uid(str: string) {
     .toString();
 }
 
-function babelTransform(filename: string, code: string, externals: Record<string, string>) {
-  const handleImportee = (node: { value: string } | null | undefined) => {
-    if (!node || typeof node.value !== 'string') return;
+function babelTransform(
+  filename: string,
+  code: string,
+  externals: Record<string, string>,
+  preset: object,
+  version: string | undefined,
+) {
+  const handleImportee = (node: Node | null | undefined) => {
+    if (node?.type !== 'StringLiteral') return;
     const importee = node.value;
     if (importee.startsWith('.')) {
       node.value = 'solidrepl:' + importee;
     } else if (!importee.includes('://')) {
-      if (!(importee in externals)) externals[importee] = `https://esm.sh/${importee}`;
+      if (!(importee in externals)) externals[importee] = moduleUrl(importee, version);
     }
   };
 
   let { code: transformedCode } = transform(code, {
     plugins: [
       babelSyntaxJsx,
-      function importRewriter() {
+      function importRewriter(): { visitor: Visitor } {
         return {
           visitor: {
-            Import(path: any) {
-              handleImportee(path.parent.arguments[0]);
+            Import(path) {
+              if (path.parent.type === 'CallExpression') handleImportee(path.parent.arguments[0]);
             },
-            ImportDeclaration(path: any) {
+            ImportDeclaration(path) {
               handleImportee(path.node.source);
             },
-            ExportAllDeclaration(path: any) {
+            ExportAllDeclaration(path) {
               handleImportee(path.node.source);
             },
-            ExportNamedDeclaration(path: any) {
+            ExportNamedDeclaration(path) {
               handleImportee(path.node.source);
             },
           },
@@ -47,7 +81,7 @@ function babelTransform(filename: string, code: string, externals: Record<string
       },
     ],
     presets: [
-      [babelPresetSolid, { generate: 'dom', hydratable: false }],
+      [preset, { generate: 'dom', hydratable: false }],
       ['typescript', { onlyRemoveTypeImports: true }],
     ],
     filename,
@@ -56,7 +90,12 @@ function babelTransform(filename: string, code: string, externals: Record<string
   return transformedCode!.replace('render(', 'window.dispose = render(');
 }
 
-function transformTab(tab: Tab, externals: Record<string, string>): string {
+function transformTab(
+  tab: Tab,
+  externals: Record<string, string>,
+  preset: object,
+  version: string | undefined,
+): string {
   if (tab.name.endsWith('.css')) {
     const id = uid(tab.name);
     return dd`
@@ -73,43 +112,40 @@ function transformTab(tab: Tab, externals: Record<string, string>): string {
       })()
     `;
   }
-  return babelTransform(tab.name, tab.source, externals);
+  return babelTransform(tab.name, tab.source, externals, preset, version);
 }
 
-function compile(tabs: Tab[], event: string) {
+async function compile(tabs: Tab[], version: string | undefined) {
+  const preset = await loadPreset(version);
   const externals: Record<string, string> = {};
   const compiled: Record<string, string> = {};
   for (const tab of tabs) {
     const key = `./${tab.name.replace(/\.(tsx|jsx)$/, '')}`;
-    compiled[key] = transformTab(tab, externals);
+    compiled[key] = transformTab(tab, externals, preset, version);
   }
-  return { event, compiled, externals };
+  for (const pkg of solidFamily(version)) {
+    externals[pkg] ??= moduleUrl(pkg, version);
+  }
+  return { compiled, externals };
 }
 
-function babel(tab: Tab, compileOpts: any) {
+async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string | undefined) {
+  const preset = await loadPreset(version);
   const { code } = transform(tab.source, {
     plugins: [babelSyntaxJsx],
     presets: [
-      [babelPresetSolid, compileOpts],
+      [preset, compileOpts],
       ['typescript', { onlyRemoveTypeImports: true }],
     ],
     filename: tab.name,
   });
-  return { event: 'BABEL', compiled: code };
+  return { compiled: code };
 }
 
-self.addEventListener('message', ({ data }) => {
-  const { event, tabs, tab, compileOpts } = data;
-
-  try {
-    if (event === 'BABEL') {
-      self.postMessage(babel(tab, compileOpts));
-    } else if (event === 'ROLLUP') {
-      self.postMessage(compile(tabs, event));
-    }
-  } catch (e) {
-    self.postMessage({ event: 'ERROR', error: e });
-  }
+serveWorker({
+  ROLLUP: ({ tabs, version }: { tabs: Tab[]; version?: string }) => compile(tabs, version),
+  BABEL: ({ tab, compileOpts, version }: { tab: Tab; compileOpts: SolidCompileOptions; version?: string }) =>
+    babel(tab, compileOpts, version),
 });
 
 export {};

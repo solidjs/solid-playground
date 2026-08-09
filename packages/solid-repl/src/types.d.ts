@@ -4,6 +4,7 @@ declare module 'solid-repl' {
   export interface Tab {
     name: string;
     source: string;
+    id?: string;
   }
 
   export const defaultTabs: Tab[];
@@ -17,8 +18,8 @@ declare module 'solid-repl' {
   export interface ReplStorage {
     getLayout?(): import('dockview-core').SerializedDockview | undefined;
     setLayout?(layout: import('dockview-core').SerializedDockview): void;
-    getEditorState?(uri: string): EditorPersistedState | undefined;
-    setEditorState?(uri: string, state: EditorPersistedState | null): void;
+    getEditorState?(fileId: string): EditorPersistedState | undefined;
+    setEditorState?(fileId: string, state: EditorPersistedState | null): void;
   }
 }
 
@@ -32,6 +33,7 @@ declare module 'solid-repl/dist/repl' {
     dark: boolean;
     tabs: Tab[];
     id: string;
+    version?: string;
     hideDevtools?: boolean;
     setTabs: (tab: Tab[]) => void;
     reset: () => void;

@@ -81,12 +81,16 @@ export const Edit = () => {
 
   let readonly = () => !scratchpad() && context.profile() != params.user && !localStorage.getItem(params.repl);
 
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith('solid-repl:editorState:file:///')) safeRemove(key);
+  }
+
   const replStorage: ReplStorage = {
     getLayout: () => readJson('solid-repl:layout'),
     setLayout: (layout) => writeJson('solid-repl:layout', layout),
-    getEditorState: (uri) => readJson(`solid-repl:editorState:${uri}`),
-    setEditorState: (uri, state) => {
-      const key = `solid-repl:editorState:${uri}`;
+    getEditorState: (fileId) => readJson(`solid-repl:editorState:${fileId}`),
+    setEditorState: (fileId, state) => {
+      const key = `solid-repl:editorState:${fileId}`;
       if (state) writeJson(key, state);
       else safeRemove(key);
     },
@@ -133,6 +137,35 @@ export const Edit = () => {
 
   const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
   const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
+
+  const storedVersion = localStorage.getItem('solidVersion') ?? '';
+  const [solidVersion, setSolidVersion] = createSignal(storedVersion);
+  const changeSolidVersion = (version: string) => {
+    setSolidVersion(version);
+    localStorage.setItem('solidVersion', version);
+  };
+
+  const resolveSolidVersion = async (stored: string): Promise<string> => {
+    if (stored !== 'next' && stored !== 'latest') return stored;
+    const cacheKey = `solidVersion:${stored}`;
+    try {
+      const res = await fetch('https://data.jsdelivr.com/v1/package/npm/solid-js');
+      const { tags } = (await res.json()) as { tags: Record<string, string> };
+      if (tags[stored]) {
+        localStorage.setItem(cacheKey, tags[stored]);
+        return tags[stored];
+      }
+    } catch (e) {
+      console.error('Failed to resolve solid-js version tag', e);
+    }
+    return localStorage.getItem(cacheKey) ?? '';
+  };
+  const [resolvedSolidVersion] = createResource(solidVersion, resolveSolidVersion, {
+    initialValue:
+      storedVersion === 'next' || storedVersion === 'latest'
+        ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
+        : storedVersion,
+  });
   context.setTabs(tabs);
   onCleanup(() => context.setTabs(undefined));
 
@@ -169,6 +202,8 @@ export const Edit = () => {
 
   const reset = () => {
     setTabs(mapTabs(defaultTabs));
+    // The persistence hook hangs off the per-tab source setter, which this bypasses.
+    updateRepl();
   };
 
   const publishScratchpad = async (title: string) => {
@@ -267,6 +302,8 @@ export const Edit = () => {
     <>
       <Header
         compiler={compiler}
+        solidVersion={solidVersion()}
+        onSolidVersionChange={changeSolidVersion}
         fork={() => {}}
         share={async () => {
           if (scratchpad()) {
@@ -318,6 +355,7 @@ export const Edit = () => {
             compiler={compiler}
             formatter={formatter}
             linter={linter}
+            version={resolvedSolidVersion() || undefined}
             dark={context.dark()}
             tabs={tabs()}
             setTabs={setTabs}

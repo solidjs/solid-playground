@@ -179,6 +179,8 @@ export const typescriptLspExtras: Extension = [
 export function createTypescriptLSPClient(transport: Transport): LSPClient {
   const client = new LSPClient({
     extensions: languageServerExtensions(),
+    // Type acquisition legitimately exceeds the 3s default on first sync.
+    timeout: 60_000,
     highlightLanguage: (name) =>
       name === 'typescript' || name === 'javascript' || name === 'ts' || name === 'js' ? javascriptLanguage : null,
   });

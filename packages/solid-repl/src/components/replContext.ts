@@ -1,11 +1,16 @@
 import { createContext, useContext, type Accessor } from 'solid-js';
 import type { Tab } from 'solid-repl';
 import type { CodemirrorTabs } from './editor/codemirrorTabs';
+import type { Command } from '../kernel/commands';
+import type { WorkerClient } from '../kernel/workerClient';
+import type { Workspace } from '../kernel/workspace';
 
 export interface ReplApi {
   tabs: Accessor<Tab[]>;
   setTabs: (tabs: Tab[]) => void;
+  workspace: Workspace;
   current: Accessor<string | undefined>;
+  currentName: Accessor<string | undefined>;
   reset: () => void;
   onUserEdit?: () => void;
 
@@ -14,14 +19,14 @@ export interface ReplApi {
   displayErrors: Accessor<boolean>;
   setDisplayErrors: (v: boolean) => void;
 
-  compiler: Worker;
-  formatter: Worker;
-  linter: Worker;
+  compiler: WorkerClient;
+  formatter: WorkerClient;
+  linter: WorkerClient;
 
+  commands: Command[];
   editors: CodemirrorTabs;
 
   folder: string;
-  uriFor: (name: string) => string;
 }
 
 export const ReplContext = createContext<ReplApi>();

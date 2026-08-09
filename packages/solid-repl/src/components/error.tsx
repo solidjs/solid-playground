@@ -64,7 +64,6 @@ export const Error: Component<{
           _hover: { bg: 'red.200' },
           _dark: { color: 'red.300', _hover: { bg: 'red.800/50' } },
         })}
-        size="sm"
         onClick={() => props.onDismiss()}
       />
     </div>

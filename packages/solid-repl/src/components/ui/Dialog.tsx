@@ -2,7 +2,7 @@ import { Component, JSX, Show, createMemo, createUniqueId } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import * as dialog from '@zag-js/dialog';
 import { useMachine, normalizeProps } from '@zag-js/solid';
-import { css, cx } from 'styled-system/css';
+import { css } from 'styled-system/css';
 
 const backdrop = css({
   position: 'fixed',
@@ -25,12 +25,7 @@ const panel = css({
   _dark: { borderColor: 'neutral.700', bg: 'neutral.900', color: 'white' },
 });
 
-export interface DialogOptions {
-  open: () => boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function useDialog(options: DialogOptions) {
+export function useDialog(options: { open: () => boolean; onOpenChange: (open: boolean) => void }) {
   const id = createUniqueId();
   const service = useMachine(dialog.machine, () => ({
     id,
@@ -39,12 +34,12 @@ export function useDialog(options: DialogOptions) {
   }));
   const api = createMemo(() => dialog.connect(service, normalizeProps));
 
-  const Root: Component<{ children: JSX.Element; class?: string }> = (props) => (
+  const Root: Component<{ children: JSX.Element }> = (props) => (
     <Show when={api().open}>
       <Portal>
-        <div {...(api().getBackdropProps() as any)} class={backdrop}>
-          <div {...(api().getPositionerProps() as any)}>
-            <div {...(api().getContentProps() as any)} class={cx(panel, props.class)}>
+        <div {...api().getBackdropProps()} class={backdrop}>
+          <div {...api().getPositionerProps()}>
+            <div {...api().getContentProps()} class={panel}>
               {props.children}
             </div>
           </div>
@@ -53,5 +48,5 @@ export function useDialog(options: DialogOptions) {
     </Show>
   );
 
-  return { api, Root };
+  return { Root };
 }

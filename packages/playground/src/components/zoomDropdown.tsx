@@ -53,7 +53,7 @@ const headerButtonOnMobile = css({
 });
 
 export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
-  const { zoomState, updateZoom, setZoomState } = useZoom();
+  const { zoomState, updateZoom, setOverrideNative, setScaleIframe } = useZoom();
 
   const service = useMachine(popover.machine, {
     id: createUniqueId(),
@@ -65,7 +65,6 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   let prevZoom = zoomState.zoom;
   let timeoutId: number | null = null;
 
-  // Auto-open the popover briefly when zoom changes via keyboard shortcuts
   createEffect(() => {
     if (prevZoom === zoomState.zoom) return;
     prevZoom = zoomState.zoom;
@@ -78,7 +77,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   return (
     <>
       <Button
-        {...(api().getTriggerProps() as any)}
+        {...api().getTriggerProps()}
         type="button"
         class={cx(
           props.showMenu && headerButtonOnMobile,
@@ -90,8 +89,8 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Scale Editor</span>
       </Button>
       <Show when={api().open}>
-        <div {...(api().getPositionerProps() as any)}>
-          <div {...(api().getContentProps() as any)} class={popoverPanel}>
+        <div {...api().getPositionerProps()}>
+          <div {...api().getContentProps()} class={popoverPanel}>
             <div class={css({ display: 'flex', alignItems: 'center' })}>
               <button
                 class={cx(stepperBtn, css({ roundedLeft: 'md' }))}
@@ -129,12 +128,12 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               <Checkbox
                 label="Override browser zoom keyboard shortcut"
                 checked={zoomState.overrideNative}
-                onChange={(e) => setZoomState('overrideNative', e.currentTarget.checked)}
+                onChange={(e) => setOverrideNative(e.currentTarget.checked)}
               />
               <Checkbox
                 label="Scale iframe result"
                 checked={zoomState.scaleIframe}
-                onChange={(e) => setZoomState('scaleIframe', e.currentTarget.checked)}
+                onChange={(e) => setScaleIframe(e.currentTarget.checked)}
               />
             </div>
           </div>

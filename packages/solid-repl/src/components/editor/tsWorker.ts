@@ -7,6 +7,7 @@ import ts, {
   ScriptTarget,
   displayPartsToString,
 } from 'typescript';
+import { createTypeAcquisition } from './typeAcquisition';
 
 const compilerOptions: CompilerOptions = {
   strict: true,
@@ -43,7 +44,22 @@ for (const path in solidTypes) {
 }
 
 const system = createSystem(fsMap);
-const env = createVirtualTypeScriptEnvironment(system, [], ts, compilerOptions);
+const typeAcquisition = createTypeAcquisition(fsMap);
+
+const openDocs = new Map<string, string>();
+
+const buildEnv = () =>
+  createVirtualTypeScriptEnvironment(system, [], ts, {
+    ...compilerOptions,
+    jsxImportSource: typeAcquisition.jsxImportSource() ?? compilerOptions.jsxImportSource,
+  });
+
+let env = buildEnv();
+
+const rebuildEnv = () => {
+  env = buildEnv();
+  for (const [uri, text] of openDocs) env.createFile(uri, text);
+};
 
 const completionItemKind: Record<string, number> = {
   'class': 7,
@@ -85,10 +101,23 @@ const positionConverters = (env: VirtualTypeScriptEnvironment, uri: string) => {
 };
 
 const ensureFile = (uri: string, text: string) => {
+  openDocs.set(uri, text);
   const existing = env.getSourceFile(uri);
   if (existing) env.updateFile(uri, text);
   else env.createFile(uri, text);
 };
+
+const removeFile = (uri: string) => {
+  openDocs.delete(uri);
+  if (!env.getSourceFile(uri)) return;
+  env.deleteFile(uri);
+};
+
+class MethodNotFound extends Error {
+  constructor(method: string) {
+    super(`Method not found: ${method}`);
+  }
+}
 
 const handleRequest = (method: string, params: any) => {
   switch (method) {
@@ -282,6 +311,12 @@ const handleRequest = (method: string, params: any) => {
       return { changes };
     }
 
+    case 'playground/syncTypes':
+      return typeAcquisition.sync(params.importMap ?? {}).then((changed) => {
+        if (changed) rebuildEnv();
+        return { changed };
+      });
+
     case 'playground/diagnostics': {
       const uri = params.uri;
       const tsDiagnostics = [
@@ -297,7 +332,7 @@ const handleRequest = (method: string, params: any) => {
     }
 
     default:
-      throw new Error('Method not found: ' + method);
+      throw new MethodNotFound(method);
   }
 };
 
@@ -317,25 +352,26 @@ const handleNotification = (method: string, params: any) => {
       return;
     }
     case 'textDocument/didClose':
+      removeFile(params.textDocument.uri);
       return;
     default:
       return;
   }
 };
 
-self.addEventListener('message', (e: MessageEvent) => {
+self.addEventListener('message', async (e: MessageEvent) => {
   const msg = e.data;
   if (msg.id !== undefined && msg.method) {
     try {
-      const result = handleRequest(msg.method, msg.params);
+      const result = await handleRequest(msg.method, msg.params);
       self.postMessage({ jsonrpc: '2.0', id: msg.id, result });
-    } catch (err: any) {
+    } catch (err) {
       self.postMessage({
         jsonrpc: '2.0',
         id: msg.id,
         error: {
-          code: err?.message?.startsWith('Method not found') ? -32601 : -32603,
-          message: err?.message ?? 'Internal error',
+          code: err instanceof MethodNotFound ? -32601 : -32603,
+          message: err instanceof Error ? err.message : 'Internal error',
         },
       });
     }

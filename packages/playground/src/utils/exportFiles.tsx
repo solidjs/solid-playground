@@ -50,11 +50,6 @@ const indexHTML = (tabs: Tab[]) => dedent`
 </html>
 `;
 
-/**
- * This function will calculate the dependencies of the
- * package.json by using the imports list provided by the bundler,
- * and then generating the package.json itself, for the export
- */
 function packageJSON(imports: string[]): string {
   const deps = imports.reduce(
     (acc, importPath): Record<string, string> => {
@@ -82,15 +77,10 @@ function packageJSON(imports: string[]): string {
   );
 }
 
-/**
- * This function will convert the tabs of the playground
- * into a ZIP formatted playground that can then be reimported later on
- */
 export async function exportToZip(tabs: Tab[]): Promise<void> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
-  // basic structure
   zip.file('index.html', indexHTML(tabs));
   zip.file('vite.config.ts', viteConfigFile);
   zip.file('tsconfig.json', tsConfig);

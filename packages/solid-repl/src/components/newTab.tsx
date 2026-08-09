@@ -17,6 +17,7 @@ import { IconButton } from './ui/IconButton';
 import { Label } from './ui/Label';
 import { useMenu } from './ui/Menu';
 import { css, cx } from 'styled-system/css';
+import type { IconPath } from './ui/icon';
 
 interface NewTabProps {
   tabs: Tab[];
@@ -33,7 +34,7 @@ type Item = {
   type: 'pane' | 'file' | 'action' | 'new';
   id: string;
   label: string;
-  icon: any;
+  icon: IconPath;
   globalIndex: number;
 };
 
@@ -322,10 +323,9 @@ const ItemRow: Component<{
           <Show when={isFile && !props.isActive() && !props.isRenaming()}>
             <span onClick={(e) => e.stopPropagation()}>
               <IconButton
-                {...(api().getTriggerProps() as any)}
+                {...api().getTriggerProps()}
                 icon={ellipsisHorizontal}
                 class={cx('menu-trigger', css({ p: 1 }))}
-                size="sm"
               />
             </span>
           </Show>

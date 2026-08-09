@@ -15,6 +15,7 @@ export interface TypescriptSession {
   client: LSPClient;
   worker: Worker;
   getDiagnostics(uri: string, view: EditorView): Promise<Diagnostic[]>;
+  syncTypes(importMap: Record<string, string>): Promise<boolean>;
 }
 
 export function createTypescriptSession(): TypescriptSession {
@@ -39,6 +40,13 @@ export function createTypescriptSession(): TypescriptSession {
           source: 'typescript',
         };
       });
+    },
+    async syncTypes(importMap) {
+      const res = await client.request<{ importMap: Record<string, string> }, { changed: boolean }>(
+        'playground/syncTypes',
+        { importMap },
+      );
+      return !!res?.changed;
     },
   };
 }

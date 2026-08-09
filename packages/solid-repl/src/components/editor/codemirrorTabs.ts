@@ -7,8 +7,9 @@ import {
   lineNumbers,
   highlightActiveLine,
   highlightActiveLineGutter,
+  type KeyBinding,
 } from '@codemirror/view';
-import { EditorSelection, EditorState, Compartment, type Extension } from '@codemirror/state';
+import { EditorSelection, EditorState, Compartment, StateEffect, type Extension } from '@codemirror/state';
 import { history } from '@codemirror/commands';
 import { bracketMatching, codeFolding, foldGutter, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
@@ -16,29 +17,35 @@ import { highlightSelectionMatches, search } from '@codemirror/search';
 import { forceLinting, lintGutter, linter, type Diagnostic } from '@codemirror/lint';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 import { json } from '@codemirror/lang-json';
-import type { EditorPersistedState, Tab } from 'solid-repl';
+import type { EditorPersistedState } from 'solid-repl';
 
 import { typescript, typescriptLspExtras, typescriptLspTheme } from './typescriptLsp';
 import { createTypescriptSession, type TypescriptSession } from './setupTypescript';
 import { darkTheme, lightTheme, darkHighlightStyle, lightHighlightStyle } from './themes';
+import type { WorkerClient } from '../../kernel/workerClient';
+import type { FileEntry, Workspace } from '../../kernel/workspace';
 
 export interface CodemirrorTabsOptions {
+  workspace: Workspace;
   isDark: () => boolean;
   fontSize: () => number;
   displayErrors: () => boolean;
-  formatter?: Worker;
-  linter?: Worker;
+  formatter?: WorkerClient;
+  linter?: WorkerClient;
+  keyBindings?: KeyBinding[];
   onUserEdit?: () => void;
-  onDocChange?: (uri: string, tab: Tab) => void;
-  loadEditorState?: (uri: string) => EditorPersistedState | undefined;
-  saveEditorState?: (uri: string, state: EditorPersistedState | null) => void;
+  onDocChange?: (fileId: string, source: string) => void;
+  loadEditorState?: (fileId: string) => EditorPersistedState | undefined;
+  saveEditorState?: (fileId: string, state: EditorPersistedState | null) => void;
 }
 
 interface TabLookup {
   view: EditorView;
   themeCompartment: Compartment;
   fontCompartment: Compartment;
-  attach: (parent: HTMLElement) => void;
+  languageCompartment: Compartment;
+  languageUri: string | undefined;
+  attach: (parent: HTMLElement, focus?: boolean) => void;
   destroy: () => void;
 }
 
@@ -56,12 +63,13 @@ export interface OutputView {
 }
 
 export interface CodemirrorTabs {
-  attach(uri: string, parent: HTMLElement): void;
-  setSource(uri: string, source: string): void;
-  format(uri: string): void;
-  fix(uri: string): void;
-  getView(uri: string): EditorView | undefined;
+  attach(fileId: string, parent: HTMLElement, focus?: boolean): void;
+  setSource(fileId: string, source: string): void;
+  format(fileId: string): Promise<void>;
+  fix(fileId: string): Promise<void>;
+  getView(fileId: string): EditorView | undefined;
   ensureOutputView(): OutputView;
+  syncTypes(importMap: Record<string, string>): void;
   session: TypescriptSession;
 }
 
@@ -121,23 +129,11 @@ const buildLanguageExtension = (uri: string, session: TypescriptSession): Extens
   return [];
 };
 
-let nextRequestId = 0;
-const lintWorkerRequest = (
-  worker: Worker,
-  event: 'LINT' | 'FIX',
-  code: string,
-): Promise<{ markers: LintMarker[]; output?: string; fixed?: boolean }> => {
-  const id = ++nextRequestId;
-  return new Promise((resolve) => {
-    const onMessage = ({ data }: MessageEvent) => {
-      if (data.id !== id) return;
-      worker.removeEventListener('message', onMessage);
-      resolve({ markers: data.markers ?? [], output: data.output, fixed: data.fixed });
-    };
-    worker.addEventListener('message', onMessage);
-    worker.postMessage({ event, id, code });
-  });
-};
+interface LintResponse {
+  markers?: LintMarker[];
+  output?: string;
+  fixed?: boolean;
+}
 
 interface LintMarker {
   startLineNumber: number;
@@ -165,48 +161,43 @@ const markersToDiagnostics = (view: EditorView, markers: LintMarker[]): Diagnost
   });
 };
 
-const buildLintExtension = (uri: string, session: TypescriptSession, opts: CodemirrorTabsOptions): Extension => {
-  const ext = fileExtension(uri);
-  const isTs = tsExts.has(ext);
-  if (!isTs && !opts.linter) return [];
+// `forceLinting` only flushes an already-pending lint; the linter treats this effect as a
+// reason to re-run after a type sync, which doesn't touch the document.
+const typesRefreshed = StateEffect.define<null>();
 
-  return [
-    linter(
-      async (view) => {
-        if (!opts.displayErrors()) return [];
-        const diagnostics: Diagnostic[] = [];
-        if (isTs) {
-          session.client.sync();
-          diagnostics.push(...(await session.getDiagnostics(uri, view)));
-        }
-        if (isTs && opts.linter) {
-          const { markers } = await lintWorkerRequest(opts.linter, 'LINT', view.state.doc.toString());
-          diagnostics.push(...markersToDiagnostics(view, markers));
-        }
-        return diagnostics;
-      },
-      { delay: 250 },
-    ),
-    lintGutter(),
-  ];
-};
-
-const formatRequest = (worker: Worker, code: string): Promise<string | null> =>
-  new Promise((resolve) => {
-    const onMessage = ({ data }: MessageEvent) => {
-      if (data.event !== 'FORMAT') return;
-      worker.removeEventListener('message', onMessage);
-      resolve(typeof data.code === 'string' ? data.code : null);
-    };
-    worker.addEventListener('message', onMessage);
-    worker.postMessage({ event: 'FORMAT', code });
-  });
-
-export const createCodemirrorTabs = (
-  folder: string,
-  tabs: () => Tab[],
+const buildLintExtension = (
+  currentUri: () => string | undefined,
+  session: TypescriptSession,
   opts: CodemirrorTabsOptions,
-): CodemirrorTabs => {
+): Extension => [
+  linter(
+    async (view) => {
+      if (!opts.displayErrors()) return [];
+      const uri = currentUri();
+      if (!uri) return [];
+      const isTs = tsExts.has(fileExtension(uri));
+      if (!isTs && !opts.linter) return [];
+
+      const diagnostics: Diagnostic[] = [];
+      if (isTs) {
+        session.client.sync();
+        diagnostics.push(...(await session.getDiagnostics(uri, view)));
+      }
+      if (isTs) {
+        const res = await opts.linter?.tryRequest<LintResponse>('LINT', { code: view.state.doc.toString() });
+        diagnostics.push(...markersToDiagnostics(view, res?.markers ?? []));
+      }
+      return diagnostics;
+    },
+    {
+      delay: 250,
+      needsRefresh: (update) => update.transactions.some((tr) => tr.effects.some((e) => e.is(typesRefreshed))),
+    },
+  ),
+  lintGutter(),
+];
+
+export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions): CodemirrorTabs => {
   const session = createTypescriptSession();
   let outputEntry: (OutputEntry & { wrapper: OutputView }) | undefined;
 
@@ -216,34 +207,27 @@ export const createCodemirrorTabs = (
   };
 
   const formatView = async (view: EditorView) => {
-    if (!opts.formatter) return;
-    const formatted = await formatRequest(opts.formatter, view.state.doc.toString());
-    if (formatted != null) replaceDoc(view, formatted);
+    const res = await opts.formatter?.tryRequest<{ code?: string }>('FORMAT', {
+      code: view.state.doc.toString(),
+    });
+    if (typeof res?.code === 'string') replaceDoc(view, res.code);
   };
 
   const fixView = async (view: EditorView) => {
-    if (!opts.linter || !opts.displayErrors()) return;
-    const code = view.state.doc.toString();
-    const { output, fixed } = await lintWorkerRequest(opts.linter, 'FIX', code);
-    if (fixed && typeof output === 'string') replaceDoc(view, output);
+    if (!opts.displayErrors()) return;
+    const res = await opts.linter?.tryRequest<LintResponse>('FIX', { code: view.state.doc.toString() });
+    if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
   };
 
-  const saveKeymap = keymap.of([
-    {
-      key: 'Mod-s',
-      preventDefault: true,
-      run(view) {
-        formatView(view).then(() => fixView(view));
-        return true;
-      },
-    },
-  ]);
+  const workspace = opts.workspace;
 
-  const buildLookup = (uri: string, tab: Tab): TabLookup => {
+  const buildLookup = (fileId: string, initialSource: string): TabLookup => {
     const themeCompartment = new Compartment();
     const fontCompartment = new Compartment();
-    const saved = opts.loadEditorState?.(uri);
-    const docLength = tab.source.length;
+    const languageCompartment = new Compartment();
+
+    const saved = opts.loadEditorState?.(fileId);
+    const docLength = initialSource.length;
     const selection = saved
       ? EditorSelection.single(Math.min(saved.anchor, docLength), Math.min(saved.head, docLength))
       : undefined;
@@ -252,7 +236,7 @@ export const createCodemirrorTabs = (
     let lastTopPos = initialTopPos;
 
     const writeState = () => {
-      opts.saveEditorState?.(uri, {
+      opts.saveEditorState?.(fileId, {
         anchor: view.state.selection.main.anchor,
         head: view.state.selection.main.head,
         topPos: lastTopPos,
@@ -260,28 +244,26 @@ export const createCodemirrorTabs = (
     };
     const persist = throttle(writeState, 500);
 
+    const currentUri = () => workspace.uriOf(fileId);
+
     const view = new EditorView({
       state: EditorState.create({
-        doc: tab.source,
+        doc: initialSource,
         selection,
         extensions: [
           baseExtensions(),
-          saveKeymap,
+          keymap.of(opts.keyBindings ?? []),
           themeCompartment.of(themeExtensions(opts.isDark())),
           fontCompartment.of(fontExtension(opts.fontSize())),
-          buildLintExtension(uri, session, opts),
-          buildLanguageExtension(uri, session),
+          buildLintExtension(currentUri, session, opts),
+          languageCompartment.of(buildLanguageExtension(currentUri() ?? '', session)),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) {
-              const next = u.state.doc.toString();
-              if (tab.source !== next) {
-                tab.source = next;
-                opts.onDocChange?.(uri, tab);
-                const userEdit = u.transactions.some(
-                  (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
-                );
-                if (userEdit) opts.onUserEdit?.();
-              }
+              opts.onDocChange?.(fileId, u.state.doc.toString());
+              const userEdit = u.transactions.some(
+                (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
+              );
+              if (userEdit) opts.onUserEdit?.();
             }
             if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
               lastTopPos = u.view.viewport.from;
@@ -299,12 +281,14 @@ export const createCodemirrorTabs = (
       view,
       themeCompartment,
       fontCompartment,
-      attach(parent) {
+      languageCompartment,
+      languageUri: currentUri(),
+      attach(parent, focus = true) {
         parent.appendChild(view.dom);
         if (lastTopPos > 0) {
           view.dispatch({ effects: EditorView.scrollIntoView(lastTopPos, { y: 'start' }) });
         }
-        if (!view.state.readOnly) view.focus();
+        if (focus && !view.state.readOnly) view.focus();
       },
       destroy: () => {
         writeState();
@@ -318,62 +302,66 @@ export const createCodemirrorTabs = (
 
   const isTsLikeUri = (uri: string) => tsExts.has(fileExtension(uri));
 
-  const tabsByUri = createMemo<Map<string, Tab>>(() => {
-    const next = new Map<string, Tab>();
-    for (const tab of tabs()) {
-      next.set(`file:///${folder}/${tab.name}`, tab);
-    }
+  const sync = createMemo(() => {
+    const files = workspace.files();
+    const liveIds = new Set(files.map((f) => f.id));
+    const liveUris = new Map<string, FileEntry>(files.map((f) => [`file:///${folder}/${f.name}`, f]));
 
-    for (const [uri, lookup] of lookups) {
-      if (!next.has(uri)) {
+    for (const [id, lookup] of lookups) {
+      if (!liveIds.has(id)) {
         lookup.destroy();
-        lookups.delete(uri);
+        lookups.delete(id);
+        opts.saveEditorState?.(id, null);
       }
     }
-    for (const uri of registered.keys()) {
-      if (!next.has(uri)) {
+
+    for (const uri of [...registered.keys()]) {
+      if (!liveUris.has(uri)) {
         session.worker.postMessage({
           method: 'textDocument/didClose',
           params: { textDocument: { uri } },
         });
         registered.delete(uri);
-        opts.saveEditorState?.(uri, null);
       }
     }
 
-    // eagerly sync tab contents to the worker so cross-file imports resolve
-    // even when no editor is mounted for that file
-    for (const [uri, tab] of next) {
+    for (const [uri, file] of liveUris) {
       if (!isTsLikeUri(uri)) continue;
-      const known = registered.get(uri);
-      if (known === tab.source) continue;
+      if (registered.get(uri) === file.source) continue;
       const isOpen = registered.has(uri);
-      registered.set(uri, tab.source);
+      registered.set(uri, file.source);
       session.worker.postMessage(
         isOpen
           ? {
               method: 'textDocument/didChange',
-              params: { textDocument: { uri, version: 0 }, contentChanges: [{ text: tab.source }] },
+              params: { textDocument: { uri, version: 0 }, contentChanges: [{ text: file.source }] },
             }
           : {
               method: 'textDocument/didOpen',
-              params: { textDocument: { uri, languageId: 'typescript', version: 0, text: tab.source } },
+              params: { textDocument: { uri, languageId: 'typescript', version: 0, text: file.source } },
             },
       );
     }
 
-    return next;
+    return files;
   });
 
-  const ensureLookup = (uri: string): TabLookup | undefined => {
-    const tab = tabsByUri().get(uri);
-    if (!tab) return undefined;
-    let lookup = lookups.get(uri);
+  const ensureLookup = (fileId: string): TabLookup | undefined => {
+    const file = sync().find((f) => f.id === fileId);
+    if (!file) return undefined;
+    let lookup = lookups.get(fileId);
     if (lookup) return lookup;
-    lookup = buildLookup(uri, tab);
-    lookups.set(uri, lookup);
+    lookup = buildLookup(fileId, file.source);
+    lookups.set(fileId, lookup);
     return lookup;
   };
+
+  createEffect(() => {
+    for (const file of sync()) {
+      const lookup = lookups.get(file.id);
+      if (lookup) replaceDoc(lookup.view, file.source);
+    }
+  });
 
   createEffect(() => {
     const ext = themeExtensions(opts.isDark());
@@ -392,6 +380,20 @@ export const createCodemirrorTabs = (
     }
     if (outputEntry) {
       outputEntry.view.dispatch({ effects: outputEntry.fontCompartment.reconfigure(ext) });
+    }
+  });
+
+  createEffect(() => {
+    for (const file of workspace.files()) {
+      const lookup = lookups.get(file.id);
+      if (!lookup) continue;
+      const uri = `file:///${folder}/${file.name}`;
+      if (lookup.languageUri === uri) continue;
+      lookup.languageUri = uri;
+      lookup.view.dispatch({
+        effects: lookup.languageCompartment.reconfigure(buildLanguageExtension(uri, session)),
+      });
+      forceLinting(lookup.view);
     }
   });
 
@@ -441,27 +443,38 @@ export const createCodemirrorTabs = (
   };
 
   return {
-    attach(uri, parent) {
-      ensureLookup(uri)?.attach(parent);
+    attach(fileId, parent, focus) {
+      ensureLookup(fileId)?.attach(parent, focus);
     },
-    setSource(uri, source) {
-      const lookup = lookups.get(uri);
+    setSource(fileId, source) {
+      const lookup = lookups.get(fileId);
       if (lookup) replaceDoc(lookup.view, source);
     },
-    format(uri) {
-      const view = lookups.get(uri)?.view;
-      if (view) formatView(view);
+    async format(fileId) {
+      const view = lookups.get(fileId)?.view;
+      if (view) await formatView(view);
     },
-    fix(uri) {
-      const view = lookups.get(uri)?.view;
-      if (view) fixView(view);
+    async fix(fileId) {
+      const view = lookups.get(fileId)?.view;
+      if (view) await fixView(view);
     },
-    getView(uri) {
-      return lookups.get(uri)?.view;
+    getView(fileId) {
+      return lookups.get(fileId)?.view;
     },
     ensureOutputView() {
       if (!outputEntry) outputEntry = buildOutput();
       return outputEntry.wrapper;
+    },
+    syncTypes(importMap) {
+      session
+        .syncTypes(importMap)
+        .then((changed) => {
+          if (!changed) return;
+          for (const lookup of lookups.values()) {
+            lookup.view.dispatch({ effects: typesRefreshed.of(null) });
+          }
+        })
+        .catch((e) => console.warn('[solid-repl] type acquisition failed', e));
     },
     session,
   };

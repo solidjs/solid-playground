@@ -26,6 +26,8 @@ export default defineConfig((env) => ({
     },
   },
   worker: {
+    // The compiler worker imports babel-preset-solid at runtime; iife workers can't do that.
+    format: 'es',
     rolldownOptions: {
       output: {
         entryFileNames: `assets/[name].js`,

@@ -39,14 +39,8 @@ const dispatchZoomKeyToParent = `
   }, true);
 `;
 
-// Sandboxed iframes get a unique opaque origin, which causes two problems for chobitsu:
-//   1. localStorage / sessionStorage throw on access (opaque origins have no storage).
-//   2. chobitsu's getUrl()/getOrigin() fall back to parent.location.{href,origin} for
-//      "about:" / "null"-origin pages, and that read is cross-origin and throws — which
-//      blanks out Page.getResourceTree, so chii's Sources panel stays empty.
-// We install in-memory storage shims and replace `parent` with a thin object that returns
-// the iframe's own location while forwarding postMessage to the real parent (so we can
-// still talk to the playground).
+// Opaque-origin iframe: storage access throws, and chobitsu's getUrl() falls back to a
+// cross-origin parent.location read that blanks chii's Sources panel.
 const sandboxShim = `
   (() => {
     const make = () => {
@@ -261,9 +255,16 @@ export const Preview: Component<Props> = (props) => {
   let devtoolsLoaded = false;
   let isIframeReady = false;
 
-  const sendToIframe = (msg: any) => {
+  type PreviewMessage =
+    | { event: 'LOADED' }
+    | { event: 'PAGE_SOURCE'; value: string }
+    | { event: 'IMPORT_MAP'; value: Record<string, string> }
+    | { event: 'CODE_UPDATE'; value: Record<string, string> }
+    | { event: 'DARK'; value: boolean };
+
+  const sendToIframe = (msg: PreviewMessage) => {
     if (!isIframeReady) return;
-    iframe.contentWindow!.postMessage(msg, '*');
+    iframe.contentWindow?.postMessage(msg, '*');
   };
 
   const devtoolsSrc = useDevtoolsSrc();
@@ -323,19 +324,25 @@ export const Preview: Component<Props> = (props) => {
       component: 'preview',
       minimumSize: 100,
     });
-    splitview.addPanel({
-      id: 'devtools',
-      component: 'devtools',
-      minimumSize: 100,
-      snap: true,
-    });
+    if (props.devtools) {
+      splitview.addPanel({
+        id: 'devtools',
+        component: 'devtools',
+        minimumSize: 100,
+        snap: true,
+      });
+    }
 
     createEffect(() => {
       sendToIframe({ event: 'DARK', value: props.isDark });
     });
 
     createEffect(() => {
-      sendToIframe({ event: 'IMPORT_MAP', value: props.importMap });
+      void props.importMap;
+      if (!isIframeReady) return;
+      // A changed import map only takes effect in a fresh document.
+      isIframeReady = false;
+      iframe.srcdoc = iframeHtml;
     });
 
     createEffect(() => {
@@ -348,6 +355,7 @@ export const Preview: Component<Props> = (props) => {
         document.dispatchEvent(new KeyboardEvent('keydown', event.data.value));
         return;
       }
+      if (!devtoolsIframe) return;
       if (event.source === iframe.contentWindow) {
         devtoolsIframe.contentWindow!.postMessage(event.data, '*');
       }
