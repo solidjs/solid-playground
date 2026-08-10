@@ -187,10 +187,9 @@ export const Edit = () => {
     if (changed) trueSetTabs(current.slice());
   };
 
-  const changeSolidVersion = async (version: string) => {
+  const changeSolidVersion = (version: string) => {
     setSolidVersion(version);
     localStorage.setItem('solidVersion', version);
-    migrateTabs((await resolveSolidVersion(version)) || undefined);
   };
 
   context.setTabs(tabs);
@@ -226,6 +225,11 @@ export const Edit = () => {
       return output;
     },
   );
+
+  createEffect(() => {
+    if (resolvedSolidVersion.loading || !resource()) return;
+    migrateTabs(resolvedSolidVersion() || undefined);
+  });
 
   const reset = () => {
     setTabs(mapTabs(defaultTabs));

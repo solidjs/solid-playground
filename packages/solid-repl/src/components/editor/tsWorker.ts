@@ -19,6 +19,11 @@ const compilerOptions: CompilerOptions = {
   allowNonTsExtensions: true,
 };
 
+const completionPreferences = {
+  includeCompletionsForModuleExports: true,
+  includeCompletionsForImportStatements: true,
+} satisfies ts.UserPreferences;
+
 const tsLibs = import.meta.glob<string>(
   [
     '/node_modules/typescript/lib/lib.*.d.ts',
@@ -100,6 +105,35 @@ const positionConverters = (env: VirtualTypeScriptEnvironment, uri: string) => {
   };
 };
 
+const completionDetails = (uri: string, offset: number, entry: ts.CompletionEntry) =>
+  env.languageService.getCompletionEntryDetails(
+    uri,
+    offset,
+    entry.name,
+    {},
+    entry.source,
+    completionPreferences,
+    entry.data,
+  );
+
+const completionActionEdits = (uri: string, details: ts.CompletionEntryDetails | undefined) => {
+  if (!details?.codeActions) return [];
+  const { offsetToPos } = positionConverters(env, uri);
+  return details.codeActions.flatMap((action) =>
+    action.changes.flatMap((change) =>
+      change.fileName === uri
+        ? change.textChanges.map(({ span, newText }) => ({
+            range: {
+              start: offsetToPos(span.start),
+              end: offsetToPos(span.start + span.length),
+            },
+            newText,
+          }))
+        : [],
+    ),
+  );
+};
+
 const ensureFile = (uri: string, text: string) => {
   openDocs.set(uri, text);
   const existing = env.getSourceFile(uri);
@@ -141,16 +175,26 @@ const handleRequest = (method: string, params: any) => {
       const uri = params.textDocument.uri;
       const { posToOffset } = positionConverters(env, uri);
       const offset = posToOffset(params.position);
-      const completions = env.languageService.getCompletionsAtPosition(uri, offset, {});
+      const completions = env.languageService.getCompletionsAtPosition(uri, offset, completionPreferences);
       if (!completions) return null;
+      const prefix = openDocs.get(uri)?.slice(0, offset).match(/[\w$]+$/)?.[0].toLowerCase();
       return {
         isIncomplete: !!completions.isIncomplete,
-        items: completions.entries.map((c) => ({
-          label: c.name,
-          kind: completionItemKind[c.kind] ?? 1,
-          sortText: c.sortText,
-          data: { uri, offset, name: c.name, source: c.source },
-        })),
+        items: completions.entries.map((c) => {
+          const details =
+            c.hasAction && prefix && c.name.toLowerCase().startsWith(prefix)
+              ? completionDetails(uri, offset, c)
+              : undefined;
+          const additionalTextEdits = completionActionEdits(uri, details);
+          return {
+            label: c.name,
+            kind: completionItemKind[c.kind] ?? 1,
+            sortText: c.sortText,
+            insertText: c.insertText,
+            additionalTextEdits: additionalTextEdits.length ? additionalTextEdits : undefined,
+            data: { uri, offset, name: c.name, source: c.source, entryData: c.data },
+          };
+        }),
       };
     }
 
@@ -163,8 +207,8 @@ const handleRequest = (method: string, params: any) => {
         data.name,
         {},
         data.source,
-        undefined,
-        undefined,
+        completionPreferences,
+        data.entryData,
       );
       if (!details) return params;
       const detail = displayPartsToString(details.displayParts);

@@ -1,6 +1,6 @@
 import { Component, For, JSX, Show, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { Icon } from 'solid-heroicons';
-import { plus, xMark } from 'solid-heroicons/outline';
+import { arrowPath, plus, xMark } from 'solid-heroicons/outline';
 import { NewTab } from './newTab';
 import { ImportMapPanel } from './importMapPanel';
 import Editor from './editor';
@@ -15,6 +15,7 @@ interface MobileReplProps {
   onPreviewOpen: (open: boolean) => void;
   onOutputOpen: (open: boolean) => void;
   onActiveFile: (id: string) => void;
+  onRefreshPreview: () => void;
 }
 
 const CARD_SCALE = 0.7;
@@ -367,6 +368,12 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
             {activeId() ? labelOf(activeId()!) : ''}
           </Show>
         </div>
+        <Show when={!switcher() && activeId() === 'Preview'}>
+          <button class={barButton} onClick={props.onRefreshPreview} title="Refresh preview">
+            <Icon path={arrowPath} class={css({ h: 5, w: 5 })} />
+            <span class={css({ srOnly: true })}>Refresh preview</span>
+          </button>
+        </Show>
         <button
           class={tabCount}
           classList={{ [tabCountActive]: switcher() }}

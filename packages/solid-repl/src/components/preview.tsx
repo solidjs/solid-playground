@@ -269,6 +269,12 @@ export const Preview: Component<Props> = (props) => {
     iframe.contentWindow?.postMessage(msg, '*');
   };
 
+  const refreshPreview = () => {
+    if (!iframe) return;
+    isIframeReady = false;
+    iframe.srcdoc = iframeHtml;
+  };
+
   const devtoolsSrc = useDevtoolsSrc();
 
   const styleScale = () => {
@@ -343,8 +349,12 @@ export const Preview: Component<Props> = (props) => {
       void props.importMap;
       if (!isIframeReady) return;
       // A changed import map only takes effect in a fresh document.
-      isIframeReady = false;
-      iframe.srcdoc = iframeHtml;
+      refreshPreview();
+    });
+
+    createEffect(() => {
+      void props.refreshKey;
+      if (props.code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: props.code });
     });
 
     createEffect(() => {
@@ -389,4 +399,5 @@ type Props = {
   devtools: boolean;
   isDark: boolean;
   pointerEvents: boolean;
+  refreshKey: number;
 };

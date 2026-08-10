@@ -30,6 +30,7 @@ export interface CodemirrorTabsOptions {
   isDark: () => boolean;
   fontSize: () => number;
   displayErrors: () => boolean;
+  eslintEnabled?: () => boolean;
   formatter?: WorkerClient;
   linter?: WorkerClient;
   keyBindings?: KeyBinding[];
@@ -69,6 +70,7 @@ export interface CodemirrorTabs {
   fix(fileId: string): Promise<void>;
   getView(fileId: string): EditorView | undefined;
   ensureOutputView(): OutputView;
+  refreshDiagnostics(): void;
   syncTypes(importMap: Record<string, string>): void;
   session: TypescriptSession;
 }
@@ -183,7 +185,7 @@ const buildLintExtension = (
         session.client.sync();
         diagnostics.push(...(await session.getDiagnostics(uri, view)));
       }
-      if (isTs) {
+      if (isTs && (opts.eslintEnabled?.() ?? true)) {
         const res = await opts.linter?.tryRequest<LintResponse>('LINT', { code: view.state.doc.toString() });
         diagnostics.push(...markersToDiagnostics(view, res?.markers ?? []));
       }
@@ -214,7 +216,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
   };
 
   const fixView = async (view: EditorView) => {
-    if (!opts.displayErrors()) return;
+    if (!opts.displayErrors() || !(opts.eslintEnabled?.() ?? true)) return;
     const res = await opts.linter?.tryRequest<LintResponse>('FIX', { code: view.state.doc.toString() });
     if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
   };
@@ -464,6 +466,11 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
     ensureOutputView() {
       if (!outputEntry) outputEntry = buildOutput();
       return outputEntry.wrapper;
+    },
+    refreshDiagnostics() {
+      for (const lookup of lookups.values()) {
+        lookup.view.dispatch({ effects: typesRefreshed.of(null) });
+      }
     },
     syncTypes(importMap) {
       session

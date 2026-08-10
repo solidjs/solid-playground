@@ -38,7 +38,7 @@ import {
   themeAbyssSpaced,
 } from 'dockview-core';
 import { Icon } from 'solid-heroicons';
-import { plus, trash, xMark } from 'solid-heroicons/outline';
+import { arrowPath, plus, trash, xMark } from 'solid-heroicons/outline';
 import { css } from 'styled-system/css';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
 
@@ -128,6 +128,8 @@ export const Repl: ReplProps = (props) => {
 
   const [outputVisible, setOutputVisible] = createSignal(false);
   const [previewVisible, setPreviewVisible] = createSignal(false);
+  const [previewRefreshKey, setPreviewRefreshKey] = createSignal(0);
+  const refreshPreview = () => setPreviewRefreshKey((key) => key + 1);
   const importMap = createMemo(
     () => parseImportMap(props.tabs.find((tab) => tab.name === 'import_map.json')?.source),
     undefined,
@@ -176,6 +178,7 @@ export const Repl: ReplProps = (props) => {
     isDark: () => !!props.dark,
     fontSize: () => zoomState.fontSize,
     displayErrors,
+    eslintEnabled: () => !props.version || parseInt(props.version, 10) < 2,
     formatter,
     linter,
     keyBindings: keyBindingsOf(commands),
@@ -189,6 +192,11 @@ export const Repl: ReplProps = (props) => {
     },
     loadEditorState: (fileId) => props.storage?.getEditorState?.(fileId),
     saveEditorState: (fileId, state) => props.storage?.setEditorState?.(fileId, state),
+  });
+
+  createEffect(() => {
+    void props.version;
+    cmTabs.refreshDiagnostics();
   });
 
   const activeName = () => {
@@ -327,6 +335,7 @@ export const Repl: ReplProps = (props) => {
       devtools={!props.hideDevtools}
       isDark={props.dark}
       pointerEvents={interactive()}
+      refreshKey={previewRefreshKey()}
     />
   );
 
@@ -458,29 +467,45 @@ export const Repl: ReplProps = (props) => {
             );
           }),
         createRightHeaderActionComponent: () => {
-          const [isTSX, setIsTSX] = createSignal(false);
+          const [activePanel, setActivePanel] = createSignal<string>();
+          const isTSX = () => {
+            const id = activePanel();
+            return !!id && !!workspace.nameOf(id)?.endsWith('.tsx');
+          };
 
           return solidPart<IGroupHeaderProps>(
             `${headerActions} ${css({ justifyContent: 'flex-end' })}`,
             () => (
-              <Show when={isTSX()}>
-                <IconButton
-                  icon={trash}
-                  class={css({ h: '28px' })}
-                  onClick={() => {
-                    if (!confirm('Are you sure you want to reset the editor?')) return;
-                    props.reset();
-                  }}
-                  title="Reset Editor"
-                >
-                  <span class={css({ srOnly: true })}>Reset Editor</span>
-                </IconButton>
-              </Show>
+              <>
+                <Show when={activePanel() === 'Preview'}>
+                  <IconButton
+                    icon={arrowPath}
+                    class={css({ h: '28px' })}
+                    onClick={refreshPreview}
+                    title="Refresh preview"
+                  >
+                    <span class={css({ srOnly: true })}>Refresh preview</span>
+                  </IconButton>
+                </Show>
+                <Show when={isTSX()}>
+                  <IconButton
+                    icon={trash}
+                    class={css({ h: '28px' })}
+                    onClick={() => {
+                      if (!confirm('Are you sure you want to reset the editor?')) return;
+                      props.reset();
+                    }}
+                    title="Reset Editor"
+                  >
+                    <span class={css({ srOnly: true })}>Reset Editor</span>
+                  </IconButton>
+                </Show>
+              </>
             ),
             (params) => {
+              setActivePanel(params.group.activePanel?.id);
               const disposable = params.group.api.onDidActivePanelChange((e) => {
-                if (!e) return;
-                setIsTSX(e.panel.id.endsWith('.tsx'));
+                setActivePanel(e?.panel.id);
               });
               return () => disposable.dispose();
             },
@@ -662,6 +687,7 @@ export const Repl: ReplProps = (props) => {
             onPreviewOpen={setPreviewVisible}
             onOutputOpen={setOutputVisible}
             onActiveFile={setActiveFileId}
+            onRefreshPreview={refreshPreview}
           />
         </Show>
         <Show when={error()}>
