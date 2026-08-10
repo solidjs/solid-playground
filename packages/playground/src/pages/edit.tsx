@@ -1,7 +1,7 @@
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import { createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { batch, createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
@@ -158,12 +158,11 @@ export const Edit = () => {
     }
     return localStorage.getItem(cacheKey) ?? '';
   };
-  const [resolvedSolidVersion] = createResource(solidVersion, resolveSolidVersion, {
-    initialValue:
-      storedVersion === 'next' || storedVersion === 'latest'
-        ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
-        : storedVersion,
-  });
+  const initialResolvedSolidVersion =
+    storedVersion === 'next' || storedVersion === 'latest'
+      ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
+      : storedVersion;
+  const [resolvedSolidVersion, setResolvedSolidVersion] = createSignal(initialResolvedSolidVersion);
 
   const migrateTabs = (version: string | undefined) => {
     const isV2 = isSolidV2(version);
@@ -187,9 +186,21 @@ export const Edit = () => {
     if (changed) trueSetTabs(current.slice());
   };
 
+  let solidVersionRequest = 0;
+  const applySolidVersion = async (version: string) => {
+    const request = ++solidVersionRequest;
+    const resolved = await resolveSolidVersion(version);
+    if (request !== solidVersionRequest || version !== solidVersion()) return;
+    batch(() => {
+      setResolvedSolidVersion(resolved);
+      migrateTabs(resolved || undefined);
+    });
+  };
+
   const changeSolidVersion = (version: string) => {
     setSolidVersion(version);
     localStorage.setItem('solidVersion', version);
+    void applySolidVersion(version);
   };
 
   context.setTabs(tabs);
@@ -221,15 +232,11 @@ export const Edit = () => {
       }
 
       setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
+      await applySolidVersion(solidVersion());
 
       return output;
     },
   );
-
-  createEffect(() => {
-    if (resolvedSolidVersion.loading || !resource()) return;
-    migrateTabs(resolvedSolidVersion() || undefined);
-  });
 
   const reset = () => {
     setTabs(mapTabs(defaultTabs));
