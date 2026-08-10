@@ -13,7 +13,7 @@ const shell = css({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  h: 'screen',
+  h: '100dvh',
   overflow: 'auto',
   fontFamily: 'sans',
   color: 'neutral.900',
