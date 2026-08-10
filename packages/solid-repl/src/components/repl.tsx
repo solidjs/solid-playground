@@ -1,4 +1,4 @@
-import { createSignal, createEffect, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
+import { createSignal, createEffect, createMemo, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { createMediaQuery } from '@solid-primitives/media';
 import { Preview } from './preview';
@@ -16,7 +16,14 @@ import { keyBindingsOf } from '../kernel/commands';
 import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
-import { isSolidV2, mergeImportMap, migrateWebImports } from '../kernel/importMap';
+import {
+  defaultUrl,
+  parseImportMap,
+  serializeImportMap,
+  syncEntries,
+  type ImportMapState,
+} from '../kernel/importMap';
+import { ImportMapPanel } from './importMapPanel';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
 
@@ -36,15 +43,6 @@ import { css } from 'styled-system/css';
 import '../../node_modules/dockview-core/dist/styles/dockview.css';
 
 const ENTRY_FILE = 'main.tsx';
-
-const getImportMap = (tabs: Tab[]): Record<string, string> => {
-  try {
-    const rawImportMap = tabs.find((tab) => tab.name === 'import_map.json');
-    return JSON.parse(rawImportMap?.source ?? '{}');
-  } catch {
-    return {};
-  }
-};
 
 const replHost = css({
   display: 'flex',
@@ -130,9 +128,24 @@ export const Repl: ReplProps = (props) => {
 
   const [outputVisible, setOutputVisible] = createSignal(false);
   const [previewVisible, setPreviewVisible] = createSignal(false);
-  const [importMap, setImportMap] = createSignal(getImportMap(props.tabs), {
-    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
-  });
+  const importMap = createMemo(
+    () => parseImportMap(props.tabs.find((tab) => tab.name === 'import_map.json')?.source),
+    undefined,
+    {
+      equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+    },
+  );
+
+  const writeImportMap = (state: ImportMapState) => {
+    const source = serializeImportMap(state);
+    const tab = props.tabs.find((tab) => tab.name === 'import_map.json');
+    if (!tab) {
+      props.setTabs(props.tabs.concat({ name: 'import_map.json', source }));
+    } else if (tab.source !== source) {
+      tab.source = source;
+      props.setTabs(props.tabs.slice());
+    }
+  };
 
   const [displayErrors, setDisplayErrors] = createSignal(true);
   const { zoomState } = useZoom();
@@ -172,14 +185,7 @@ export const Repl: ReplProps = (props) => {
       if (!file || file.source === source) return;
       const tab = props.tabs.find((t) => t.name === file.name);
       if (tab) tab.source = source;
-
-      if (file.name === 'import_map.json') {
-        try {
-          setImportMap(JSON.parse(source));
-        } catch {}
-      } else {
-        compile();
-      }
+      compile();
     },
     loadEditorState: (fileId) => props.storage?.getEditorState?.(fileId),
     saveEditorState: (fileId, state) => props.storage?.setEditorState?.(fileId, state),
@@ -190,10 +196,31 @@ export const Repl: ReplProps = (props) => {
     return id ? workspace.nameOf(id) : undefined;
   };
 
+  const editPackages = (edit: (state: ImportMapState) => ImportMapState) => {
+    props.onUserEdit?.();
+    writeImportMap(edit(importMap()));
+  };
+
   const api: ReplApi = {
     tabs: () => props.tabs,
     setTabs: props.setTabs,
     workspace,
+    importMap,
+    setPackageUrl: (name, url) =>
+      editPackages(({ imports, pinned }) => ({
+        imports: { ...imports, [name]: url },
+        pinned: pinned.includes(name) ? pinned : pinned.concat(name),
+      })),
+    addPackage: (name) =>
+      editPackages(({ imports, pinned }) => ({
+        imports: { ...imports, [name]: defaultUrl(name) },
+        pinned: pinned.concat(name),
+      })),
+    removePackage: (name) =>
+      editPackages(({ imports, pinned }) => {
+        const { [name]: _, ...rest } = imports;
+        return { imports: rest, pinned: pinned.filter((pkg) => pkg !== name) };
+      }),
     current: activeFileId,
     currentName: activeName,
     reset: () => props.reset(),
@@ -212,25 +239,19 @@ export const Repl: ReplProps = (props) => {
 
   interface RollupResult {
     compiled: Record<string, string>;
-    externals: Record<string, string>;
+    externals: string[];
   }
 
+  let syncedExternals: string | undefined;
   const applyRollupResult = ({ compiled, externals }: RollupResult) => {
     console.log(`Compilation took: ${performance.now() - now}ms`);
-    const merged = mergeImportMap(importMap(), externals);
-    const source = JSON.stringify(merged, null, 2);
-
+    const state = importMap();
+    const key = [...externals].sort().join(',');
     batch(() => {
       setOutput(compiled);
-      setImportMap(merged);
-
-      const tab = props.tabs.find((tab) => tab.name === 'import_map.json');
-      if (!tab) {
-        props.setTabs(props.tabs.concat({ name: 'import_map.json', source }));
-      } else if (tab.source !== source) {
-        tab.source = source;
-        const file = workspace.byName('import_map.json');
-        if (file) cmTabs.setSource(file.id, source);
+      if (key !== syncedExternals || externals.some((specifier) => !(specifier in state.imports))) {
+        syncedExternals = key;
+        writeImportMap(syncEntries(state, externals));
       }
     });
   };
@@ -290,24 +311,18 @@ export const Repl: ReplProps = (props) => {
   };
 
   createEffect(() => {
+    void props.version;
     if (!props.tabs.length) return;
-    for (const tab of userTabs()) {
-      const migrated = migrateWebImports(tab.source, isSolidV2(props.version));
-      if (migrated === tab.source) continue;
-      tab.source = migrated;
-      const file = workspace.byName(tab.name);
-      if (file) cmTabs.setSource(file.id, migrated);
-    }
     compile();
   });
 
-  createEffect(() => cmTabs.syncTypes(importMap()));
+  createEffect(() => cmTabs.syncTypes(importMap().imports));
 
   const isMobile = createMediaQuery('(max-width: 767px)');
 
   const previewSection = (interactive: () => boolean) => (
     <Preview
-      importMap={importMap()}
+      importMap={importMap().imports}
       code={output()}
       devtools={!props.hideDevtools}
       isDark={props.dark}
@@ -519,7 +534,12 @@ export const Repl: ReplProps = (props) => {
               );
               break;
             case 'editor':
-              component = (_, params) => <Editor fileId={params.api.id} />;
+              component = (_, params) =>
+                workspace.nameOf(params.api.id) === 'import_map.json' ? (
+                  <ImportMapPanel />
+                ) : (
+                  <Editor fileId={params.api.id} />
+                );
               break;
             case 'preview':
               setPreviewVisible(true);

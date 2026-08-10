@@ -2,6 +2,7 @@ import { createContext, useContext, type Accessor } from 'solid-js';
 import type { Tab } from 'solid-repl';
 import type { CodemirrorTabs } from './editor/codemirrorTabs';
 import type { Command } from '../kernel/commands';
+import type { ImportMapState } from '../kernel/importMap';
 import type { WorkerClient } from '../kernel/workerClient';
 import type { Workspace } from '../kernel/workspace';
 
@@ -9,6 +10,11 @@ export interface ReplApi {
   tabs: Accessor<Tab[]>;
   setTabs: (tabs: Tab[]) => void;
   workspace: Workspace;
+
+  importMap: Accessor<ImportMapState>;
+  setPackageUrl: (name: string, url: string) => void;
+  addPackage: (name: string) => void;
+  removePackage: (name: string) => void;
   current: Accessor<string | undefined>;
   currentName: Accessor<string | undefined>;
   reset: () => void;

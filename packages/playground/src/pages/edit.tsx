@@ -10,6 +10,8 @@ import { defaultTabs } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
+import { isSolidV2, migrateImportMap, migrateWebImports } from '../utils/importMap';
+import { parseImportMap, serializeImportMap } from 'solid-repl/src/kernel/importMap';
 import { Button } from 'solid-repl/src/components/ui/Button';
 import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
@@ -140,10 +142,6 @@ export const Edit = () => {
 
   const storedVersion = localStorage.getItem('solidVersion') ?? '';
   const [solidVersion, setSolidVersion] = createSignal(storedVersion);
-  const changeSolidVersion = (version: string) => {
-    setSolidVersion(version);
-    localStorage.setItem('solidVersion', version);
-  };
 
   const resolveSolidVersion = async (stored: string): Promise<string> => {
     if (stored !== 'next' && stored !== 'latest') return stored;
@@ -166,6 +164,35 @@ export const Edit = () => {
         ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
         : storedVersion,
   });
+
+  const migrateTabs = (version: string | undefined) => {
+    const isV2 = isSolidV2(version);
+    const current = tabs();
+    let changed = false;
+    for (const tab of current) {
+      if (tab.name === 'import_map.json') {
+        const migrated = migrateImportMap(parseImportMap(tab.source), version);
+        if (migrated) {
+          tab.source = serializeImportMap(migrated);
+          changed = true;
+        }
+        continue;
+      }
+      const migrated = migrateWebImports(tab.source, isV2);
+      if (migrated !== tab.source) {
+        tab.source = migrated;
+        changed = true;
+      }
+    }
+    if (changed) trueSetTabs(current.slice());
+  };
+
+  const changeSolidVersion = async (version: string) => {
+    setSolidVersion(version);
+    localStorage.setItem('solidVersion', version);
+    migrateTabs((await resolveSolidVersion(version)) || undefined);
+  };
+
   context.setTabs(tabs);
   onCleanup(() => context.setTabs(undefined));
 
@@ -301,7 +328,6 @@ export const Edit = () => {
   return (
     <>
       <Header
-        compiler={compiler}
         solidVersion={solidVersion()}
         onSolidVersionChange={changeSolidVersion}
         fork={() => {}}

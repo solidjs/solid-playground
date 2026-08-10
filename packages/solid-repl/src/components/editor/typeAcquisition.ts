@@ -23,31 +23,30 @@ const PACKAGE_PATH = /^(@[^@/]+\/[^@/]+|[^@/]+)(?:@([^/]+))?(\/.*)?$/;
 const EXACT_VERSION = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
 const DECLARATION_FILE = /\.d\.[cm]?ts$/;
 
-interface ParsedPath {
-  name: string;
-  version: string;
-  subpath: string;
-}
-
-const parsePackagePath = (path: string): ParsedPath | undefined => {
+const parsePackagePath = (path: string) => {
   const m = path.match(PACKAGE_PATH);
-  if (!m) return undefined;
-  return { name: m[1], version: m[2] ?? '', subpath: m[3] ?? '' };
+  return m ? { name: m[1], version: m[2] ?? '', subpath: m[3] ?? '' } : undefined;
 };
 
 const typesPackageFor = (name: string) =>
   name.startsWith('@') ? `@types/${name.slice(1).replace('/', '__')}` : `@types/${name}`;
 
-const fetchJson = async <T>(url: string): Promise<T> => {
+const fetchOk = async (url: string) => {
   const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
-  return res.json();
+  return res;
 };
+const fetchJson = <T>(url: string): Promise<T> => fetchOk(url).then((res) => res.json());
+const fetchText = (url: string) => fetchOk(url).then((res) => res.text());
 
-const fetchText = async (url: string): Promise<string> => {
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
-  if (!res.ok) throw new Error(`${res.status} ${url}`);
-  return res.text();
+const memo = <T>(cache: Map<string, Promise<T>>, key: string, make: () => Promise<T>): Promise<T> => {
+  let entry = cache.get(key);
+  if (!entry) {
+    entry = make();
+    entry.catch(() => cache.delete(key));
+    cache.set(key, entry);
+  }
+  return entry;
 };
 
 export interface TypeAcquisition {
@@ -61,47 +60,32 @@ export function createTypeAcquisition(fsMap: Map<string, string>): TypeAcquisiti
   const versionCache = new Map<string, Promise<string | undefined>>();
   const packageCache = new Map<string, Promise<PackageFiles>>();
 
-  const resolveVersion = (name: string, range: string): Promise<string | undefined> => {
-    if (EXACT_VERSION.test(range)) return Promise.resolve(range);
-    const key = `${name}@${range}`;
-    let cached = versionCache.get(key);
-    if (!cached) {
-      cached = fetchJson<{ version: string | null }>(
-        `https://data.jsdelivr.com/v1/package/resolved/npm/${name}${range ? `@${encodeURIComponent(range)}` : ''}`,
-      ).then(
-        (r) => r.version ?? undefined,
-        () => {
-          versionCache.delete(key);
-          return undefined;
-        },
-      );
-      versionCache.set(key, cached);
-    }
-    return cached;
-  };
+  const resolveVersion = (name: string, range: string) =>
+    EXACT_VERSION.test(range)
+      ? Promise.resolve(range)
+      : memo(versionCache, `${name}@${range}`, async () => {
+          const resolved = await fetchJson<{ version: string | null }>(
+            `https://data.jsdelivr.com/v1/packages/npm/${name}/resolved${range ? `?specifier=${encodeURIComponent(range)}` : ''}`,
+          );
+          return resolved.version ?? undefined;
+        });
 
-  const fetchPackage = (name: string, version: string): Promise<PackageFiles> => {
-    const key = `${name}@${version}`;
-    let cached = packageCache.get(key);
-    if (!cached) {
-      cached = (async (): Promise<PackageFiles> => {
-        const listing = await fetchJson<{ files: { name: string; size: number }[] }>(
-          `https://data.jsdelivr.com/v1/package/npm/${key}/flat`,
-        );
-        const wanted = listing.files
-          .filter((f) => (f.name === '/package.json' || DECLARATION_FILE.test(f.name)) && f.size <= MAX_FILE_SIZE)
-          .slice(0, MAX_FILES_PER_PACKAGE);
-        const files = new Map(
-          await Promise.all(
-            wanted.map(async (f) => [f.name, await fetchText(`https://cdn.jsdelivr.net/npm/${key}${f.name}`)] as const),
-          ),
-        );
-        return { version, files, hasTypes: wanted.some((f) => DECLARATION_FILE.test(f.name)) };
-      })();
-      cached.catch(() => packageCache.delete(key));
-      packageCache.set(key, cached);
-    }
-    return cached;
+  const fetchPackage = (name: string, version: string) => {
+    const spec = `${name}@${version}`;
+    return memo(packageCache, spec, async (): Promise<PackageFiles> => {
+      const listing = await fetchJson<{ files: { name: string; size: number }[] }>(
+        `https://data.jsdelivr.com/v1/package/npm/${spec}/flat`,
+      );
+      const wanted = listing.files
+        .filter((f) => (f.name === '/package.json' || DECLARATION_FILE.test(f.name)) && f.size <= MAX_FILE_SIZE)
+        .slice(0, MAX_FILES_PER_PACKAGE);
+      const files = new Map(
+        await Promise.all(
+          wanted.map(async (f) => [f.name, await fetchText(`https://cdn.jsdelivr.net/npm/${spec}${f.name}`)] as const),
+        ),
+      );
+      return { version, files, hasTypes: wanted.some((f) => DECLARATION_FILE.test(f.name)) };
+    });
   };
 
   // Dependency ranges must resolve against the pins — `^2.0.0-beta.29` would otherwise land
@@ -152,10 +136,10 @@ export function createTypeAcquisition(fsMap: Map<string, string>): TypeAcquisiti
       if (scheduled.has(name) || scheduled.size >= MAX_PACKAGES) return;
       scheduled.add(name);
 
-      const version = pins.get(name) ?? (await resolveVersion(name, range));
-      if (!version) return;
       let pkg: PackageFiles;
       try {
+        const version = pins.get(name) ?? (await resolveVersion(name, range));
+        if (!version) return;
         pkg = await fetchPackage(name, version);
       } catch {
         return;
@@ -182,23 +166,20 @@ export function createTypeAcquisition(fsMap: Map<string, string>): TypeAcquisiti
   };
 
   const apply = (packages: Map<string, PackageFiles>, aliases: AliasShim[]) => {
-    for (const key of [...fsMap.keys()]) {
+    for (const key of fsMap.keys()) {
       if (key.startsWith(MOUNT_PREFIX)) fsMap.delete(key);
     }
-    for (const [key, content] of bundled) fsMap.set(key, content);
-
+    for (const [key, content] of bundled) {
+      const pkg = parsePackagePath(key.slice(MOUNT_PREFIX.length));
+      if (!pkg || !packages.has(pkg.name)) fsMap.set(key, content);
+    }
     for (const [name, pkg] of packages) {
-      const prefix = `${MOUNT_PREFIX}${name}/`;
-      for (const key of [...fsMap.keys()]) {
-        if (key.startsWith(prefix)) fsMap.delete(key);
-      }
       for (const [path, content] of pkg.files) fsMap.set(`${MOUNT_PREFIX}${name}${path}`, content);
     }
 
     // solid 2.x dropped the ./web entry, so the re-export shim must also be patched into the
     // host's exports map or it never resolves.
     for (const { host, subpath, target } of aliases) {
-      if (!packages.has(host) || !subpath) continue;
       fsMap.set(`${MOUNT_PREFIX}${host}${subpath}.d.ts`, `export * from '${target}';\n`);
       const manifestKey = `${MOUNT_PREFIX}${host}/package.json`;
       try {
@@ -239,7 +220,7 @@ export function createTypeAcquisition(fsMap: Map<string, string>): TypeAcquisiti
       const packages = await collect(roots, pins);
       if (token !== syncToken) return false;
 
-      const liveAliases = aliases.filter((a) => packages.has(a.host));
+      const liveAliases = aliases.filter((a) => a.subpath && packages.has(a.host));
       const next = fingerprint(packages, liveAliases);
       if (next === applied) return false;
       apply(packages, liveAliases);

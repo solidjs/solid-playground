@@ -86,7 +86,6 @@ const loginLink = css({
 });
 
 export const Header: ParentComponent<{
-  compiler?: Worker;
   fork?: () => void;
   share: () => Promise<string>;
   solidVersion?: string;

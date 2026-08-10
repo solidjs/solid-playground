@@ -2,6 +2,7 @@ import { Component, For, JSX, Show, createEffect, createSignal, onCleanup, onMou
 import { Icon } from 'solid-heroicons';
 import { plus, xMark } from 'solid-heroicons/outline';
 import { NewTab } from './newTab';
+import { ImportMapPanel } from './importMapPanel';
 import Editor from './editor';
 import { useRepl } from './replContext';
 import { Button } from './ui/Button';
@@ -299,6 +300,7 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   const content = (id: string) => {
     if (id === 'Preview') return props.preview(() => !switcher() && activeId() === 'Preview');
     if (id === 'Output') return props.outputPane();
+    if (workspace.nameOf(id) === 'import_map.json') return <ImportMapPanel />;
     return <Editor fileId={id} autofocus={false} />;
   };
 

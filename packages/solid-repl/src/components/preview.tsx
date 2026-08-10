@@ -102,10 +102,12 @@ const mainIframeScript = `
       script.id = 'appsrc';
       script.type = 'module';
       finisher = () => {};
-      script.onload = () => {
+      const settle = () => {
         if (finisher) finisher();
         finisher = undefined;
       };
+      script.onload = settle;
+      script.onerror = settle;
       script.src = buildModule('./main', sources['./main'], sources);
       document.body.appendChild(script);
 

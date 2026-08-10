@@ -10,7 +10,6 @@ import babelSyntaxJsx from '@babel/plugin-syntax-jsx';
 import dd from 'dedent';
 
 import { serveWorker } from '../src/kernel/workerServer';
-import { moduleUrl, solidFamily } from '../src/kernel/importMap';
 import type { SolidCompileOptions } from '../src/components/CompileMode';
 
 // Stable preset patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.
@@ -41,20 +40,14 @@ function uid(str: string) {
     .toString();
 }
 
-function babelTransform(
-  filename: string,
-  code: string,
-  externals: Record<string, string>,
-  preset: object,
-  version: string | undefined,
-) {
+function babelTransform(filename: string, code: string, externals: Set<string>, preset: object) {
   const handleImportee = (node: Node | null | undefined) => {
     if (node?.type !== 'StringLiteral') return;
     const importee = node.value;
     if (importee.startsWith('.')) {
       node.value = 'solidrepl:' + importee;
     } else if (!importee.includes('://')) {
-      if (!(importee in externals)) externals[importee] = moduleUrl(importee, version);
+      externals.add(importee);
     }
   };
 
@@ -90,12 +83,7 @@ function babelTransform(
   return transformedCode!.replace('render(', 'window.dispose = render(');
 }
 
-function transformTab(
-  tab: Tab,
-  externals: Record<string, string>,
-  preset: object,
-  version: string | undefined,
-): string {
+function transformTab(tab: Tab, externals: Set<string>, preset: object): string {
   if (tab.name.endsWith('.css')) {
     const id = uid(tab.name);
     return dd`
@@ -112,21 +100,18 @@ function transformTab(
       })()
     `;
   }
-  return babelTransform(tab.name, tab.source, externals, preset, version);
+  return babelTransform(tab.name, tab.source, externals, preset);
 }
 
 async function compile(tabs: Tab[], version: string | undefined) {
   const preset = await loadPreset(version);
-  const externals: Record<string, string> = {};
+  const externals = new Set<string>();
   const compiled: Record<string, string> = {};
   for (const tab of tabs) {
     const key = `./${tab.name.replace(/\.(tsx|jsx)$/, '')}`;
-    compiled[key] = transformTab(tab, externals, preset, version);
+    compiled[key] = transformTab(tab, externals, preset);
   }
-  for (const pkg of solidFamily(version)) {
-    externals[pkg] ??= moduleUrl(pkg, version);
-  }
-  return { compiled, externals };
+  return { compiled, externals: [...externals] };
 }
 
 async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string | undefined) {
