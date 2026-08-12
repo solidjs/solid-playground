@@ -139,19 +139,47 @@ const handleRequest = (method: string, params: any) => {
 
     case 'textDocument/completion': {
       const uri = params.textDocument.uri;
-      const { posToOffset } = positionConverters(env, uri);
+      const { posToOffset, offsetToPos } = positionConverters(env, uri);
       const offset = posToOffset(params.position);
-      const completions = env.languageService.getCompletionsAtPosition(uri, offset, {});
+      const ls = env.languageService;
+      const completions = ls.getCompletionsAtPosition(uri, offset, { includeCompletionsForModuleExports: true });
       if (!completions) return null;
-      return {
-        isIncomplete: !!completions.isIncomplete,
-        items: completions.entries.map((c) => ({
-          label: c.name,
-          kind: completionItemKind[c.kind] ?? 1,
-          sortText: c.sortText,
-          data: { uri, offset, name: c.name, source: c.source },
-        })),
-      };
+
+      const toItem = (c: ts.CompletionEntry) => ({
+        label: c.name,
+        kind: completionItemKind[c.kind] ?? 1,
+        sortText: c.sortText,
+        data: { uri, offset, name: c.name, source: c.source },
+      });
+
+      // Auto-import entries must carry their import edit up front (the client never sends
+      // completionItem/resolve), so only a bounded, prefix-matched set of them is resolved.
+      const start = completions.optionalReplacementSpan?.start ?? offset;
+      const prefix = (openDocs.get(uri) ?? '').slice(start, offset).toLowerCase();
+      const autoImports = completions.entries
+        .filter(
+          (c) =>
+            c.source &&
+            c.hasAction &&
+            prefix.length >= 2 &&
+            c.name.toLowerCase().startsWith(prefix) &&
+            // solid-js re-exports the signals APIs; its internal type paths aren't importable
+            !/@solidjs\/signals|solid-js\/types\//.test(c.source),
+        )
+        .slice(0, 20)
+        .flatMap((c) => {
+          const details = ls.getCompletionEntryDetails(uri, offset, c.name, {}, c.source, undefined, c.data);
+          const change = details?.codeActions?.[0]?.changes.find((ch) => ch.fileName === uri);
+          const edits = change?.textChanges.map((tc) => ({
+            range: { start: offsetToPos(tc.span.start), end: offsetToPos(tc.span.start + tc.span.length) },
+            newText: tc.newText,
+          }));
+          return edits ? [{ ...toItem(c), additionalTextEdits: edits }] : [];
+        });
+
+      const plain = completions.entries.filter((c) => !c.source || !c.hasAction).map(toItem);
+      // Incomplete so the client re-queries as the word grows instead of filtering its first response.
+      return { isIncomplete: true, items: [...plain, ...autoImports] };
     }
 
     case 'completionItem/resolve': {
