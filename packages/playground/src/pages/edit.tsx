@@ -6,12 +6,10 @@ import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
-import { defaultTabs } from 'solid-repl/src';
+import { clearUnpinnedImports, defaultTabs } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
-import { isSolidV2, migrateImportMap, migrateWebImports } from '../utils/importMap';
-import { parseImportMap, serializeImportMap } from 'solid-repl/src/kernel/importMap';
 import { Button } from 'solid-repl/src/components/ui/Button';
 import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
@@ -166,19 +164,21 @@ export const Edit = () => {
   });
 
   const migrateTabs = (version: string | undefined) => {
-    const isV2 = isSolidV2(version);
+    const isV2 = !!version && parseInt(version, 10) >= 2;
     const current = tabs();
     let changed = false;
     for (const tab of current) {
       if (tab.name === 'import_map.json') {
-        const migrated = migrateImportMap(parseImportMap(tab.source), version);
+        const migrated = clearUnpinnedImports(tab.source);
         if (migrated) {
-          tab.source = serializeImportMap(migrated);
+          tab.source = migrated;
           changed = true;
         }
         continue;
       }
-      const migrated = migrateWebImports(tab.source, isV2);
+      const migrated = isV2
+        ? tab.source.replaceAll('solid-js/web', '@solidjs/web')
+        : tab.source.replaceAll('@solidjs/web', 'solid-js/web');
       if (migrated !== tab.source) {
         tab.source = migrated;
         changed = true;

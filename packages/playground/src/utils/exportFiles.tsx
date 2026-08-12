@@ -1,6 +1,6 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl';
-import { parseImportMap } from 'solid-repl/src/kernel/importMap';
+import { parseImportMap } from 'solid-repl/src';
 import dedent from 'dedent';
 
 const viteConfigFile = dedent`

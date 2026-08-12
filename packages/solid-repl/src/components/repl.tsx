@@ -1,4 +1,4 @@
-import { createSignal, createEffect, createMemo, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
+import { createSignal, createEffect, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { createMediaQuery } from '@solid-primitives/media';
 import { Preview } from './preview';
@@ -16,13 +16,7 @@ import { keyBindingsOf } from '../kernel/commands';
 import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
-import {
-  defaultUrl,
-  parseImportMap,
-  serializeImportMap,
-  syncEntries,
-  type ImportMapState,
-} from '../kernel/importMap';
+import { createImportMap } from '../kernel/importMap';
 import { ImportMapPanel } from './importMapPanel';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
@@ -120,7 +114,10 @@ export const Repl: ReplProps = (props) => {
   let now: number;
 
   const [error, setError] = createSignal('');
-  const [output, setOutput] = createSignal<Record<string, string>>({});
+  const [output, setOutput] = createSignal<Record<string, string>>(
+    {},
+    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+  );
   const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
   const [mode, setMode] = createSignal<(typeof compileOptions)[keyof typeof compileOptions]>(compileOptions.DOM);
 
@@ -128,24 +125,12 @@ export const Repl: ReplProps = (props) => {
 
   const [outputVisible, setOutputVisible] = createSignal(false);
   const [previewVisible, setPreviewVisible] = createSignal(false);
-  const importMap = createMemo(
-    () => parseImportMap(props.tabs.find((tab) => tab.name === 'import_map.json')?.source),
-    undefined,
-    {
-      equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
-    },
-  );
-
-  const writeImportMap = (state: ImportMapState) => {
-    const source = serializeImportMap(state);
-    const tab = props.tabs.find((tab) => tab.name === 'import_map.json');
-    if (!tab) {
-      props.setTabs(props.tabs.concat({ name: 'import_map.json', source }));
-    } else if (tab.source !== source) {
-      tab.source = source;
-      props.setTabs(props.tabs.slice());
-    }
-  };
+  const importMap = createImportMap({
+    tabs: () => props.tabs,
+    setTabs: props.setTabs,
+    version: () => props.version,
+    onEdit: () => props.onUserEdit?.(),
+  });
 
   const [displayErrors, setDisplayErrors] = createSignal(true);
   const { zoomState } = useZoom();
@@ -196,31 +181,14 @@ export const Repl: ReplProps = (props) => {
     return id ? workspace.nameOf(id) : undefined;
   };
 
-  const editPackages = (edit: (state: ImportMapState) => ImportMapState) => {
-    props.onUserEdit?.();
-    writeImportMap(edit(importMap()));
-  };
-
   const api: ReplApi = {
     tabs: () => props.tabs,
     setTabs: props.setTabs,
     workspace,
-    importMap,
-    setPackageUrl: (name, url) =>
-      editPackages(({ imports, pinned }) => ({
-        imports: { ...imports, [name]: url },
-        pinned: pinned.includes(name) ? pinned : pinned.concat(name),
-      })),
-    addPackage: (name) =>
-      editPackages(({ imports, pinned }) => ({
-        imports: { ...imports, [name]: defaultUrl(name) },
-        pinned: pinned.concat(name),
-      })),
-    removePackage: (name) =>
-      editPackages(({ imports, pinned }) => {
-        const { [name]: _, ...rest } = imports;
-        return { imports: rest, pinned: pinned.filter((pkg) => pkg !== name) };
-      }),
+    importMap: importMap.state,
+    setPackageUrl: importMap.setPackageUrl,
+    addPackage: importMap.addPackage,
+    removePackage: importMap.removePackage,
     current: activeFileId,
     currentName: activeName,
     reset: () => props.reset(),
@@ -242,17 +210,11 @@ export const Repl: ReplProps = (props) => {
     externals: string[];
   }
 
-  let syncedExternals: string | undefined;
   const applyRollupResult = ({ compiled, externals }: RollupResult) => {
     console.log(`Compilation took: ${performance.now() - now}ms`);
-    const state = importMap();
-    const key = [...externals].sort().join(',');
     batch(() => {
       setOutput(compiled);
-      if (key !== syncedExternals || externals.some((specifier) => !(specifier in state.imports))) {
-        syncedExternals = key;
-        writeImportMap(syncEntries(state, externals));
-      }
+      importMap.syncExternals(externals);
     });
   };
 
@@ -292,10 +254,13 @@ export const Repl: ReplProps = (props) => {
     }
   }, 250);
 
-  const compile = () => {
+  const compilePreview = () => {
     if (previewVisible()) {
       applyRollupCompilation(unwrap(userTabs()));
     }
+  };
+
+  const compileOutput = () => {
     const active = activeName();
     if (outputVisible() && active?.endsWith('.tsx')) {
       let compileOpts: SolidCompileOptions = mode();
@@ -310,19 +275,30 @@ export const Repl: ReplProps = (props) => {
     }
   };
 
+  const compile = () => {
+    compilePreview();
+    compileOutput();
+  };
+
   createEffect(() => {
     void props.version;
     if (!props.tabs.length) return;
-    compile();
+    compilePreview();
   });
 
-  createEffect(() => cmTabs.syncTypes(importMap().imports));
+  createEffect(() => {
+    void props.version;
+    if (!props.tabs.length) return;
+    compileOutput();
+  });
+
+  createEffect(() => cmTabs.syncTypes(importMap.state().imports));
 
   const isMobile = createMediaQuery('(max-width: 767px)');
 
   const previewSection = (interactive: () => boolean) => (
     <Preview
-      importMap={importMap().imports}
+      importMap={importMap.state().imports}
       code={output()}
       devtools={!props.hideDevtools}
       isDark={props.dark}
