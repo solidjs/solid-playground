@@ -33,6 +33,7 @@ const titleStyles = css({
   lineHeight: 0,
   letterSpacing: 'widest',
   textTransform: 'uppercase',
+  whiteSpace: 'nowrap',
 });
 
 const menuButtonOnMobile = css({
