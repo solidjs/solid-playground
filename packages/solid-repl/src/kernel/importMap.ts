@@ -6,8 +6,9 @@ export interface ImportMapState {
   pinned: string[];
 }
 
-const EXTERNALIZED = ['solid-js', '@solidjs/web'];
-const SOLID_FAMILY = [...EXTERNALIZED, '@solidjs/signals'];
+// `@solidjs/signals` is externalized too: the v2 preset injects imports of it into
+// compiled output after externals are collected, so it must always be in the map.
+const EXTERNALIZED = ['solid-js', '@solidjs/web', '@solidjs/signals'];
 
 const isSolidV2 = (solidVersion: string | undefined) => !!solidVersion && parseInt(solidVersion, 10) >= 2;
 
@@ -23,7 +24,7 @@ function moduleUrl(importee: string, solidVersion?: string) {
   const isV2 = isSolidV2(solidVersion);
   const target = solidWebAlias(importee, solidVersion) ?? importee;
 
-  const family = isV2 ? SOLID_FAMILY : ['solid-js'];
+  const family = isV2 ? EXTERNALIZED : ['solid-js'];
   const match = family.find((pkg) => target === pkg || target.startsWith(`${pkg}/`));
 
   let url = 'https://esm.sh/';
