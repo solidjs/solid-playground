@@ -94,10 +94,11 @@ export const Header: ParentComponent<{
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const resolved = children(() => props.children);
-  const [isMobile, setIsMobile] = createSignal(window.innerWidth < 768);
-  const onResize = () => setIsMobile(window.innerWidth < 768);
-  window.addEventListener('resize', onResize);
-  onCleanup(() => window.removeEventListener('resize', onResize));
+  const mql = window.matchMedia('(max-width: 767px)');
+  const [isMobile, setIsMobile] = createSignal(mql.matches);
+  const onChange = () => setIsMobile(mql.matches);
+  mql.addEventListener('change', onChange);
+  onCleanup(() => mql.removeEventListener('change', onChange));
 
   const mobileMenu = useMachine(popover.machine, {
     id: createUniqueId(),
