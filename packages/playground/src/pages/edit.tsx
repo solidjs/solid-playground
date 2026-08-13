@@ -6,7 +6,7 @@ import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
-import { clearUnpinnedImports, defaultTabs } from 'solid-repl/src';
+import { defaultTabs } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
@@ -140,6 +140,11 @@ export const Edit = () => {
 
   const storedVersion = localStorage.getItem('solidVersion') ?? '';
   const [solidVersion, setSolidVersion] = createSignal(storedVersion);
+  const [resolvedSolidVersion, setResolvedSolidVersion] = createSignal(
+    storedVersion === 'next' || storedVersion === 'latest'
+      ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
+      : storedVersion,
+  );
 
   const resolveSolidVersion = async (stored: string): Promise<string> => {
     if (stored !== 'next' && stored !== 'latest') return stored;
@@ -156,26 +161,13 @@ export const Edit = () => {
     }
     return localStorage.getItem(cacheKey) ?? '';
   };
-  const [resolvedSolidVersion] = createResource(solidVersion, resolveSolidVersion, {
-    initialValue:
-      storedVersion === 'next' || storedVersion === 'latest'
-        ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
-        : storedVersion,
-  });
 
   const migrateTabs = (version: string | undefined) => {
     const isV2 = !!version && parseInt(version, 10) >= 2;
     const current = tabs();
     let changed = false;
     for (const tab of current) {
-      if (tab.name === 'import_map.json') {
-        const migrated = clearUnpinnedImports(tab.source);
-        if (migrated) {
-          tab.source = migrated;
-          changed = true;
-        }
-        continue;
-      }
+      if (tab.name === 'import_map.json') continue;
       const migrated = isV2
         ? tab.source.replaceAll('solid-js/web', '@solidjs/web')
         : tab.source.replaceAll('@solidjs/web', 'solid-js/web');
@@ -187,10 +179,20 @@ export const Edit = () => {
     if (changed) trueSetTabs(current.slice());
   };
 
-  const changeSolidVersion = async (version: string) => {
+  let versionRequest = 0;
+  const applySolidVersion = async (version: string, migrate: boolean) => {
+    const request = ++versionRequest;
+    const resolved = await resolveSolidVersion(version);
+    if (request !== versionRequest) return;
+    setResolvedSolidVersion(resolved);
+    if (migrate) migrateTabs(resolved || undefined);
+  };
+  if (storedVersion === 'next' || storedVersion === 'latest') applySolidVersion(storedVersion, false);
+
+  const changeSolidVersion = (version: string) => {
     setSolidVersion(version);
     localStorage.setItem('solidVersion', version);
-    migrateTabs((await resolveSolidVersion(version)) || undefined);
+    applySolidVersion(version, true);
   };
 
   context.setTabs(tabs);

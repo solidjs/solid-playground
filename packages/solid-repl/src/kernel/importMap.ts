@@ -63,18 +63,11 @@ function serializeImportMap(state: ImportMapState): string {
   return JSON.stringify({ imports: state.imports, pinned: state.pinned }, null, 2);
 }
 
-export function clearUnpinnedImports(source: string): string | undefined {
-  const { imports, pinned } = parseImportMap(source);
-  const kept = Object.fromEntries(Object.entries(imports).filter(([name]) => pinned.includes(name)));
-  if (Object.keys(kept).length === Object.keys(imports).length) return undefined;
-  return serializeImportMap({ imports: kept, pinned });
-}
-
 function syncEntries(state: ImportMapState, specifiers: string[], solidVersion?: string): ImportMapState {
   const pinned = new Set(state.pinned);
   const imports: Record<string, string> = {};
   for (const [name, url] of Object.entries(state.imports)) {
-    if (pinned.has(name) || specifiers.includes(name)) imports[name] = url;
+    if (pinned.has(name)) imports[name] = url;
   }
   for (const specifier of specifiers.concat(isSolidV2(solidVersion) ? EXTERNALIZED : ['solid-js', 'solid-js/web'])) {
     imports[specifier] ??= moduleUrl(specifier, solidVersion);
@@ -100,8 +93,17 @@ export interface ImportMapOptions {
 }
 
 export function createImportMap(opts: ImportMapOptions): ImportMapController {
-  const state = createMemo(
+  const tabState = createMemo(
     () => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_TAB)?.source),
+    undefined,
+    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+  );
+
+  const state = createMemo(
+    () => {
+      const tab = tabState();
+      return syncEntries(tab, Object.keys(tab.imports), opts.version());
+    },
     undefined,
     { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
@@ -123,8 +125,6 @@ export function createImportMap(opts: ImportMapOptions): ImportMapController {
     write(fn(state()));
   };
 
-  let syncedExternals: string | undefined;
-
   return {
     state,
     setPackageUrl: (name, url) =>
@@ -142,12 +142,6 @@ export function createImportMap(opts: ImportMapOptions): ImportMapController {
         const { [name]: _, ...rest } = imports;
         return { imports: rest, pinned: pinned.filter((pkg) => pkg !== name) };
       }),
-    syncExternals: (externals) => {
-      const current = state();
-      const key = [...externals].sort().join(',');
-      if (key === syncedExternals && externals.every((specifier) => specifier in current.imports)) return;
-      syncedExternals = key;
-      write(syncEntries(current, externals, opts.version()));
-    },
+    syncExternals: (externals) => write(syncEntries(tabState(), externals, opts.version())),
   };
 }

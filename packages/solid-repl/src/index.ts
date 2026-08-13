@@ -1,6 +1,6 @@
 import type { Tab } from 'solid-repl';
 
-export { clearUnpinnedImports, parseImportMap } from './kernel/importMap';
+export { parseImportMap } from './kernel/importMap';
 
 const indexTSX = `import { render } from "solid-js/web";
 import { createSignal } from "solid-js";
