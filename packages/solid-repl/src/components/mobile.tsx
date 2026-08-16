@@ -163,16 +163,6 @@ const tabCountActive = css({
   _dark: { bg: 'neutral.300', color: 'black' },
 });
 
-const overlay = css({
-  position: 'absolute',
-  inset: 0,
-  zIndex: 10,
-  display: 'flex',
-  flexDirection: 'column',
-  bg: 'white',
-  _dark: { bg: 'neutral.900' },
-});
-
 const emptyState = css({
   position: 'absolute',
   inset: 0,
@@ -191,10 +181,12 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   const [openIds, setOpenIds] = createSignal<string[]>(props.initialViews);
   const [activeId, setActiveId] = createSignal<string | undefined>(props.initialViews[0]);
   const [switcher, setSwitcher] = createSignal(false);
-  const [showNewTab, setShowNewTab] = createSignal(false);
 
-  const isPane = (id: string) => id === 'Preview' || id === 'Output';
-  const labelOf = (id: string) => (isPane(id) ? id : (workspace.nameOf(id) ?? id));
+  const isPane = (id: string) => id === 'Preview' || id === 'Output' || id === 'NewTab';
+  const labelOf = (id: string) => {
+    if (id === 'NewTab') return 'New Tab';
+    return isPane(id) ? id : (workspace.nameOf(id) ?? id);
+  };
 
   const setActive = (id: string | undefined) => {
     setActiveId(id);
@@ -240,7 +232,6 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
 
   const openView = (id: string) => {
     if (!openIds().includes(id)) setOpenIds(openIds().concat(id));
-    setShowNewTab(false);
     activate(id);
   };
 
@@ -300,6 +291,34 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   const content = (id: string) => {
     if (id === 'Preview') return props.preview(() => !switcher() && activeId() === 'Preview');
     if (id === 'Output') return props.outputPane();
+    if (id === 'NewTab')
+      return (
+        <NewTab
+          tabs={api.tabs()}
+          onOpenPane={openView}
+          onOpenFile={(name) => {
+            const file = workspace.byName(name);
+            if (file) openView(file.id);
+          }}
+          onNewFile={(name) => {
+            const file = workspace.create(name);
+            if (file) openView(file.id);
+          }}
+          onUpload={(name, source) => {
+            const file = workspace.create(name, source);
+            if (file) openView(file.id);
+          }}
+          onDeleteFile={(name) => {
+            const file = workspace.byName(name);
+            if (file) workspace.remove(file.id);
+          }}
+          onRenameFile={(oldName, newName) => {
+            const file = workspace.byName(oldName);
+            if (file) workspace.rename(file.id, newName);
+          }}
+          onClose={() => closeView('NewTab')}
+        />
+      );
     if (workspace.nameOf(id) === 'import_map.json') return <ImportMapPanel />;
     return <Editor fileId={id} autofocus={false} />;
   };
@@ -350,7 +369,7 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
         <Show when={openIds().length === 0}>
           <div class={emptyState}>
             <p>No open tabs</p>
-            <Button variant="primary" onClick={() => setShowNewTab(true)}>
+            <Button variant="primary" onClick={() => openView('NewTab')}>
               Open a file
             </Button>
           </div>
@@ -358,7 +377,7 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
       </div>
 
       <div class={bottomBar}>
-        <button class={barButton} onClick={() => setShowNewTab(true)} title="New tab">
+        <button class={barButton} onClick={() => openView('NewTab')} title="New tab">
           <Icon path={plus} class={css({ h: 5, w: 5 })} />
           <span class={css({ srOnly: true })}>New tab</span>
         </button>
@@ -376,36 +395,6 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
           {openIds().length}
         </button>
       </div>
-
-      <Show when={showNewTab()}>
-        <div class={overlay}>
-          <NewTab
-            tabs={api.tabs()}
-            onOpenPane={openView}
-            onOpenFile={(name) => {
-              const file = workspace.byName(name);
-              if (file) openView(file.id);
-            }}
-            onNewFile={(name) => {
-              const file = workspace.create(name);
-              if (file) openView(file.id);
-            }}
-            onUpload={(name, source) => {
-              const file = workspace.create(name, source);
-              if (file) openView(file.id);
-            }}
-            onDeleteFile={(name) => {
-              const file = workspace.byName(name);
-              if (file) workspace.remove(file.id);
-            }}
-            onRenameFile={(oldName, newName) => {
-              const file = workspace.byName(oldName);
-              if (file) workspace.rename(file.id, newName);
-            }}
-            onClose={() => setShowNewTab(false)}
-          />
-        </div>
-      </Show>
     </div>
   );
 };

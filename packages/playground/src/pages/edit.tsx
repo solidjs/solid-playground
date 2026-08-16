@@ -46,7 +46,9 @@ function safeRemove(key: string): void {
 const Repl = lazy(() => import('solid-repl/src/repl'));
 
 const titleInput = css({
-  width: 96,
+  flex: 1,
+  minW: 0,
+  maxW: 96,
   px: 3,
   py: 1.5,
   rounded: 'md',
