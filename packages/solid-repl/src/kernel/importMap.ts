@@ -9,7 +9,7 @@ export interface ImportMapState {
 const EXTERNALIZED = ['solid-js', '@solidjs/web'];
 const SOLID_FAMILY = [...EXTERNALIZED, '@solidjs/signals'];
 
-const isSolidV2 = (solidVersion: string | undefined) => !!solidVersion && parseInt(solidVersion, 10) >= 2;
+export const isSolidV2 = (solidVersion: string | undefined) => !!solidVersion && parseInt(solidVersion, 10) >= 2;
 
 const solidWebAlias = (importee: string, solidVersion?: string) => {
   const isV2 = isSolidV2(solidVersion);

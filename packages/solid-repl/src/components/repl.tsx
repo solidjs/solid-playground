@@ -16,7 +16,7 @@ import { keyBindingsOf } from '../kernel/commands';
 import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
-import { createImportMap } from '../kernel/importMap';
+import { createImportMap, isSolidV2 } from '../kernel/importMap';
 import { ImportMapPanel } from './importMapPanel';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
@@ -161,6 +161,7 @@ export const Repl: ReplProps = (props) => {
     isDark: () => !!props.dark,
     fontSize: () => zoomState.fontSize,
     displayErrors,
+    eslintEnabled: () => !isSolidV2(props.version),
     formatter,
     linter,
     keyBindings: keyBindingsOf(commands),

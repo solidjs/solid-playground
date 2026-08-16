@@ -6,8 +6,13 @@ import { xMark } from 'solid-heroicons/outline';
 import { css } from 'styled-system/css';
 
 const card = css({
-  position: 'relative',
+  position: 'fixed',
+  left: 3,
+  right: 3,
+  bottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
+  zIndex: 12,
   maxW: 'sm',
+  md: { left: 10, right: 'auto', bottom: 10 },
   px: 6,
   py: 4,
   rounded: 'lg',

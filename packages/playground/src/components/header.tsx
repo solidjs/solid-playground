@@ -49,9 +49,6 @@ const desktopMenuList = css({
 });
 
 const mobileMenuPanel = css({
-  position: 'absolute',
-  top: '53px',
-  right: '10px',
   zIndex: 10,
   display: 'flex',
   flexDirection: 'column',
@@ -103,6 +100,7 @@ export const Header: ParentComponent<{
   const mobileMenu = useMachine(popover.machine, {
     id: createUniqueId(),
     portalled: false,
+    positioning: { placement: 'bottom-end' },
   });
   const mobileApi = createMemo(() => popover.connect(mobileMenu, normalizeProps));
 

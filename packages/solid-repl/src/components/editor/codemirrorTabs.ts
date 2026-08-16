@@ -30,6 +30,7 @@ export interface CodemirrorTabsOptions {
   isDark: () => boolean;
   fontSize: () => number;
   displayErrors: () => boolean;
+  eslintEnabled: () => boolean;
   formatter?: WorkerClient;
   linter?: WorkerClient;
   keyBindings?: KeyBinding[];
@@ -162,8 +163,8 @@ const markersToDiagnostics = (view: EditorView, markers: LintMarker[]): Diagnost
 };
 
 // `forceLinting` only flushes an already-pending lint; the linter treats this effect as a
-// reason to re-run after a type sync, which doesn't touch the document.
-const typesRefreshed = StateEffect.define<null>();
+// reason to re-run when lint inputs change without a document edit (type sync, lint config).
+const relintRequested = StateEffect.define<null>();
 
 const buildLintExtension = (
   currentUri: () => string | undefined,
@@ -183,7 +184,7 @@ const buildLintExtension = (
         session.client.sync();
         diagnostics.push(...(await session.getDiagnostics(uri, view)));
       }
-      if (isTs) {
+      if (isTs && opts.eslintEnabled()) {
         const res = await opts.linter?.tryRequest<LintResponse>('LINT', { code: view.state.doc.toString() });
         diagnostics.push(...markersToDiagnostics(view, res?.markers ?? []));
       }
@@ -191,7 +192,7 @@ const buildLintExtension = (
     },
     {
       delay: 250,
-      needsRefresh: (update) => update.transactions.some((tr) => tr.effects.some((e) => e.is(typesRefreshed))),
+      needsRefresh: (update) => update.transactions.some((tr) => tr.effects.some((e) => e.is(relintRequested))),
     },
   ),
   lintGutter(),
@@ -214,7 +215,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
   };
 
   const fixView = async (view: EditorView) => {
-    if (!opts.displayErrors()) return;
+    if (!opts.displayErrors() || !opts.eslintEnabled()) return;
     const res = await opts.linter?.tryRequest<LintResponse>('FIX', { code: view.state.doc.toString() });
     if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
   };
@@ -399,8 +400,9 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
 
   createEffect(() => {
     opts.displayErrors();
+    opts.eslintEnabled();
     for (const lookup of lookups.values()) {
-      forceLinting(lookup.view);
+      lookup.view.dispatch({ effects: relintRequested.of(null) });
     }
   });
 
@@ -471,7 +473,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
         .then((changed) => {
           if (!changed) return;
           for (const lookup of lookups.values()) {
-            lookup.view.dispatch({ effects: typesRefreshed.of(null) });
+            lookup.view.dispatch({ effects: relintRequested.of(null) });
           }
         })
         .catch((e) => console.warn('[solid-repl] type acquisition failed', e));

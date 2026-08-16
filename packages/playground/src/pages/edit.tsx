@@ -6,7 +6,7 @@ import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
-import { defaultTabs } from 'solid-repl/src';
+import { defaultTabs, isSolidV2 } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
@@ -163,7 +163,7 @@ export const Edit = () => {
   };
 
   const migrateTabs = (version: string | undefined) => {
-    const isV2 = !!version && parseInt(version, 10) >= 2;
+    const isV2 = isSolidV2(version);
     const current = tabs();
     let changed = false;
     for (const tab of current) {
