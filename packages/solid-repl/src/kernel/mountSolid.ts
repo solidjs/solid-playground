@@ -1,5 +1,6 @@
 import { createRoot, type JSX } from 'solid-js';
 import { insert } from 'solid-js/web';
+import { SplitviewPanel } from 'dockview';
 
 // `insert(element, view())`, not `insert(element, view)`: the latter runs the body inside a
 // render effect and zag machines never start.
@@ -40,4 +41,17 @@ export function solidPart<P>(
       disposeRoot = undefined;
     },
   };
+}
+
+export class SolidSplitviewPanel extends SplitviewPanel {
+  constructor(
+    id: string,
+    component: string,
+    private readonly view: () => JSX.Element,
+  ) {
+    super(id, component);
+  }
+  getComponent() {
+    return { update: () => {}, dispose: mountSolid(this.element, this.view) };
+  }
 }

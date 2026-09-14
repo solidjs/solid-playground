@@ -1,7 +1,7 @@
 import type { Tab } from 'solid-repl';
 
 import { transform } from '@babel/standalone';
-import type { Visitor } from '@babel/core';
+import type { PluginItem, PluginTarget, Visitor } from '@babel/core';
 import type { Node } from '@babel/types';
 // @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
@@ -25,7 +25,7 @@ const usesBabelPlugin = (version: string) => {
   return !!rc && Number(rc[1]) >= 2;
 };
 
-type SolidCompiler = { solid: object; isPlugin: boolean };
+type SolidCompiler = { solid: PluginTarget; isPlugin: boolean };
 
 const solidCache = new Map<string, Promise<SolidCompiler>>();
 
@@ -48,13 +48,21 @@ function loadSolid(version: string | undefined): Promise<SolidCompiler> {
   return cached;
 }
 
+const babelOptions = ({ solid, isPlugin }: SolidCompiler, options: SolidCompileOptions, plugins: PluginItem[] = []) => {
+  const entry: PluginItem = [solid, options];
+  return {
+    plugins: [babelSyntaxJsx, ...plugins, ...(isPlugin ? [entry] : [])],
+    presets: [...(isPlugin ? [] : [entry]), ['typescript', { onlyRemoveTypeImports: true }]],
+  };
+};
+
 function uid(str: string) {
   return Array.from(str)
     .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
     .toString();
 }
 
-function babelTransform(filename: string, code: string, externals: Set<string>, { solid, isPlugin }: SolidCompiler) {
+function babelTransform(filename: string, code: string, externals: Set<string>, compiler: SolidCompiler) {
   const handleImportee = (node: Node | null | undefined) => {
     if (node?.type !== 'StringLiteral') return;
     const importee = node.value;
@@ -65,31 +73,25 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
     }
   };
 
-  const solidEntry = [solid, { generate: 'dom', hydratable: false }];
-  let { code: transformedCode } = transform(code, {
-    plugins: [
-      babelSyntaxJsx,
-      function importRewriter(): { visitor: Visitor } {
-        return {
-          visitor: {
-            Import(path) {
-              if (path.parent.type === 'CallExpression') handleImportee(path.parent.arguments[0]);
-            },
-            ImportDeclaration(path) {
-              handleImportee(path.node.source);
-            },
-            ExportAllDeclaration(path) {
-              handleImportee(path.node.source);
-            },
-            ExportNamedDeclaration(path) {
-              handleImportee(path.node.source);
-            },
-          },
-        };
+  const importRewriter = (): { visitor: Visitor } => ({
+    visitor: {
+      Import(path) {
+        if (path.parent.type === 'CallExpression') handleImportee(path.parent.arguments[0]);
       },
-      ...(isPlugin ? [solidEntry] : []),
-    ],
-    presets: [...(isPlugin ? [] : [solidEntry]), ['typescript', { onlyRemoveTypeImports: true }]],
+      ImportDeclaration(path) {
+        handleImportee(path.node.source);
+      },
+      ExportAllDeclaration(path) {
+        handleImportee(path.node.source);
+      },
+      ExportNamedDeclaration(path) {
+        handleImportee(path.node.source);
+      },
+    },
+  });
+
+  const { code: transformedCode } = transform(code, {
+    ...babelOptions(compiler, { generate: 'dom', hydratable: false }, [importRewriter]),
     filename,
   });
 
@@ -128,13 +130,8 @@ async function compile(tabs: Tab[], version: string | undefined) {
 }
 
 async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string | undefined) {
-  const { solid, isPlugin } = await loadSolid(version);
-  const solidEntry = [solid, compileOpts];
-  const { code } = transform(tab.source, {
-    plugins: [babelSyntaxJsx, ...(isPlugin ? [solidEntry] : [])],
-    presets: [...(isPlugin ? [] : [solidEntry]), ['typescript', { onlyRemoveTypeImports: true }]],
-    filename: tab.name,
-  });
+  const compiler = await loadSolid(version);
+  const { code } = transform(tab.source, { ...babelOptions(compiler, compileOpts), filename: tab.name });
   return { compiled: code };
 }
 
@@ -143,5 +140,3 @@ serveWorker({
   BABEL: ({ tab, compileOpts, version }: { tab: Tab; compileOpts: SolidCompileOptions; version?: string }) =>
     babel(tab, compileOpts, version),
 });
-
-export {};

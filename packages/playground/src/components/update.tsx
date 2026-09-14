@@ -10,7 +10,6 @@ const card = css({
   left: 3,
   right: 3,
   bottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
-  zIndex: 12,
   maxW: 'sm',
   md: { left: 10, right: 'auto', bottom: 10 },
   px: 6,

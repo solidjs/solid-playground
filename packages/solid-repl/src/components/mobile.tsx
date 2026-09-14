@@ -2,8 +2,7 @@ import { Component, For, JSX, Show, createEffect, createSignal, onCleanup, onMou
 import { Icon } from 'solid-heroicons';
 import { plus, xMark } from 'solid-heroicons/outline';
 import { NewTab } from './newTab';
-import { ImportMapPanel } from './importMapPanel';
-import Editor from './editor';
+import { FilePanel } from './editor';
 import { useRepl } from './replContext';
 import { Button } from './ui/Button';
 import { css } from 'styled-system/css';
@@ -175,8 +174,7 @@ const emptyState = css({
 });
 
 export const MobileRepl: Component<MobileReplProps> = (props) => {
-  const api = useRepl();
-  const workspace = api.workspace;
+  const { workspace } = useRepl();
 
   const [openIds, setOpenIds] = createSignal<string[]>(props.initialViews);
   const [activeId, setActiveId] = createSignal<string | undefined>(props.initialViews[0]);
@@ -291,36 +289,8 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   const content = (id: string) => {
     if (id === 'Preview') return props.preview(() => !switcher() && activeId() === 'Preview');
     if (id === 'Output') return props.outputPane();
-    if (id === 'NewTab')
-      return (
-        <NewTab
-          tabs={api.tabs()}
-          onOpenPane={openView}
-          onOpenFile={(name) => {
-            const file = workspace.byName(name);
-            if (file) openView(file.id);
-          }}
-          onNewFile={(name) => {
-            const file = workspace.create(name);
-            if (file) openView(file.id);
-          }}
-          onUpload={(name, source) => {
-            const file = workspace.create(name, source);
-            if (file) openView(file.id);
-          }}
-          onDeleteFile={(name) => {
-            const file = workspace.byName(name);
-            if (file) workspace.remove(file.id);
-          }}
-          onRenameFile={(oldName, newName) => {
-            const file = workspace.byName(oldName);
-            if (file) workspace.rename(file.id, newName);
-          }}
-          onClose={() => closeView('NewTab')}
-        />
-      );
-    if (workspace.nameOf(id) === 'import_map.json') return <ImportMapPanel />;
-    return <Editor fileId={id} autofocus={false} />;
+    if (id === 'NewTab') return <NewTab onOpen={openView} onClose={() => closeView('NewTab')} />;
+    return <FilePanel fileId={id} autofocus={false} />;
   };
 
   return (

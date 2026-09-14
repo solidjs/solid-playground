@@ -1,12 +1,10 @@
-import { javascript, javascriptLanguage } from '@codemirror/lang-javascript';
-import { type LanguageSupport, syntaxTree } from '@codemirror/language';
+import { javascriptLanguage } from '@codemirror/lang-javascript';
+import { syntaxTree } from '@codemirror/language';
+import type { Diagnostic } from '@codemirror/lint';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin } from '@codemirror/view';
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { LSPClient, type Transport, jumpToDefinition, languageServerExtensions } from '@codemirror/lsp-client';
-
-export const typescript = ({ jsx }: { jsx: boolean } = { jsx: false }): LanguageSupport => {
-  return javascript({ typescript: true, jsx });
-};
+import TsWorker from './tsWorker?worker';
 
 const monospace = 'Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace';
 
@@ -44,25 +42,6 @@ export const typescriptLspTheme: Extension = EditorView.theme({
   '.cm-tooltip-hover': { 'z-index': '150' },
   'a': { 'text-decoration': 'inherit' },
 });
-
-export function createWorkerTransport(worker: Worker): Transport {
-  const handlers = new Set<(value: string) => void>();
-  worker.addEventListener('message', (e: MessageEvent) => {
-    const json = JSON.stringify(e.data);
-    for (const h of handlers) h(json);
-  });
-  return {
-    send(message) {
-      worker.postMessage(JSON.parse(message));
-    },
-    subscribe(handler) {
-      handlers.add(handler);
-    },
-    unsubscribe(handler) {
-      handlers.delete(handler);
-    },
-  };
-}
 
 const cmdHoverMark = Decoration.mark({ class: 'cm-cmdHoverLink' });
 const allowedNode = new Set([
@@ -159,10 +138,10 @@ const cmdHoverTheme = EditorView.theme({
   },
 });
 
-const cmdHover: Extension = [cmdHoverField, cmdHoverListeners, cmdHoverTheme];
-
 export const typescriptLspExtras: Extension = [
-  cmdHover,
+  cmdHoverField,
+  cmdHoverListeners,
+  cmdHoverTheme,
   EditorView.domEventHandlers({
     mousedown(event, view) {
       if (!event.metaKey && !event.ctrlKey) return false;
@@ -176,7 +155,48 @@ export const typescriptLspExtras: Extension = [
   }),
 ];
 
-export function createTypescriptLSPClient(transport: Transport): LSPClient {
+function workerTransport(worker: Worker): Transport {
+  const handlers = new Set<(value: string) => void>();
+  worker.addEventListener('message', (e: MessageEvent) => {
+    const json = JSON.stringify(e.data);
+    for (const h of handlers) h(json);
+  });
+  return {
+    send(message) {
+      worker.postMessage(JSON.parse(message));
+    },
+    subscribe(handler) {
+      handlers.add(handler);
+    },
+    unsubscribe(handler) {
+      handlers.delete(handler);
+    },
+  };
+}
+
+const tsSeverity = (cat: number): Diagnostic['severity'] => {
+  if (cat === 1) return 'error';
+  if (cat === 0) return 'warning';
+  if (cat === 2) return 'hint';
+  return 'info';
+};
+
+interface TsDiagnostic {
+  start: number;
+  length: number;
+  severity: number;
+  message: string;
+}
+
+export interface TypescriptSession {
+  client: LSPClient;
+  worker: Worker;
+  getDiagnostics(uri: string, view: EditorView): Promise<Diagnostic[]>;
+  syncTypes(importMap: Record<string, string>): Promise<boolean>;
+}
+
+export function createTypescriptSession(): TypescriptSession {
+  const worker = new TsWorker();
   const client = new LSPClient({
     extensions: languageServerExtensions(),
     // Type acquisition legitimately exceeds the 3s default on first sync.
@@ -184,13 +204,31 @@ export function createTypescriptLSPClient(transport: Transport): LSPClient {
     highlightLanguage: (name) =>
       name === 'typescript' || name === 'javascript' || name === 'ts' || name === 'js' ? javascriptLanguage : null,
   });
-  client.connect(transport);
-  return client;
-}
+  client.connect(workerTransport(worker));
 
-export interface TsLspDiagnostic {
-  start: number;
-  length: number;
-  severity: number;
-  message: string;
+  return {
+    client,
+    worker,
+    async getDiagnostics(uri, view) {
+      const raw = (await client.request<{ uri: string }, TsDiagnostic[]>('playground/diagnostics', { uri })) ?? [];
+      const docLength = view.state.doc.length;
+      return raw.map((d) => {
+        const from = Math.min(d.start, docLength);
+        return {
+          from,
+          to: Math.min(from + d.length, docLength),
+          severity: tsSeverity(d.severity),
+          message: d.message,
+          source: 'typescript',
+        };
+      });
+    },
+    async syncTypes(importMap) {
+      const res = await client.request<{ importMap: Record<string, string> }, { changed: boolean }>(
+        'playground/syncTypes',
+        { importMap },
+      );
+      return !!res?.changed;
+    },
+  };
 }

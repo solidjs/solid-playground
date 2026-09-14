@@ -1,6 +1,6 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl';
-import { parseImportMap } from 'solid-repl/src';
+import { IMPORT_MAP_FILE, parseImportMap } from 'solid-repl/src';
 import dedent from 'dedent';
 
 const viteConfigFile = dedent`
@@ -88,7 +88,7 @@ export async function exportToZip(tabs: Tab[]): Promise<void> {
   zip.folder('src');
 
   for (const tab of tabs) {
-    if (tab.name == 'import_map.json') {
+    if (tab.name === IMPORT_MAP_FILE) {
       zip.file('package.json', packageJSON(Object.keys(parseImportMap(tab.source).imports)));
     } else {
       zip.file(`src/${tab.name}`, tab.source);

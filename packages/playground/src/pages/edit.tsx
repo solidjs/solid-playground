@@ -6,10 +6,11 @@ import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
-import { defaultTabs, isSolidV2, solidVersionFromImportMap } from 'solid-repl/src';
+import { defaultTabs, IMPORT_MAP_FILE, isSolidV2, solidVersionFromImportMap } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
+import { Spinner } from '../components/spinner';
 import { Button } from 'solid-repl/src/components/ui/Button';
 import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
@@ -59,14 +60,7 @@ const titleInput = css({
   _focus: { borderColor: 'solidc', outline: 'none' },
 });
 
-const spinner = css({ h: 12, w: 12, m: 'auto', color: 'neutral.500', animation: 'spin 1s linear infinite' });
-
 const dialogActions = css({ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 });
-
-interface InternalTab extends Tab {
-  _source: string;
-  _name: string;
-}
 
 export const Edit = () => {
   const scratchpad = useMatch(() => '/');
@@ -114,31 +108,11 @@ export const Edit = () => {
     }
   });
 
-  const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
-    toMap.map((tab) => {
-      if ('_source' in tab) return tab;
-      return {
-        _name: tab.name,
-        get name() {
-          return this._name;
-        },
-        set name(name: string) {
-          this._name = name;
-          updateRepl();
-        },
-        _source: tab.source,
-        get source() {
-          return this._source;
-        },
-        set source(source: string) {
-          this._source = source;
-          updateRepl();
-        },
-      };
-    });
-
-  const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
-  const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
+  const [tabs, setTabs] = createSignal<Tab[]>([]);
+  const editTabs = (next: Tab[]) => {
+    setTabs(next);
+    updateRepl();
+  };
 
   const storedVersion = localStorage.getItem('solidVersion') ?? '';
   const [solidVersion, setSolidVersion] = createSignal(storedVersion);
@@ -167,18 +141,14 @@ export const Edit = () => {
   const migrateTabs = (version: string | undefined) => {
     const isV2 = isSolidV2(version);
     const current = tabs();
-    let changed = false;
-    for (const tab of current) {
-      if (tab.name === 'import_map.json') continue;
-      const migrated = isV2
+    const migrated = current.map((tab) => {
+      if (tab.name === IMPORT_MAP_FILE) return tab;
+      const source = isV2
         ? tab.source.replaceAll('solid-js/web', '@solidjs/web')
         : tab.source.replaceAll('@solidjs/web', 'solid-js/web');
-      if (migrated !== tab.source) {
-        tab.source = migrated;
-        changed = true;
-      }
-    }
-    if (changed) trueSetTabs(current.slice());
+      return source === tab.source ? tab : { ...tab, source };
+    });
+    if (migrated.some((tab, i) => tab !== current[i])) editTabs(migrated);
   };
 
   let versionRequest = 0;
@@ -238,7 +208,7 @@ export const Edit = () => {
         }).then((r) => r.json());
       }
 
-      adoptSolidVersion(output.files.find((x) => x.name === 'import_map.json')?.content);
+      adoptSolidVersion(output.files.find((x) => x.name === IMPORT_MAP_FILE)?.content);
       setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
 
       return output;
@@ -246,10 +216,8 @@ export const Edit = () => {
   );
 
   const reset = () => {
-    setTabs(mapTabs(defaultTabs));
+    editTabs(defaultTabs);
     migrateTabs(resolvedSolidVersion() || undefined);
-    // The persistence hook hangs off the per-tab source setter, which this bypasses.
-    updateRepl();
   };
 
   const publishScratchpad = async (title: string) => {
@@ -349,7 +317,6 @@ export const Edit = () => {
       <Header
         solidVersion={solidVersion()}
         onSolidVersionChange={changeSolidVersion}
-        fork={() => {}}
         share={async () => {
           if (scratchpad()) {
             const url = await publishScratchpad(`${context.user()?.display || 'Anonymous'}'s Scratchpad`);
@@ -383,18 +350,7 @@ export const Edit = () => {
           />
         </Show>
       </Header>
-      <Suspense
-        fallback={
-          <svg class={spinner} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class={css({ opacity: 0.25 })} cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path
-              class={css({ opacity: 0.75 })}
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        }
-      >
+      <Suspense fallback={<Spinner class={css({ h: 12, w: 12, m: 'auto' })} />}>
         <Show when={resource()}>
           <Repl
             compiler={compiler}
@@ -403,7 +359,7 @@ export const Edit = () => {
             version={resolvedSolidVersion() || undefined}
             dark={context.dark()}
             tabs={tabs()}
-            setTabs={setTabs}
+            setTabs={editTabs}
             reset={reset}
             onUserEdit={onUserEdit}
             storage={replStorage}

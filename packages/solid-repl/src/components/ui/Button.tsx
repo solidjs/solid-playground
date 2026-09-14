@@ -43,37 +43,50 @@ const button = cva({
         _dark: { bg: 'neutral.700', color: 'white' },
       },
     },
+    mobile: {
+      true: {
+        rounded: 'none',
+        _active: { bg: 'gray.300' },
+        _hover: { bg: 'gray.300', _dark: { color: 'black' } },
+      },
+    },
   },
   defaultVariants: {
     variant: 'ghost',
   },
 });
 
-export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
+interface Variants {
   variant?: 'primary' | 'ghost';
   active?: boolean;
+  mobile?: boolean;
 }
 
+export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement>, Variants {}
+
 export const Button: ParentComponent<ButtonProps> = (props) => {
-  const [local, others] = splitProps(props, ['variant', 'active', 'class', 'children']);
+  const [local, others] = splitProps(props, ['variant', 'active', 'mobile', 'class', 'children']);
 
   return (
-    <button {...others} class={cx(button({ variant: local.variant, active: local.active }), local.class)}>
+    <button
+      {...others}
+      class={cx(button({ variant: local.variant, active: local.active, mobile: local.mobile }), local.class)}
+    >
       {local.children}
     </button>
   );
 };
 
-export interface LinkButtonProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {
-  variant?: 'primary' | 'ghost';
-  active?: boolean;
-}
+export interface LinkButtonProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement>, Variants {}
 
 export const LinkButton: ParentComponent<LinkButtonProps> = (props) => {
-  const [local, others] = splitProps(props, ['variant', 'active', 'class', 'children']);
+  const [local, others] = splitProps(props, ['variant', 'active', 'mobile', 'class', 'children']);
 
   return (
-    <a {...others} class={cx(button({ variant: local.variant, active: local.active }), local.class)}>
+    <a
+      {...others}
+      class={cx(button({ variant: local.variant, active: local.active, mobile: local.mobile }), local.class)}
+    >
       {local.children}
     </a>
   );

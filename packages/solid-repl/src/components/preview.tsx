@@ -1,7 +1,7 @@
 import { Component, createEffect, JSX, onCleanup, onMount } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
-import { Orientation, SplitviewComponent } from 'dockview-core';
-import { SolidPanelView } from '../dockview/solid';
+import { Orientation, SplitviewComponent } from 'dockview';
+import { SolidSplitviewPanel } from '../kernel/mountSolid';
 import { css } from 'styled-system/css';
 
 const iframeStyles = css({
@@ -247,7 +247,15 @@ const useDevtoolsSrc = () => {
   return `${devtoolsRawUrl}#?embedded=${encodeURIComponent(location.origin)}`;
 };
 
-export const Preview: Component<Props> = (props) => {
+interface PreviewProps {
+  importMap: Record<string, string>;
+  code: Record<string, string>;
+  devtools: boolean;
+  isDark: boolean;
+  pointerEvents: boolean;
+}
+
+export const Preview: Component<PreviewProps> = (props) => {
   const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
@@ -318,7 +326,7 @@ export const Preview: Component<Props> = (props) => {
       orientation: Orientation.VERTICAL,
 
       createComponent: ({ id, name }) => {
-        return new SolidPanelView(id, name, frameworkComponents[name]);
+        return new SolidSplitviewPanel(id, name, frameworkComponents[name]);
       },
     });
     splitview.addPanel({
@@ -377,16 +385,5 @@ export const Preview: Component<Props> = (props) => {
     });
   });
 
-  return <div class={previewContainer} ref={outerContainer} classList={props.classList} />;
-};
-
-type Props = {
-  importMap: Record<string, string>;
-  classList?: {
-    [k: string]: boolean | undefined;
-  };
-  code: Record<string, string>;
-  devtools: boolean;
-  isDark: boolean;
-  pointerEvents: boolean;
+  return <div class={previewContainer} ref={outerContainer} />;
 };

@@ -1,38 +1,14 @@
-import { createContext, useContext, type Accessor } from 'solid-js';
-import type { Tab } from 'solid-repl';
+import { createContext, useContext } from 'solid-js';
 import type { CodemirrorTabs } from './editor/codemirrorTabs';
 import type { Command } from '../kernel/commands';
-import type { ImportMapState } from '../kernel/importMap';
-import type { WorkerClient } from '../kernel/workerClient';
+import type { ImportMapController } from '../kernel/importMap';
 import type { Workspace } from '../kernel/workspace';
 
 export interface ReplApi {
-  tabs: Accessor<Tab[]>;
-  setTabs: (tabs: Tab[]) => void;
   workspace: Workspace;
-
-  importMap: Accessor<ImportMapState>;
-  setPackageUrl: (name: string, url: string) => void;
-  addPackage: (name: string) => void;
-  removePackage: (name: string) => void;
-  current: Accessor<string | undefined>;
-  currentName: Accessor<string | undefined>;
-  reset: () => void;
-  onUserEdit?: () => void;
-
-  isDark: Accessor<boolean>;
-  fontSize: Accessor<number>;
-  displayErrors: Accessor<boolean>;
-  setDisplayErrors: (v: boolean) => void;
-
-  compiler: WorkerClient;
-  formatter: WorkerClient;
-  linter: WorkerClient;
-
+  importMap: ImportMapController;
   commands: Command[];
   editors: CodemirrorTabs;
-
-  folder: string;
 }
 
 export const ReplContext = createContext<ReplApi>();

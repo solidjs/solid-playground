@@ -16,8 +16,8 @@ declare module 'solid-repl' {
   }
 
   export interface ReplStorage {
-    getLayout?(): import('dockview-core').SerializedDockview | undefined;
-    setLayout?(layout: import('dockview-core').SerializedDockview): void;
+    getLayout?(): import('dockview').SerializedDockview | undefined;
+    setLayout?(layout: import('dockview').SerializedDockview): void;
     getEditorState?(fileId: string): EditorPersistedState | undefined;
     setEditorState?(fileId: string, state: EditorPersistedState | null): void;
   }

@@ -46,12 +46,6 @@ const valueBox = css({
   _dark: { borderColor: 'neutral.700' },
 });
 
-const headerButtonOnMobile = css({
-  rounded: 'none',
-  _active: { bg: 'gray.300' },
-  _hover: { bg: 'gray.300', _dark: { color: 'black' } },
-});
-
 export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   const { zoomState, updateZoom, setOverrideNative, setScaleIframe } = useZoom();
 
@@ -79,10 +73,8 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
       <Button
         {...api().getTriggerProps()}
         type="button"
-        class={cx(
-          props.showMenu && headerButtonOnMobile,
-          api().open && props.showMenu && css({ bg: 'gray.300', _dark: { color: 'black' } }),
-        )}
+        mobile={props.showMenu}
+        class={cx(api().open && props.showMenu && css({ bg: 'gray.300', _dark: { color: 'black' } }))}
         title="Scale editor to make text larger or smaller"
       >
         <Icon class={css({ h: 6 })} path={magnifyingGlassPlus} />

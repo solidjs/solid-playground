@@ -1,7 +1,15 @@
 import { A } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
-import { unwrap } from 'solid-js/store';
-import { ParentComponent, Show, children, createMemo, createSignal, createUniqueId, onCleanup } from 'solid-js';
+import {
+  Component,
+  ParentComponent,
+  Show,
+  children,
+  createMemo,
+  createSignal,
+  createUniqueId,
+  onCleanup,
+} from 'solid-js';
 import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
 import * as popover from '@zag-js/popover';
 import { useMachine, normalizeProps } from '@zag-js/solid';
@@ -33,12 +41,6 @@ const titleStyles = css({
   lineHeight: 0,
   letterSpacing: 'widest',
   textTransform: 'uppercase',
-});
-
-const menuButtonOnMobile = css({
-  rounded: 'none',
-  _active: { bg: 'gray.300' },
-  _hover: { bg: 'gray.300', _dark: { color: 'black' } },
 });
 
 const desktopMenuList = css({
@@ -83,7 +85,6 @@ const loginLink = css({
 });
 
 export const Header: ParentComponent<{
-  fork?: () => void;
   share: () => Promise<string>;
   solidVersion?: string;
   onSolidVersionChange?: (version: string) => void;
@@ -209,7 +210,7 @@ export const Header: ParentComponent<{
   );
 };
 
-const HeaderMenuItems: ParentComponent<{
+const HeaderMenuItems: Component<{
   copy: boolean;
   shareLink: () => void;
   showOnMobile: boolean;
@@ -217,10 +218,9 @@ const HeaderMenuItems: ParentComponent<{
   onSolidVersionChange?: (version: string) => void;
 }> = (props) => {
   const context = useAppContext()!;
-  const mobileBtn = () => (props.showOnMobile ? menuButtonOnMobile : '');
   return (
     <>
-      <Button onClick={context.toggleDark} class={mobileBtn()} title="Toggle dark mode">
+      <Button onClick={context.toggleDark} mobile={props.showOnMobile} title="Toggle dark mode">
         <Show when={context.dark()} fallback={<Icon path={moon} class={css({ h: 6 })} />}>
           <Icon path={sun} class={css({ h: 6 })} />
         </Show>
@@ -228,7 +228,7 @@ const HeaderMenuItems: ParentComponent<{
       </Button>
 
       <Show when={context.tabs()}>
-        <Button onClick={() => exportToZip(unwrap(context.tabs())!)} class={mobileBtn()} title="Export to Zip">
+        <Button onClick={() => exportToZip(context.tabs()!)} mobile={props.showOnMobile} title="Export to Zip">
           <Icon path={arrowDownTray} class={css({ h: 6, m: 0 })} />
           <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Export to Zip</span>
         </Button>
@@ -248,10 +248,8 @@ const HeaderMenuItems: ParentComponent<{
 
       <Button
         onClick={props.shareLink}
-        class={cx(
-          mobileBtn(),
-          props.copy ? css({ color: 'green.100' }) : css({ opacity: 0.8, _hover: { opacity: 1 } }),
-        )}
+        mobile={props.showOnMobile}
+        class={props.copy ? css({ color: 'green.100' }) : css({ opacity: 0.8, _hover: { opacity: 1 } })}
         title="Share with a minified link"
       >
         <Icon class={css({ h: 6 })} path={props.copy ? link : share} />
@@ -263,7 +261,8 @@ const HeaderMenuItems: ParentComponent<{
       <LinkButton
         href="https://github.com/solidjs/solid-playground"
         target="_blank"
-        class={cx(mobileBtn(), css({ cursor: 'alias' }))}
+        mobile={props.showOnMobile}
+        class={css({ cursor: 'alias' })}
         title="Github"
       >
         <Icon

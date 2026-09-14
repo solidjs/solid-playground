@@ -11,7 +11,7 @@ import {
   pencil,
   trash as trashIcon,
 } from 'solid-heroicons/outline';
-import type { Tab } from 'solid-repl';
+import { useRepl } from './replContext';
 import { Input } from './ui/Input';
 import { IconButton } from './ui/IconButton';
 import { Label } from './ui/Label';
@@ -20,13 +20,7 @@ import { css, cx } from 'styled-system/css';
 import type { IconPath } from './ui/icon';
 
 interface NewTabProps {
-  tabs: Tab[];
-  onOpenPane: (id: string) => void;
-  onOpenFile: (name: string) => void;
-  onNewFile: (name: string) => void;
-  onUpload: (name: string, source: string) => void;
-  onDeleteFile: (name: string) => void;
-  onRenameFile: (oldName: string, newName: string) => void;
+  onOpen: (id: string) => void;
   onClose: () => void;
 }
 
@@ -41,14 +35,15 @@ type Item = {
 type Section = { title: string; items: Item[] };
 
 export const NewTab: Component<NewTabProps> = (props) => {
+  const { workspace } = useRepl();
   const [query, setQuery] = createSignal('');
   const [selectedIndex, setSelectedIndex] = createSignal(0);
-  const [renamingFile, setRenamingFile] = createSignal<string | null>(null);
+  const [renamingId, setRenamingId] = createSignal<string | null>(null);
   let inputRef!: HTMLInputElement;
   let fileInputRef!: HTMLInputElement;
 
   const categories = createMemo<Section[]>(() => {
-    const q = query().toLowerCase();
+    const q = query().trim().toLowerCase();
     const sections: Section[] = [];
     let count = 0;
 
@@ -57,14 +52,14 @@ export const NewTab: Component<NewTabProps> = (props) => {
       .map<Item>((p) => ({ type: 'pane', id: p, label: p, icon: square_2Stack, globalIndex: count++ }));
     if (paneItems.length) sections.push({ title: 'Panes', items: paneItems });
 
-    const files = props.tabs.filter((t) => t.name.toLowerCase().includes(q));
+    const files = workspace.files().filter((f) => f.name.toLowerCase().includes(q));
     if (files.length) {
       sections.push({
         title: 'Files',
-        items: files.map<Item>((t) => ({
+        items: files.map<Item>((f) => ({
           type: 'file',
-          id: t.name,
-          label: t.name,
+          id: f.id,
+          label: f.name,
           icon: documentIcon,
           globalIndex: count++,
         })),
@@ -75,8 +70,9 @@ export const NewTab: Component<NewTabProps> = (props) => {
     if (q === '' || 'upload file'.includes(q)) {
       actions.push({ type: 'action', id: 'upload', label: 'Upload File', icon: arrowUpTray });
     }
-    if (q !== '' && !props.tabs.some((t) => t.name.toLowerCase() === q)) {
-      actions.push({ type: 'new', id: q, label: `Create "${query()}"`, icon: documentPlus });
+    if (q !== '' && !workspace.files().some((f) => f.name.toLowerCase() === q)) {
+      const name = query().trim();
+      actions.push({ type: 'new', id: name, label: `Create "${name}"`, icon: documentPlus });
     }
     if (actions.length) {
       sections.push({ title: 'Actions', items: actions.map((item) => ({ ...item, globalIndex: count++ })) });
@@ -87,16 +83,20 @@ export const NewTab: Component<NewTabProps> = (props) => {
 
   const allItems = createMemo(() => categories().flatMap((c) => c.items));
 
+  const openNew = (name: string, source?: string) => {
+    const file = workspace.create(name, source);
+    if (file) props.onOpen(file.id);
+  };
+
   const handleSelect = (item: Item) => {
     props.onClose();
-    if (item.type === 'pane') props.onOpenPane(item.id);
-    else if (item.type === 'file') props.onOpenFile(item.id);
-    else if (item.type === 'new') props.onNewFile(item.id);
-    else if (item.type === 'action' && item.id === 'upload') fileInputRef.click();
+    if (item.type === 'pane' || item.type === 'file') props.onOpen(item.id);
+    else if (item.type === 'new') openNew(item.id);
+    else if (item.id === 'upload') fileInputRef.click();
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (renamingFile()) return;
+    if (renamingId()) return;
     const items = allItems();
     if (e.key === 'ArrowDown') setSelectedIndex((i) => (i + 1) % items.length);
     else if (e.key === 'ArrowUp') setSelectedIndex((i) => (i - 1 + items.length) % items.length);
@@ -111,8 +111,8 @@ export const NewTab: Component<NewTabProps> = (props) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      props.onUpload(file.name, e.target?.result as string);
       props.onClose();
+      openNew(file.name, e.target?.result as string);
     };
     reader.readAsText(file);
   };
@@ -148,16 +148,16 @@ export const NewTab: Component<NewTabProps> = (props) => {
                   <ItemRow
                     item={item}
                     isActive={() => item.globalIndex === selectedIndex()}
-                    isRenaming={() => renamingFile() === item.id}
+                    isRenaming={() => renamingId() === item.id}
                     onSelect={() => handleSelect(item)}
-                    onStartRename={() => setRenamingFile(item.id)}
+                    onStartRename={() => setRenamingId(item.id)}
                     onSubmitRename={(newName) => {
-                      setRenamingFile(null);
-                      props.onRenameFile(item.id, newName);
+                      setRenamingId(null);
+                      workspace.rename(item.id, newName);
                     }}
-                    onCancelRename={() => setRenamingFile(null)}
+                    onCancelRename={() => setRenamingId(null)}
                     onDelete={() => {
-                      if (confirm(`Delete ${item.label}?`)) props.onDeleteFile(item.id);
+                      if (confirm(`Delete ${item.label}?`)) workspace.remove(item.id);
                     }}
                   />
                 )}

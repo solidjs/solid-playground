@@ -1,14 +1,13 @@
 import { createSignal, createEffect, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
-import { unwrap } from 'solid-js/store';
 import { createMediaQuery } from '@solid-primitives/media';
+import { throttle } from '@solid-primitives/scheduled';
 import { Preview } from './preview';
 import { Error } from './error';
 import { MobileRepl } from './mobile';
-import { throttle } from '@solid-primitives/scheduled';
 import { createCodemirrorTabs } from './editor/codemirrorTabs';
 import { useZoom } from '../hooks/useZoom';
 import { NewTab } from './newTab';
-import { CompileMode, compileOptions, type SolidCompileOptions } from './CompileMode';
+import { CompileMode, compileOptions, type CompileModeOption, type SolidCompileOptions } from './CompileMode';
 import { IconButton } from './ui/IconButton';
 import { useMenu } from './ui/Menu';
 import { ReplContext, type ReplApi } from './replContext';
@@ -16,25 +15,25 @@ import { keyBindingsOf } from '../kernel/commands';
 import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
-import { createImportMap, isSolidV2 } from '../kernel/importMap';
-import { ImportMapPanel } from './importMapPanel';
+import { createImportMap, IMPORT_MAP_FILE, isSolidV2 } from '../kernel/importMap';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
 
-import Editor, { OutputEditor } from './editor';
+import { FilePanel, OutputEditor } from './editor';
 import type { Repl as ReplProps } from 'solid-repl/dist/repl';
 import type { Tab } from 'solid-repl';
 import {
   DockviewComponent,
   Orientation,
-  GroupPanelPartInitParameters,
-  IGroupHeaderProps,
+  type AddPanelOptions,
+  type GroupPanelPartInitParameters,
+  type IGroupHeaderProps,
   themeAbyssSpaced,
-} from 'dockview-core';
+} from 'dockview';
 import { Icon } from 'solid-heroicons';
 import { plus, trash, xMark } from 'solid-heroicons/outline';
 import { css } from 'styled-system/css';
-import '../../node_modules/dockview-core/dist/styles/dockview.css';
+import 'dockview/dist/styles/dockview.css';
 
 const ENTRY_FILE = 'main.tsx';
 
@@ -101,6 +100,11 @@ const outputPane = css({
   },
 });
 
+interface RollupResult {
+  compiled: Record<string, string>;
+  externals: string[];
+}
+
 export const Repl: ReplProps = (props) => {
   const compiler = createWorkerClient(props.compiler);
   const formatter = createWorkerClient(props.formatter);
@@ -111,20 +115,19 @@ export const Repl: ReplProps = (props) => {
     linter.dispose();
   });
 
-  let now: number;
-
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal<Record<string, string>>(
     {},
     { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
   const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
-  const [mode, setMode] = createSignal<(typeof compileOptions)[keyof typeof compileOptions]>(compileOptions.DOM);
-
-  const userTabs = () => props.tabs.filter((tab) => tab.name != 'import_map.json');
-
+  const [mode, setMode] = createSignal<CompileModeOption>(compileOptions.DOM);
   const [outputVisible, setOutputVisible] = createSignal(false);
   const [previewVisible, setPreviewVisible] = createSignal(false);
+  const [displayErrors, setDisplayErrors] = createSignal(true);
+  const [activeFileId, setActiveFileId] = createSignal<string | undefined>();
+  const { zoomState } = useZoom();
+
   const importMap = createImportMap({
     tabs: () => props.tabs,
     setTabs: props.setTabs,
@@ -132,17 +135,12 @@ export const Repl: ReplProps = (props) => {
     onEdit: () => props.onUserEdit?.(),
   });
 
-  const [displayErrors, setDisplayErrors] = createSignal(true);
-  const { zoomState } = useZoom();
-
   const workspace = createWorkspace({
     tabs: () => props.tabs,
     setTabs: props.setTabs,
     folder: () => props.id,
     entry: ENTRY_FILE,
   });
-
-  const [activeFileId, setActiveFileId] = createSignal<string | undefined>();
 
   const commands = createEditorCommands({
     activeView: () => {
@@ -166,13 +164,6 @@ export const Repl: ReplProps = (props) => {
     linter,
     keyBindings: keyBindingsOf(commands),
     onUserEdit: () => props.onUserEdit?.(),
-    onDocChange: (fileId, source) => {
-      const file = workspace.byId(fileId);
-      if (!file || file.source === source) return;
-      const tab = props.tabs.find((t) => t.name === file.name);
-      if (tab) tab.source = source;
-      compile();
-    },
     loadEditorState: (fileId) => props.storage?.getEditorState?.(fileId),
     saveEditorState: (fileId, state) => props.storage?.setEditorState?.(fileId, state),
   });
@@ -182,41 +173,11 @@ export const Repl: ReplProps = (props) => {
     return id ? workspace.nameOf(id) : undefined;
   };
 
-  const api: ReplApi = {
-    tabs: () => props.tabs,
-    setTabs: props.setTabs,
-    workspace,
-    importMap: importMap.state,
-    setPackageUrl: importMap.setPackageUrl,
-    addPackage: importMap.addPackage,
-    removePackage: importMap.removePackage,
-    current: activeFileId,
-    currentName: activeName,
-    reset: () => props.reset(),
-    onUserEdit: props.onUserEdit,
-    isDark: () => !!props.dark,
-    fontSize: () => zoomState.fontSize,
-    displayErrors,
-    setDisplayErrors,
-    compiler,
-    formatter,
-    linter,
-    commands,
-    editors: cmTabs,
-    folder: props.id,
-  };
+  const api: ReplApi = { workspace, importMap, commands, editors: cmTabs };
 
-  interface RollupResult {
-    compiled: Record<string, string>;
-    externals: string[];
-  }
-
-  const applyRollupResult = ({ compiled, externals }: RollupResult) => {
-    console.log(`Compilation took: ${performance.now() - now}ms`);
-    batch(() => {
-      setOutput(compiled);
-      importMap.syncExternals(externals);
-    });
+  const onCompileFailed = (e: unknown) => {
+    console.error(e);
+    setError(e instanceof globalThis.Error ? e.message : String(e));
   };
 
   const requestRollup = latest((tabs: Tab[]) =>
@@ -226,25 +187,23 @@ export const Repl: ReplProps = (props) => {
     compiler.request<{ compiled: string }>('BABEL', { tab, compileOpts, version: props.version }),
   );
 
-  const onCompileFailed = (e: unknown) => {
-    console.error(e);
-    setError(e instanceof globalThis.Error ? e.message : String(e));
-  };
-
-  const applyRollupCompilation = throttle(async (tabs: Tab[]) => {
-    now = performance.now();
+  const compilePreview = throttle(async (tabs: Tab[]) => {
+    const started = performance.now();
     try {
       const result = await requestRollup(tabs);
       if (!result) return;
+      console.log(`Compilation took: ${performance.now() - started}ms`);
       setError('');
-      applyRollupResult(result);
+      batch(() => {
+        setOutput(result.compiled);
+        importMap.syncExternals(result.externals);
+      });
     } catch (e) {
       onCompileFailed(e);
     }
   }, 250);
 
-  const applyBabelCompilation = throttle(async (tab: Tab, compileOpts: SolidCompileOptions) => {
-    now = performance.now();
+  const compileOutput = throttle(async (tab: Tab, compileOpts: SolidCompileOptions) => {
     try {
       const result = await requestBabel(tab, compileOpts);
       if (!result) return;
@@ -255,42 +214,23 @@ export const Repl: ReplProps = (props) => {
     }
   }, 250);
 
-  const compilePreview = () => {
-    if (previewVisible()) {
-      applyRollupCompilation(unwrap(userTabs()));
-    }
-  };
-
-  const compileOutput = () => {
-    const active = activeName();
-    if (outputVisible() && active && /\.[tj]sx$/.test(active)) {
-      let compileOpts: SolidCompileOptions = mode();
-      if (compileOpts === compileOptions.UNIVERSAL) {
-        compileOpts = {
-          generate: 'universal',
-          hydratable: false,
-          moduleName: universalModuleName(),
-        };
-      }
-      applyBabelCompilation(unwrap(props.tabs.find((tab) => tab.name == active))!, compileOpts);
-    }
-  };
-
-  const compile = () => {
-    compilePreview();
-    compileOutput();
-  };
-
   createEffect(() => {
     void props.version;
-    if (!props.tabs.length) return;
-    compilePreview();
+    const tabs = props.tabs.filter((tab) => tab.name !== IMPORT_MAP_FILE);
+    if (previewVisible() && tabs.length) compilePreview(tabs);
   });
 
   createEffect(() => {
     void props.version;
-    if (!props.tabs.length) return;
-    compileOutput();
+    const active = activeName();
+    if (!outputVisible() || !active || !/\.[tj]sx$/.test(active)) return;
+    const tab = props.tabs.find((tab) => tab.name === active);
+    if (!tab) return;
+    const current = mode();
+    compileOutput(
+      tab,
+      current === compileOptions.UNIVERSAL ? { ...current, moduleName: universalModuleName() } : current,
+    );
   });
 
   createEffect(() => cmTabs.syncTypes(importMap.state().imports));
@@ -325,30 +265,26 @@ export const Repl: ReplProps = (props) => {
     let ref!: HTMLDivElement;
 
     onMount(() => {
-      const openFile = (fileId: string) => {
-        const panel = dockview.getGroupPanel(fileId);
-        if (panel) {
-          panel.focus();
-          return;
-        }
-        dockview.addPanel({
-          id: fileId,
-          title: workspace.nameOf(fileId),
-          tabComponent: 'file',
-          component: 'editor',
+      const openPanel = (options: AddPanelOptions) => {
+        const panel = dockview.getGroupPanel(options.id);
+        if (panel) panel.focus();
+        else dockview.addPanel(options);
+      };
+      const openFile = (fileId: string) =>
+        openPanel({ id: fileId, title: workspace.nameOf(fileId), tabComponent: 'file', component: 'editor' });
+      const openPane = (id: string) =>
+        openPanel({
+          id,
+          tabComponent: 'default',
+          component: id.toLowerCase(),
+          renderer: id === 'Preview' ? 'always' : undefined,
         });
-      };
-
-      const newFile = (name: string) => {
-        const file = workspace.create(name);
-        if (file) openFile(file.id);
-      };
+      const open = (id: string) => (workspace.byId(id) ? openFile(id) : openPane(id));
 
       createEffect(() => {
         const live = new Set(workspace.files().map((f) => f.id));
         for (const panel of [...dockview.panels]) {
-          if (panel.view?.contentComponent !== 'editor') continue;
-          if (!live.has(panel.id)) panel.api.close();
+          if (panel.view?.contentComponent === 'editor' && !live.has(panel.id)) panel.api.close();
         }
       });
 
@@ -361,18 +297,8 @@ export const Repl: ReplProps = (props) => {
               icon={plus}
               class={css({ h: '28px' })}
               onClick={() => {
-                const panel = dockview.getPanel('newTab');
-                if (panel) {
-                  panel.focus();
-                } else {
-                  params.group.focus();
-                  dockview.addPanel({
-                    id: 'newTab',
-                    title: 'New Tab',
-                    tabComponent: 'default',
-                    component: 'newTab',
-                  });
-                }
+                params.group.focus();
+                openPanel({ id: 'newTab', title: 'New Tab', tabComponent: 'default', component: 'newTab' });
               }}
               title="New Tab"
             >
@@ -383,9 +309,7 @@ export const Repl: ReplProps = (props) => {
           solidPart<GroupPanelPartInitParameters>(tabBody, (params) => {
             const isFile = panel.name == 'file';
             const fileId = params.api.id;
-
-            const [panelTitle, setPanelTitle] = createSignal(params.title);
-            params.api.onDidTitleChange((e) => setPanelTitle(e.title));
+            const label = () => (isFile ? workspace.nameOf(fileId) : undefined) ?? params.title;
 
             if (isFile) {
               createEffect(() => {
@@ -393,8 +317,6 @@ export const Repl: ReplProps = (props) => {
                 if (name && name !== params.api.title) params.api.setTitle(name);
               });
             }
-
-            const label = () => (isFile ? (workspace.nameOf(fileId) ?? panelTitle()) : panelTitle());
 
             const items = () => fileMenuItems(workspace, fileId);
             const { Content, openAt } = useMenu(items);
@@ -465,60 +387,16 @@ export const Repl: ReplProps = (props) => {
         },
         createComponent(options) {
           let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
-
-          let component: (
-            params: GroupPanelPartInitParameters['params'],
-            x: GroupPanelPartInitParameters,
-          ) => JSX.Element = () => null;
+          let component: (params: GroupPanelPartInitParameters) => JSX.Element = () => null;
 
           switch (options.name) {
             case 'newTab':
-              component = (_, params) => (
-                <NewTab
-                  tabs={props.tabs}
-                  onOpenPane={(id) => {
-                    const panel = dockview.getGroupPanel(id);
-                    if (panel) {
-                      panel.focus();
-                    } else {
-                      dockview.addPanel({
-                        id,
-                        tabComponent: 'default',
-                        component: id.toLowerCase(),
-                        renderer: id === 'Preview' ? 'always' : undefined,
-                      });
-                    }
-                  }}
-                  onOpenFile={(name) => {
-                    const file = workspace.byName(name);
-                    if (file) openFile(file.id);
-                  }}
-                  onNewFile={newFile}
-                  onUpload={(name: string, source: string) => {
-                    const file = workspace.create(name, source);
-                    if (file) setTimeout(() => openFile(file.id));
-                  }}
-                  onDeleteFile={(name) => {
-                    const file = workspace.byName(name);
-                    if (file) workspace.remove(file.id);
-                  }}
-                  onRenameFile={(oldName, newName) => {
-                    const file = workspace.byName(oldName);
-                    if (file) workspace.rename(file.id, newName);
-                  }}
-                  onClose={() => params.api.close()}
-                />
-              );
+              component = (params) => <NewTab onOpen={open} onClose={() => params.api.close()} />;
               break;
             case 'editor':
-              component = (_, params) =>
-                workspace.nameOf(params.api.id) === 'import_map.json' ? (
-                  <ImportMapPanel />
-                ) : (
-                  <Editor fileId={params.api.id} />
-                );
+              component = (params) => <FilePanel fileId={params.api.id} />;
               break;
-            case 'preview':
+            case 'preview': {
               setPreviewVisible(true);
               onCleanup(() => setPreviewVisible(false));
               const [previewIsActive, setPreviewIsActive] = createSignal(false);
@@ -529,6 +407,7 @@ export const Repl: ReplProps = (props) => {
                 return () => disposable.dispose();
               };
               break;
+            }
             case 'output':
               setOutputVisible(true);
               onCleanup(() => setOutputVisible(false));
@@ -538,13 +417,13 @@ export const Repl: ReplProps = (props) => {
 
           return solidPart<GroupPanelPartInitParameters>(
             css({ display: 'flex', flexDirection: 'column', h: 'full' }),
-            (params) => <ReplContext.Provider value={api}>{component(params.params, params)}</ReplContext.Provider>,
+            (params) => <ReplContext.Provider value={api}>{component(params)}</ReplContext.Provider>,
             onInit,
           );
         },
       });
 
-      const entryId = workspace.byName(ENTRY_FILE)?.id ?? workspace.files()[0]?.id ?? ENTRY_FILE;
+      const entryId = entryFileId() ?? ENTRY_FILE;
 
       const defaultLayout = {
         grid: {
@@ -620,8 +499,7 @@ export const Repl: ReplProps = (props) => {
       }
 
       dockview.onDidActivePanelChange((e) => {
-        if (!e.panel) return;
-        if (workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
+        if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
       });
     });
 

@@ -6,7 +6,7 @@ import { IconButton } from './ui/IconButton';
 import { css } from 'styled-system/css';
 
 export const Error: Component<{
-  onDismiss: (...args: unknown[]) => unknown;
+  onDismiss: () => void;
   message: string;
 }> = (props) => {
   const lines = createMemo(() => props.message.split('\n'));

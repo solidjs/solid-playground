@@ -6,6 +6,8 @@ export interface ImportMapState {
   pinned: string[];
 }
 
+export const IMPORT_MAP_FILE = 'import_map.json';
+
 const EXTERNALIZED = ['solid-js', '@solidjs/web'];
 const SOLID_FAMILY = [...EXTERNALIZED, '@solidjs/signals'];
 
@@ -80,8 +82,6 @@ function syncEntries(state: ImportMapState, specifiers: string[], solidVersion?:
   return { imports, pinned: state.pinned };
 }
 
-const IMPORT_MAP_TAB = 'import_map.json';
-
 export interface ImportMapController {
   state: Accessor<ImportMapState>;
   setPackageUrl(name: string, url: string): void;
@@ -99,7 +99,7 @@ export interface ImportMapOptions {
 
 export function createImportMap(opts: ImportMapOptions): ImportMapController {
   const tabState = createMemo(
-    () => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_TAB)?.source),
+    () => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_FILE)?.source),
     undefined,
     { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
@@ -116,9 +116,9 @@ export function createImportMap(opts: ImportMapOptions): ImportMapController {
   const write = (next: ImportMapState) => {
     const source = serializeImportMap(next);
     const tabs = opts.tabs();
-    const tab = tabs.find((tab) => tab.name === IMPORT_MAP_TAB);
+    const tab = tabs.find((tab) => tab.name === IMPORT_MAP_FILE);
     if (!tab) {
-      opts.setTabs(tabs.concat({ name: IMPORT_MAP_TAB, source }));
+      opts.setTabs(tabs.concat({ name: IMPORT_MAP_FILE, source }));
     } else if (tab.source !== source) {
       tab.source = source;
       opts.setTabs(tabs.slice());

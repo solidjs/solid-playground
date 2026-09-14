@@ -20,6 +20,8 @@ export const compileOptions = {
   },
 } as const;
 
+export type CompileModeOption = (typeof compileOptions)[keyof typeof compileOptions];
+
 const labels = {
   DOM: 'Client side rendering',
   SSR: 'Server side rendering',
@@ -34,8 +36,8 @@ const radioRow = css({
 });
 
 interface CompileModeProps {
-  mode: (typeof compileOptions)[keyof typeof compileOptions];
-  setMode: Setter<(typeof compileOptions)[keyof typeof compileOptions]>;
+  mode: CompileModeOption;
+  setMode: Setter<CompileModeOption>;
   universalModuleName: string;
   setUniversalModuleName: Setter<string>;
 }

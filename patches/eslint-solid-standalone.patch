@@ -1,0 +1,13 @@
+diff --git a/dist.js b/dist.js
+index d08afcc..5c34260 100644
+--- a/dist.js
++++ b/dist.js
+@@ -461094,7 +461094,7 @@ function memoizeOne(resultFn, isEqual) {
+ }
+ 
+ // Create linter instance
+-const linter = new linter$3.Linter({ configType: "flat" });
++const linter = new linter$3.Linter({ configType: "flat", cwd: "/" });
+ 
+ const getConfig = memoizeOne((ruleSeverityOverrides) => {
+   const config = [

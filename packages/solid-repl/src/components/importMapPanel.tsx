@@ -45,21 +45,21 @@ const pinnedBadge = css({
 });
 
 export const ImportMapPanel: Component = () => {
-  const repl = useRepl();
+  const { importMap } = useRepl();
 
-  const names = () => Object.keys(repl.importMap().imports);
-  const urlOf = (name: string) => repl.importMap().imports[name] ?? '';
-  const isPinned = (name: string) => repl.importMap().pinned.includes(name);
+  const names = () => Object.keys(importMap.state().imports);
+  const urlOf = (name: string) => importMap.state().imports[name] ?? '';
+  const isPinned = (name: string) => importMap.state().pinned.includes(name);
 
   const commitUrl = (name: string, url: string) => {
     const trimmed = url.trim();
-    if (trimmed && trimmed !== urlOf(name)) repl.setPackageUrl(name, trimmed);
+    if (trimmed && trimmed !== urlOf(name)) importMap.setPackageUrl(name, trimmed);
   };
 
   const addPackage = (input: HTMLInputElement) => {
     const name = input.value.trim();
-    if (!name || name in repl.importMap().imports) return;
-    repl.addPackage(name);
+    if (!name || name in importMap.state().imports) return;
+    importMap.addPackage(name);
     input.value = '';
   };
 
@@ -87,7 +87,7 @@ export const ImportMapPanel: Component = () => {
             <Show when={isPinned(name)}>
               <span class={pinnedBadge}>pinned</span>
             </Show>
-            <IconButton icon={trash} onClick={() => repl.removePackage(name)} title={`Remove ${name}`} />
+            <IconButton icon={trash} onClick={() => importMap.removePackage(name)} title={`Remove ${name}`} />
           </div>
         )}
       </For>

@@ -48,11 +48,7 @@ export function formatKey(key: string): string {
 }
 
 export const toCommandItems = (commands: Command[]): CommandItem[] =>
-  commands.map((c) => ({
-    id: c.id,
-    label: c.title,
-    icon: c.icon,
-    shortcut: c.shortcut ? formatKey(c.shortcut) : c.key ? formatKey(c.key) : undefined,
-    group: c.group,
-    onSelect: c.run,
-  }));
+  commands.map((c) => {
+    const key = c.shortcut ?? c.key;
+    return { id: c.id, label: c.title, icon: c.icon, shortcut: key && formatKey(key), group: c.group, onSelect: c.run };
+  });

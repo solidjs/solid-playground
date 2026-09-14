@@ -13,5 +13,3 @@ function format(code: string) {
 serveWorker({
   FORMAT: async ({ code }: { code: string }) => ({ code: await format(code) }),
 });
-
-export {};

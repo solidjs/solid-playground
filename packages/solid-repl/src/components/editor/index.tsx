@@ -2,7 +2,10 @@ import { Component, For, Show, onMount } from 'solid-js';
 import { IconButton } from '../ui/IconButton';
 import { useCommandMenu } from '../ui/CommandPalette';
 import { useRepl } from '../replContext';
+import { ImportMapPanel } from '../importMapPanel';
+import { IMPORT_MAP_FILE } from '../../kernel/importMap';
 import { menuOf, toCommandItems } from '../../kernel/commands';
+import { isTsFile } from './codemirrorTabs';
 import { css } from 'styled-system/css';
 
 const editorContainer = css({ flex: 1, p: 0, minH: 0, minW: 0, display: 'flex', overflow: 'hidden' });
@@ -20,16 +23,13 @@ const footer = css({
   _dark: { borderColor: 'neutral.700', bg: 'neutral.900' },
 });
 
-const tsExts = new Set(['tsx', 'jsx', 'ts', 'js', 'mts', 'cts', 'mjs', 'cjs']);
-
 export const Editor: Component<{ fileId: string; autofocus?: boolean }> = (props) => {
   const api = useRepl();
   let parent!: HTMLDivElement;
 
   onMount(() => api.editors.attach(props.fileId, parent, props.autofocus !== false));
 
-  const name = () => api.workspace.nameOf(props.fileId) ?? '';
-  const isTs = () => tsExts.has(name().split('.').pop() ?? '');
+  const isTs = () => isTsFile(api.workspace.nameOf(props.fileId) ?? '');
 
   const onContextMenu = (e: MouseEvent) => {
     if (!isTs()) return;
@@ -73,11 +73,21 @@ export const Editor: Component<{ fileId: string; autofocus?: boolean }> = (props
   );
 };
 
+export const FilePanel: Component<{ fileId: string; autofocus?: boolean }> = (props) => {
+  const api = useRepl();
+  return (
+    <Show
+      when={api.workspace.nameOf(props.fileId) === IMPORT_MAP_FILE}
+      fallback={<Editor fileId={props.fileId} autofocus={props.autofocus} />}
+    >
+      <ImportMapPanel />
+    </Show>
+  );
+};
+
 export const OutputEditor: Component = () => {
   const api = useRepl();
   let parent!: HTMLDivElement;
   onMount(() => api.editors.ensureOutputView().attach(parent));
   return <div class={editorContainer} ref={parent} />;
 };
-
-export default Editor;

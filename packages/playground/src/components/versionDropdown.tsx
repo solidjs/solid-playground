@@ -3,13 +3,7 @@ import { Icon } from 'solid-heroicons';
 import { check, cube } from 'solid-heroicons/outline';
 import { useMenu } from 'solid-repl/src/components/ui/Menu';
 import { Button } from 'solid-repl/src/components/ui/Button';
-import { css, cx } from 'styled-system/css';
-
-const headerButtonOnMobile = css({
-  rounded: 'none',
-  _active: { bg: 'gray.300' },
-  _hover: { bg: 'gray.300', _dark: { color: 'black' } },
-});
+import { css } from 'styled-system/css';
 
 interface VersionOption {
   value: string;
@@ -80,12 +74,7 @@ export const VersionDropdown: Component<{
 
   return (
     <>
-      <Button
-        {...menu.api().getTriggerProps()}
-        type="button"
-        class={cx(props.showOnMobile && headerButtonOnMobile)}
-        title="Switch Solid version"
-      >
+      <Button {...menu.api().getTriggerProps()} type="button" mobile={props.showOnMobile} title="Switch Solid version">
         <Icon path={cube} class={css({ h: 6 })} />
         <span class={css({ fontSize: 'sm' })}>{label()}</span>
       </Button>
