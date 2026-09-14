@@ -12,24 +12,38 @@ import dd from 'dedent';
 import { serveWorker } from '../src/kernel/workerServer';
 import type { SolidCompileOptions } from '../src/components/CompileMode';
 
-// Stable preset patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.
-const presetSpecFor = (version: string) => (version.includes('-') ? version : version.split('.').slice(0, 2).join('.'));
+// Stable package patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.
+const specFor = (version: string) => (version.includes('-') ? version : version.split('.').slice(0, 2).join('.'));
 
-const presetCache = new Map<string, Promise<object>>();
+// The compiler moved from babel-preset-solid to @solidjs/babel-plugin at 2.0.0-rc.2.
+const usesBabelPlugin = (version: string) => {
+  const [core, pre] = version.split('-');
+  const [major = 0, minor = 0, patch = 0] = core.split('.').map(Number);
+  if (major !== 2 || minor !== 0 || patch !== 0) return major >= 2;
+  if (!pre) return true;
+  const rc = /^rc\.(\d+)$/.exec(pre);
+  return !!rc && Number(rc[1]) >= 2;
+};
 
-function loadPreset(version: string | undefined): Promise<object> {
-  if (!version) return Promise.resolve(babelPresetSolid);
-  let cached = presetCache.get(version);
+type SolidCompiler = { solid: object; isPlugin: boolean };
+
+const solidCache = new Map<string, Promise<SolidCompiler>>();
+
+function loadSolid(version: string | undefined): Promise<SolidCompiler> {
+  if (!version) return Promise.resolve({ solid: babelPresetSolid, isPlugin: false });
+  let cached = solidCache.get(version);
   if (!cached) {
-    const spec = presetSpecFor(version);
-    cached = import(/* @vite-ignore */ `https://esm.sh/babel-preset-solid@${spec}`).then(
-      (m) => m.default ?? m,
+    const isPlugin = usesBabelPlugin(version);
+    const pkg = isPlugin ? '@solidjs/babel-plugin' : 'babel-preset-solid';
+    const spec = specFor(version);
+    cached = import(/* @vite-ignore */ `https://esm.sh/${pkg}@${spec}`).then(
+      (m) => ({ solid: m.default ?? m, isPlugin }),
       (e) => {
-        presetCache.delete(version);
-        throw new Error(`Failed to load babel-preset-solid@${spec}: ${e instanceof Error ? e.message : e}`);
+        solidCache.delete(version);
+        throw new Error(`Failed to load ${pkg}@${spec}: ${e instanceof Error ? e.message : e}`);
       },
     );
-    presetCache.set(version, cached);
+    solidCache.set(version, cached);
   }
   return cached;
 }
@@ -40,7 +54,7 @@ function uid(str: string) {
     .toString();
 }
 
-function babelTransform(filename: string, code: string, externals: Set<string>, preset: object) {
+function babelTransform(filename: string, code: string, externals: Set<string>, { solid, isPlugin }: SolidCompiler) {
   const handleImportee = (node: Node | null | undefined) => {
     if (node?.type !== 'StringLiteral') return;
     const importee = node.value;
@@ -51,6 +65,7 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
     }
   };
 
+  const solidEntry = [solid, { generate: 'dom', hydratable: false }];
   let { code: transformedCode } = transform(code, {
     plugins: [
       babelSyntaxJsx,
@@ -72,18 +87,16 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
           },
         };
       },
+      ...(isPlugin ? [solidEntry] : []),
     ],
-    presets: [
-      [preset, { generate: 'dom', hydratable: false }],
-      ['typescript', { onlyRemoveTypeImports: true }],
-    ],
+    presets: [...(isPlugin ? [] : [solidEntry]), ['typescript', { onlyRemoveTypeImports: true }]],
     filename,
   });
 
   return transformedCode!.replace('render(', 'window.dispose = render(');
 }
 
-function transformTab(tab: Tab, externals: Set<string>, preset: object): string {
+function transformTab(tab: Tab, externals: Set<string>, compiler: SolidCompiler): string {
   if (tab.name.endsWith('.css')) {
     const id = uid(tab.name);
     return dd`
@@ -100,28 +113,26 @@ function transformTab(tab: Tab, externals: Set<string>, preset: object): string 
       })()
     `;
   }
-  return babelTransform(tab.name, tab.source, externals, preset);
+  return babelTransform(tab.name, tab.source, externals, compiler);
 }
 
 async function compile(tabs: Tab[], version: string | undefined) {
-  const preset = await loadPreset(version);
+  const compiler = await loadSolid(version);
   const externals = new Set<string>();
   const compiled: Record<string, string> = {};
   for (const tab of tabs) {
     const key = `./${tab.name.replace(/\.(tsx|jsx)$/, '')}`;
-    compiled[key] = transformTab(tab, externals, preset);
+    compiled[key] = transformTab(tab, externals, compiler);
   }
   return { compiled, externals: [...externals] };
 }
 
 async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string | undefined) {
-  const preset = await loadPreset(version);
+  const { solid, isPlugin } = await loadSolid(version);
+  const solidEntry = [solid, compileOpts];
   const { code } = transform(tab.source, {
-    plugins: [babelSyntaxJsx],
-    presets: [
-      [preset, compileOpts],
-      ['typescript', { onlyRemoveTypeImports: true }],
-    ],
+    plugins: [babelSyntaxJsx, ...(isPlugin ? [solidEntry] : [])],
+    presets: [...(isPlugin ? [] : [solidEntry]), ['typescript', { onlyRemoveTypeImports: true }]],
     filename: tab.name,
   });
   return { compiled: code };
