@@ -283,7 +283,7 @@ export const Repl: ReplProps = (props) => {
 
       createEffect(() => {
         const live = new Set(workspace.files().map((f) => f.id));
-        for (const panel of [...dockview.panels]) {
+        for (const panel of dockview.panels) {
           if (panel.view?.contentComponent === 'editor' && !live.has(panel.id)) panel.api.close();
         }
       });

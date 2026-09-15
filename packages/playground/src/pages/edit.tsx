@@ -309,7 +309,7 @@ export const Edit = () => {
         });
       }
     },
-    !!scratchpad() ? 10 : 1000,
+    scratchpad() ? 10 : 1000,
   );
 
   return (

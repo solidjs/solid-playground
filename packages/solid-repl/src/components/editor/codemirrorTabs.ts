@@ -288,7 +288,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
       }
     }
 
-    for (const uri of [...registered.keys()]) {
+    for (const uri of registered.keys()) {
       if (!liveUris.has(uri)) {
         session.worker.postMessage({ method: 'textDocument/didClose', params: { textDocument: { uri } } });
         registered.delete(uri);
