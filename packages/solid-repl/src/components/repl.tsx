@@ -193,8 +193,8 @@ export const Repl: ReplProps = (props) => {
       const result = await requestRollup(tabs);
       if (!result) return;
       console.log(`Compilation took: ${performance.now() - started}ms`);
-      setError('');
       batch(() => {
+        setError('');
         setOutput(result.compiled);
         importMap.syncExternals(result.externals);
       });

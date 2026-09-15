@@ -1,4 +1,5 @@
-import { Component, For, JSX, Show, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { Component, For, JSX, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
+import { batched } from '../kernel/batched';
 import { Icon } from 'solid-heroicons';
 import { plus, xMark } from 'solid-heroicons/outline';
 import { NewTab } from './newTab';
@@ -176,8 +177,8 @@ const emptyState = css({
 export const MobileRepl: Component<MobileReplProps> = (props) => {
   const { workspace } = useRepl();
 
-  const [openIds, setOpenIds] = createSignal<string[]>(props.initialViews);
-  const [activeId, setActiveId] = createSignal<string | undefined>(props.initialViews[0]);
+  const [requestedIds, setOpenIds] = createSignal<string[]>(props.initialViews);
+  const [requestedActive, setActiveId] = createSignal<string | undefined>(props.initialViews[0]);
   const [switcher, setSwitcher] = createSignal(false);
 
   const isPane = (id: string) => id === 'Preview' || id === 'Output' || id === 'NewTab';
@@ -186,26 +187,25 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
     return isPane(id) ? id : (workspace.nameOf(id) ?? id);
   };
 
-  const setActive = (id: string | undefined) => {
-    setActiveId(id);
-    if (id && workspace.byId(id)) props.onActiveFile(id);
-  };
-  setActive(activeId());
-
-  createEffect(() => props.onPreviewOpen(openIds().includes('Preview')));
-  createEffect(() => props.onOutputOpen(openIds().includes('Output')));
-  onCleanup(() => {
-    props.onPreviewOpen(false);
-    props.onOutputOpen(false);
+  // Deleted files drop out of the open list; the active view falls back to the first one.
+  const openIds = createMemo(() => requestedIds().filter((id) => isPane(id) || !!workspace.byId(id)));
+  const activeId = createMemo(() => {
+    const id = requestedActive();
+    return id && openIds().includes(id) ? id : openIds()[0];
   });
 
   createEffect(() => {
-    const live = new Set(workspace.files().map((f) => f.id));
-    const open = openIds().filter((id) => isPane(id) || live.has(id));
-    if (open.length === openIds().length) return;
-    setOpenIds(open);
-    if (!open.includes(activeId()!)) setActive(open[0]);
+    const id = activeId();
+    if (id && workspace.byId(id)) props.onActiveFile(id);
   });
+  createEffect(() => props.onPreviewOpen(openIds().includes('Preview')));
+  createEffect(() => props.onOutputOpen(openIds().includes('Output')));
+  onCleanup(
+    batched(() => {
+      props.onPreviewOpen(false);
+      props.onOutputOpen(false);
+    }),
+  );
 
   let stageRef!: HTMLDivElement;
   const [stageSize, setStageSize] = createSignal({ w: 0, h: 0 });
@@ -223,23 +223,24 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   const cardY = (index: number) => STACK_PAD + index * (cardH() + CARD_GAP);
   const stackHeight = () => STACK_PAD * 2 + openIds().length * (cardH() + CARD_GAP) - CARD_GAP;
 
-  const activate = (id: string) => {
-    setActive(id);
+  const activate = batched((id: string) => {
+    setActiveId(id);
     setSwitcher(false);
-  };
+  });
 
-  const openView = (id: string) => {
+  const openView = batched((id: string) => {
     if (!openIds().includes(id)) setOpenIds(openIds().concat(id));
     activate(id);
-  };
+  });
 
-  const closeView = (id: string) => {
+  const closeView = batched((id: string) => {
     const open = openIds();
     const index = open.indexOf(id);
     const next = open.filter((x) => x !== id);
+    const wasActive = activeId() === id;
     setOpenIds(next);
-    if (activeId() === id) setActive(next[Math.min(index, next.length - 1)]);
-  };
+    if (wasActive) setActiveId(next[Math.min(index, next.length - 1)]);
+  });
 
   const toggleSwitcher = () => {
     const entering = !switcher();

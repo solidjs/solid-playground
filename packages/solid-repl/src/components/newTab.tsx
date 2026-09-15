@@ -1,4 +1,5 @@
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js';
+import { batched } from '../kernel/batched';
 import { Icon } from 'solid-heroicons';
 import {
   magnifyingGlass,
@@ -83,17 +84,17 @@ export const NewTab: Component<NewTabProps> = (props) => {
 
   const allItems = createMemo(() => categories().flatMap((c) => c.items));
 
-  const openNew = (name: string, source?: string) => {
+  const openNew = batched((name: string, source?: string) => {
     const file = workspace.create(name, source);
     if (file) props.onOpen(file.id);
-  };
+  });
 
-  const handleSelect = (item: Item) => {
+  const handleSelect = batched((item: Item) => {
     props.onClose();
     if (item.type === 'pane' || item.type === 'file') props.onOpen(item.id);
     else if (item.type === 'new') openNew(item.id);
     else if (item.id === 'upload') fileInputRef.click();
-  };
+  });
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (renamingId()) return;
@@ -131,10 +132,10 @@ export const NewTab: Component<NewTabProps> = (props) => {
             class={css({ pl: 10 })}
             placeholder="Search panes, files, or type a new filename..."
             value={query()}
-            onInput={(e) => {
+            onInput={batched((e: InputEvent & { currentTarget: HTMLInputElement }) => {
               setQuery(e.currentTarget.value);
               setSelectedIndex(0);
-            }}
+            })}
             onKeyDown={handleKeyDown}
           />
         </div>
@@ -151,10 +152,10 @@ export const NewTab: Component<NewTabProps> = (props) => {
                     isRenaming={() => renamingId() === item.id}
                     onSelect={() => handleSelect(item)}
                     onStartRename={() => setRenamingId(item.id)}
-                    onSubmitRename={(newName) => {
+                    onSubmitRename={batched((newName: string) => {
                       setRenamingId(null);
                       workspace.rename(item.id, newName);
-                    }}
+                    })}
                     onCancelRename={() => setRenamingId(null)}
                     onDelete={() => {
                       if (confirm(`Delete ${item.label}?`)) workspace.remove(item.id);

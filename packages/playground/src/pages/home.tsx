@@ -2,6 +2,7 @@ import { A, useParams } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
 import { eye, eyeSlash, plus, xMark } from 'solid-heroicons/outline';
 import { createResource, createSignal, For, Show, Suspense } from 'solid-js';
+import { batched } from 'solid-repl/src';
 import { createStore, produce } from 'solid-js/store';
 import { API, useAppContext } from '../context';
 import { Header } from '../components/header';
@@ -204,7 +205,7 @@ export const Home = () => {
           <Button onClick={() => setDeleteId(undefined)}>No</Button>
           <Button
             class={css({ color: 'red.700', _dark: { color: 'red.400' } })}
-            onClick={() => {
+            onClick={batched(() => {
               const id = deleteId();
               if (!id) return;
               fetch(`${API}/repl/${id}`, {
@@ -216,7 +217,7 @@ export const Home = () => {
                 list: repls.list.filter((x) => x.id !== id),
               });
               setDeleteId(undefined);
-            }}
+            })}
           >
             Delete
           </Button>

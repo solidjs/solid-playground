@@ -1,4 +1,4 @@
-import { Component, createEffect, JSX, onCleanup, onMount } from 'solid-js';
+import { Component, createEffect, JSX, on, onCleanup, onMount } from 'solid-js';
 import { useZoom } from '../hooks/useZoom';
 import { Orientation, SplitviewComponent } from 'dockview';
 import { SolidSplitviewPanel } from '../kernel/mountSolid';
@@ -66,7 +66,8 @@ const sandboxShim = `
 
 const mainIframeScript = `
   (() => {
-    let finisher = undefined;
+    let loading = false;
+    let queued = undefined;
     let cache = {};
 
     const buildModule = (name, source, sources) => {
@@ -81,108 +82,80 @@ const mainIframeScript = `
       return cache[name];
     };
 
-    const handleCodeUpdate = (sources) => {
-      if (!sources || typeof sources['./main'] !== 'string') return;
-
+    const runCode = (sources) => {
       window.dispose?.();
       window.dispose = undefined;
 
-      if (document.getElementById('app')) document.getElementById('app').innerHTML = '';
+      const app = document.getElementById('app');
+      if (app) app.innerHTML = '';
 
       console.clear();
 
       document.getElementById('appsrc')?.remove();
+      document.getElementById('load')?.remove();
 
       for (const url of Object.values(cache)) {
         if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url);
       }
       cache = {};
 
+      loading = true;
+      const settle = () => {
+        loading = false;
+        const next = queued;
+        queued = undefined;
+        if (next) runCode(next);
+      };
       const script = document.createElement('script');
       script.id = 'appsrc';
       script.type = 'module';
-      finisher = () => {};
-      const settle = () => {
-        if (finisher) finisher();
-        finisher = undefined;
-      };
       script.onload = settle;
       script.onerror = settle;
       script.src = buildModule('./main', sources['./main'], sources);
       document.body.appendChild(script);
-
-      const load = document.getElementById('load');
-      if (load) load.remove();
     };
 
-    const sendToDevtools = (message) => {
-      window.parent.postMessage(JSON.stringify(message), '*');
-    };
-    let id = 0;
-    const sendToChobitsu = (message) => {
-      message.id = 'tmp' + ++id;
-      chobitsu.sendRawMessage(JSON.stringify(message));
-    };
-    chobitsu.setOnMessage((message) => {
-      if (message.includes('"id":"tmp')) return;
-      window.parent.postMessage(message, '*');
-    });
+    chobitsu.setOnMessage((message) => window.parent.postMessage(message, '*'));
 
     let pageSource = '';
     const pageDomain = chobitsu.domain('Page');
     if (pageDomain) {
-      pageDomain.getResourceContent = (params) => {
-        if (params.frameId === '1') {
-          return Promise.resolve({ base64Encoded: false, content: pageSource });
-        }
-        return Promise.resolve({ base64Encoded: false, content: '' });
-      };
+      pageDomain.getResourceContent = (params) =>
+        Promise.resolve({ base64Encoded: false, content: params.frameId === '1' ? pageSource : '' });
     }
 
-    const handle = (data) => {
-      try {
-        const { event, value } = data;
-        if (event === 'CODE_UPDATE') {
-          const next = () => handleCodeUpdate(value);
-          if (finisher !== undefined) finisher = next;
-          else next();
-        } else if (event === 'IMPORT_MAP') {
-          document.getElementById('importmap')?.remove();
-          const importMap = document.createElement('script');
-          importMap.id = 'importmap';
-          importMap.type = 'importmap';
-          importMap.textContent = JSON.stringify({ imports: value });
-          document.head.appendChild(importMap);
-        } else if (event === 'DARK') {
-          document.documentElement.classList.toggle('dark', value);
-        } else if (event === 'PAGE_SOURCE') {
-          pageSource = value;
-        } else if (event === 'DEV') {
-          chobitsu.sendRawMessage(data.data);
-        } else if (event === 'LOADED') {
-          sendToDevtools({
-            method: 'Page.frameNavigated',
-            params: {
-              frame: { id: '1', mimeType: 'text/html', securityOrigin: parent.location.origin, url: parent.location.href },
-              type: 'Navigation',
-            },
-          });
-          sendToChobitsu({ method: 'Network.enable' });
-          sendToDevtools({ method: 'Runtime.executionContextsCleared' });
-          sendToChobitsu({ method: 'Runtime.enable' });
-          sendToChobitsu({ method: 'Debugger.enable' });
-          sendToChobitsu({ method: 'DOMStorage.enable' });
-          sendToChobitsu({ method: 'DOM.enable' });
-          sendToChobitsu({ method: 'CSS.enable' });
-          sendToChobitsu({ method: 'Overlay.enable' });
-          sendToDevtools({ method: 'DOM.documentUpdated' });
-        }
-      } catch (e) {
-        console.error(e);
-      }
+    const handlers = {
+      CODE_UPDATE: (sources) => {
+        if (!sources || typeof sources['./main'] !== 'string') return;
+        if (loading) queued = sources;
+        else runCode(sources);
+      },
+      IMPORT_MAP: (imports) => {
+        document.getElementById('importmap')?.remove();
+        const importMap = document.createElement('script');
+        importMap.id = 'importmap';
+        importMap.type = 'importmap';
+        importMap.textContent = JSON.stringify({ imports });
+        document.head.appendChild(importMap);
+      },
+      DARK: (isDark) => {
+        document.documentElement.classList.toggle('dark', isDark);
+      },
+      PAGE_SOURCE: (source) => {
+        pageSource = source;
+      },
+      DEV: (message) => {
+        chobitsu.sendRawMessage(message);
+      },
     };
 
-    window.addEventListener('message', (e) => handle(e.data));
+    window.addEventListener('message', (e) => {
+      try {
+        handlers[e.data?.event]?.(e.data.value);
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
     ${dispatchZoomKeyToParent}
   })();
@@ -224,8 +197,7 @@ const iframeHtml = `<!doctype html>
   </body>
 </html>`;
 
-const useDevtoolsSrc = () => {
-  const html = `
+const devtoolsHtml = `
   <!DOCTYPE html>
   <html lang="en">
   <meta charset="utf-8">
@@ -242,10 +214,13 @@ const useDevtoolsSrc = () => {
   <script src="https://unpkg.com/@ungap/custom-elements/es.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/chii@1.15.5/public/front_end/entrypoints/chii_app/chii_app.js"></script>
   <body class="undocked" id="-blink-dev-tools">`;
-  const devtoolsRawUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-  onCleanup(() => URL.revokeObjectURL(devtoolsRawUrl));
-  return `${devtoolsRawUrl}#?embedded=${encodeURIComponent(location.origin)}`;
-};
+
+type PreviewMessage =
+  | { event: 'PAGE_SOURCE'; value: string }
+  | { event: 'IMPORT_MAP'; value: Record<string, string> }
+  | { event: 'CODE_UPDATE'; value: Record<string, string> }
+  | { event: 'DARK'; value: boolean }
+  | { event: 'DEV'; value: string };
 
 interface PreviewProps {
   importMap: Record<string, string>;
@@ -259,130 +234,127 @@ export const Preview: Component<PreviewProps> = (props) => {
   const { zoomState } = useZoom();
 
   let iframe!: HTMLIFrameElement;
-  let devtoolsIframe!: HTMLIFrameElement;
+  let devtoolsIframe: HTMLIFrameElement | undefined;
   let outerContainer!: HTMLDivElement;
 
-  let devtoolsLoaded = false;
-  let isIframeReady = false;
-
-  type PreviewMessage =
-    | { event: 'LOADED' }
-    | { event: 'PAGE_SOURCE'; value: string }
-    | { event: 'IMPORT_MAP'; value: Record<string, string> }
-    | { event: 'CODE_UPDATE'; value: Record<string, string> }
-    | { event: 'DARK'; value: boolean };
+  let iframeReady = false;
+  // DevTools boots before the preview document exists; its startup requests (Page.getResourceTree
+  // among them, which gates its console) must reach chobitsu once the document is there.
+  const pendingDevtools: string[] = [];
 
   const sendToIframe = (msg: PreviewMessage) => {
-    if (!isIframeReady) return;
+    if (!iframeReady) return;
     iframe.contentWindow?.postMessage(msg, '*');
   };
 
-  const devtoolsSrc = useDevtoolsSrc();
+  // A DevTools session is tied to one preview document: reload it whenever the document is replaced.
+  const reloadDevtools = () => {
+    pendingDevtools.length = 0;
+    devtoolsIframe?.contentWindow?.location.reload();
+  };
 
-  const styleScale = () => {
-    const pointerEvents = props.pointerEvents ? 'inherit' : 'none';
-    if (zoomState.scale === 100 || !zoomState.scaleIframe) return `pointer-events: ${pointerEvents};`;
+  const uiTheme = () => (props.isDark ? '"dark"' : '"default"');
+  localStorage.setItem('uiTheme', uiTheme());
 
-    return `pointer-events: ${pointerEvents}; width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
+  const devtoolsUrl = URL.createObjectURL(new Blob([devtoolsHtml], { type: 'text/html' }));
+  onCleanup(() => URL.revokeObjectURL(devtoolsUrl));
+  const devtoolsSrc = `${devtoolsUrl}#?embedded=${encodeURIComponent(location.origin)}`;
+
+  const pointerEvents = () => (props.pointerEvents ? 'inherit' : 'none');
+
+  const iframeStyle = () => {
+    if (zoomState.scale === 100 || !zoomState.scaleIframe) return `pointer-events: ${pointerEvents()};`;
+    return `pointer-events: ${pointerEvents()}; width: ${zoomState.scale}%; height: ${zoomState.scale}%; transform: scale(${
       zoomState.zoom / 100
     }); transform-origin: 0 0;`;
   };
 
-  onMount(() => {
-    const frameworkComponents: Record<string, () => JSX.Element> = {
-      preview: () => (
-        <iframe
-          title="Solid REPL"
-          class={iframeStyles}
-          style={styleScale()}
-          ref={iframe}
-          srcdoc={iframeHtml}
-          onload={() => {
-            isIframeReady = true;
+  const onIframeLoad = () => {
+    iframeReady = true;
+    sendToIframe({ event: 'PAGE_SOURCE', value: iframeHtml });
+    sendToIframe({ event: 'IMPORT_MAP', value: props.importMap });
+    sendToIframe({ event: 'DARK', value: props.isDark });
+    for (const message of pendingDevtools.splice(0)) sendToIframe({ event: 'DEV', value: message });
+    if (props.code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: props.code });
+  };
 
-            if (devtoolsLoaded) sendToIframe({ event: 'LOADED' });
-            sendToIframe({ event: 'PAGE_SOURCE', value: iframeHtml });
-            sendToIframe({ event: 'IMPORT_MAP', value: props.importMap });
-            if (props.code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: props.code });
-            sendToIframe({ event: 'DARK', value: props.isDark });
-          }}
-          // @ts-ignore
-          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-pointer-lock"
-        />
-      ),
-      devtools: () => (
-        <iframe
-          title="Devtools"
-          class={devtoolsIframeStyles}
-          style={`pointer-events: ${props.pointerEvents ? 'inherit' : 'none'}`}
-          ref={devtoolsIframe}
-          src={devtoolsSrc}
-          onload={() => (devtoolsLoaded = true)}
-          classList={{ block: props.devtools, hidden: !props.devtools }}
-        />
-      ),
-    };
+  const views: Record<string, () => JSX.Element> = {
+    preview: () => (
+      <iframe
+        title="Solid REPL"
+        class={iframeStyles}
+        style={iframeStyle()}
+        ref={iframe}
+        srcdoc={iframeHtml}
+        onload={onIframeLoad}
+        // @ts-ignore
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-pointer-lock"
+      />
+    ),
+    devtools: () => (
+      <iframe
+        title="Devtools"
+        class={devtoolsIframeStyles}
+        style={`pointer-events: ${pointerEvents()}`}
+        ref={devtoolsIframe}
+        src={devtoolsSrc}
+      />
+    ),
+  };
+
+  const onMessage = (event: MessageEvent) => {
+    if (event.data?.event === 'ZOOM_KEY') {
+      document.dispatchEvent(new KeyboardEvent('keydown', event.data.value));
+    } else if (!devtoolsIframe) {
+      return;
+    } else if (event.source === iframe.contentWindow) {
+      devtoolsIframe.contentWindow!.postMessage(event.data, '*');
+    } else if (event.source === devtoolsIframe.contentWindow) {
+      if (iframeReady) sendToIframe({ event: 'DEV', value: event.data });
+      else pendingDevtools.push(event.data);
+    }
+  };
+
+  onMount(() => {
     const splitview = new SplitviewComponent(outerContainer, {
       orientation: Orientation.VERTICAL,
+      createComponent: ({ id, name }) => new SolidSplitviewPanel(id, name, views[name]),
+    });
+    splitview.addPanel({ id: 'preview', component: 'preview', minimumSize: 100 });
+    if (props.devtools) splitview.addPanel({ id: 'devtools', component: 'devtools', minimumSize: 100, snap: true });
 
-      createComponent: ({ id, name }) => {
-        return new SolidSplitviewPanel(id, name, frameworkComponents[name]);
-      },
-    });
-    splitview.addPanel({
-      id: 'preview',
-      component: 'preview',
-      minimumSize: 100,
-    });
-    if (props.devtools) {
-      splitview.addPanel({
-        id: 'devtools',
-        component: 'devtools',
-        minimumSize: 100,
-        snap: true,
-      });
-    }
+    window.addEventListener('message', onMessage);
+    onCleanup(() => window.removeEventListener('message', onMessage));
+
+    createEffect(
+      on(
+        () => props.importMap,
+        () => {
+          if (!iframeReady) return;
+          // A changed import map only takes effect in a fresh document.
+          iframeReady = false;
+          iframe.srcdoc = iframeHtml;
+          reloadDevtools();
+        },
+        { defer: true },
+      ),
+    );
 
     createEffect(() => {
-      sendToIframe({ event: 'DARK', value: props.isDark });
+      if (props.code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: props.code });
     });
 
-    createEffect(() => {
-      void props.importMap;
-      if (!isIframeReady) return;
-      // A changed import map only takes effect in a fresh document.
-      isIframeReady = false;
-      iframe.srcdoc = iframeHtml;
-    });
-
-    createEffect(() => {
-      if (!props.code['./main']) return;
-      sendToIframe({ event: 'CODE_UPDATE', value: props.code });
-    });
-
-    const messageListener = (event: MessageEvent) => {
-      if (event.data?.event === 'ZOOM_KEY') {
-        document.dispatchEvent(new KeyboardEvent('keydown', event.data.value));
-        return;
-      }
-      if (!devtoolsIframe) return;
-      if (event.source === iframe.contentWindow) {
-        devtoolsIframe.contentWindow!.postMessage(event.data, '*');
-      }
-      if (event.source === devtoolsIframe.contentWindow) {
-        iframe.contentWindow!.postMessage({ event: 'DEV', data: event.data }, '*');
-      }
-    };
-    window.addEventListener('message', messageListener);
-    onCleanup(() => window.removeEventListener('message', messageListener));
-
-    createEffect(() => {
-      localStorage.setItem('uiTheme', props.isDark ? '"dark"' : '"default"');
-
-      if (!devtoolsLoaded) return;
-
-      devtoolsIframe.contentWindow!.location.reload();
-    });
+    createEffect(
+      on(
+        () => props.isDark,
+        (isDark) => {
+          sendToIframe({ event: 'DARK', value: isDark });
+          localStorage.setItem('uiTheme', uiTheme());
+          reloadDevtools();
+        },
+        { defer: true },
+      ),
+    );
   });
 
   return <div class={previewContainer} ref={outerContainer} />;

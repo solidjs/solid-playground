@@ -1,4 +1,5 @@
 import { createEffect, createMemo, onCleanup } from 'solid-js';
+import { batched } from '../../kernel/batched';
 import { throttle } from '@solid-primitives/scheduled';
 import {
   drawSelection,
@@ -236,21 +237,23 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
           appearance.of(appearanceExtensions(opts.isDark(), opts.fontSize())),
           lintExtensions(currentUri, session, opts),
           language.of(languageExtensions(currentUri() ?? '', session)),
-          EditorView.updateListener.of((u) => {
-            if (u.docChanged) {
-              workspace.setSource(fileId, u.state.doc.toString());
-              const userEdit = u.transactions.some(
-                (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
-              );
-              if (userEdit) opts.onUserEdit?.();
-            }
-            if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
-              lastTopPos = u.view.viewport.from;
-              persist();
-            } else if (u.docChanged || u.selectionSet) {
-              persist();
-            }
-          }),
+          EditorView.updateListener.of(
+            batched((u) => {
+              if (u.docChanged) {
+                workspace.setSource(fileId, u.state.doc.toString());
+                const userEdit = u.transactions.some(
+                  (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
+                );
+                if (userEdit) opts.onUserEdit?.();
+              }
+              if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
+                lastTopPos = u.view.viewport.from;
+                persist();
+              } else if (u.docChanged || u.selectionSet) {
+                persist();
+              }
+            }),
+          ),
         ],
       }),
       scrollTo: lastTopPos > 0 ? EditorView.scrollIntoView(lastTopPos, { y: 'start' }) : undefined,

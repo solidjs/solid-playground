@@ -1,12 +1,12 @@
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import { createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { batch, createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
 import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
-import { defaultTabs, IMPORT_MAP_FILE, isSolidV2, solidVersionFromImportMap } from 'solid-repl/src';
+import { batched, defaultTabs, IMPORT_MAP_FILE, isSolidV2, solidVersionFromImportMap } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
@@ -156,12 +156,14 @@ export const Edit = () => {
     const request = ++versionRequest;
     const resolved = await resolveSolidVersion(version);
     if (request !== versionRequest) return;
-    setResolvedSolidVersion(resolved);
-    if (migrate) migrateTabs(resolved || undefined);
+    batch(() => {
+      setResolvedSolidVersion(resolved);
+      if (migrate) migrateTabs(resolved || undefined);
+    });
   };
   if (storedVersion === 'next' || storedVersion === 'latest') applySolidVersion(storedVersion, false);
 
-  const adoptSolidVersion = (importMapSource: string | undefined) => {
+  const adoptSolidVersion = batched((importMapSource: string | undefined) => {
     const version = solidVersionFromImportMap(importMapSource);
     if (version) {
       versionRequest++;
@@ -172,7 +174,7 @@ export const Edit = () => {
       setSolidVersion(stored);
       applySolidVersion(stored, false);
     }
-  };
+  });
 
   const changeSolidVersion = (version: string) => {
     setSolidVersion(version);
@@ -208,17 +210,19 @@ export const Edit = () => {
         }).then((r) => r.json());
       }
 
-      adoptSolidVersion(output.files.find((x) => x.name === IMPORT_MAP_FILE)?.content);
-      setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
+      batch(() => {
+        adoptSolidVersion(output.files.find((x) => x.name === IMPORT_MAP_FILE)?.content);
+        setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
+      });
 
       return output;
     },
   );
 
-  const reset = () => {
+  const reset = batched(() => {
     editTabs(defaultTabs);
     migrateTabs(resolvedSolidVersion() || undefined);
-  };
+  });
 
   const publishScratchpad = async (title: string) => {
     const newRepl = {
@@ -374,10 +378,10 @@ export const Edit = () => {
         </p>
         <div class={dialogActions}>
           <Button
-            onClick={() => {
+            onClick={batched(() => {
               setForkPromptFor(null);
               setForkDeclinedFor(params.repl);
-            }}
+            })}
           >
             Cancel
           </Button>

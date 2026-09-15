@@ -1,4 +1,5 @@
 import { Component, For, Show, createMemo, createSignal, createUniqueId } from 'solid-js';
+import { batched } from '../../kernel/batched';
 import { Portal } from 'solid-js/web';
 import { Icon } from 'solid-heroicons';
 import { magnifyingGlass } from 'solid-heroicons/outline';
@@ -96,12 +97,12 @@ export function useCommandMenu(items: () => CommandItem[]) {
   }));
   const api = createMemo(() => combobox.connect(service, normalizeProps));
 
-  const openAt = (x: number, y: number) => {
+  const openAt = batched((x: number, y: number) => {
     setPosition({ x, y });
     setQuery('');
     api().setOpen(true);
     queueMicrotask(() => api().focus());
-  };
+  });
 
   const Content: Component = () => (
     <Portal>
