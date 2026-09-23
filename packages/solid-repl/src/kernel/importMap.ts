@@ -8,8 +8,9 @@ export interface ImportMapState {
 
 export const IMPORT_MAP_FILE = 'import_map.json';
 
-const EXTERNALIZED = ['solid-js', '@solidjs/web'];
-const SOLID_FAMILY = [...EXTERNALIZED, '@solidjs/signals'];
+// Import-map entries that esm.sh must leave bare so Solid packages share one runtime.
+const EXTERNALIZED = ['solid-js', 'solid-js/internal', '@solidjs/web'];
+const SOLID_FAMILY = ['solid-js', '@solidjs/web', '@solidjs/signals'];
 
 export const isSolidV2 = (solidVersion: string | undefined) => !!solidVersion && parseInt(solidVersion, 10) >= 2;
 
@@ -35,7 +36,9 @@ function moduleUrl(importee: string, solidVersion?: string) {
     url += importee;
   }
 
-  const external = (isV2 ? EXTERNALIZED : ['solid-js']).filter((pkg) => pkg !== match);
+  const external = (isV2 ? EXTERNALIZED : ['solid-js']).filter(
+    (pkg) => pkg !== target && pkg !== match && !target.startsWith(`${pkg}/`),
+  );
   if (external.length) url += `?external=${external.join(',')}`;
   return url;
 }
