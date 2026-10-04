@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import { resolve } from 'node:path';
+import { linterAliases, linterDefine } from 'solid-repl/linterBuild.ts';
 
 const styledSystemPath = resolve(import.meta.dirname, '../../styled-system');
 
@@ -9,10 +10,12 @@ export default defineConfig((env) => ({
   resolve: {
     alias: {
       'styled-system': styledSystemPath,
+      ...linterAliases,
     },
   },
   define: {
     'process.env.NODE_DEBUG': 'false',
+    ...linterDefine,
     ...(env.command == 'build' ? {} : { global: 'globalThis' }),
   },
   build: {

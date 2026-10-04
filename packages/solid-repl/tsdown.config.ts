@@ -1,5 +1,6 @@
 import { defineConfig } from 'tsdown';
 import { copyFileSync, cpSync, renameSync } from 'node:fs';
+import { linterAliases, linterDefine } from './linterBuild.ts';
 
 export default defineConfig({
   entry: ['./repl/compiler.ts', './repl/formatter.ts', './repl/linter.ts', './repl/main.css'],
@@ -8,11 +9,13 @@ export default defineConfig({
   platform: 'browser',
   minify: true,
   dts: false,
+  alias: linterAliases,
   css: {
     transformer: 'postcss',
   },
   define: {
     'process.env.NODE_DEBUG': 'false',
+    ...linterDefine,
     'preventAssignment': 'true',
   },
   hooks: {

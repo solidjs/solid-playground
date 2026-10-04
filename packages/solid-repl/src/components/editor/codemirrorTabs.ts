@@ -36,7 +36,7 @@ export interface CodemirrorTabsOptions {
   isDark: () => boolean;
   fontSize: () => number;
   displayErrors: () => boolean;
-  eslintEnabled: () => boolean;
+  solidV2: () => boolean;
   formatter?: WorkerClient;
   linter?: WorkerClient;
   keyBindings?: KeyBinding[];
@@ -163,11 +163,11 @@ const lintExtensions = (
 
       session.client.sync();
       const diagnostics = await session.getDiagnostics(uri, view);
-      if (opts.eslintEnabled()) {
-        const res = await opts.linter?.tryRequest<LintResponse>('LINT', { code: view.state.doc.toString() });
-        diagnostics.push(...markersToDiagnostics(view, res?.markers ?? []));
-      }
-      return diagnostics;
+      const res = await opts.linter?.tryRequest<LintResponse>('LINT', {
+        code: view.state.doc.toString(),
+        v2: opts.solidV2(),
+      });
+      return diagnostics.concat(markersToDiagnostics(view, res?.markers ?? []));
     },
     {
       delay: 250,
@@ -200,8 +200,11 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
   };
 
   const fixView = async (view: EditorView) => {
-    if (!opts.displayErrors() || !opts.eslintEnabled()) return;
-    const res = await opts.linter?.tryRequest<LintResponse>('FIX', { code: view.state.doc.toString() });
+    if (!opts.displayErrors()) return;
+    const res = await opts.linter?.tryRequest<LintResponse>('FIX', {
+      code: view.state.doc.toString(),
+      v2: opts.solidV2(),
+    });
     if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
   };
 
@@ -354,7 +357,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
 
   createEffect(() => {
     opts.displayErrors();
-    opts.eslintEnabled();
+    opts.solidV2();
     relint();
   });
 

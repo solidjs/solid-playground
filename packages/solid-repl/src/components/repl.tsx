@@ -159,7 +159,7 @@ export const Repl: ReplProps = (props) => {
     isDark: () => !!props.dark,
     fontSize: () => zoomState.fontSize,
     displayErrors,
-    eslintEnabled: () => !isSolidV2(props.version),
+    solidV2: () => isSolidV2(props.version),
     formatter,
     linter,
     keyBindings: keyBindingsOf(commands),
