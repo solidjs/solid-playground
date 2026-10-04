@@ -20,7 +20,9 @@
   },
   "devDependencies": {
     "@changesets/cli": "3.0.2",
-    "@pandacss/dev": "^1.12.1",
+    "@pandacss/dev": "^2.1.1",
+    "@pandacss/preset-base": "^2.1.1",
+    "@pandacss/preset-panda": "^2.1.1",
     "@pandacss/eslint-plugin": "^0.3.2",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0"
