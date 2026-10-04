@@ -21,8 +21,9 @@ interface PendingRequest {
   reject(reason: Error): void;
 }
 
+let nextId = 0;
+
 export function createWorkerClient(worker: Worker): WorkerClient {
-  let nextId = 0;
   const pending = new Map<number, PendingRequest>();
 
   const onMessage = ({ data }: MessageEvent<WorkerMessage>) => {
