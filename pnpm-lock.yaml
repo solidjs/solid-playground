@@ -162,9 +162,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  eslint-solid-standalone: e2bf499242cdecf74f84daf8cd1d688db8d55ba92360e81755b2e9ba317cff5d
-
 importers:
 
   .:
@@ -370,8 +367,8 @@ importers:
         specifier: ^1.9.15
         version: 1.9.15(@babel/core@8.0.5)(solid-js@1.9.15)
       eslint-solid-standalone:
-        specifier: ^0.18.0
-        version: 0.18.0(patch_hash=e2bf499242cdecf74f84daf8cd1d688db8d55ba92360e81755b2e9ba317cff5d)(typescript@6.0.3)
+        specifier: ^0.18.1
+        version: 0.18.1(typescript@6.0.3)
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -2083,8 +2080,8 @@ packages:
     resolution: {integrity: sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint-solid-standalone@0.18.0:
-    resolution: {integrity: sha512-7hisYo7OpH4QtEKVxB8+f+SOYXzKNfFzWd+672lpf7aHsblxGdtjmk6eBc23TaJET9gLS3UM7Q9b/U27g0U2wg==}
+  eslint-solid-standalone@0.18.1:
+    resolution: {integrity: sha512-hQyut5Q9YuEhmxJkP8EIBbr3tjyXl1Ek7fFfXfD3dEbFkLiMNyjRR/aF1AEsJF7Dx6qsq0BNuQ+XCiqa0F03NQ==}
     peerDependencies:
       typescript: '>=4.0.0'
 
@@ -5002,7 +4999,7 @@ snapshots:
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
-  eslint-solid-standalone@0.18.0(patch_hash=e2bf499242cdecf74f84daf8cd1d688db8d55ba92360e81755b2e9ba317cff5d)(typescript@6.0.3):
+  eslint-solid-standalone@0.18.1(typescript@6.0.3):
     dependencies:
       '@types/eslint': 8.56.12
       typescript: 6.0.3

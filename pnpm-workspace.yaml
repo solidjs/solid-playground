@@ -2,5 +2,5 @@ packages:
   - packages/*
 allowBuilds:
   esbuild: true
-patchedDependencies:
-  eslint-solid-standalone: patches/eslint-solid-standalone.patch
+minimumReleaseAgeExclude:
+  - eslint-solid-standalone@0.18.1
