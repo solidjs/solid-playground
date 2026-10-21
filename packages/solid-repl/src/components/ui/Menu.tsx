@@ -1,7 +1,7 @@
-import { Component, For, JSX, Show, createMemo, createUniqueId } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { For, Show, createUniqueId, type Component } from 'solid-js';
+import { Portal, type JSX } from '@solidjs/web';
 import * as menu from '@zag-js/menu';
-import { useMachine, normalizeProps } from '@zag-js/solid';
+import { useMachine } from './zag';
 import { css, cva } from 'styled-system/css';
 import { IconSlot, type IconPath } from './icon';
 
@@ -62,19 +62,21 @@ export interface MenuItemDef {
 export function useMenu(items: () => MenuItemDef[], options: { positioning?: menu.PositioningOptions } = {}) {
   const id = createUniqueId();
 
-  const service = useMachine(menu.machine, () => ({
-    id,
-    positioning: options.positioning,
-    onSelect: ({ value }) => {
-      const item = items().find((i) => i.value === value);
-      item?.onSelect();
-    },
-  }));
-
-  const api = createMemo(() => menu.connect(service, normalizeProps));
+  const { api, send } = useMachine(
+    menu.machine,
+    () => ({
+      id,
+      positioning: options.positioning,
+      onSelect: ({ value }) => {
+        const item = items().find((i) => i.value === value);
+        item?.onSelect();
+      },
+    }),
+    menu.connect,
+  );
 
   const openAt = (x: number, y: number) => {
-    service.send({ type: 'CONTEXT_MENU', point: { x, y } });
+    send({ type: 'CONTEXT_MENU', point: { x, y } });
   };
 
   const Content: Component<{ portal?: boolean }> = (props) => {

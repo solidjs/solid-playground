@@ -1,7 +1,7 @@
-import { Component, JSX, Show, createMemo, createUniqueId } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { Show, createUniqueId, type Component } from 'solid-js';
+import { Portal, type JSX } from '@solidjs/web';
 import * as dialog from '@zag-js/dialog';
-import { useMachine, normalizeProps } from '@zag-js/solid';
+import { useMachine } from './zag';
 import { css } from 'styled-system/css';
 
 const backdrop = css({
@@ -27,12 +27,15 @@ const panel = css({
 
 export function useDialog(options: { open: () => boolean; onOpenChange: (open: boolean) => void }) {
   const id = createUniqueId();
-  const service = useMachine(dialog.machine, () => ({
-    id,
-    open: options.open(),
-    onOpenChange: ({ open }) => options.onOpenChange(open),
-  }));
-  const api = createMemo(() => dialog.connect(service, normalizeProps));
+  const { api } = useMachine(
+    dialog.machine,
+    () => ({
+      id,
+      open: options.open(),
+      onOpenChange: ({ open }) => options.onOpenChange(open),
+    }),
+    dialog.connect,
+  );
 
   const Root: Component<{ children: JSX.Element }> = (props) => (
     <Show when={api().open}>
