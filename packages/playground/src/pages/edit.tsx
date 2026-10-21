@@ -210,7 +210,11 @@ export const Edit = () => {
 
   onSettled(() => {
     context.setTabs(tabs);
-    return () => context.setTabs(undefined);
+    context.setSolidVersion(resolvedSolidVersion);
+    return () => {
+      context.setTabs(undefined);
+      context.setSolidVersion(undefined);
+    };
   });
 
   const reset = async () => {

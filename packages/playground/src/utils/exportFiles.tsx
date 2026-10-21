@@ -17,10 +17,10 @@ export default defineConfig({
   plugins: [solidPlugin()],
   build: {
     target: "esnext",
-    polyfillDynamicImport: false,
   },
 });
 `;
+
 const tsConfig = (v2: boolean) =>
   JSON.stringify(
     {
@@ -32,9 +32,9 @@ const tsConfig = (v2: boolean) =>
         esModuleInterop: true,
         sourceMap: true,
         allowJs: true,
-        lib: ['es6', 'dom'],
+        lib: ['ESNext', 'DOM'],
         rootDir: 'src',
-        moduleResolution: 'node',
+        moduleResolution: 'bundler',
         jsxImportSource: v2 ? '@solidjs/web' : 'solid-js',
       },
     },
@@ -42,7 +42,10 @@ const tsConfig = (v2: boolean) =>
     2,
   );
 
-const indexHTML = (tabs: Tab[]) => dedent`
+const entryOf = (tabs: Tab[]) =>
+  tabs.find((tab) => tab.name === 'main.tsx') ?? tabs.find((tab) => /\.[tj]sx?$/.test(tab.name)) ?? tabs[0];
+
+const indexHTML = (entry: string) => dedent`
 <html>
   <head>
     <title>Vite Sandbox</title>
@@ -52,28 +55,64 @@ const indexHTML = (tabs: Tab[]) => dedent`
   <body>
     <div id="app"></div>
 
-    <script type="module" src="./src/${tabs[0].name}"></script>
+    <script type="module" src="./src/${entry}"></script>
   </body>
 </html>
 `;
 
-function packageJSON(imports: string[], v2: boolean): string {
-  const deps = imports.reduce(
-    (acc, importPath): Record<string, string> => {
-      const name = importPath.split('/')[0];
-      if (!acc[name]) acc[name] = '*';
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+/** npm package name of a bare specifier: `@scope/name/sub` -> `@scope/name`, `name/sub` -> `name`. */
+const packageNameOf = (specifier: string): string | undefined => {
+  if (specifier.startsWith('.') || specifier.startsWith('/') || specifier.includes(':')) return undefined;
+  const parts = specifier.split('/');
+  if (specifier.startsWith('@')) return parts.length >= 2 && parts[1] ? `${parts[0]}/${parts[1]}` : undefined;
+  return parts[0] || undefined;
+};
 
-  return JSON.stringify(
+const CDN_PACKAGE_URL =
+  /^https:\/\/(?:esm\.sh|cdn\.jsdelivr\.net\/npm|unpkg\.com)\/(@[^/@?]+\/[^/@?]+|[^/@?]+)(?:@([^/?]+))?/;
+
+/** Version an import-map URL pins for `name` (`latest` when unversioned); undefined for non-CDN URLs. */
+const versionFromUrl = (url: string, name: string): string | undefined => {
+  const match = CDN_PACKAGE_URL.exec(url);
+  if (!match || match[1] !== name) return undefined;
+  return match[2] ?? 'latest';
+};
+
+interface Manifest {
+  packageJson: string;
+  /** Import-map entries that do not map to an npm package on a known CDN. */
+  custom: [string, string][];
+}
+
+function manifest(imports: Record<string, string>, solidVersion: string): Manifest {
+  const v2 = isSolidV2(solidVersion);
+  const dependencies: Record<string, string> = {};
+  const custom: [string, string][] = [];
+
+  for (const [specifier, url] of Object.entries(imports)) {
+    const name = packageNameOf(specifier);
+    const version = name && versionFromUrl(url, name);
+    if (!name || !version) {
+      custom.push([specifier, url]);
+      continue;
+    }
+    dependencies[name] ??= version;
+  }
+
+  // The preview's runtime, whatever the map says about it: Solid 2 also needs a matching renderer.
+  dependencies['solid-js'] = solidVersion;
+  if (v2) dependencies['@solidjs/web'] = solidVersion;
+  else delete dependencies['@solidjs/web'];
+
+  const packageJson = JSON.stringify(
     {
+      private: true,
+      type: 'module',
       scripts: {
         start: 'vite',
         build: 'vite build',
       },
-      dependencies: deps,
+      dependencies,
       devDependencies: {
         vite: pkg.devDependencies['vite'],
         ...(v2
@@ -84,26 +123,41 @@ function packageJSON(imports: string[], v2: boolean): string {
     null,
     2,
   );
+  return { packageJson, custom };
 }
 
-export async function exportToZip(tabs: Tab[]): Promise<void> {
+const readme = (custom: [string, string][]) => dedent`
+# Solid Playground export
+
+\`npm install\`, then \`npm start\` (dev server) or \`npm run build\`.
+
+The import map of this playground also loaded these modules from URLs that are not npm packages on
+a known CDN, so they are not in package.json. Install or vendor them yourself:
+
+${custom.map(([specifier, url]) => `- \`${specifier}\`: ${url}`).join('\n')}
+`;
+
+/**
+ * Downloads the tabs as a Vite project. `previewVersion` is the Solid version the preview runs
+ * (resolved, '' for the bundled default); a solid-js version pinned in the import map wins.
+ */
+export async function exportToZip(tabs: Tab[], previewVersion?: string): Promise<void> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
-  zip.file('index.html', indexHTML(tabs));
-  const importMap = tabs.find((tab) => tab.name === IMPORT_MAP_FILE)?.source;
-  const v2 = isSolidV2(solidVersionFromImportMap(importMap) ?? DEFAULT_SOLID_VERSION);
+  const importMapSource = tabs.find((tab) => tab.name === IMPORT_MAP_FILE)?.source;
+  const solidVersion = solidVersionFromImportMap(importMapSource) || previewVersion || DEFAULT_SOLID_VERSION;
+  const v2 = isSolidV2(solidVersion);
+  const { packageJson, custom } = manifest(parseImportMap(importMapSource).imports, solidVersion);
 
+  zip.file('index.html', indexHTML(entryOf(tabs).name));
   zip.file('vite.config.ts', viteConfigFile(v2));
   zip.file('tsconfig.json', tsConfig(v2));
+  zip.file('package.json', packageJson);
+  if (custom.length) zip.file('README.md', readme(custom));
   zip.folder('src');
-
   for (const tab of tabs) {
-    if (tab.name === IMPORT_MAP_FILE) {
-      zip.file('package.json', packageJSON(Object.keys(parseImportMap(tab.source).imports), v2));
-    } else {
-      zip.file(`src/${tab.name}`, tab.source);
-    }
+    if (tab.name !== IMPORT_MAP_FILE) zip.file(`src/${tab.name}`, tab.source);
   }
 
   const blob = await zip.generateAsync({ type: 'blob' });

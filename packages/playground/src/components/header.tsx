@@ -236,7 +236,11 @@ const HeaderMenuItems: Component<{
       {/* The page's tabs may still be loading: show the button once a page provides them and read
           them only on click, so the header never waits for them. */}
       <Show when={context.hasTabs()}>
-        <Button onClick={() => exportToZip(context.tabs()!)} mobile={props.showOnMobile} title="Export to Zip">
+        <Button
+          onClick={() => exportToZip(context.tabs()!, context.solidVersion())}
+          mobile={props.showOnMobile}
+          title="Export to Zip"
+        >
           <Icon path={arrowDownTray} class={css({ h: 6, m: 0 })} />
           <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Export to Zip</span>
         </Button>

@@ -13,6 +13,9 @@ interface AppContextType {
   profile: Accessor<string>;
   tabs: Accessor<Tab[] | undefined>;
   hasTabs: Accessor<boolean>;
+  /** Solid version the current page previews (resolved; '' = bundled default). */
+  solidVersion: Accessor<string | undefined>;
+  setSolidVersion: (x: Accessor<string> | undefined) => void;
   setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
   dark: Accessor<boolean>;
   toggleDark: () => void;
@@ -57,6 +60,7 @@ export const AppContextProvider: ParentComponent = (props) => {
   document.body.classList.toggle('dark', initialDark);
 
   const [tabsGetter, setTabsGetter] = createSignal<Accessor<Tab[] | undefined>>();
+  const [versionGetter, setVersionGetter] = createSignal<Accessor<string>>();
   return (
     <AppContext
       value={{
@@ -75,6 +79,10 @@ export const AppContextProvider: ParentComponent = (props) => {
           return tabs();
         },
         hasTabs: () => !!tabsGetter(),
+        solidVersion: () => versionGetter()?.(),
+        setSolidVersion(x) {
+          setVersionGetter(() => x);
+        },
         setTabs(x) {
           setTabsGetter(() => x);
         },
