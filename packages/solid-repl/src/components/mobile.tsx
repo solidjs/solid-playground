@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal, onSettled, untrack, type Component } from 'solid-js';
+import { For, Show, createMemo, createSignal, onSettled, untrack, type Accessor, type Component } from 'solid-js';
 import type { JSX } from '@solidjs/web';
 import { Icon } from './ui/icon';
 import { plus, xMark } from './ui/icons';
@@ -6,15 +6,52 @@ import { NewTab } from './newTab';
 import { FilePanel } from './editor';
 import { useRepl } from './replContext';
 import { Button } from './ui/Button';
+import type { Workspace } from '../kernel/workspace';
 import { css } from 'styled-system/css';
 
+const isPane = (id: string) => id === 'Preview' || id === 'Output' || id === 'NewTab';
+
+export interface MobileViews {
+  /** Open views (file ids and panes) in stack order; deleted files drop out. */
+  openIds: Accessor<string[]>;
+  /** The visible view; falls back to the first open one. */
+  activeId: Accessor<string | undefined>;
+  /** The last active view that is a file, kept while a pane is in front. */
+  activeFileId: Accessor<string | undefined>;
+  setOpenIds(ids: string[]): void;
+  setActiveId(id: string | undefined): void;
+}
+
+// Owned by Repl so preview/output visibility and the active file are derived from it directly
+// rather than relayed upwards through effects.
+export function createMobileViews(workspace: Workspace, initial: string[]): MobileViews {
+  const [requestedIds, setRequestedIds] = createSignal<string[]>(initial);
+  const [requestedActive, setRequestedActive] = createSignal<string | undefined>(initial[0]);
+
+  const openIds = createMemo(() => requestedIds().filter((id) => isPane(id) || !!workspace.byId(id)));
+  const activeId = createMemo(() => {
+    const id = requestedActive();
+    return id && openIds().includes(id) ? id : openIds()[0];
+  });
+  const activeFileId = createMemo<string | undefined>((prev) => {
+    const id = activeId();
+    if (id && workspace.byId(id)) return id;
+    return prev && workspace.byId(prev) ? prev : undefined;
+  });
+
+  return {
+    openIds,
+    activeId,
+    activeFileId,
+    setOpenIds: (ids) => setRequestedIds(ids),
+    setActiveId: (id) => setRequestedActive(id),
+  };
+}
+
 interface MobileReplProps {
-  initialViews: string[];
+  views: MobileViews;
   preview: (interactive: () => boolean) => JSX.Element;
   outputPane: () => JSX.Element;
-  onPreviewOpen: (open: boolean) => void;
-  onOutputOpen: (open: boolean) => void;
-  onActiveFile: (id: string) => void;
 }
 
 const CARD_SCALE = 0.7;
@@ -177,49 +214,13 @@ const emptyState = css({
 export const MobileRepl: Component<MobileReplProps> = (props) => {
   const { workspace } = useRepl();
 
-  const initialViews = untrack(() => props.initialViews);
-  const [requestedIds, setOpenIds] = createSignal<string[]>(initialViews);
-  const [requestedActive, setActiveId] = createSignal<string | undefined>(initialViews[0]);
+  const { openIds, activeId, setOpenIds, setActiveId } = untrack(() => props.views);
   const [switcher, setSwitcher] = createSignal(false);
 
-  const isPane = (id: string) => id === 'Preview' || id === 'Output' || id === 'NewTab';
   const labelOf = (id: string) => {
     if (id === 'NewTab') return 'New Tab';
     return isPane(id) ? id : (workspace.nameOf(id) ?? id);
   };
-
-  // Deleted files drop out of the open list; the active view falls back to the first one.
-  const openIds = createMemo(() => requestedIds().filter((id) => isPane(id) || !!workspace.byId(id)));
-  const activeId = createMemo(() => {
-    const id = requestedActive();
-    return id && openIds().includes(id) ? id : openIds()[0];
-  });
-
-  createEffect(
-    () => {
-      const id = activeId();
-      return id && workspace.byId(id) ? id : undefined;
-    },
-    (id) => {
-      if (id) props.onActiveFile(id);
-    },
-  );
-  createEffect(
-    () => openIds().includes('Preview'),
-    (open) => {
-      props.onPreviewOpen(open);
-    },
-  );
-  createEffect(
-    () => openIds().includes('Output'),
-    (open) => {
-      props.onOutputOpen(open);
-    },
-  );
-  onSettled(() => () => {
-    props.onPreviewOpen(false);
-    props.onOutputOpen(false);
-  });
 
   let stageRef!: HTMLDivElement;
   const [stageSize, setStageSize] = createSignal({ w: 0, h: 0 });

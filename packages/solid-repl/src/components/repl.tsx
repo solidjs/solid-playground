@@ -1,10 +1,10 @@
-import { createSignal, createEffect, getOwner, onCleanup, onSettled, runWithOwner, Show } from 'solid-js';
+import { createSignal, createEffect, getOwner, onCleanup, onSettled, runWithOwner, Show, untrack } from 'solid-js';
 import type { JSX } from '@solidjs/web';
 import { createMediaQuery } from '@solid-primitives/media';
 import { throttle } from '@solid-primitives/scheduled';
 import { Preview } from './preview';
 import { Error } from './error';
-import { MobileRepl } from './mobile';
+import { createMobileViews, MobileRepl } from './mobile';
 import { createCodemirrorTabs } from './editor/codemirrorTabs';
 import { useZoom } from '../hooks/useZoom';
 import { NewTab } from './newTab';
@@ -127,10 +127,10 @@ export const Repl: ReplProps = (props) => {
   );
   const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
   const [mode, setMode] = createSignal<CompileModeOption>(compileOptions.DOM);
-  const [outputVisible, setOutputVisible] = createSignal(false);
-  const [previewVisible, setPreviewVisible] = createSignal(false);
+  const [desktopOutputVisible, setOutputVisible] = createSignal(false);
+  const [desktopPreviewVisible, setPreviewVisible] = createSignal(false);
   const [displayErrors, setDisplayErrors] = createSignal(true);
-  const [activeFileId, setActiveFileId] = createSignal<string | undefined>();
+  const [desktopActiveFileId, setActiveFileId] = createSignal<string | undefined>();
   const { zoomState } = useZoom();
 
   const importMap = createImportMap({
@@ -146,6 +146,19 @@ export const Repl: ReplProps = (props) => {
     folder: () => props.id,
     entry: ENTRY_FILE,
   });
+
+  const entryFileId = () => workspace.byName(ENTRY_FILE)?.id ?? workspace.files()[0]?.id;
+
+  // Desktop (dockview) and mobile layouts each track which panes are open and which file is active;
+  // the rest of the REPL reads whichever layout is showing.
+  const isMobile = createMediaQuery('(max-width: 767px)');
+  const mobileViews = createMobileViews(
+    workspace,
+    untrack(() => [entryFileId(), 'Preview'].filter((id): id is string => !!id)),
+  );
+  const previewVisible = () => (isMobile() ? mobileViews.openIds().includes('Preview') : desktopPreviewVisible());
+  const outputVisible = () => (isMobile() ? mobileViews.openIds().includes('Output') : desktopOutputVisible());
+  const activeFileId = () => (isMobile() ? mobileViews.activeFileId() : desktopActiveFileId());
 
   const commands = createEditorCommands({
     activeView: () => {
@@ -252,8 +265,6 @@ export const Repl: ReplProps = (props) => {
     },
   );
 
-  const isMobile = createMediaQuery('(max-width: 767px)');
-
   const previewSection = (interactive: () => boolean) => (
     <Preview
       importMap={importMap.state().imports}
@@ -275,8 +286,6 @@ export const Repl: ReplProps = (props) => {
       />
     </section>
   );
-
-  const entryFileId = () => workspace.byName(ENTRY_FILE)?.id ?? workspace.files()[0]?.id;
 
   const DesktopRepl = () => {
     let ref!: HTMLDivElement;
@@ -553,14 +562,7 @@ export const Repl: ReplProps = (props) => {
     <ReplContext value={api}>
       <div class={replHost}>
         <Show when={isMobile()} fallback={<DesktopRepl />}>
-          <MobileRepl
-            initialViews={[entryFileId(), 'Preview'].filter((id): id is string => !!id)}
-            preview={previewSection}
-            outputPane={outputSection}
-            onPreviewOpen={setPreviewVisible}
-            onOutputOpen={setOutputVisible}
-            onActiveFile={setActiveFileId}
-          />
+          <MobileRepl views={mobileViews} preview={previewSection} outputPane={outputSection} />
         </Show>
         <Show when={error()}>
           <Error message={error()} onDismiss={() => setError('')} />
