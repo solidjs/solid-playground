@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "jsxImportSource": "@solidjs/web",
     "paths": {
       "styled-system/*": ["../../styled-system/*"]
     }
