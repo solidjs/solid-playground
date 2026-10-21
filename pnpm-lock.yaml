@@ -369,6 +369,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.71.0
         version: 8.71.0(eslint@10.12.0)(typescript@6.0.3)
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
       eslint:
         specifier: ^10.12.0
         version: 10.12.0
