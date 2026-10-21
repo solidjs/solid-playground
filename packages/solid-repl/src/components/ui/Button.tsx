@@ -1,5 +1,6 @@
-import { ParentComponent, JSX, splitProps } from 'solid-js';
-import { cva, cx } from 'styled-system/css';
+import { omit, type ParentComponent } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { cva } from 'styled-system/css';
 
 const button = cva({
   base: {
@@ -65,14 +66,11 @@ interface Variants {
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement>, Variants {}
 
 export const Button: ParentComponent<ButtonProps> = (props) => {
-  const [local, others] = splitProps(props, ['variant', 'active', 'mobile', 'class', 'children']);
+  const others = omit(props, 'variant', 'active', 'mobile', 'class', 'children');
 
   return (
-    <button
-      {...others}
-      class={cx(button({ variant: local.variant, active: local.active, mobile: local.mobile }), local.class)}
-    >
-      {local.children}
+    <button {...others} class={[button({ variant: props.variant, active: props.active, mobile: props.mobile }), props.class]}>
+      {props.children}
     </button>
   );
 };
@@ -80,14 +78,11 @@ export const Button: ParentComponent<ButtonProps> = (props) => {
 export interface LinkButtonProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement>, Variants {}
 
 export const LinkButton: ParentComponent<LinkButtonProps> = (props) => {
-  const [local, others] = splitProps(props, ['variant', 'active', 'mobile', 'class', 'children']);
+  const others = omit(props, 'variant', 'active', 'mobile', 'class', 'children');
 
   return (
-    <a
-      {...others}
-      class={cx(button({ variant: local.variant, active: local.active, mobile: local.mobile }), local.class)}
-    >
-      {local.children}
+    <a {...others} class={[button({ variant: props.variant, active: props.active, mobile: props.mobile }), props.class]}>
+      {props.children}
     </a>
   );
 };
