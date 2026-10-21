@@ -8,6 +8,10 @@ export interface ImportMapState {
 
 export const IMPORT_MAP_FILE = 'import_map.json';
 
+// Solid version previews use when the host does not pass `version`. Its compiler is bundled in the
+// compiler worker; keep in step with the @solidjs/babel-plugin devDependency.
+export const DEFAULT_SOLID_VERSION = '2.0.0-rc.16';
+
 // Import-map entries that esm.sh must leave bare so Solid packages share one runtime.
 const EXTERNALIZED = ['solid-js', 'solid-js/internal', '@solidjs/web'];
 const SOLID_FAMILY = ['solid-js', '@solidjs/web', '@solidjs/signals'];

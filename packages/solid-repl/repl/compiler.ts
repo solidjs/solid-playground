@@ -1,15 +1,16 @@
 import type { Tab } from 'solid-repl';
 
 import { transform } from '@babel/standalone';
-import type { PluginItem, PluginTarget, Visitor } from '@babel/core';
+import type { PluginTarget, Visitor } from '@babel/core';
 import type { Node } from '@babel/types';
-// @ts-ignore
-import babelPresetSolid from 'babel-preset-solid';
+// @ts-ignore no types published
+import solidBabelPlugin from '@solidjs/babel-plugin';
 import babelSyntaxJsx from '@babel/plugin-syntax-jsx';
 
 import dd from 'dedent';
 
 import { serveWorker } from '../src/kernel/workerServer';
+import { DEFAULT_SOLID_VERSION } from '../src/kernel/importMap';
 import type { SolidCompileOptions } from '../src/components/CompileMode';
 
 // Stable package patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.
@@ -25,12 +26,20 @@ const usesBabelPlugin = (version: string) => {
   return !!rc && Number(rc[1]) >= 2;
 };
 
+type BabelOptions = NonNullable<Parameters<typeof transform>[1]>;
+type PluginItem = NonNullable<BabelOptions['plugins']>[number];
+type PresetItem = NonNullable<BabelOptions['presets']>[number];
+
 type SolidCompiler = { solid: PluginTarget; isPlugin: boolean };
 
 const solidCache = new Map<string, Promise<SolidCompiler>>();
 
+// The default Solid 2 compiler ships in this worker, so the common case needs no CDN round trip.
+// Any other version (including 1.x) is fetched from esm.sh on demand.
+const bundled: SolidCompiler = { solid: solidBabelPlugin, isPlugin: true };
+
 function loadSolid(version: string | undefined): Promise<SolidCompiler> {
-  if (!version) return Promise.resolve({ solid: babelPresetSolid, isPlugin: false });
+  if (!version || version === DEFAULT_SOLID_VERSION) return Promise.resolve(bundled);
   let cached = solidCache.get(version);
   if (!cached) {
     const isPlugin = usesBabelPlugin(version);
@@ -48,11 +57,17 @@ function loadSolid(version: string | undefined): Promise<SolidCompiler> {
   return cached;
 }
 
-const babelOptions = ({ solid, isPlugin }: SolidCompiler, options: SolidCompileOptions, plugins: PluginItem[] = []) => {
+const babelOptions = (
+  { solid, isPlugin }: SolidCompiler,
+  options: SolidCompileOptions,
+  plugins: PluginItem[] = [],
+): { plugins: PluginItem[]; presets: PresetItem[] } => {
   const entry: PluginItem = [solid, options];
+  const typescript: PresetItem = ['typescript', { onlyRemoveTypeImports: true }];
   return {
     plugins: [babelSyntaxJsx, ...plugins, ...(isPlugin ? [entry] : [])],
-    presets: [...(isPlugin ? [] : [entry]), ['typescript', { onlyRemoveTypeImports: true }]],
+    // babel-preset-solid (Solid < 2.0.0-rc.2) is a preset with the same [target, options] shape.
+    presets: [...(isPlugin ? [] : [entry as PresetItem]), typescript],
   };
 };
 
@@ -90,10 +105,10 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
     },
   });
 
-  const { code: transformedCode } = transform(code, {
+  const transformedCode = transform(code, {
     ...babelOptions(compiler, { generate: 'dom', hydratable: false }, [importRewriter]),
     filename,
-  });
+  })?.code;
 
   return transformedCode!.replace('render(', 'window.dispose = render(');
 }
@@ -131,7 +146,7 @@ async function compile(tabs: Tab[], version: string | undefined) {
 
 async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string | undefined) {
   const compiler = await loadSolid(version);
-  const { code } = transform(tab.source, { ...babelOptions(compiler, compileOpts), filename: tab.name });
+  const code = transform(tab.source, { ...babelOptions(compiler, compileOpts), filename: tab.name })?.code;
   return { compiled: code };
 }
 

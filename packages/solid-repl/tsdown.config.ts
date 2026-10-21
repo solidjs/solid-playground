@@ -1,5 +1,6 @@
 import { defineConfig } from 'tsdown';
 import { copyFileSync, cpSync, renameSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { linterAliases, linterDefine } from './linterBuild.ts';
 
 export default defineConfig({
@@ -9,7 +10,11 @@ export default defineConfig({
   platform: 'browser',
   minify: true,
   dts: false,
-  alias: linterAliases,
+  alias: {
+    ...linterAliases,
+    // Optional peer of @solidjs/babel-plugin, only needed for .tsrx sources.
+    '@tsrx/core': resolve(import.meta.dirname, 'linter/nodeStub.cjs'),
+  },
   css: {
     transformer: 'postcss',
   },

@@ -16,7 +16,7 @@ import { keyBindingsOf } from '../kernel/commands';
 import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
-import { createImportMap, IMPORT_MAP_FILE, isSolidV2 } from '../kernel/importMap';
+import { createImportMap, DEFAULT_SOLID_VERSION, IMPORT_MAP_FILE, isSolidV2 } from '../kernel/importMap';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
 
@@ -116,6 +116,10 @@ export const Repl: ReplProps = (props) => {
     linter.dispose();
   });
 
+  // Previews default to the Solid 2 release whose compiler is bundled in the compiler worker;
+  // hosts pass `version` (e.g. '1.9') to preview other releases, including Solid 1.
+  const solidVersion = () => props.version ?? DEFAULT_SOLID_VERSION;
+
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal<Record<string, string>>(
     {},
@@ -132,7 +136,7 @@ export const Repl: ReplProps = (props) => {
   const importMap = createImportMap({
     tabs: () => props.tabs,
     setTabs: props.setTabs,
-    version: () => props.version,
+    version: solidVersion,
     onEdit: () => props.onUserEdit?.(),
   });
 
@@ -160,7 +164,7 @@ export const Repl: ReplProps = (props) => {
     isDark: () => !!props.dark,
     fontSize: () => zoomState.fontSize,
     displayErrors,
-    solidV2: () => isSolidV2(props.version),
+    solidV2: () => isSolidV2(solidVersion()),
     formatter,
     linter,
     keyBindings: keyBindingsOf(commands),
@@ -182,10 +186,10 @@ export const Repl: ReplProps = (props) => {
   };
 
   const requestRollup = latest((tabs: Tab[]) =>
-    compiler.request<RollupResult>('ROLLUP', { tabs, version: props.version }),
+    compiler.request<RollupResult>('ROLLUP', { tabs, version: solidVersion() }),
   );
   const requestBabel = latest((tab: Tab, compileOpts: SolidCompileOptions) =>
-    compiler.request<{ compiled: string }>('BABEL', { tab, compileOpts, version: props.version }),
+    compiler.request<{ compiled: string }>('BABEL', { tab, compileOpts, version: solidVersion() }),
   );
 
   const compilePreview = throttle(async (tabs: Tab[]) => {
@@ -215,7 +219,7 @@ export const Repl: ReplProps = (props) => {
 
   createEffect(
     () => {
-      void props.version;
+      void solidVersion();
       const tabs = props.tabs.filter((tab) => tab.name !== IMPORT_MAP_FILE);
       return previewVisible() && tabs.length ? tabs : undefined;
     },
@@ -226,7 +230,7 @@ export const Repl: ReplProps = (props) => {
 
   createEffect(
     () => {
-      void props.version;
+      void solidVersion();
       const active = activeName();
       if (!outputVisible() || !active || !/\.[tj]sx$/.test(active)) return undefined;
       const tab = props.tabs.find((tab) => tab.name === active);

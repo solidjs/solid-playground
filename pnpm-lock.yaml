@@ -378,9 +378,6 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.71.0
         version: 8.71.0(eslint@10.12.0)(typescript@6.0.3)
-      babel-preset-solid:
-        specifier: ^1.9.15
-        version: 1.9.15(@babel/core@8.0.6)(solid-js@2.0.0-rc.16)
       eslint:
         specifier: ^10.12.0
         version: 10.12.0
@@ -4646,28 +4643,12 @@ snapshots:
       html-entities: 2.3.3
       parse5: 7.3.0
 
-  babel-plugin-jsx-dom-expressions@0.40.10(@babel/core@8.0.6):
-    dependencies:
-      '@babel/core': 8.0.6
-      '@babel/helper-module-imports': 7.18.6
-      '@babel/plugin-syntax-jsx': 7.29.7(@babel/core@8.0.6)
-      '@babel/types': 7.29.8
-      html-entities: 2.3.3
-      parse5: 7.3.0
-
   babel-preset-solid@1.9.15(@babel/core@7.29.7)(solid-js@1.9.15):
     dependencies:
       '@babel/core': 7.29.7
       babel-plugin-jsx-dom-expressions: 0.40.10(@babel/core@7.29.7)
     optionalDependencies:
       solid-js: 1.9.15
-
-  babel-preset-solid@1.9.15(@babel/core@8.0.6)(solid-js@2.0.0-rc.16):
-    dependencies:
-      '@babel/core': 8.0.6
-      babel-plugin-jsx-dom-expressions: 0.40.10(@babel/core@8.0.6)
-    optionalDependencies:
-      solid-js: 2.0.0-rc.16
 
   balanced-match@4.0.4: {}
 
