@@ -24,11 +24,7 @@ export const Icon: Component<IconProps> = (props) => {
     >
       <For each={props.path.paths}>
         {(p) => (
-          <path
-            d={p.d}
-            fill-rule={p.evenodd ? 'evenodd' : undefined}
-            clip-rule={p.evenodd ? 'evenodd' : undefined}
-          />
+          <path d={p.d} fill-rule={p.evenodd ? 'evenodd' : undefined} clip-rule={p.evenodd ? 'evenodd' : undefined} />
         )}
       </For>
     </svg>

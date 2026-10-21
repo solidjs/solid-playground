@@ -294,253 +294,255 @@ export const Repl: ReplProps = (props) => {
     // Dockview calls back into Solid from `onSettled`, where creating primitives or cleanups is
     // forbidden, and later from user actions with no owner at all. Build it unowned; parts mount
     // their roots under `owner` (see solidPart) and everything else is disposed below.
-    onSettled(() => runWithOwner(null, () => {
-      const openPanel = (options: AddPanelOptions) => {
-        const panel = view.getGroupPanel(options.id);
-        if (panel) panel.focus();
-        else view.addPanel(options);
-      };
-      const openFile = (fileId: string) =>
-        openPanel({ id: fileId, title: workspace.nameOf(fileId), tabComponent: 'file', component: 'editor' });
-      const openPane = (id: string) =>
-        openPanel({
-          id,
-          tabComponent: 'default',
-          component: id.toLowerCase(),
-          renderer: id === 'Preview' ? 'always' : undefined,
-        });
-      const open = (id: string) => (workspace.byId(id) ? openFile(id) : openPane(id));
+    onSettled(() =>
+      runWithOwner(null, () => {
+        const openPanel = (options: AddPanelOptions) => {
+          const panel = view.getGroupPanel(options.id);
+          if (panel) panel.focus();
+          else view.addPanel(options);
+        };
+        const openFile = (fileId: string) =>
+          openPanel({ id: fileId, title: workspace.nameOf(fileId), tabComponent: 'file', component: 'editor' });
+        const openPane = (id: string) =>
+          openPanel({
+            id,
+            tabComponent: 'default',
+            component: id.toLowerCase(),
+            renderer: id === 'Preview' ? 'always' : undefined,
+          });
+        const open = (id: string) => (workspace.byId(id) ? openFile(id) : openPane(id));
 
-      const view = new DockviewComponent(ref, {
-        theme: themeAbyssSpaced,
-        defaultTabComponent: 'default',
-        createLeftHeaderActionComponent: () =>
-          solidPart<IGroupHeaderProps>(owner, headerActions, (params) => (
-            <IconButton
-              icon={plus}
-              class={css({ h: '28px' })}
-              onClick={() => {
-                params.group.focus();
-                openPanel({ id: 'newTab', title: 'New Tab', tabComponent: 'default', component: 'newTab' });
-              }}
-              title="New Tab"
-            >
-              <span class={css({ srOnly: true })}>New tab</span>
-            </IconButton>
-          )),
-        createTabComponent: (panel) =>
-          solidPart<GroupPanelPartInitParameters>(owner, tabBody, (params) => {
-            const isFile = panel.name == 'file';
-            const fileId = params.api.id;
-            const label = () => (isFile ? workspace.nameOf(fileId) : undefined) ?? params.title;
-
-            if (isFile) {
-              createEffect(
-                () => workspace.nameOf(fileId),
-                (name) => {
-                  if (name && name !== params.api.title) params.api.setTitle(name);
-                },
-              );
-            }
-
-            const items = () => fileMenuItems(workspace, fileId);
-            const { Content, openAt } = useMenu(items);
-
-            return (
-              <div
-                class={tabLayout}
-                onContextMenu={(e) => {
-                  if (!isFile || items().length === 0) return;
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openAt(e.clientX, e.clientY);
+        const view = new DockviewComponent(ref, {
+          theme: themeAbyssSpaced,
+          defaultTabComponent: 'default',
+          createLeftHeaderActionComponent: () =>
+            solidPart<IGroupHeaderProps>(owner, headerActions, (params) => (
+              <IconButton
+                icon={plus}
+                class={css({ h: '28px' })}
+                onClick={() => {
+                  params.group.focus();
+                  openPanel({ id: 'newTab', title: 'New Tab', tabComponent: 'default', component: 'newTab' });
                 }}
+                title="New Tab"
               >
-                <span
-                  class={css({
-                    fontSize: 'sm',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  })}
-                >
-                  {label()}
-                </span>
-                <button
-                  class={`tab-close ${tabClose}`}
-                  onClick={(e) => {
-                    if (e.defaultPrevented) return;
+                <span class={css({ srOnly: true })}>New tab</span>
+              </IconButton>
+            )),
+          createTabComponent: (panel) =>
+            solidPart<GroupPanelPartInitParameters>(owner, tabBody, (params) => {
+              const isFile = panel.name == 'file';
+              const fileId = params.api.id;
+              const label = () => (isFile ? workspace.nameOf(fileId) : undefined) ?? params.title;
+
+              if (isFile) {
+                createEffect(
+                  () => workspace.nameOf(fileId),
+                  (name) => {
+                    if (name && name !== params.api.title) params.api.setTitle(name);
+                  },
+                );
+              }
+
+              const items = () => fileMenuItems(workspace, fileId);
+              const { Content, openAt } = useMenu(items);
+
+              return (
+                <div
+                  class={tabLayout}
+                  onContextMenu={(e) => {
+                    if (!isFile || items().length === 0) return;
                     e.preventDefault();
-                    params.api.close();
+                    e.stopPropagation();
+                    openAt(e.clientX, e.clientY);
                   }}
-                  title="Close tab"
                 >
-                  <Icon path={xMark} class={css({ h: 3, w: 3, color: 'neutral.500' })} />
-                </button>
-                <Content portal />
-              </div>
+                  <span
+                    class={css({
+                      fontSize: 'sm',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    })}
+                  >
+                    {label()}
+                  </span>
+                  <button
+                    class={`tab-close ${tabClose}`}
+                    onClick={(e) => {
+                      if (e.defaultPrevented) return;
+                      e.preventDefault();
+                      params.api.close();
+                    }}
+                    title="Close tab"
+                  >
+                    <Icon path={xMark} class={css({ h: 3, w: 3, color: 'neutral.500' })} />
+                  </button>
+                  <Content portal />
+                </div>
+              );
+            }),
+          createRightHeaderActionComponent: () => {
+            const [isTSX, setIsTSX] = createSignal(false);
+
+            return solidPart<IGroupHeaderProps>(
+              owner,
+              `${headerActions} ${css({ justifyContent: 'flex-end' })}`,
+              () => (
+                <Show when={isTSX()}>
+                  <IconButton
+                    icon={trash}
+                    class={css({ h: '28px' })}
+                    onClick={() => {
+                      if (!confirm('Are you sure you want to reset the editor?')) return;
+                      props.reset();
+                    }}
+                    title="Reset Editor"
+                  >
+                    <span class={css({ srOnly: true })}>Reset Editor</span>
+                  </IconButton>
+                </Show>
+              ),
+              (params) => {
+                const disposable = params.group.api.onDidActivePanelChange((e) => {
+                  if (!e) return;
+                  setIsTSX(/\.[tj]sx$/.test(e.panel.id));
+                });
+                return () => disposable.dispose();
+              },
             );
-          }),
-        createRightHeaderActionComponent: () => {
-          const [isTSX, setIsTSX] = createSignal(false);
+          },
+          createComponent(options) {
+            let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
+            let component: (params: GroupPanelPartInitParameters) => JSX.Element = () => null;
 
-          return solidPart<IGroupHeaderProps>(
-            owner,
-            `${headerActions} ${css({ justifyContent: 'flex-end' })}`,
-            () => (
-              <Show when={isTSX()}>
-                <IconButton
-                  icon={trash}
-                  class={css({ h: '28px' })}
-                  onClick={() => {
-                    if (!confirm('Are you sure you want to reset the editor?')) return;
-                    props.reset();
-                  }}
-                  title="Reset Editor"
-                >
-                  <span class={css({ srOnly: true })}>Reset Editor</span>
-                </IconButton>
-              </Show>
-            ),
-            (params) => {
-              const disposable = params.group.api.onDidActivePanelChange((e) => {
-                if (!e) return;
-                setIsTSX(/\.[tj]sx$/.test(e.panel.id));
-              });
-              return () => disposable.dispose();
-            },
-          );
-        },
-        createComponent(options) {
-          let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
-          let component: (params: GroupPanelPartInitParameters) => JSX.Element = () => null;
-
-          switch (options.name) {
-            case 'newTab':
-              component = (params) => <NewTab onOpen={open} onClose={() => params.api.close()} />;
-              break;
-            case 'editor':
-              component = (params) => <FilePanel fileId={params.api.id} />;
-              break;
-            case 'preview': {
-              const [previewIsActive, setPreviewIsActive] = createSignal(false);
-              component = () => previewSection(previewIsActive);
-              onInit = (params) => {
-                setPreviewVisible(true);
-                setPreviewIsActive(params.api.isActive);
-                const disposable = params.api.onDidActiveChange((e) => setPreviewIsActive(e.isActive));
-                return () => {
-                  disposable.dispose();
-                  setPreviewVisible(false);
+            switch (options.name) {
+              case 'newTab':
+                component = (params) => <NewTab onOpen={open} onClose={() => params.api.close()} />;
+                break;
+              case 'editor':
+                component = (params) => <FilePanel fileId={params.api.id} />;
+                break;
+              case 'preview': {
+                const [previewIsActive, setPreviewIsActive] = createSignal(false);
+                component = () => previewSection(previewIsActive);
+                onInit = (params) => {
+                  setPreviewVisible(true);
+                  setPreviewIsActive(params.api.isActive);
+                  const disposable = params.api.onDidActiveChange((e) => setPreviewIsActive(e.isActive));
+                  return () => {
+                    disposable.dispose();
+                    setPreviewVisible(false);
+                  };
                 };
-              };
-              break;
+                break;
+              }
+              case 'output':
+                component = outputSection;
+                onInit = () => {
+                  setOutputVisible(true);
+                  return () => setOutputVisible(false);
+                };
+                break;
             }
-            case 'output':
-              component = outputSection;
-              onInit = () => {
-                setOutputVisible(true);
-                return () => setOutputVisible(false);
-              };
-              break;
-          }
 
-          return solidPart<GroupPanelPartInitParameters>(
-            owner,
-            css({ display: 'flex', flexDirection: 'column', h: 'full' }),
-            (params) => <ReplContext value={api}>{component(params)}</ReplContext>,
-            onInit,
-          );
-        },
-      });
+            return solidPart<GroupPanelPartInitParameters>(
+              owner,
+              css({ display: 'flex', flexDirection: 'column', h: 'full' }),
+              (params) => <ReplContext value={api}>{component(params)}</ReplContext>,
+              onInit,
+            );
+          },
+        });
 
-      const entryId = entryFileId() ?? ENTRY_FILE;
+        const entryId = entryFileId() ?? ENTRY_FILE;
 
-      const defaultLayout = {
-        grid: {
-          root: {
-            type: 'branch' as const,
-            data: [
-              {
-                type: 'leaf' as const,
-                data: { views: [entryId], activeView: entryId, id: '1' },
-                size: 400,
-              },
-              {
-                type: 'leaf' as const,
-                data: {
-                  views: ['Preview', 'Output'],
-                  activeView: 'Preview',
-                  id: '2',
+        const defaultLayout = {
+          grid: {
+            root: {
+              type: 'branch' as const,
+              data: [
+                {
+                  type: 'leaf' as const,
+                  data: { views: [entryId], activeView: entryId, id: '1' },
+                  size: 400,
                 },
-                size: 250,
-              },
-            ],
-            size: 480,
+                {
+                  type: 'leaf' as const,
+                  data: {
+                    views: ['Preview', 'Output'],
+                    activeView: 'Preview',
+                    id: '2',
+                  },
+                  size: 250,
+                },
+              ],
+              size: 480,
+            },
+            width: 1600,
+            height: 480,
+            orientation: props.vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL,
           },
-          width: 1600,
-          height: 480,
-          orientation: props.vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL,
-        },
-        activeGroup: '1',
-        panels: {
-          Output: {
-            id: 'Output',
-            tabComponent: 'default',
-            contentComponent: 'output',
+          activeGroup: '1',
+          panels: {
+            Output: {
+              id: 'Output',
+              tabComponent: 'default',
+              contentComponent: 'output',
+            },
+            Preview: {
+              id: 'Preview',
+              contentComponent: 'preview',
+              tabComponent: 'default',
+              renderer: 'always' as const,
+            },
+            [entryId]: {
+              id: entryId,
+              title: workspace.nameOf(entryId) ?? ENTRY_FILE,
+              tabComponent: 'file',
+              contentComponent: 'editor',
+            },
           },
-          Preview: {
-            id: 'Preview',
-            contentComponent: 'preview',
-            tabComponent: 'default',
-            renderer: 'always' as const,
-          },
-          [entryId]: {
-            id: entryId,
-            title: workspace.nameOf(entryId) ?? ENTRY_FILE,
-            tabComponent: 'file',
-            contentComponent: 'editor',
-          },
-        },
-      };
+        };
 
-      let restored = false;
-      const stored = props.storage?.getLayout?.();
-      if (stored) {
-        try {
-          const validIds = new Set(
-            workspace
-              .files()
-              .map((f) => f.id)
-              .concat(['Output', 'Preview']),
-          );
-          for (const id in stored.panels) {
-            if (!validIds.has(id)) delete stored.panels[id];
-          }
-          view.fromJSON(stored);
-          restored = view.panels.length > 0;
-        } catch {}
-      }
-      if (!restored) view.fromJSON(defaultLayout);
-      dockview = view;
+        let restored = false;
+        const stored = props.storage?.getLayout?.();
+        if (stored) {
+          try {
+            const validIds = new Set(
+              workspace
+                .files()
+                .map((f) => f.id)
+                .concat(['Output', 'Preview']),
+            );
+            for (const id in stored.panels) {
+              if (!validIds.has(id)) delete stored.panels[id];
+            }
+            view.fromJSON(stored);
+            restored = view.panels.length > 0;
+          } catch {}
+        }
+        if (!restored) view.fromJSON(defaultLayout);
+        dockview = view;
 
-      const disposables = [
-        view.onDidActivePanelChange((e) => {
-          if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
-        }),
-      ];
+        const disposables = [
+          view.onDidActivePanelChange((e) => {
+            if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
+          }),
+        ];
 
-      const storage = props.storage;
-      const saveLayout = storage?.setLayout ? throttle(() => storage.setLayout!(view.toJSON()), 300) : undefined;
-      if (saveLayout) disposables.push(view.onDidLayoutChange(saveLayout));
+        const storage = props.storage;
+        const saveLayout = storage?.setLayout ? throttle(() => storage.setLayout!(view.toJSON()), 300) : undefined;
+        if (saveLayout) disposables.push(view.onDidLayoutChange(saveLayout));
 
-      return () => {
-        saveLayout?.clear();
-        for (const d of disposables) d.dispose();
-        dockview = undefined;
-        view.dispose();
-      };
-    }));
+        return () => {
+          saveLayout?.clear();
+          for (const d of disposables) d.dispose();
+          dockview = undefined;
+          view.dispose();
+        };
+      }),
+    );
 
     return <div ref={ref} class={replBody} />;
   };

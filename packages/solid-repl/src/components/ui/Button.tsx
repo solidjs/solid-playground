@@ -69,7 +69,10 @@ export const Button: ParentComponent<ButtonProps> = (props) => {
   const others = omit(props, 'variant', 'active', 'mobile', 'class', 'children');
 
   return (
-    <button {...others} class={[button({ variant: props.variant, active: props.active, mobile: props.mobile }), props.class]}>
+    <button
+      {...others}
+      class={[button({ variant: props.variant, active: props.active, mobile: props.mobile }), props.class]}
+    >
       {props.children}
     </button>
   );
@@ -81,7 +84,10 @@ export const LinkButton: ParentComponent<LinkButtonProps> = (props) => {
   const others = omit(props, 'variant', 'active', 'mobile', 'class', 'children');
 
   return (
-    <a {...others} class={[button({ variant: props.variant, active: props.active, mobile: props.mobile }), props.class]}>
+    <a
+      {...others}
+      class={[button({ variant: props.variant, active: props.active, mobile: props.mobile }), props.class]}
+    >
       {props.children}
     </a>
   );

@@ -76,24 +76,24 @@ export function useCommandMenu(items: () => CommandItem[]) {
     combobox.machine,
     () => ({
       id,
-    collection: collection(),
-    inputValue: query(),
-    inputBehavior: 'autohighlight' as const,
-    selectionBehavior: 'clear' as const,
-    openOnClick: true,
-    onInputValueChange: ({ inputValue }) => {
-      setQuery(inputValue);
-    },
-    onOpenChange: ({ open }) => {
-      if (!open) setQuery('');
-    },
-    onSelect: ({ itemValue }) => {
-      const item = items().find((i) => i.id === itemValue);
-      if (item) {
-        api().setOpen(false);
-        item.onSelect();
-      }
-    },
+      collection: collection(),
+      inputValue: query(),
+      inputBehavior: 'autohighlight' as const,
+      selectionBehavior: 'clear' as const,
+      openOnClick: true,
+      onInputValueChange: ({ inputValue }) => {
+        setQuery(inputValue);
+      },
+      onOpenChange: ({ open }) => {
+        if (!open) setQuery('');
+      },
+      onSelect: ({ itemValue }) => {
+        const item = items().find((i) => i.id === itemValue);
+        if (item) {
+          api().setOpen(false);
+          item.onSelect();
+        }
+      },
     }),
     combobox.connect,
   );

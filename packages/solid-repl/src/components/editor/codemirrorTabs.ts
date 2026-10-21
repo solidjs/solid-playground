@@ -242,19 +242,19 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
           lintExtensions(currentUri, session, opts),
           language.of(languageExtensions(currentUri() ?? '', session)),
           EditorView.updateListener.of((u) => {
-              if (u.docChanged) {
-                workspace.setSource(fileId, u.state.doc.toString());
-                const userEdit = u.transactions.some(
-                  (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
-                );
-                if (userEdit) opts.onUserEdit?.();
-              }
-              if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
-                lastTopPos = u.view.viewport.from;
-                persist();
-              } else if (u.docChanged || u.selectionSet) {
-                persist();
-              }
+            if (u.docChanged) {
+              workspace.setSource(fileId, u.state.doc.toString());
+              const userEdit = u.transactions.some(
+                (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
+              );
+              if (userEdit) opts.onUserEdit?.();
+            }
+            if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
+              lastTopPos = u.view.viewport.from;
+              persist();
+            } else if (u.docChanged || u.selectionSet) {
+              persist();
+            }
           }),
         ],
       }),

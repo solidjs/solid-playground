@@ -105,10 +105,9 @@ export interface ImportMapOptions {
 }
 
 export function createImportMap(opts: ImportMapOptions): ImportMapController {
-  const tabState = createMemo(
-    () => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_FILE)?.source),
-    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
-  );
+  const tabState = createMemo(() => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_FILE)?.source), {
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+  });
 
   const state = createMemo(
     () => {
