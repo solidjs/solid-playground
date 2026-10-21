@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, runWithOwner } from 'solid-js';
+import { createEffect, onCleanup, runWithOwner, untrack } from 'solid-js';
 import { throttle } from '@solid-primitives/scheduled';
 import {
   drawSelection,
@@ -156,15 +156,16 @@ const lintExtensions = (
 ): Extension => [
   linter(
     async (view) => {
-      if (!opts.displayErrors()) return [];
-      const uri = currentUri();
+      // CodeMirror may run this synchronously (forceLinting from an effect), so read state untracked.
+      if (!untrack(opts.displayErrors)) return [];
+      const uri = untrack(currentUri);
       if (!uri || !isTsFile(uri)) return [];
 
       session.client.sync();
       const diagnostics = await session.getDiagnostics(uri, view);
       const res = await opts.linter?.tryRequest<LintResponse>('LINT', {
         code: view.state.doc.toString(),
-        v2: opts.solidV2(),
+        v2: untrack(opts.solidV2),
       });
       return diagnostics.concat(markersToDiagnostics(view, res?.markers ?? []));
     },
