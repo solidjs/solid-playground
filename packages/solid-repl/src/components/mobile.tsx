@@ -1,7 +1,7 @@
-import { Component, For, JSX, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
-import { batched } from '../kernel/batched';
-import { Icon } from 'solid-heroicons';
-import { plus, xMark } from 'solid-heroicons/outline';
+import { For, Show, createEffect, createMemo, createSignal, onSettled, untrack, type Component } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { Icon } from './ui/icon';
+import { plus, xMark } from './ui/icons';
 import { NewTab } from './newTab';
 import { FilePanel } from './editor';
 import { useRepl } from './replContext';
@@ -177,8 +177,9 @@ const emptyState = css({
 export const MobileRepl: Component<MobileReplProps> = (props) => {
   const { workspace } = useRepl();
 
-  const [requestedIds, setOpenIds] = createSignal<string[]>(props.initialViews);
-  const [requestedActive, setActiveId] = createSignal<string | undefined>(props.initialViews[0]);
+  const initialViews = untrack(() => props.initialViews);
+  const [requestedIds, setOpenIds] = createSignal<string[]>(initialViews);
+  const [requestedActive, setActiveId] = createSignal<string | undefined>(initialViews[0]);
   const [switcher, setSwitcher] = createSignal(false);
 
   const isPane = (id: string) => id === 'Preview' || id === 'Output' || id === 'NewTab';
@@ -194,27 +195,36 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
     return id && openIds().includes(id) ? id : openIds()[0];
   });
 
-  createEffect(() => {
-    const id = activeId();
-    if (id && workspace.byId(id)) props.onActiveFile(id);
-  });
-  createEffect(() => props.onPreviewOpen(openIds().includes('Preview')));
-  createEffect(() => props.onOutputOpen(openIds().includes('Output')));
-  onCleanup(
-    batched(() => {
-      props.onPreviewOpen(false);
-      props.onOutputOpen(false);
-    }),
+  createEffect(
+    () => {
+      const id = activeId();
+      return id && workspace.byId(id) ? id : undefined;
+    },
+    (id) => {
+      if (id) props.onActiveFile(id);
+    },
   );
+  createEffect(
+    () => openIds().includes('Preview'),
+    (open) => props.onPreviewOpen(open),
+  );
+  createEffect(
+    () => openIds().includes('Output'),
+    (open) => props.onOutputOpen(open),
+  );
+  onSettled(() => () => {
+    props.onPreviewOpen(false);
+    props.onOutputOpen(false);
+  });
 
   let stageRef!: HTMLDivElement;
   const [stageSize, setStageSize] = createSignal({ w: 0, h: 0 });
-  onMount(() => {
+  onSettled(() => {
     const observer = new ResizeObserver(([entry]) => {
       setStageSize({ w: entry.contentRect.width, h: entry.contentRect.height });
     });
     observer.observe(stageRef);
-    onCleanup(() => observer.disconnect());
+    return () => observer.disconnect();
   });
 
   const cardW = () => stageSize().w * CARD_SCALE;
@@ -223,24 +233,24 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   const cardY = (index: number) => STACK_PAD + index * (cardH() + CARD_GAP);
   const stackHeight = () => STACK_PAD * 2 + openIds().length * (cardH() + CARD_GAP) - CARD_GAP;
 
-  const activate = batched((id: string) => {
+  const activate = (id: string) => {
     setActiveId(id);
     setSwitcher(false);
-  });
+  };
 
-  const openView = batched((id: string) => {
+  const openView = (id: string) => {
     if (!openIds().includes(id)) setOpenIds(openIds().concat(id));
     activate(id);
-  });
+  };
 
-  const closeView = batched((id: string) => {
+  const closeView = (id: string) => {
     const open = openIds();
     const index = open.indexOf(id);
     const next = open.filter((x) => x !== id);
     const wasActive = activeId() === id;
     setOpenIds(next);
     if (wasActive) setActiveId(next[Math.min(index, next.length - 1)]);
-  });
+  };
 
   const toggleSwitcher = () => {
     const entering = !switcher();
@@ -305,7 +315,7 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
         >
           <For each={openIds()}>
             {(id, index) => (
-              <div class={viewShell} classList={{ [viewShellCard]: switcher() }} style={shellStyle(id, index)}>
+              <div class={[viewShell, { [viewShellCard]: switcher() }]} style={shellStyle(id, index)}>
                 <div class={contentHost} style={contentStyle()}>
                   {content(id)}
                 </div>
@@ -358,8 +368,7 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
           </Show>
         </div>
         <button
-          class={tabCount}
-          classList={{ [tabCountActive]: switcher() }}
+          class={[tabCount, { [tabCountActive]: switcher() }]}
           onClick={toggleSwitcher}
           title={switcher() ? 'Back to tab' : 'Show open tabs'}
         >

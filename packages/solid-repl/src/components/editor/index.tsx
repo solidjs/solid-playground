@@ -1,4 +1,4 @@
-import { Component, For, Show, onMount } from 'solid-js';
+import { For, Show, onSettled, type Component } from 'solid-js';
 import { IconButton } from '../ui/IconButton';
 import { useCommandMenu } from '../ui/CommandPalette';
 import { useRepl } from '../replContext';
@@ -27,7 +27,7 @@ export const Editor: Component<{ fileId: string; autofocus?: boolean }> = (props
   const api = useRepl();
   let parent!: HTMLDivElement;
 
-  onMount(() => api.editors.attach(props.fileId, parent, props.autofocus !== false));
+  onSettled(() => api.editors.attach(props.fileId, parent, props.autofocus !== false));
 
   const isTs = () => isTsFile(api.workspace.nameOf(props.fileId) ?? '');
 
@@ -88,6 +88,8 @@ export const FilePanel: Component<{ fileId: string; autofocus?: boolean }> = (pr
 export const OutputEditor: Component = () => {
   const api = useRepl();
   let parent!: HTMLDivElement;
-  onMount(() => api.editors.ensureOutputView().attach(parent));
+  onSettled(() => {
+    api.editors.ensureOutputView().attach(parent);
+  });
   return <div class={editorContainer} ref={parent} />;
 };

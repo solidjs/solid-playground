@@ -1,4 +1,5 @@
-import { createSignal, createEffect, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
+import { createSignal, createEffect, getOwner, onCleanup, onSettled, runWithOwner, Show } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import { createMediaQuery } from '@solid-primitives/media';
 import { throttle } from '@solid-primitives/scheduled';
 import { Preview } from './preview';
@@ -30,8 +31,8 @@ import {
   type IGroupHeaderProps,
   themeAbyssSpaced,
 } from 'dockview';
-import { Icon } from 'solid-heroicons';
-import { plus, trash, xMark } from 'solid-heroicons/outline';
+import { Icon } from './ui/icon';
+import { plus, trash, xMark } from './ui/icons';
 import { css } from 'styled-system/css';
 import 'dockview/dist/styles/dockview.css';
 
@@ -193,11 +194,9 @@ export const Repl: ReplProps = (props) => {
       const result = await requestRollup(tabs);
       if (!result) return;
       console.log(`Compilation took: ${performance.now() - started}ms`);
-      batch(() => {
-        setError('');
-        setOutput(result.compiled);
-        importMap.syncExternals(result.externals);
-      });
+      setError('');
+      setOutput(result.compiled);
+      importMap.syncExternals(result.externals);
     } catch (e) {
       onCompileFailed(e);
     }
@@ -214,26 +213,38 @@ export const Repl: ReplProps = (props) => {
     }
   }, 250);
 
-  createEffect(() => {
-    void props.version;
-    const tabs = props.tabs.filter((tab) => tab.name !== IMPORT_MAP_FILE);
-    if (previewVisible() && tabs.length) compilePreview(tabs);
-  });
+  createEffect(
+    () => {
+      void props.version;
+      const tabs = props.tabs.filter((tab) => tab.name !== IMPORT_MAP_FILE);
+      return previewVisible() && tabs.length ? tabs : undefined;
+    },
+    (tabs) => {
+      if (tabs) compilePreview(tabs);
+    },
+  );
 
-  createEffect(() => {
-    void props.version;
-    const active = activeName();
-    if (!outputVisible() || !active || !/\.[tj]sx$/.test(active)) return;
-    const tab = props.tabs.find((tab) => tab.name === active);
-    if (!tab) return;
-    const current = mode();
-    compileOutput(
-      tab,
-      current === compileOptions.UNIVERSAL ? { ...current, moduleName: universalModuleName() } : current,
-    );
-  });
+  createEffect(
+    () => {
+      void props.version;
+      const active = activeName();
+      if (!outputVisible() || !active || !/\.[tj]sx$/.test(active)) return undefined;
+      const tab = props.tabs.find((tab) => tab.name === active);
+      if (!tab) return undefined;
+      const current = mode();
+      const compileOpts: SolidCompileOptions =
+        current === compileOptions.UNIVERSAL ? { ...current, moduleName: universalModuleName() } : current;
+      return { tab, compileOpts };
+    },
+    (job) => {
+      if (job) compileOutput(job.tab, job.compileOpts);
+    },
+  );
 
-  createEffect(() => cmTabs.syncTypes(importMap.state().imports));
+  createEffect(
+    () => importMap.state().imports,
+    (imports) => cmTabs.syncTypes(imports),
+  );
 
   const isMobile = createMediaQuery('(max-width: 767px)');
 
@@ -263,12 +274,27 @@ export const Repl: ReplProps = (props) => {
 
   const DesktopRepl = () => {
     let ref!: HTMLDivElement;
+    const owner = getOwner();
+    let dockview: DockviewComponent | undefined;
 
-    onMount(() => {
+    createEffect(
+      () => new Set(workspace.files().map((f) => f.id)),
+      (live) => {
+        if (!dockview) return;
+        for (const panel of dockview.panels) {
+          if (panel.view?.contentComponent === 'editor' && !live.has(panel.id)) panel.api.close();
+        }
+      },
+    );
+
+    // Dockview calls back into Solid from `onSettled`, where creating primitives or cleanups is
+    // forbidden, and later from user actions with no owner at all. Build it unowned; parts mount
+    // their roots under `owner` (see solidPart) and everything else is disposed below.
+    onSettled(() => runWithOwner(null, () => {
       const openPanel = (options: AddPanelOptions) => {
-        const panel = dockview.getGroupPanel(options.id);
+        const panel = view.getGroupPanel(options.id);
         if (panel) panel.focus();
-        else dockview.addPanel(options);
+        else view.addPanel(options);
       };
       const openFile = (fileId: string) =>
         openPanel({ id: fileId, title: workspace.nameOf(fileId), tabComponent: 'file', component: 'editor' });
@@ -281,18 +307,11 @@ export const Repl: ReplProps = (props) => {
         });
       const open = (id: string) => (workspace.byId(id) ? openFile(id) : openPane(id));
 
-      createEffect(() => {
-        const live = new Set(workspace.files().map((f) => f.id));
-        for (const panel of dockview.panels) {
-          if (panel.view?.contentComponent === 'editor' && !live.has(panel.id)) panel.api.close();
-        }
-      });
-
-      const dockview = new DockviewComponent(ref, {
+      const view = new DockviewComponent(ref, {
         theme: themeAbyssSpaced,
         defaultTabComponent: 'default',
         createLeftHeaderActionComponent: () =>
-          solidPart<IGroupHeaderProps>(headerActions, (params) => (
+          solidPart<IGroupHeaderProps>(owner, headerActions, (params) => (
             <IconButton
               icon={plus}
               class={css({ h: '28px' })}
@@ -306,16 +325,18 @@ export const Repl: ReplProps = (props) => {
             </IconButton>
           )),
         createTabComponent: (panel) =>
-          solidPart<GroupPanelPartInitParameters>(tabBody, (params) => {
+          solidPart<GroupPanelPartInitParameters>(owner, tabBody, (params) => {
             const isFile = panel.name == 'file';
             const fileId = params.api.id;
             const label = () => (isFile ? workspace.nameOf(fileId) : undefined) ?? params.title;
 
             if (isFile) {
-              createEffect(() => {
-                const name = workspace.nameOf(fileId);
-                if (name && name !== params.api.title) params.api.setTitle(name);
-              });
+              createEffect(
+                () => workspace.nameOf(fileId),
+                (name) => {
+                  if (name && name !== params.api.title) params.api.setTitle(name);
+                },
+              );
             }
 
             const items = () => fileMenuItems(workspace, fileId);
@@ -360,6 +381,7 @@ export const Repl: ReplProps = (props) => {
           const [isTSX, setIsTSX] = createSignal(false);
 
           return solidPart<IGroupHeaderProps>(
+            owner,
             `${headerActions} ${css({ justifyContent: 'flex-end' })}`,
             () => (
               <Show when={isTSX()}>
@@ -397,27 +419,32 @@ export const Repl: ReplProps = (props) => {
               component = (params) => <FilePanel fileId={params.api.id} />;
               break;
             case 'preview': {
-              setPreviewVisible(true);
-              onCleanup(() => setPreviewVisible(false));
               const [previewIsActive, setPreviewIsActive] = createSignal(false);
               component = () => previewSection(previewIsActive);
               onInit = (params) => {
+                setPreviewVisible(true);
                 setPreviewIsActive(params.api.isActive);
                 const disposable = params.api.onDidActiveChange((e) => setPreviewIsActive(e.isActive));
-                return () => disposable.dispose();
+                return () => {
+                  disposable.dispose();
+                  setPreviewVisible(false);
+                };
               };
               break;
             }
             case 'output':
-              setOutputVisible(true);
-              onCleanup(() => setOutputVisible(false));
               component = outputSection;
+              onInit = () => {
+                setOutputVisible(true);
+                return () => setOutputVisible(false);
+              };
               break;
           }
 
           return solidPart<GroupPanelPartInitParameters>(
+            owner,
             css({ display: 'flex', flexDirection: 'column', h: 'full' }),
-            (params) => <ReplContext.Provider value={api}>{component(params)}</ReplContext.Provider>,
+            (params) => <ReplContext value={api}>{component(params)}</ReplContext>,
             onInit,
           );
         },
@@ -486,28 +513,36 @@ export const Repl: ReplProps = (props) => {
           for (const id in stored.panels) {
             if (!validIds.has(id)) delete stored.panels[id];
           }
-          dockview.fromJSON(stored);
-          restored = dockview.panels.length > 0;
+          view.fromJSON(stored);
+          restored = view.panels.length > 0;
         } catch {}
       }
-      if (!restored) dockview.fromJSON(defaultLayout);
+      if (!restored) view.fromJSON(defaultLayout);
+      dockview = view;
 
-      if (props.storage?.setLayout) {
-        const saveLayout = throttle(() => props.storage!.setLayout!(dockview.toJSON()), 300);
-        const layoutDisp = dockview.onDidLayoutChange(saveLayout);
-        onCleanup(() => layoutDisp.dispose());
-      }
+      const disposables = [
+        view.onDidActivePanelChange((e) => {
+          if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
+        }),
+      ];
 
-      dockview.onDidActivePanelChange((e) => {
-        if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
-      });
-    });
+      const storage = props.storage;
+      const saveLayout = storage?.setLayout ? throttle(() => storage.setLayout!(view.toJSON()), 300) : undefined;
+      if (saveLayout) disposables.push(view.onDidLayoutChange(saveLayout));
+
+      return () => {
+        saveLayout?.clear();
+        for (const d of disposables) d.dispose();
+        dockview = undefined;
+        view.dispose();
+      };
+    }));
 
     return <div ref={ref} class={replBody} />;
   };
 
   return (
-    <ReplContext.Provider value={api}>
+    <ReplContext value={api}>
       <div class={replHost}>
         <Show when={isMobile()} fallback={<DesktopRepl />}>
           <MobileRepl
@@ -523,6 +558,6 @@ export const Repl: ReplProps = (props) => {
           <Error message={error()} onDismiss={() => setError('')} />
         </Show>
       </div>
-    </ReplContext.Provider>
+    </ReplContext>
   );
 };

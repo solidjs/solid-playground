@@ -54,7 +54,7 @@ export const CompileMode: Component<CompileModeProps> = (props) => {
               <input
                 checked={props.mode === compileOptions[m]}
                 class={css({ accentColor: 'solidc' })}
-                onChange={[props.setMode, compileOptions[m]]}
+                onChange={() => props.setMode(compileOptions[m])}
                 type="radio"
                 name="dom"
               />
@@ -67,13 +67,13 @@ export const CompileMode: Component<CompileModeProps> = (props) => {
           <input
             checked={props.mode.generate === 'universal'}
             class={css({ accentColor: 'solidc' })}
-            onChange={[props.setMode, compileOptions.UNIVERSAL]}
+            onChange={() => props.setMode(compileOptions.UNIVERSAL)}
             type="radio"
             name="dom"
           />
           <span>Universal Rendering & moduleName:</span>
           <Input
-            onFocus={[props.setMode, compileOptions.UNIVERSAL]}
+            onFocus={() => props.setMode(compileOptions.UNIVERSAL)}
             onInput={(e) => props.setUniversalModuleName(e.currentTarget.value)}
             size="sm"
             inline

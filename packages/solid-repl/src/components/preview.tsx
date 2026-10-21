@@ -1,4 +1,5 @@
-import { Component, createEffect, JSX, on, onCleanup, onMount } from 'solid-js';
+import { createEffect, getOwner, onCleanup, onSettled, untrack, type Component } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import { useZoom } from '../hooks/useZoom';
 import { Orientation, SplitviewComponent } from 'dockview';
 import { SolidSplitviewPanel } from '../kernel/mountSolid';
@@ -232,6 +233,7 @@ interface PreviewProps {
 
 export const Preview: Component<PreviewProps> = (props) => {
   const { zoomState } = useZoom();
+  const owner = getOwner();
 
   let iframe!: HTMLIFrameElement;
   let devtoolsIframe: HTMLIFrameElement | undefined;
@@ -253,8 +255,8 @@ export const Preview: Component<PreviewProps> = (props) => {
     devtoolsIframe?.contentWindow?.location.reload();
   };
 
-  const uiTheme = () => (props.isDark ? '"dark"' : '"default"');
-  localStorage.setItem('uiTheme', uiTheme());
+  const uiTheme = (isDark: boolean) => (isDark ? '"dark"' : '"default"');
+  localStorage.setItem('uiTheme', uiTheme(untrack(() => props.isDark)));
 
   const devtoolsUrl = URL.createObjectURL(new Blob([devtoolsHtml], { type: 'text/html' }));
   onCleanup(() => URL.revokeObjectURL(devtoolsUrl));
@@ -286,7 +288,7 @@ export const Preview: Component<PreviewProps> = (props) => {
         style={iframeStyle()}
         ref={iframe}
         srcdoc={iframeHtml}
-        onload={onIframeLoad}
+        onLoad={onIframeLoad}
         // @ts-ignore
         sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-pointer-lock"
       />
@@ -315,46 +317,48 @@ export const Preview: Component<PreviewProps> = (props) => {
     }
   };
 
-  onMount(() => {
+  createEffect(
+    () => props.importMap,
+    () => {
+      if (!iframeReady) return;
+      // A changed import map only takes effect in a fresh document.
+      iframeReady = false;
+      iframe.srcdoc = iframeHtml;
+      reloadDevtools();
+    },
+    { defer: true },
+  );
+
+  createEffect(
+    () => props.code,
+    (code) => {
+      if (code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: code });
+    },
+  );
+
+  createEffect(
+    () => props.isDark,
+    (isDark) => {
+      sendToIframe({ event: 'DARK', value: isDark });
+      localStorage.setItem('uiTheme', uiTheme(isDark));
+      reloadDevtools();
+    },
+    { defer: true },
+  );
+
+  onSettled(() => {
     const splitview = new SplitviewComponent(outerContainer, {
       orientation: Orientation.VERTICAL,
-      createComponent: ({ id, name }) => new SolidSplitviewPanel(id, name, views[name]),
+      createComponent: ({ id, name }) => new SolidSplitviewPanel(id, name, owner, views[name]),
     });
     splitview.addPanel({ id: 'preview', component: 'preview', minimumSize: 100 });
     if (props.devtools) splitview.addPanel({ id: 'devtools', component: 'devtools', minimumSize: 100, snap: true });
 
     window.addEventListener('message', onMessage);
-    onCleanup(() => window.removeEventListener('message', onMessage));
-
-    createEffect(
-      on(
-        () => props.importMap,
-        () => {
-          if (!iframeReady) return;
-          // A changed import map only takes effect in a fresh document.
-          iframeReady = false;
-          iframe.srcdoc = iframeHtml;
-          reloadDevtools();
-        },
-        { defer: true },
-      ),
-    );
-
-    createEffect(() => {
-      if (props.code['./main']) sendToIframe({ event: 'CODE_UPDATE', value: props.code });
-    });
-
-    createEffect(
-      on(
-        () => props.isDark,
-        (isDark) => {
-          sendToIframe({ event: 'DARK', value: isDark });
-          localStorage.setItem('uiTheme', uiTheme());
-          reloadDevtools();
-        },
-        { defer: true },
-      ),
-    );
+    return () => {
+      window.removeEventListener('message', onMessage);
+      splitview.dispose();
+    };
   });
 
   return <div class={previewContainer} ref={outerContainer} />;

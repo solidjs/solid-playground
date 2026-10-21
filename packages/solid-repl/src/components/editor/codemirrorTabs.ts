@@ -1,5 +1,4 @@
-import { createEffect, createMemo, onCleanup } from 'solid-js';
-import { batched } from '../../kernel/batched';
+import { createEffect, onCleanup, runWithOwner } from 'solid-js';
 import { throttle } from '@solid-primitives/scheduled';
 import {
   drawSelection,
@@ -226,7 +225,9 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
         topPos: lastTopPos,
       });
     };
-    const persist = throttle(writeState, 500);
+    // Editors are built from `onSettled`, where primitives may not register cleanups; this one is
+    // cleared in `destroy`.
+    const persist = runWithOwner(null, () => throttle(writeState, 500));
 
     const currentUri = () => workspace.uriOf(fileId);
 
@@ -240,8 +241,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
           appearance.of(appearanceExtensions(opts.isDark(), opts.fontSize())),
           lintExtensions(currentUri, session, opts),
           language.of(languageExtensions(currentUri() ?? '', session)),
-          EditorView.updateListener.of(
-            batched((u) => {
+          EditorView.updateListener.of((u) => {
               if (u.docChanged) {
                 workspace.setSource(fileId, u.state.doc.toString());
                 const userEdit = u.transactions.some(
@@ -255,8 +255,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
               } else if (u.docChanged || u.selectionSet) {
                 persist();
               }
-            }),
-          ),
+          }),
         ],
       }),
       scrollTo: lastTopPos > 0 ? EditorView.scrollIntoView(lastTopPos, { y: 'start' }) : undefined,
@@ -273,6 +272,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
         if (focus) view.focus();
       },
       destroy() {
+        persist.clear();
         writeState();
         view.destroy();
       },
@@ -281,18 +281,10 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
 
   const registered = new Map<string, string>();
 
-  const sync = createMemo(() => {
-    const files = workspace.files();
-    const liveIds = new Set(files.map((f) => f.id));
+  // Keeps the TypeScript worker's open documents in step with the workspace. Idempotent: also
+  // called before an editor is built so the worker knows the file before the LSP plugin attaches.
+  const syncDocuments = (files: FileEntry[]) => {
     const liveUris = new Map<string, FileEntry>(files.map((f) => [`file:///${folder}/${f.name}`, f]));
-
-    for (const [id, editor] of editors) {
-      if (!liveIds.has(id)) {
-        editor.destroy();
-        editors.delete(id);
-        opts.saveEditorState?.(id, null);
-      }
-    }
 
     for (const uri of registered.keys()) {
       if (!liveUris.has(uri)) {
@@ -317,12 +309,12 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
             },
       );
     }
-
-    return files;
-  });
+  };
 
   const ensureEditor = (fileId: string): FileEditor | undefined => {
-    const file = sync().find((f) => f.id === fileId);
+    const files = workspace.files();
+    syncDocuments(files);
+    const file = files.find((f) => f.id === fileId);
     if (!file) return undefined;
     let editor = editors.get(fileId);
     if (!editor) {
@@ -332,34 +324,44 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
     return editor;
   };
 
-  createEffect(() => {
-    for (const file of sync()) {
-      const editor = editors.get(file.id);
-      if (editor) replaceDoc(editor.view, file.source);
-    }
-  });
+  createEffect(
+    () => workspace.files(),
+    (files) => {
+      const liveIds = new Set(files.map((f) => f.id));
+      for (const [id, editor] of editors) {
+        if (!liveIds.has(id)) {
+          editor.destroy();
+          editors.delete(id);
+          opts.saveEditorState?.(id, null);
+        }
+      }
 
-  createEffect(() => {
-    const ext = appearanceExtensions(opts.isDark(), opts.fontSize());
-    for (const { view, appearance } of styled()) view.dispatch({ effects: appearance.reconfigure(ext) });
-  });
+      syncDocuments(files);
 
-  createEffect(() => {
-    for (const file of workspace.files()) {
-      const editor = editors.get(file.id);
-      const uri = `file:///${folder}/${file.name}`;
-      if (!editor || editor.languageUri === uri) continue;
-      editor.languageUri = uri;
-      editor.view.dispatch({ effects: editor.language.reconfigure(languageExtensions(uri, session)) });
-      forceLinting(editor.view);
-    }
-  });
+      for (const file of files) {
+        const editor = editors.get(file.id);
+        if (!editor) continue;
+        replaceDoc(editor.view, file.source);
+        const uri = `file:///${folder}/${file.name}`;
+        if (editor.languageUri === uri) continue;
+        editor.languageUri = uri;
+        editor.view.dispatch({ effects: editor.language.reconfigure(languageExtensions(uri, session)) });
+        forceLinting(editor.view);
+      }
+    },
+  );
 
-  createEffect(() => {
-    opts.displayErrors();
-    opts.solidV2();
-    relint();
-  });
+  createEffect(
+    () => appearanceExtensions(opts.isDark(), opts.fontSize()),
+    (ext) => {
+      for (const { view, appearance } of styled()) view.dispatch({ effects: appearance.reconfigure(ext) });
+    },
+  );
+
+  createEffect(
+    () => [opts.displayErrors(), opts.solidV2()],
+    () => relint(),
+  );
 
   onCleanup(() => {
     for (const editor of editors.values()) editor.destroy();
