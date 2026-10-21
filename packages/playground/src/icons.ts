@@ -1,4 +1,5 @@
-// Vendored from heroicons v2 (MIT, https://heroicons.com) via solid-heroicons 3.2.4.
+// Vendored from Heroicons v2 (MIT, Copyright (c) Tailwind Labs, Inc.) via solid-heroicons 3.2.4.
+// Full license and attribution: public/THIRD_PARTY_NOTICES.txt (served with the app).
 // Generated: only the icons this app uses.
 
 import type { IconPath } from 'solid-repl/src/components/ui/icons';

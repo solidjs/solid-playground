@@ -1,4 +1,5 @@
-// Vendored from heroicons v2 (MIT, https://heroicons.com) via solid-heroicons 3.2.4.
+// Vendored from Heroicons v2 (MIT, Copyright (c) Tailwind Labs, Inc.) via solid-heroicons 3.2.4.
+// Full license and attribution: THIRD_PARTY_NOTICES.md (package root).
 // Generated: only the icons this package uses.
 
 export interface IconPath {

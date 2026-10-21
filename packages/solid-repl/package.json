@@ -9,7 +9,8 @@
     "url": "https://github.com/solidjs/solid-playground.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "module": "dist/repl.jsx",
   "types": "dist/repl.d.ts",
