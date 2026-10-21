@@ -18,7 +18,7 @@ import { forceLinting, lintGutter, linter, type Diagnostic } from '@codemirror/l
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 import { javascript } from '@codemirror/lang-javascript';
 import { json } from '@codemirror/lang-json';
-import type { EditorPersistedState } from 'solid-repl';
+import type { EditorPersistedState } from '../../types';
 
 import {
   createTypescriptSession,

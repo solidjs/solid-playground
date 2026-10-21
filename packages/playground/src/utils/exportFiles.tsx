@@ -1,5 +1,5 @@
 import pkg from '../../package.json';
-import type { Tab } from 'solid-repl';
+import type { Tab } from 'solid-repl/src';
 import {
   DEFAULT_SOLID_VERSION,
   IMPORT_MAP_FILE,

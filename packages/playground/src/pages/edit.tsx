@@ -13,7 +13,7 @@ import {
   isSolidV2,
   solidVersionFromImportMap,
 } from 'solid-repl/src';
-import type { ReplStorage, Tab } from 'solid-repl';
+import type { ReplStorage, Tab } from 'solid-repl/src';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { Spinner } from '../components/spinner';

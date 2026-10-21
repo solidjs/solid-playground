@@ -1,5 +1,5 @@
 import { defineConfig } from 'tsdown';
-import { copyFileSync, cpSync, renameSync } from 'node:fs';
+import { cpSync, renameSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { linterAliases, linterDefine } from './linterBuild.ts';
 
@@ -26,7 +26,6 @@ export default defineConfig({
   hooks: {
     'build:done': () => {
       renameSync('./dist/style.css', './dist/bundle.css');
-      copyFileSync('./src/types.d.ts', './dist/types.d.ts');
       cpSync('../../styled-system', './dist/styled-system', {
         recursive: true,
         filter: (src) => !src.includes('/types'),

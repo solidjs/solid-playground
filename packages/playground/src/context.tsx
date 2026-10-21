@@ -1,5 +1,5 @@
 import { createContext, createEffect, createSignal, useContext, type Accessor, type ParentComponent } from 'solid-js';
-import type { Tab } from 'solid-repl';
+import type { Tab } from 'solid-repl/src';
 import { isDarkTheme } from './utils/isDarkTheme';
 
 interface UserProfile {

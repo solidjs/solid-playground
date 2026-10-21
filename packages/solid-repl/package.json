@@ -12,7 +12,7 @@
     "dist"
   ],
   "module": "dist/repl.jsx",
-  "types": "src/types.d.ts",
+  "types": "dist/repl.d.ts",
   "scripts": {
     "build": "tsdown && vite build -c vite.tsworker.config.ts && tsc -p tsconfig.build.json && node scripts/patch-dist.mjs",
     "tsc": "tsc"

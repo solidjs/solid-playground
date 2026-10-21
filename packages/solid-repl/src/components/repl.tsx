@@ -22,8 +22,8 @@ import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
 
 import { FilePanel, OutputEditor } from './editor';
-import type { Repl as ReplProps } from 'solid-repl/dist/repl';
-import type { Tab } from 'solid-repl';
+import type { Repl as ReplComponent } from '../types';
+import type { Tab } from '../types';
 import {
   DockviewComponent,
   Orientation,
@@ -107,7 +107,7 @@ interface RollupResult {
   externals: string[];
 }
 
-export const Repl: ReplProps = (props) => {
+export const Repl: ReplComponent = (props) => {
   const compiler = createWorkerClient(props.compiler);
   const formatter = createWorkerClient(props.formatter);
   const linter = createWorkerClient(props.linter);

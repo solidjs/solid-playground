@@ -1,4 +1,4 @@
-import type { Tab } from 'solid-repl';
+import type { Tab } from '../src/types';
 
 import { transform } from '@babel/standalone';
 import type { PluginTarget, Visitor } from '@babel/core';

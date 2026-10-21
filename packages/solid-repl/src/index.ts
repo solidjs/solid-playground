@@ -1,4 +1,6 @@
-import type { Tab } from 'solid-repl';
+import type { Tab } from './types';
+
+export type { EditorPersistedState, Repl, ReplProps, ReplStorage, Tab } from './types';
 
 export {
   DEFAULT_SOLID_VERSION,

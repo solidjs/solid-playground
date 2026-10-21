@@ -8,4 +8,6 @@ const patched = source.replace("from './tsWorker?worker'", "from '../../tsWorker
 if (patched === source) throw new Error(`patch-dist: worker import not found in ${lsp}`);
 writeFileSync(lsp, patched);
 
-for (const file of ['tsWorker.js', 'typeAcquisition.js']) rmSync(`dist/components/editor/${file}`, { force: true });
+for (const file of ['tsWorker.js', 'tsWorker.d.ts', 'typeAcquisition.js', 'typeAcquisition.d.ts']) {
+  rmSync(`dist/components/editor/${file}`, { force: true });
+}
