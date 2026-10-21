@@ -1,4 +1,4 @@
-import { createMemo, type Accessor } from 'solid-js';
+import { createMemo, flush, type Accessor } from 'solid-js';
 import type { Tab } from 'solid-repl';
 
 export interface FileEntry {
@@ -44,6 +44,13 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
   const update = (file: FileEntry, patch: Partial<Tab>) =>
     opts.setTabs(opts.tabs().map((tab) => (tab.name === file.name ? { ...tab, ...patch } : tab)));
 
+  // Solid 2 applies writes on the next microtask. Structural edits come from user actions and
+  // their callers read the result right away (open the new file, retitle the tab), so apply them now.
+  const commit = (tabs: Tab[]) => {
+    opts.setTabs(tabs);
+    flush();
+  };
+
   return {
     files,
     byId,
@@ -62,7 +69,7 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
         alert('A file with that name already exists');
         return undefined;
       }
-      opts.setTabs(opts.tabs().concat({ name: trimmed, source }));
+      commit(opts.tabs().concat({ name: trimmed, source }));
       return byName(trimmed);
     },
 
@@ -74,14 +81,14 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
         alert('A file with that name already exists');
         return false;
       }
-      update(file, { id, name: trimmed });
+      commit(opts.tabs().map((tab) => (tab.name === file.name ? { ...tab, id, name: trimmed } : tab)));
       return true;
     },
 
     remove(id) {
       const file = byId(id);
       if (!file || file.name === opts.entry) return false;
-      opts.setTabs(opts.tabs().filter((tab) => tab.name !== file.name));
+      commit(opts.tabs().filter((tab) => tab.name !== file.name));
       return true;
     },
 

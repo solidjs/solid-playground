@@ -15,6 +15,6 @@ export const ReplContext = createContext<ReplApi>();
 
 export const useRepl = (): ReplApi => {
   const ctx = useContext(ReplContext);
-  if (!ctx) throw new Error('useRepl must be called inside <ReplContext.Provider>');
+  if (!ctx) throw new Error('useRepl must be called inside <ReplContext>');
   return ctx;
 };
