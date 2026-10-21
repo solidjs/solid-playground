@@ -1,11 +1,17 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl';
-import { IMPORT_MAP_FILE, parseImportMap } from 'solid-repl/src';
+import {
+  DEFAULT_SOLID_VERSION,
+  IMPORT_MAP_FILE,
+  isSolidV2,
+  parseImportMap,
+  solidVersionFromImportMap,
+} from 'solid-repl/src';
 import dedent from 'dedent';
 
-const viteConfigFile = dedent`
+const viteConfigFile = (v2: boolean) => dedent`
 import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import solidPlugin from "${v2 ? '@solidjs/vite-plugin' : 'vite-plugin-solid'}";
 
 export default defineConfig({
   plugins: [solidPlugin()],
@@ -15,26 +21,26 @@ export default defineConfig({
   },
 });
 `;
-const tsConfig = JSON.stringify(
-  {
-    compilerOptions: {
-      strict: true,
-      module: 'ESNext',
-      target: 'ESNext',
-      jsx: 'preserve',
-      esModuleInterop: true,
-      sourceMap: true,
-      allowJs: true,
-      lib: ['es6', 'dom'],
-      rootDir: 'src',
-      moduleResolution: 'node',
-      jsxImportSource: 'solid-js',
-      types: ['solid-js', 'solid-js/dom'],
+const tsConfig = (v2: boolean) =>
+  JSON.stringify(
+    {
+      compilerOptions: {
+        strict: true,
+        module: 'ESNext',
+        target: 'ESNext',
+        jsx: 'preserve',
+        esModuleInterop: true,
+        sourceMap: true,
+        allowJs: true,
+        lib: ['es6', 'dom'],
+        rootDir: 'src',
+        moduleResolution: 'node',
+        jsxImportSource: v2 ? '@solidjs/web' : 'solid-js',
+      },
     },
-  },
-  null,
-  2,
-);
+    null,
+    2,
+  );
 
 const indexHTML = (tabs: Tab[]) => dedent`
 <html>
@@ -51,7 +57,7 @@ const indexHTML = (tabs: Tab[]) => dedent`
 </html>
 `;
 
-function packageJSON(imports: string[]): string {
+function packageJSON(imports: string[], v2: boolean): string {
   const deps = imports.reduce(
     (acc, importPath): Record<string, string> => {
       const name = importPath.split('/')[0];
@@ -69,8 +75,10 @@ function packageJSON(imports: string[]): string {
       },
       dependencies: deps,
       devDependencies: {
-        'vite': pkg.devDependencies['vite'],
-        'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'],
+        vite: pkg.devDependencies['vite'],
+        ...(v2
+          ? { '@solidjs/vite-plugin': pkg.devDependencies['@solidjs/vite-plugin'] }
+          : { 'vite-plugin-solid': '^2.11.14' }),
       },
     },
     null,
@@ -83,13 +91,16 @@ export async function exportToZip(tabs: Tab[]): Promise<void> {
   const zip = new JSZip();
 
   zip.file('index.html', indexHTML(tabs));
-  zip.file('vite.config.ts', viteConfigFile);
-  zip.file('tsconfig.json', tsConfig);
+  const importMap = tabs.find((tab) => tab.name === IMPORT_MAP_FILE)?.source;
+  const v2 = isSolidV2(solidVersionFromImportMap(importMap) ?? DEFAULT_SOLID_VERSION);
+
+  zip.file('vite.config.ts', viteConfigFile(v2));
+  zip.file('tsconfig.json', tsConfig(v2));
   zip.folder('src');
 
   for (const tab of tabs) {
     if (tab.name === IMPORT_MAP_FILE) {
-      zip.file('package.json', packageJSON(Object.keys(parseImportMap(tab.source).imports)));
+      zip.file('package.json', packageJSON(Object.keys(parseImportMap(tab.source).imports), v2));
     } else {
       zip.file(`src/${tab.name}`, tab.source);
     }

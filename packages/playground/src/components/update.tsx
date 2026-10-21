@@ -1,8 +1,8 @@
 import type { Component } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { Portal } from '@solidjs/web';
 
-import { Icon } from 'solid-heroicons';
-import { xMark } from 'solid-heroicons/outline';
+import { Icon } from 'solid-repl/src/components/ui/icon';
+import { xMark } from '../icons';
 import { css } from 'styled-system/css';
 
 const card = css({

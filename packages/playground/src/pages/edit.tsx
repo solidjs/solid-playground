@@ -1,12 +1,18 @@
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import { batch, createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { createEffect, createMemo, createSignal, lazy, Loading, onSettled, Show, untrack } from 'solid-js';
 import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
 import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
-import { batched, defaultTabs, IMPORT_MAP_FILE, isSolidV2, solidVersionFromImportMap } from 'solid-repl/src';
+import {
+  DEFAULT_SOLID_VERSION,
+  defaultTabs,
+  IMPORT_MAP_FILE,
+  isSolidV2,
+  solidVersionFromImportMap,
+} from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
@@ -62,6 +68,38 @@ const titleInput = css({
 
 const dialogActions = css({ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 });
 
+const isVersionTag = (version: string) => version === 'next' || version === 'latest';
+
+const resolveSolidVersion = async (stored: string): Promise<string> => {
+  if (!isVersionTag(stored)) return stored;
+  const cacheKey = `solidVersion:${stored}`;
+  try {
+    const res = await fetch('https://data.jsdelivr.com/v1/package/npm/solid-js');
+    const { tags } = (await res.json()) as { tags: Record<string, string> };
+    if (tags[stored]) {
+      localStorage.setItem(cacheKey, tags[stored]);
+      return tags[stored];
+    }
+  } catch (e) {
+    console.error('Failed to resolve solid-js version tag', e);
+  }
+  return localStorage.getItem(cacheKey) ?? '';
+};
+
+// '' means the REPL's bundled default, which is Solid 2.
+const migrateTabs = (tabs: Tab[], version: string): Tab[] => {
+  const isV2 = isSolidV2(version || DEFAULT_SOLID_VERSION);
+  return tabs.map((tab) => {
+    if (tab.name === IMPORT_MAP_FILE) return tab;
+    const source = isV2
+      ? tab.source.replaceAll('solid-js/web', '@solidjs/web')
+      : tab.source.replaceAll('@solidjs/web', 'solid-js/web');
+    return source === tab.source ? tab : { ...tab, source };
+  });
+};
+
+const toTabs = (repl: APIRepl): Tab[] => repl.files.map((x) => ({ name: x.name, source: x.content }));
+
 export const Edit = () => {
   const scratchpad = useMatch(() => '/');
   const compiler = new CompilerWorker();
@@ -75,7 +113,7 @@ export const Edit = () => {
 
   let disableFetch: true | undefined;
 
-  let readonly = () => !scratchpad() && context.profile() != params.user && !localStorage.getItem(params.repl);
+  const readonly = () => !scratchpad() && context.profile() != params.user && !localStorage.getItem(params.repl);
 
   for (const key of Object.keys(localStorage)) {
     if (key.startsWith('solid-repl:editorState:file:///')) safeRemove(key);
@@ -92,137 +130,88 @@ export const Edit = () => {
     },
   };
 
-  createEffect(() => {
-    if (!scratchpad()) return;
-    if (location.query.hash) {
-      navigate(`/anonymous/${location.query.hash}`);
-    } else if (location.hash) {
-      const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
-      localStorage.setItem(
-        'scratchpad',
-        JSON.stringify({
-          files: initialTabs.map((x) => ({ name: x.name, content: x.source })),
-        }),
-      );
-      navigate('/', { replace: true });
+  // Shared links: `/?hash=<id>` (legacy) and `/#<compressed tabs>` import into the scratchpad.
+  const [scratchpadVersion, setScratchpadVersion] = createSignal(0);
+  createEffect(
+    () => ({ isScratchpad: !!scratchpad(), queryHash: location.query.hash, hash: location.hash }),
+    ({ isScratchpad, queryHash, hash }) => {
+      if (!isScratchpad) return;
+      if (queryHash) {
+        navigate(`/anonymous/${queryHash}`);
+      } else if (hash) {
+        const initialTabs = parseHash(hash.slice(1), defaultTabs);
+        localStorage.setItem(
+          'scratchpad',
+          JSON.stringify({ files: initialTabs.map((x) => ({ name: x.name, content: x.source })) }),
+        );
+        setScratchpadVersion((v) => v + 1);
+        navigate('/', { replace: true });
+      }
+    },
+  );
+
+  // The repl being edited: the local scratchpad or one fetched from the API. Async, so the editor
+  // renders under a Loading boundary until it lands.
+  const loaded = createMemo(async (): Promise<APIRepl> => {
+    const repl = params.repl;
+    const isScratchpad = !!scratchpad();
+    const token = context.token;
+    scratchpadVersion();
+    if (disableFetch) {
+      disableFetch = undefined;
+      const current = untrack(replInfo);
+      if (current) return current;
     }
+
+    if (isScratchpad) {
+      const myScratchpad = localStorage.getItem('scratchpad');
+      if (myScratchpad) return JSON.parse(myScratchpad) as APIRepl;
+      const output = { files: defaultTabs.map((x) => ({ name: x.name, content: x.source })) } as APIRepl;
+      localStorage.setItem('scratchpad', JSON.stringify(output));
+      return output;
+    }
+    return (await fetch(`${API}/repl/${repl}`, {
+      headers: { authorization: token ? `Bearer ${token}` : '' },
+    }).then((r) => r.json())) as APIRepl;
   });
 
-  const [tabs, setTabs] = createSignal<Tab[]>([]);
+  // Writable derivations of the loaded repl: local edits override them until another repl loads.
+  const [replInfo, setReplInfo] = createSignal<APIRepl | undefined>(() => loaded());
+  const [tabs, setTabs] = createSignal<Tab[]>(() => toTabs(loaded()));
   const editTabs = (next: Tab[]) => {
     setTabs(next);
     updateRepl();
   };
 
-  const storedVersion = localStorage.getItem('solidVersion') ?? '';
-  const [solidVersion, setSolidVersion] = createSignal(storedVersion);
-  const [resolvedSolidVersion, setResolvedSolidVersion] = createSignal(
-    storedVersion === 'next' || storedVersion === 'latest'
-      ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
-      : storedVersion,
+  // A repl whose import map pins solid-js previews that version; otherwise the user's choice
+  // (persisted; '' = bundled default, 'next'/'latest' resolve against npm).
+  const [solidVersion, setSolidVersion] = createSignal<string>(
+    () =>
+      solidVersionFromImportMap(loaded().files.find((x) => x.name === IMPORT_MAP_FILE)?.content) ??
+      localStorage.getItem('solidVersion') ??
+      '',
   );
+  const resolvedSolidVersion = createMemo(() => resolveSolidVersion(solidVersion()));
 
-  const resolveSolidVersion = async (stored: string): Promise<string> => {
-    if (stored !== 'next' && stored !== 'latest') return stored;
-    const cacheKey = `solidVersion:${stored}`;
-    try {
-      const res = await fetch('https://data.jsdelivr.com/v1/package/npm/solid-js');
-      const { tags } = (await res.json()) as { tags: Record<string, string> };
-      if (tags[stored]) {
-        localStorage.setItem(cacheKey, tags[stored]);
-        return tags[stored];
-      }
-    } catch (e) {
-      console.error('Failed to resolve solid-js version tag', e);
-    }
-    return localStorage.getItem(cacheKey) ?? '';
-  };
-
-  const migrateTabs = (version: string | undefined) => {
-    const isV2 = isSolidV2(version);
-    const current = tabs();
-    const migrated = current.map((tab) => {
-      if (tab.name === IMPORT_MAP_FILE) return tab;
-      const source = isV2
-        ? tab.source.replaceAll('solid-js/web', '@solidjs/web')
-        : tab.source.replaceAll('@solidjs/web', 'solid-js/web');
-      return source === tab.source ? tab : { ...tab, source };
-    });
+  const changeSolidVersion = async (version: string) => {
+    setSolidVersion(version);
+    localStorage.setItem('solidVersion', version);
+    const resolved = await resolveSolidVersion(version);
+    if (untrack(solidVersion) !== version) return;
+    const current = untrack(tabs);
+    const migrated = migrateTabs(current, resolved);
     if (migrated.some((tab, i) => tab !== current[i])) editTabs(migrated);
   };
 
-  let versionRequest = 0;
-  const applySolidVersion = async (version: string, migrate: boolean) => {
-    const request = ++versionRequest;
-    const resolved = await resolveSolidVersion(version);
-    if (request !== versionRequest) return;
-    batch(() => {
-      setResolvedSolidVersion(resolved);
-      if (migrate) migrateTabs(resolved || undefined);
-    });
-  };
-  if (storedVersion === 'next' || storedVersion === 'latest') applySolidVersion(storedVersion, false);
-
-  const adoptSolidVersion = batched((importMapSource: string | undefined) => {
-    const version = solidVersionFromImportMap(importMapSource);
-    if (version) {
-      versionRequest++;
-      setSolidVersion(version);
-      setResolvedSolidVersion(version);
-    } else {
-      const stored = localStorage.getItem('solidVersion') ?? '';
-      setSolidVersion(stored);
-      applySolidVersion(stored, false);
-    }
+  onSettled(() => {
+    context.setTabs(tabs);
+    return () => context.setTabs(undefined);
   });
 
-  const changeSolidVersion = (version: string) => {
-    setSolidVersion(version);
-    localStorage.setItem('solidVersion', version);
-    applySolidVersion(version, true);
+  const reset = async () => {
+    const resolved = await resolveSolidVersion(untrack(solidVersion));
+    editTabs(migrateTabs(defaultTabs, resolved));
   };
-
-  context.setTabs(tabs);
-  onCleanup(() => context.setTabs(undefined));
-
-  const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
-    () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
-    async ({ repl, scratchpad }): Promise<APIRepl> => {
-      if (disableFetch) {
-        disableFetch = undefined;
-        if (resource.latest) return resource.latest;
-      }
-
-      let output: APIRepl;
-      if (scratchpad) {
-        const myScratchpad = localStorage.getItem('scratchpad');
-        if (!myScratchpad) {
-          output = {
-            files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
-          } as APIRepl;
-          localStorage.setItem('scratchpad', JSON.stringify(output));
-        } else {
-          output = JSON.parse(myScratchpad);
-        }
-      } else {
-        output = await fetch(`${API}/repl/${repl}`, {
-          headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-        }).then((r) => r.json());
-      }
-
-      batch(() => {
-        adoptSolidVersion(output.files.find((x) => x.name === IMPORT_MAP_FILE)?.content);
-        setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
-      });
-
-      return output;
-    },
-  );
-
-  const reset = batched(() => {
-    editTabs(defaultTabs);
-    migrateTabs(resolvedSolidVersion() || undefined);
-  });
 
   const publishScratchpad = async (title: string) => {
     const newRepl = {
@@ -248,7 +237,7 @@ export const Edit = () => {
       const repls = localStorage.getItem('repls');
       localStorage.setItem('repls', JSON.stringify(repls ? [...JSON.parse(repls), id] : [id]));
     }
-    mutate(() => ({
+    setReplInfo({
       id,
       title: newRepl.title,
       labels: newRepl.labels,
@@ -257,7 +246,7 @@ export const Edit = () => {
       public: newRepl.public,
       size: 0,
       created_at: '',
-    }));
+    });
     const url = `/${context.profile()}/${id}`;
     disableFetch = true;
     navigate(url);
@@ -290,7 +279,7 @@ export const Edit = () => {
         localStorage.setItem('scratchpad', JSON.stringify({ files }));
       }
 
-      const repl = resource.latest;
+      const repl = replInfo();
       if (!repl) return;
 
       const loggedIn = context.token && params.user && context.profile() == params.user;
@@ -313,7 +302,7 @@ export const Edit = () => {
         });
       }
     },
-    scratchpad() ? 10 : 1000,
+    untrack(() => (scratchpad() ? 10 : 1000)),
   );
 
   return (
@@ -323,10 +312,10 @@ export const Edit = () => {
         onSolidVersionChange={changeSolidVersion}
         share={async () => {
           if (scratchpad()) {
-            const url = await publishScratchpad(`${context.user()?.display || 'Anonymous'}'s Scratchpad`);
+            const url = await publishScratchpad(`${context.user().display || 'Anonymous'}'s Scratchpad`);
             return `${window.location.origin}${url}`;
           } else if (readonly()) {
-            const original = resource.latest;
+            const original = replInfo();
             const url = await publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
             return `${window.location.origin}${url}`;
           } else {
@@ -334,28 +323,30 @@ export const Edit = () => {
           }
         }}
       >
-        <Show when={resource() && (resource()?.title || (scratchpad() && context.token))}>
-          <input
-            class={titleInput}
-            value={resource()?.title ?? ''}
-            placeholder={scratchpad() ? 'Name this repl to save it' : ''}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.currentTarget.blur();
-            }}
-            onChange={(e) => {
-              const title = e.currentTarget.value;
-              if (scratchpad() || readonly()) {
-                if (title) publishScratchpad(title);
-              } else {
-                mutate((x) => x && { ...x, title });
-                updateRepl();
-              }
-            }}
-          />
-        </Show>
+        <Loading>
+          <Show when={replInfo() && (replInfo()?.title || (scratchpad() && context.token))}>
+            <input
+              class={titleInput}
+              value={replInfo()?.title ?? ''}
+              placeholder={scratchpad() ? 'Name this repl to save it' : ''}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+              }}
+              onChange={(e) => {
+                const title = e.currentTarget.value;
+                if (scratchpad() || readonly()) {
+                  if (title) publishScratchpad(title);
+                } else {
+                  setReplInfo((x) => x && { ...x, title });
+                  updateRepl();
+                }
+              }}
+            />
+          </Show>
+        </Loading>
       </Header>
-      <Suspense fallback={<Spinner class={css({ h: 12, w: 12, m: 'auto' })} />}>
-        <Show when={resource()}>
+      <Loading fallback={<Spinner class={css({ h: 12, w: 12, m: 'auto' })} />}>
+        <Show when={replInfo()}>
           <Repl
             compiler={compiler}
             formatter={formatter}
@@ -370,7 +361,7 @@ export const Edit = () => {
             id="repl"
           />
         </Show>
-      </Suspense>
+      </Loading>
       <forkDialog.Root>
         <p class={css({ fontWeight: 'semibold' })}>Fork this repl?</p>
         <p class={css({ mt: 2, fontSize: 'sm', opacity: 0.8 })}>
@@ -378,10 +369,10 @@ export const Edit = () => {
         </p>
         <div class={dialogActions}>
           <Button
-            onClick={batched(() => {
+            onClick={() => {
               setForkPromptFor(null);
               setForkDeclinedFor(params.repl);
-            })}
+            }}
           >
             Cancel
           </Button>
@@ -389,7 +380,7 @@ export const Edit = () => {
             variant="primary"
             onClick={() => {
               setForkPromptFor(null);
-              const original = resource.latest;
+              const original = replInfo();
               publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
             }}
           >

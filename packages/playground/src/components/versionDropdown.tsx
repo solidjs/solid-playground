@@ -1,6 +1,6 @@
-import { Component, createResource } from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { check, cube } from 'solid-heroicons/outline';
+import { createSignal, onSettled, type Component } from 'solid-js';
+import { Icon } from 'solid-repl/src/components/ui/icon';
+import { check, cube } from '../icons';
 import { useMenu } from 'solid-repl/src/components/ui/Menu';
 import { Button } from 'solid-repl/src/components/ui/Button';
 import { css } from 'styled-system/css';
@@ -52,7 +52,11 @@ export const VersionDropdown: Component<{
   onChange: (version: string) => void;
   showOnMobile: boolean;
 }> = (props) => {
-  const [options] = createResource(fetchVersions, { initialValue: [] });
+  // Fetched in the background: the dropdown works with just the default entry until it lands.
+  const [options, setOptions] = createSignal<VersionOption[]>([]);
+  onSettled(() => {
+    void fetchVersions().then(setOptions);
+  });
 
   const label = () => {
     if (!props.version) return 'Solid';

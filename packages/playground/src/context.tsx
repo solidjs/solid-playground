@@ -1,12 +1,18 @@
-import { Accessor, createContext, createResource, createSignal, ParentComponent, Resource, useContext } from 'solid-js';
+import { createContext, createEffect, createSignal, useContext, type Accessor, type ParentComponent } from 'solid-js';
 import type { Tab } from 'solid-repl';
 import { isDarkTheme } from './utils/isDarkTheme';
 
+interface UserProfile {
+  display: string;
+  avatar: string;
+}
+
 interface AppContextType {
   token: string;
-  user: Resource<{ display: string; avatar: string } | undefined>;
+  user: Accessor<UserProfile>;
   profile: Accessor<string>;
   tabs: Accessor<Tab[] | undefined>;
+  hasTabs: Accessor<boolean>;
   setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
   dark: Accessor<boolean>;
   toggleDark: () => void;
@@ -18,32 +24,41 @@ const AppContext = createContext<AppContextType>();
 // export const API = '/api';
 export const API = 'https://api.solidjs.com';
 
+const anonymous: UserProfile = { display: '', avatar: '' };
+
+const fetchProfile = async (token: string): Promise<UserProfile> => {
+  try {
+    const result = await fetch(`${API}/profile`, { headers: { authorization: `Bearer ${token}` } });
+    const body = await result.json();
+    return { display: body.display, avatar: body.avatar };
+  } catch (e) {
+    console.warn('[playground] failed to load profile', e);
+    return anonymous;
+  }
+};
+
 export const AppContextProvider: ParentComponent = (props) => {
   const [token, setToken] = createSignal(localStorage.getItem('token') || '');
-  const [user] = createResource(token, async (token) => {
-    if (!token)
-      return {
-        display: '',
-        avatar: '',
-      };
-    const result = await fetch(`${API}/profile`, {
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
-    });
-    const body = await result.json();
-    return {
-      display: body.display,
-      avatar: body.avatar,
+
+  // The profile only decorates the header, so it loads in the background instead of suspending
+  // the page behind a Loading boundary.
+  const [user, setUser] = createSignal<UserProfile>(anonymous);
+  createEffect(token, (token) => {
+    let current = true;
+    if (!token) setUser(anonymous);
+    else fetchProfile(token).then((profile) => current && setUser(profile));
+    return () => {
+      current = false;
     };
   });
 
-  const [dark, setDark] = createSignal(isDarkTheme());
-  document.body.classList.toggle('dark', dark());
+  const initialDark = isDarkTheme();
+  const [dark, setDark] = createSignal(initialDark);
+  document.body.classList.toggle('dark', initialDark);
 
-  let [tabsGetter, setTabs] = createSignal<Accessor<Tab[] | undefined>>();
+  const [tabsGetter, setTabsGetter] = createSignal<Accessor<Tab[] | undefined>>();
   return (
-    <AppContext.Provider
+    <AppContext
       value={{
         get token() {
           return token();
@@ -53,18 +68,19 @@ export const AppContextProvider: ParentComponent = (props) => {
           localStorage.setItem('token', x);
         },
         user,
-        profile: () => user()?.display || 'anonymous',
+        profile: () => user().display || 'anonymous',
         tabs() {
           const tabs = tabsGetter();
           if (!tabs) return undefined;
           return tabs();
         },
+        hasTabs: () => !!tabsGetter(),
         setTabs(x) {
-          setTabs(() => x);
+          setTabsGetter(() => x);
         },
         dark,
         toggleDark() {
-          let x = !dark();
+          const x = !dark();
           document.body.classList.toggle('dark', x);
           setDark(x);
           localStorage.setItem('dark', String(x));
@@ -72,7 +88,7 @@ export const AppContextProvider: ParentComponent = (props) => {
       }}
     >
       {props.children}
-    </AppContext.Provider>
+    </AppContext>
   );
 };
 
