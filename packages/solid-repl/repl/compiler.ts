@@ -10,7 +10,7 @@ import babelSyntaxJsx from '@babel/plugin-syntax-jsx';
 import dd from 'dedent';
 
 import { serveWorker } from '../src/kernel/workerServer';
-import { DEFAULT_SOLID_VERSION } from '../src/kernel/importMap';
+import { DEFAULT_SOLID_VERSION } from '../src/kernel/solidVersion';
 import type { SolidCompileOptions } from '../src/components/CompileMode';
 
 // Stable package patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.

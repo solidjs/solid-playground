@@ -16,7 +16,8 @@ import { keyBindingsOf } from '../kernel/commands';
 import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
-import { createImportMap, DEFAULT_SOLID_VERSION, IMPORT_MAP_FILE, isSolidV2 } from '../kernel/importMap';
+import { createImportMap, IMPORT_MAP_FILE, isSolidV2 } from '../kernel/importMap';
+import { resolveSolidVersion } from '../kernel/solidVersion';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
 
@@ -118,7 +119,7 @@ export const Repl: ReplProps = (props) => {
 
   // Previews default to the Solid 2 release whose compiler is bundled in the compiler worker;
   // hosts pass `version` (e.g. '1.9') to preview other releases, including Solid 1.
-  const solidVersion = () => props.version ?? DEFAULT_SOLID_VERSION;
+  const solidVersion = () => resolveSolidVersion(props.version);
 
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal<Record<string, string>>(
