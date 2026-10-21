@@ -28,7 +28,8 @@ export default defineConfig({
       renameSync('./dist/style.css', './dist/bundle.css');
       cpSync('../../styled-system', './dist/styled-system', {
         recursive: true,
-        filter: (src) => !src.includes('/types'),
+        // Only the css/patterns runtime is used; the generated JSX factory targets Solid 1 APIs.
+        filter: (src) => !src.includes('/types') && !src.includes('/styled-system/jsx'),
       });
     },
   },
