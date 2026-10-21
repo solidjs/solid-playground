@@ -1,7 +1,7 @@
-import { Component, createMemo, createSignal } from 'solid-js';
+import { createMemo, createSignal, type Component } from 'solid-js';
 
-import { Icon } from 'solid-heroicons';
-import { chevronDown, chevronRight, xMark } from 'solid-heroicons/solid';
+import { Icon } from './ui/icon';
+import { chevronDownSolid as chevronDown, chevronRightSolid as chevronRight, xMarkSolid as xMark } from './ui/icons';
 import { IconButton } from './ui/IconButton';
 import { css } from 'styled-system/css';
 

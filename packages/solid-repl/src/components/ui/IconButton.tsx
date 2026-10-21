@@ -1,7 +1,7 @@
-import { Component, JSX, splitProps } from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { css, cx } from 'styled-system/css';
-import type { IconPath } from './icon';
+import { omit, type Component } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { css } from 'styled-system/css';
+import { Icon, type IconPath } from './icon';
 
 const button = css({
   display: 'inline-flex',
@@ -23,11 +23,11 @@ export interface IconButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElem
 }
 
 export const IconButton: Component<IconButtonProps> = (props) => {
-  const [local, rest] = splitProps(props, ['icon', 'class', 'children']);
+  const rest = omit(props, 'icon', 'class', 'children');
   return (
-    <button type="button" {...rest} class={cx(button, local.class)}>
-      <Icon path={local.icon} class={buttonIcon} />
-      {local.children}
+    <button type="button" {...rest} class={[button, props.class]}>
+      <Icon path={props.icon} class={buttonIcon} />
+      {props.children}
     </button>
   );
 };

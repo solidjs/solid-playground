@@ -11,7 +11,7 @@ import {
   documentDuplicate,
   pencil,
   scissors,
-} from 'solid-heroicons/outline';
+} from '../components/ui/icons';
 import type { Command } from '../kernel/commands';
 
 export interface EditorCommandContext {

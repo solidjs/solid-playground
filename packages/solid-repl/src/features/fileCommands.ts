@@ -1,4 +1,4 @@
-import { pencil, trash } from 'solid-heroicons/outline';
+import { pencil, trash } from '../components/ui/icons';
 import type { MenuItemDef } from '../components/ui/Menu';
 import type { Workspace } from '../kernel/workspace';
 
