@@ -247,7 +247,9 @@ export const Repl: ReplProps = (props) => {
 
   createEffect(
     () => importMap.state().imports,
-    (imports) => cmTabs.syncTypes(imports),
+    (imports) => {
+      cmTabs.syncTypes(imports);
+    },
   );
 
   const isMobile = createMediaQuery('(max-width: 767px)');

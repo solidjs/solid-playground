@@ -206,11 +206,15 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
   );
   createEffect(
     () => openIds().includes('Preview'),
-    (open) => props.onPreviewOpen(open),
+    (open) => {
+      props.onPreviewOpen(open);
+    },
   );
   createEffect(
     () => openIds().includes('Output'),
-    (open) => props.onOutputOpen(open),
+    (open) => {
+      props.onOutputOpen(open);
+    },
   );
   onSettled(() => () => {
     props.onPreviewOpen(false);

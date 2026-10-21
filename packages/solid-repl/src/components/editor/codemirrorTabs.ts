@@ -360,7 +360,9 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
 
   createEffect(
     () => [opts.displayErrors(), opts.solidV2()],
-    () => relint(),
+    () => {
+      relint();
+    },
   );
 
   onCleanup(() => {
