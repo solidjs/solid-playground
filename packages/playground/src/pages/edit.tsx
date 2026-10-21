@@ -170,9 +170,14 @@ export const Edit = () => {
       localStorage.setItem('scratchpad', JSON.stringify(output));
       return output;
     }
-    return (await fetch(`${API}/repl/${repl}`, {
+    const res = await fetch(`${API}/repl/${repl}`, {
       headers: { authorization: token ? `Bearer ${token}` : '' },
-    }).then((r) => r.json())) as APIRepl;
+    });
+    // Reject here (not downstream) so the Errored boundary's Retry re-runs this request.
+    if (!res.ok) throw new Error(`Failed to load repl "${repl}": ${res.status} ${res.statusText}`);
+    const body = (await res.json()) as APIRepl;
+    if (!Array.isArray(body?.files)) throw new Error(`Failed to load repl "${repl}": unexpected response`);
+    return body;
   });
 
   // Writable derivations of the loaded repl: local edits override them until another repl loads.

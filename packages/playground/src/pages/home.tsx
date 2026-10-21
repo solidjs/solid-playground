@@ -85,9 +85,14 @@ export const Home = () => {
       const user = params.user;
       const token = context.token;
       if (!user && !token) return { total: 0, list: [] };
-      return (await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
+      const res = await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
         headers: { Authorization: `Bearer ${token}` },
-      }).then((r) => r.json())) as Repls;
+      });
+      // Reject here so the Errored boundary's Retry re-runs this request.
+      if (!res.ok) throw new Error(`Failed to load repls: ${res.status} ${res.statusText}`);
+      const body = (await res.json()) as Repls;
+      if (!Array.isArray(body?.list)) throw new Error('Failed to load repls: unexpected response');
+      return body;
     },
     { total: 0, list: [] },
   );
