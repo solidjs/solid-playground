@@ -91,6 +91,9 @@ export const Header: ParentComponent<{
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
   const resolved = children(() => props.children);
+  // Pages pass optional title content (possibly wrapped in Loading/Show); fall back to the
+  // default title when it renders nothing.
+  const hasTitle = () => resolved.toArray().some((node) => node != null && node !== '');
   const mql = window.matchMedia('(max-width: 767px)');
   const [isMobile, setIsMobile] = createSignal(mql.matches);
   onSettled(() => {
@@ -140,7 +143,9 @@ export const Header: ParentComponent<{
       <a href={`/${context.profile()}`}>
         <img src={logo} alt="solid-js logo" class={css({ w: 8 })} />
       </a>
-      {resolved() || (
+      {hasTitle() ? (
+        resolved()
+      ) : (
         <h1 class={titleStyles}>
           Solid<b>JS</b> Playground
         </h1>
