@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, onSettled, untrack, type Accessor } from 'solid-js';
+import { createEffect, createMemo, createSignal, flush, onSettled, untrack, type Accessor } from 'solid-js';
 import type { JSX } from '@solidjs/web';
 import type { InputProps, Machine, MachineSchema, Service } from '@zag-js/core';
 import { createNormalizer } from '@zag-js/types';
@@ -21,17 +21,33 @@ export function useMachine<S extends MachineSchema, Api>(
   let current = untrack(props);
   const vm = new VanillaMachine(machine, () => current);
   const [version, setVersion] = createSignal(0);
-  const unsubscribe = vm.subscribe(() => setVersion((v) => v + 1));
+  // Machine updates (from DOM events, timers or zag's store microtask) are committed to the DOM
+  // right away: zag looks up the nodes it just opened (e.g. to register Escape / focus handlers)
+  // before the next frame. Updates that originate inside Solid's own queue (the props effect,
+  // vm.start in onSettled) are left to that flush; flushing there is a no-op at best.
+  let inSolidQueue = false;
+  const unsubscribe = vm.subscribe(() => {
+    setVersion((v) => v + 1);
+    if (!inSolidQueue) flush();
+  });
+  const insideSolidQueue = (fn: () => void) => {
+    inSolidQueue = true;
+    try {
+      fn();
+    } finally {
+      inSolidQueue = false;
+    }
+  };
 
   createEffect(props, (next) => {
     if (next === current) return;
     current = next;
     // Re-runs the machine's prop watchers and publishes to subscribers.
-    (vm as unknown as { notify(): void }).notify();
+    insideSolidQueue(() => (vm as unknown as { notify(): void }).notify());
   });
 
   onSettled(() => {
-    vm.start();
+    insideSolidQueue(() => vm.start());
     return () => {
       unsubscribe();
       vm.stop();

@@ -1,4 +1,4 @@
-import { For, Show, createUniqueId, type Component } from 'solid-js';
+import { For, Show, createEffect, createUniqueId, type Component } from 'solid-js';
 import { Portal, type JSX } from '@solidjs/web';
 import * as menu from '@zag-js/menu';
 import { useMachine } from './zag';
@@ -80,10 +80,20 @@ export function useMenu(items: () => MenuItemDef[], options: { positioning?: men
   };
 
   const Content: Component<{ portal?: boolean }> = (props) => {
+    // zag focuses the menu on the next animation frame; until then keyboard events (ArrowDown
+    // right after opening) go to <body>. Focus the content as soon as it is rendered instead.
+    let content: HTMLUListElement | undefined;
+    createEffect(
+      () => api().open,
+      (open) => {
+        if (open) content?.focus({ preventScroll: true });
+      },
+    );
+
     const body = (
       <Show when={api().open}>
         <div {...api().getPositionerProps()}>
-          <ul {...api().getContentProps()} class={menuStyles}>
+          <ul ref={(el) => (content = el)} {...api().getContentProps()} class={menuStyles}>
             <For each={items()}>
               {(item) => (
                 <li
