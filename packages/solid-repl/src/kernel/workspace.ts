@@ -1,4 +1,4 @@
-import { createMemo, flush, type Accessor } from 'solid-js';
+import { createMemo, flush, untrack, type Accessor } from 'solid-js';
 import type { Tab } from 'solid-repl';
 
 export interface FileEntry {
@@ -62,39 +62,45 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
     },
     isProtected: (id) => byId(id)?.name === opts.entry,
 
-    create(name, source = '') {
-      const trimmed = name.trim();
-      if (!trimmed) return undefined;
-      if (byName(trimmed)) {
-        alert('A file with that name already exists');
-        return undefined;
-      }
-      commit(opts.tabs().concat({ name: trimmed, source }));
-      return byName(trimmed);
-    },
+    // Mutations are imperative and can run synchronously inside effects (e.g. a CodeMirror
+    // dispatch made from an effect re-enters setSource), so they read state untracked.
+    create: (name, source = '') =>
+      untrack(() => {
+        const trimmed = name.trim();
+        if (!trimmed) return undefined;
+        if (byName(trimmed)) {
+          alert('A file with that name already exists');
+          return undefined;
+        }
+        commit(opts.tabs().concat({ name: trimmed, source }));
+        return byName(trimmed);
+      }),
 
-    rename(id, next) {
-      const file = byId(id);
-      const trimmed = next.trim();
-      if (!file || !trimmed || trimmed === file.name || file.name === opts.entry) return false;
-      if (byName(trimmed)) {
-        alert('A file with that name already exists');
-        return false;
-      }
-      commit(opts.tabs().map((tab) => (tab.name === file.name ? { ...tab, id, name: trimmed } : tab)));
-      return true;
-    },
+    rename: (id, next) =>
+      untrack(() => {
+        const file = byId(id);
+        const trimmed = next.trim();
+        if (!file || !trimmed || trimmed === file.name || file.name === opts.entry) return false;
+        if (byName(trimmed)) {
+          alert('A file with that name already exists');
+          return false;
+        }
+        commit(opts.tabs().map((tab) => (tab.name === file.name ? { ...tab, id, name: trimmed } : tab)));
+        return true;
+      }),
 
-    remove(id) {
-      const file = byId(id);
-      if (!file || file.name === opts.entry) return false;
-      commit(opts.tabs().filter((tab) => tab.name !== file.name));
-      return true;
-    },
+    remove: (id) =>
+      untrack(() => {
+        const file = byId(id);
+        if (!file || file.name === opts.entry) return false;
+        commit(opts.tabs().filter((tab) => tab.name !== file.name));
+        return true;
+      }),
 
-    setSource(id, source) {
-      const file = byId(id);
-      if (file && file.source !== source) update(file, { source });
-    },
+    setSource: (id, source) =>
+      untrack(() => {
+        const file = byId(id);
+        if (file && file.source !== source) update(file, { source });
+      }),
   };
 }

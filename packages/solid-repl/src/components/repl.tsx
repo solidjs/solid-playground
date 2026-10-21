@@ -538,7 +538,8 @@ export const Repl: ReplProps = (props) => {
 
         const disposables = [
           view.onDidActivePanelChange((e) => {
-            if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
+            // Dockview fires this synchronously from panel operations, possibly inside effects.
+            if (e.panel && untrack(() => workspace.byId(e.panel!.id))) setActiveFileId(e.panel.id);
           }),
         ];
 
