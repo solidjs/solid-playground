@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import solidPlugin from 'vite-plugin-solid';
+import solidPlugin from '@solidjs/vite-plugin';
 import { resolve } from 'node:path';
 import { linterAliases, linterDefine } from '../solid-repl/linterBuild';
 
@@ -29,7 +29,7 @@ export default defineConfig((env) => ({
     },
   },
   worker: {
-    // The compiler worker imports babel-preset-solid at runtime; iife workers can't do that.
+    // The compiler worker imports Solid compilers from esm.sh at runtime; iife workers can't do that.
     format: 'es',
     rolldownOptions: {
       output: {
