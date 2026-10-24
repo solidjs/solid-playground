@@ -11,10 +11,10 @@
   "dependencies": {
     "@solid-primitives/scheduled": "2.0.0-next.4",
     "@solidjs/router": "2.0.0-next.41",
-    "@solidjs/web": "2.0.0-rc.16",
+    "@solidjs/web": "2.0.0-rc.18",
     "@zag-js/popover": "2.0.0-next.3",
     "dedent": "^1.7.2",
-    "solid-js": "2.0.0-rc.16",
+    "solid-js": "2.0.0-rc.18",
     "solid-repl": "workspace:*"
   },
   "devDependencies": {
