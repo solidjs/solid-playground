@@ -15,6 +15,7 @@
   "module": "dist/repl.jsx",
   "types": "dist/repl.d.ts",
   "scripts": {
+    "prepack": "pnpm --workspace-root exec panda codegen && pnpm run build",
     "build": "tsdown && vite build -c vite.tsworker.config.ts && tsc -p tsconfig.build.json && node scripts/patch-dist.mjs",
     "tsc": "tsc"
   },
