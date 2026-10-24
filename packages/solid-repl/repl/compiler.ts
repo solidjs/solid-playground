@@ -93,6 +93,9 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
       Import(path) {
         if (path.parent.type === 'CallExpression') handleImportee(path.parent.arguments[0]);
       },
+      ImportExpression(path) {
+        handleImportee(path.node.source);
+      },
       ImportDeclaration(path) {
         handleImportee(path.node.source);
       },
