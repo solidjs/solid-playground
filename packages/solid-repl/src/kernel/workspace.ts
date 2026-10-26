@@ -1,5 +1,5 @@
 import { createMemo, type Accessor } from 'solid-js';
-import type { Tab } from 'solid-repl';
+import type { Tab } from '../types';
 
 export interface FileEntry {
   readonly id: string;

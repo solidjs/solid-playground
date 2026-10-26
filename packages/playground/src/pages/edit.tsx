@@ -7,7 +7,7 @@ import { API, useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { batched, defaultTabs, IMPORT_MAP_FILE, isSolidV2, solidVersionFromImportMap } from 'solid-repl/src';
-import type { ReplStorage, Tab } from 'solid-repl';
+import type { ReplStorage, Tab } from 'solid-repl/src';
 import type { APIRepl } from './home';
 import { Header } from '../components/header';
 import { Spinner } from '../components/spinner';
@@ -183,7 +183,11 @@ export const Edit = () => {
   };
 
   context.setTabs(tabs);
-  onCleanup(() => context.setTabs(undefined));
+  context.setSolidVersion(resolvedSolidVersion);
+  onCleanup(() => {
+    context.setTabs(undefined);
+    context.setSolidVersion(undefined);
+  });
 
   const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
     () => ({ repl: params.repl, scratchpad: !!scratchpad() }),

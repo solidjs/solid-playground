@@ -1,7 +1,7 @@
-import type { Tab } from 'solid-repl';
+import type { Tab } from '../src/types';
 
 import { transform } from '@babel/standalone';
-import type { PluginItem, PluginTarget, Visitor } from '@babel/core';
+import type { PluginTarget, Visitor } from '@babel/core';
 import type { Node } from '@babel/types';
 // @ts-ignore
 import babelPresetSolid from 'babel-preset-solid';
@@ -24,6 +24,10 @@ const usesBabelPlugin = (version: string) => {
   const rc = /^rc\.(\d+)$/.exec(pre);
   return !!rc && Number(rc[1]) >= 2;
 };
+
+type BabelOptions = NonNullable<Parameters<typeof transform>[1]>;
+type PluginItem = NonNullable<BabelOptions['plugins']>[number];
+type PresetItem = NonNullable<BabelOptions['presets']>[number];
 
 type SolidCompiler = { solid: PluginTarget; isPlugin: boolean };
 
@@ -48,11 +52,16 @@ function loadSolid(version: string | undefined): Promise<SolidCompiler> {
   return cached;
 }
 
-const babelOptions = ({ solid, isPlugin }: SolidCompiler, options: SolidCompileOptions, plugins: PluginItem[] = []) => {
+const babelOptions = (
+  { solid, isPlugin }: SolidCompiler,
+  options: SolidCompileOptions,
+  plugins: PluginItem[] = [],
+): { plugins: PluginItem[]; presets: PresetItem[] } => {
   const entry: PluginItem = [solid, options];
+  const typescript: PresetItem = ['typescript', { onlyRemoveTypeImports: true }];
   return {
     plugins: [babelSyntaxJsx, ...plugins, ...(isPlugin ? [entry] : [])],
-    presets: [...(isPlugin ? [] : [entry]), ['typescript', { onlyRemoveTypeImports: true }]],
+    presets: [...(isPlugin ? [] : [entry as PresetItem]), typescript],
   };
 };
 
@@ -78,6 +87,9 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
       Import(path) {
         if (path.parent.type === 'CallExpression') handleImportee(path.parent.arguments[0]);
       },
+      ImportExpression(path) {
+        handleImportee(path.node.source);
+      },
       ImportDeclaration(path) {
         handleImportee(path.node.source);
       },
@@ -90,10 +102,10 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
     },
   });
 
-  const { code: transformedCode } = transform(code, {
+  const transformedCode = transform(code, {
     ...babelOptions(compiler, { generate: 'dom', hydratable: false }, [importRewriter]),
     filename,
-  });
+  })?.code;
 
   return transformedCode!.replace('render(', 'window.dispose = render(');
 }
@@ -131,7 +143,7 @@ async function compile(tabs: Tab[], version: string | undefined) {
 
 async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string | undefined) {
   const compiler = await loadSolid(version);
-  const { code } = transform(tab.source, { ...babelOptions(compiler, compileOpts), filename: tab.name });
+  const code = transform(tab.source, { ...babelOptions(compiler, compileOpts), filename: tab.name })?.code;
   return { compiled: code };
 }
 

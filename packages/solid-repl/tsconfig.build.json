@@ -4,9 +4,9 @@
     "rootDir": "src",
     "outDir": "dist",
     "noEmit": false,
-    "declaration": false,
+    "declaration": true,
     "allowImportingTsExtensions": false
   },
   "include": ["./src/**/*"],
-  "exclude": ["node_modules/"]
+  "exclude": ["node_modules/", "src/components/editor/tsWorker.ts", "src/components/editor/typeAcquisition.ts"]
 }

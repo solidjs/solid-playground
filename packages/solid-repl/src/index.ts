@@ -1,4 +1,6 @@
-import type { Tab } from 'solid-repl';
+import type { Tab } from './types';
+
+export type { EditorPersistedState, Repl, ReplProps, ReplStorage, Tab } from './types';
 
 export { IMPORT_MAP_FILE, isSolidV2, parseImportMap, solidVersionFromImportMap } from './kernel/importMap';
 export { batched } from './kernel/batched';

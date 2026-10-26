@@ -1,5 +1,5 @@
 import { Accessor, createContext, createResource, createSignal, ParentComponent, Resource, useContext } from 'solid-js';
-import type { Tab } from 'solid-repl';
+import type { Tab } from 'solid-repl/src';
 import { isDarkTheme } from './utils/isDarkTheme';
 
 interface AppContextType {
@@ -8,6 +8,8 @@ interface AppContextType {
   profile: Accessor<string>;
   tabs: Accessor<Tab[] | undefined>;
   setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
+  solidVersion: Accessor<string | undefined>;
+  setSolidVersion: (x: Accessor<string> | undefined) => void;
   dark: Accessor<boolean>;
   toggleDark: () => void;
 }
@@ -42,6 +44,7 @@ export const AppContextProvider: ParentComponent = (props) => {
   document.body.classList.toggle('dark', dark());
 
   let [tabsGetter, setTabs] = createSignal<Accessor<Tab[] | undefined>>();
+  const [versionGetter, setVersionGetter] = createSignal<Accessor<string>>();
   return (
     <AppContext.Provider
       value={{
@@ -61,6 +64,10 @@ export const AppContextProvider: ParentComponent = (props) => {
         },
         setTabs(x) {
           setTabs(() => x);
+        },
+        solidVersion: () => versionGetter()?.(),
+        setSolidVersion(x) {
+          setVersionGetter(() => x);
         },
         dark,
         toggleDark() {

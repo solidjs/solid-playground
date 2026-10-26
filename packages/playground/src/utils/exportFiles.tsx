@@ -1,42 +1,45 @@
 import pkg from '../../package.json';
-import type { Tab } from 'solid-repl';
-import { IMPORT_MAP_FILE, parseImportMap } from 'solid-repl/src';
+import type { Tab } from 'solid-repl/src';
+import { IMPORT_MAP_FILE, isSolidV2, parseImportMap, solidVersionFromImportMap } from 'solid-repl/src';
 import dedent from 'dedent';
 
-const viteConfigFile = dedent`
+const viteConfigFile = (v2: boolean) => dedent`
 import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import solidPlugin from "${v2 ? '@solidjs/vite-plugin' : 'vite-plugin-solid'}";
 
 export default defineConfig({
   plugins: [solidPlugin()],
   build: {
     target: "esnext",
-    polyfillDynamicImport: false,
   },
 });
 `;
-const tsConfig = JSON.stringify(
-  {
-    compilerOptions: {
-      strict: true,
-      module: 'ESNext',
-      target: 'ESNext',
-      jsx: 'preserve',
-      esModuleInterop: true,
-      sourceMap: true,
-      allowJs: true,
-      lib: ['es6', 'dom'],
-      rootDir: 'src',
-      moduleResolution: 'node',
-      jsxImportSource: 'solid-js',
-      types: ['solid-js', 'solid-js/dom'],
-    },
-  },
-  null,
-  2,
-);
 
-const indexHTML = (tabs: Tab[]) => dedent`
+const tsConfig = (v2: boolean) =>
+  JSON.stringify(
+    {
+      compilerOptions: {
+        strict: true,
+        module: 'ESNext',
+        target: 'ESNext',
+        jsx: 'preserve',
+        esModuleInterop: true,
+        sourceMap: true,
+        allowJs: true,
+        lib: ['ESNext', 'DOM'],
+        rootDir: 'src',
+        moduleResolution: 'bundler',
+        jsxImportSource: v2 ? '@solidjs/web' : 'solid-js',
+      },
+    },
+    null,
+    2,
+  );
+
+const entryOf = (tabs: Tab[]) =>
+  tabs.find((tab) => tab.name === 'main.tsx') ?? tabs.find((tab) => /\.[tj]sx?$/.test(tab.name)) ?? tabs[0];
+
+const indexHTML = (entry: string) => dedent`
 <html>
   <head>
     <title>Vite Sandbox</title>
@@ -46,53 +49,96 @@ const indexHTML = (tabs: Tab[]) => dedent`
   <body>
     <div id="app"></div>
 
-    <script type="module" src="./src/${tabs[0].name}"></script>
+    <script type="module" src="./src/${entry}"></script>
   </body>
 </html>
 `;
 
-function packageJSON(imports: string[]): string {
-  const deps = imports.reduce(
-    (acc, importPath): Record<string, string> => {
-      const name = importPath.split('/')[0];
-      if (!acc[name]) acc[name] = '*';
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+const packageNameOf = (specifier: string): string | undefined => {
+  if (specifier.startsWith('.') || specifier.startsWith('/') || specifier.includes(':')) return undefined;
+  const parts = specifier.split('/');
+  if (specifier.startsWith('@')) return parts.length >= 2 && parts[1] ? `${parts[0]}/${parts[1]}` : undefined;
+  return parts[0] || undefined;
+};
 
-  return JSON.stringify(
+const CDN_PACKAGE_URL =
+  /^https:\/\/(?:esm\.sh|cdn\.jsdelivr\.net\/npm|unpkg\.com)\/(@[^/@?]+\/[^/@?]+|[^/@?]+)(?:@([^/?]+))?/;
+
+const versionFromUrl = (url: string, name: string): string | undefined => {
+  const match = CDN_PACKAGE_URL.exec(url);
+  if (!match || match[1] !== name) return undefined;
+  return match[2] ?? 'latest';
+};
+
+function manifest(imports: Record<string, string>, solidVersion: string | undefined) {
+  const v2 = isSolidV2(solidVersion);
+  const dependencies: Record<string, string> = {};
+  const custom: [string, string][] = [];
+
+  for (const [specifier, url] of Object.entries(imports)) {
+    const name = packageNameOf(specifier);
+    const version = name && versionFromUrl(url, name);
+    if (!name || !version) {
+      custom.push([specifier, url]);
+      continue;
+    }
+    dependencies[name] ??= version;
+  }
+
+  dependencies['solid-js'] = solidVersion || pkg.dependencies['solid-js'];
+  if (v2) dependencies['@solidjs/web'] = solidVersion!;
+  else delete dependencies['@solidjs/web'];
+
+  const packageJson = JSON.stringify(
     {
+      private: true,
+      type: 'module',
       scripts: {
         start: 'vite',
         build: 'vite build',
       },
-      dependencies: deps,
+      dependencies,
       devDependencies: {
         'vite': pkg.devDependencies['vite'],
-        'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'],
+        ...(v2
+          ? { '@solidjs/vite-plugin': '3.0.0-next.50' }
+          : { 'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'] }),
       },
     },
     null,
     2,
   );
+  return { packageJson, custom };
 }
 
-export async function exportToZip(tabs: Tab[]): Promise<void> {
+const readme = (custom: [string, string][]) => dedent`
+# Solid Playground export
+
+\`npm install\`, then \`npm start\` (dev server) or \`npm run build\`.
+
+The import map of this playground also loaded these modules from URLs that are not npm packages on
+a known CDN, so they are not in package.json. Install or vendor them yourself:
+
+${custom.map(([specifier, url]) => `- \`${specifier}\`: ${url}`).join('\n')}
+`;
+
+export async function exportToZip(tabs: Tab[], previewVersion?: string): Promise<void> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
-  zip.file('index.html', indexHTML(tabs));
-  zip.file('vite.config.ts', viteConfigFile);
-  zip.file('tsconfig.json', tsConfig);
-  zip.folder('src');
+  const importMapSource = tabs.find((tab) => tab.name === IMPORT_MAP_FILE)?.source;
+  const solidVersion = solidVersionFromImportMap(importMapSource) || previewVersion || undefined;
+  const v2 = isSolidV2(solidVersion);
+  const { packageJson, custom } = manifest(parseImportMap(importMapSource).imports, solidVersion);
 
+  zip.file('index.html', indexHTML(entryOf(tabs).name));
+  zip.file('vite.config.ts', viteConfigFile(v2));
+  zip.file('tsconfig.json', tsConfig(v2));
+  zip.file('package.json', packageJson);
+  if (custom.length) zip.file('README.md', readme(custom));
+  zip.folder('src');
   for (const tab of tabs) {
-    if (tab.name === IMPORT_MAP_FILE) {
-      zip.file('package.json', packageJSON(Object.keys(parseImportMap(tab.source).imports)));
-    } else {
-      zip.file(`src/${tab.name}`, tab.source);
-    }
+    if (tab.name !== IMPORT_MAP_FILE) zip.file(`src/${tab.name}`, tab.source);
   }
 
   const blob = await zip.generateAsync({ type: 'blob' });

@@ -228,7 +228,11 @@ const HeaderMenuItems: Component<{
       </Button>
 
       <Show when={context.tabs()}>
-        <Button onClick={() => exportToZip(context.tabs()!)} mobile={props.showOnMobile} title="Export to Zip">
+        <Button
+          onClick={() => exportToZip(context.tabs()!, context.solidVersion())}
+          mobile={props.showOnMobile}
+          title="Export to Zip"
+        >
           <Icon path={arrowDownTray} class={css({ h: 6, m: 0 })} />
           <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Export to Zip</span>
         </Button>
