@@ -1,5 +1,6 @@
-import { Component, JSX, splitProps } from 'solid-js';
-import { cva, cx } from 'styled-system/css';
+import { omit, type Component } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { cva } from 'styled-system/css';
 
 const input = cva({
   base: {
@@ -36,7 +37,7 @@ export interface InputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input: Component<InputProps> = (props) => {
-  const [local, others] = splitProps(props, ['class', 'size', 'inline']);
+  const others = omit(props, 'class', 'size', 'inline');
 
-  return <input {...others} class={cx(input({ size: local.size, inline: local.inline }), local.class)} />;
+  return <input {...others} class={[input({ size: props.size, inline: props.inline }), props.class]} />;
 };

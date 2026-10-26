@@ -1,5 +1,5 @@
 import type { KeyBinding } from '@codemirror/view';
-import type { CommandItem } from '../components/ui/CommandPalette';
+import type { CommandItem } from '../components/ui/CommandMenu';
 import type { IconPath } from '../components/ui/icon';
 
 export interface Command {

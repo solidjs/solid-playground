@@ -5,3 +5,4 @@ allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
   - eslint-plugin-solid@0.18.1
+  - '@solid-primitives/media@4.0.0-next.6'

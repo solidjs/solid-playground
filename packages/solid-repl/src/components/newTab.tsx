@@ -1,23 +1,21 @@
-import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js';
-import { batched } from '../kernel/batched';
-import { Icon } from 'solid-heroicons';
+import { createMemo, createSignal, For, onSettled, Show, type Component } from 'solid-js';
+import { Icon } from './ui/icon';
 import {
   magnifyingGlass,
   documentPlus,
-  document as documentIcon,
+  documentIcon,
   square_2Stack,
   chevronRight,
   arrowUpTray,
   ellipsisHorizontal,
-  pencil,
-  trash as trashIcon,
-} from 'solid-heroicons/outline';
+} from './ui/icons';
 import { useRepl } from './replContext';
 import { Input } from './ui/Input';
 import { IconButton } from './ui/IconButton';
 import { Label } from './ui/Label';
 import { useMenu } from './ui/Menu';
-import { css, cx } from 'styled-system/css';
+import { fileMenuItems } from '../features/fileCommands';
+import { css } from 'styled-system/css';
 import type { IconPath } from './ui/icon';
 
 interface NewTabProps {
@@ -84,17 +82,17 @@ export const NewTab: Component<NewTabProps> = (props) => {
 
   const allItems = createMemo(() => categories().flatMap((c) => c.items));
 
-  const openNew = batched((name: string, source?: string) => {
+  const openNew = (name: string, source?: string) => {
     const file = workspace.create(name, source);
     if (file) props.onOpen(file.id);
-  });
+  };
 
-  const handleSelect = batched((item: Item) => {
+  const handleSelect = (item: Item) => {
     props.onClose();
     if (item.type === 'pane' || item.type === 'file') props.onOpen(item.id);
     else if (item.type === 'new') openNew(item.id);
     else if (item.id === 'upload') fileInputRef.click();
-  });
+  };
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (renamingId()) return;
@@ -118,7 +116,10 @@ export const NewTab: Component<NewTabProps> = (props) => {
     reader.readAsText(file);
   };
 
-  onMount(() => requestAnimationFrame(() => inputRef.focus()));
+  onSettled(() => {
+    const frame = requestAnimationFrame(() => inputRef.focus());
+    return () => cancelAnimationFrame(frame);
+  });
 
   return (
     <div class={shell}>
@@ -132,10 +133,10 @@ export const NewTab: Component<NewTabProps> = (props) => {
             class={css({ pl: 10 })}
             placeholder="Search panes, files, or type a new filename..."
             value={query()}
-            onInput={batched((e: InputEvent & { currentTarget: HTMLInputElement }) => {
+            onInput={(e) => {
               setQuery(e.currentTarget.value);
               setSelectedIndex(0);
-            })}
+            }}
             onKeyDown={handleKeyDown}
           />
         </div>
@@ -152,14 +153,11 @@ export const NewTab: Component<NewTabProps> = (props) => {
                     isRenaming={() => renamingId() === item.id}
                     onSelect={() => handleSelect(item)}
                     onStartRename={() => setRenamingId(item.id)}
-                    onSubmitRename={batched((newName: string) => {
+                    onSubmitRename={(newName: string) => {
                       setRenamingId(null);
                       workspace.rename(item.id, newName);
-                    })}
-                    onCancelRename={() => setRenamingId(null)}
-                    onDelete={() => {
-                      if (confirm(`Delete ${item.label}?`)) workspace.remove(item.id);
                     }}
+                    onCancelRename={() => setRenamingId(null)}
                   />
                 )}
               </For>
@@ -280,23 +278,22 @@ const ItemRow: Component<{
   onStartRename: () => void;
   onSubmitRename: (name: string) => void;
   onCancelRename: () => void;
-  onDelete: () => void;
 }> = (props) => {
+  const { workspace } = useRepl();
   const isFile = props.item.type === 'file';
 
   const { api, Content } = useMenu(() => [
     { value: 'open', label: 'Open', onSelect: () => props.onSelect() },
-    { value: 'rename', label: 'Rename', icon: pencil, onSelect: () => props.onStartRename() },
-    { value: 'delete', label: 'Delete', icon: trashIcon, variant: 'danger', onSelect: () => props.onDelete() },
+    ...fileMenuItems(workspace, props.item.id, () => props.onStartRename()),
   ]);
 
   return (
     <div class={groupRow}>
       <div
-        class={cx(rowStyles, props.isActive() ? rowActive : !props.isRenaming() && rowIdle)}
+        class={[rowStyles, { [rowActive]: props.isActive(), [rowIdle]: !props.isActive() && !props.isRenaming() }]}
         onClick={() => !props.isRenaming() && props.onSelect()}
       >
-        <div class={cx(iconCircle, props.isActive() ? iconActive : iconIdle)}>
+        <div class={[iconCircle, props.isActive() ? iconActive : iconIdle]}>
           <Icon path={props.item.icon} class={css({ h: 4, w: 4 })} />
         </div>
         <div class={css({ flex: 1, minW: 0, textAlign: 'left' })}>
@@ -326,7 +323,7 @@ const ItemRow: Component<{
               <IconButton
                 {...api().getTriggerProps()}
                 icon={ellipsisHorizontal}
-                class={cx('menu-trigger', css({ p: 1 }))}
+                class={['menu-trigger', css({ p: 1 })]}
               />
             </span>
           </Show>

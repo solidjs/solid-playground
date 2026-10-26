@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
-import solidPlugin from 'vite-plugin-solid';
+import solidPlugin from '@solidjs/vite-plugin';
 import { resolve } from 'node:path';
-import { linterAliases, linterDefine } from '../solid-repl/linterBuild';
+import { linterAliases, linterDefine } from '../solid-repl/linterBuild.ts';
 
 const styledSystemPath = resolve(import.meta.dirname, '../../styled-system');
 

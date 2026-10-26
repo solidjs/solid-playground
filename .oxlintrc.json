@@ -7,6 +7,18 @@
     "@pandacss/no-invalid-token-paths": "error",
     "@pandacss/no-deprecated": "warn",
     "@pandacss/extraction-diagnostics": "warn",
-    "eslint/no-unassigned-vars": "off"
+    "eslint/no-unassigned-vars": "off",
+    "oxc/no-barrel-file": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["solid-repl/src/**", "!solid-repl/src/repl", "!solid-repl/src/internal"],
+            "message": "Import from 'solid-repl/src' (or 'solid-repl/src/internal' for the UI kit)."
+          }
+        ]
+      }
+    ]
   }
 }

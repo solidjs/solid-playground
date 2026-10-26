@@ -1,8 +1,8 @@
 import type { Component } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { Portal } from '@solidjs/web';
 
-import { Icon } from 'solid-heroicons';
-import { xMark } from 'solid-heroicons/outline';
+import { Icon } from 'solid-repl/src/internal';
+import { xMark } from '../icons';
 import { css } from 'styled-system/css';
 
 const card = css({
@@ -47,23 +47,19 @@ const refreshBtn = css({
 
 export const Update: Component<{
   onDismiss: (...args: unknown[]) => unknown;
-}> = (props) => {
-  const mount = document.getElementById('update');
-
-  return (
-    <Portal mount={mount!}>
-      <div class={card}>
-        <button title="close" onClick={props.onDismiss} class={closeBtn}>
-          <Icon path={xMark} class={css({ h: 5 })} />
-        </button>
-        <p class={css({ pr: 6, fontWeight: 'semibold' })}>There's a new update available.</p>
-        <p class={css({ mt: 2, fontSize: 'sm', opacity: 0.8 })}>
-          Refresh your browser or click the button below to get the latest update of the REPL.
-        </p>
-        <button onClick={() => location.reload()} class={refreshBtn}>
-          Refresh
-        </button>
-      </div>
-    </Portal>
-  );
-};
+}> = (props) => (
+  <Portal>
+    <div class={card}>
+      <button title="close" onClick={props.onDismiss} class={closeBtn}>
+        <Icon path={xMark} class={css({ h: 5 })} />
+      </button>
+      <p class={css({ pr: 6, fontWeight: 'semibold' })}>There's a new update available.</p>
+      <p class={css({ mt: 2, fontSize: 'sm', opacity: 0.8 })}>
+        Refresh your browser or click the button below to get the latest update of the REPL.
+      </p>
+      <button onClick={() => location.reload()} class={refreshBtn}>
+        Refresh
+      </button>
+    </div>
+  </Portal>
+);

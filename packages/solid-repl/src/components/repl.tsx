@@ -1,9 +1,10 @@
-import { createSignal, createEffect, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
+import { createSignal, createEffect, getOwner, onSettled, runWithOwner, Show, untrack } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import { createMediaQuery } from '@solid-primitives/media';
 import { throttle } from '@solid-primitives/scheduled';
 import { Preview } from './preview';
-import { Error } from './error';
-import { MobileRepl } from './mobile';
+import { ErrorBanner } from './errorBanner';
+import { createMobileViews, MobileRepl } from './mobile';
 import { createCodemirrorTabs } from './editor/codemirrorTabs';
 import { useZoom } from '../hooks/useZoom';
 import { NewTab } from './newTab';
@@ -16,22 +17,23 @@ import { createWorkerClient, latest } from '../kernel/workerClient';
 import { solidPart } from '../kernel/mountSolid';
 import { createWorkspace } from '../kernel/workspace';
 import { createImportMap, IMPORT_MAP_FILE, isSolidV2 } from '../kernel/importMap';
+import { resolveSolidVersion } from '../kernel/solidVersion';
 import { createEditorCommands } from '../features/editorCommands';
 import { fileMenuItems } from '../features/fileCommands';
 
 import { FilePanel, OutputEditor } from './editor';
-import type { Repl as ReplComponent } from '../types';
-import type { Tab } from '../types';
+import type { Repl as ReplComponent, Tab } from '../types';
 import {
   DockviewComponent,
+  DockviewCompositeDisposable,
   Orientation,
   type AddPanelOptions,
   type GroupPanelPartInitParameters,
   type IGroupHeaderProps,
   themeAbyssSpaced,
 } from 'dockview';
-import { Icon } from 'solid-heroicons';
-import { plus, trash, xMark } from 'solid-heroicons/outline';
+import { Icon } from './ui/icon';
+import { plus, trash, xMark } from './ui/icons';
 import { css } from 'styled-system/css';
 import 'dockview/dist/styles/dockview.css';
 
@@ -100,7 +102,7 @@ const outputPane = css({
   },
 });
 
-interface RollupResult {
+interface CompileResult {
   compiled: Record<string, string>;
   externals: string[];
 }
@@ -108,30 +110,26 @@ interface RollupResult {
 export const Repl: ReplComponent = (props) => {
   const compiler = createWorkerClient(props.compiler);
   const formatter = createWorkerClient(props.formatter);
-  const linter = createWorkerClient(props.linter);
-  onCleanup(() => {
-    compiler.dispose();
-    formatter.dispose();
-    linter.dispose();
-  });
+
+  const solidVersion = () => resolveSolidVersion(props.version);
 
   const [error, setError] = createSignal('');
   const [output, setOutput] = createSignal<Record<string, string>>(
     {},
     { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
-  const [universalModuleName, setUniversalModuleName] = createSignal('solid-universal-module');
+  const [universalModuleName, setUniversalModuleName] = createSignal(compileOptions.UNIVERSAL.moduleName);
   const [mode, setMode] = createSignal<CompileModeOption>(compileOptions.DOM);
-  const [outputVisible, setOutputVisible] = createSignal(false);
-  const [previewVisible, setPreviewVisible] = createSignal(false);
+  const [desktopOutputVisible, setOutputVisible] = createSignal(false);
+  const [desktopPreviewVisible, setPreviewVisible] = createSignal(false);
   const [displayErrors, setDisplayErrors] = createSignal(true);
-  const [activeFileId, setActiveFileId] = createSignal<string | undefined>();
+  const [desktopActiveFileId, setActiveFileId] = createSignal<string | undefined>();
   const { zoomState } = useZoom();
 
   const importMap = createImportMap({
     tabs: () => props.tabs,
     setTabs: props.setTabs,
-    version: () => props.version,
+    version: solidVersion,
     onEdit: () => props.onUserEdit?.(),
   });
 
@@ -140,7 +138,19 @@ export const Repl: ReplComponent = (props) => {
     setTabs: props.setTabs,
     folder: () => props.id,
     entry: ENTRY_FILE,
+    onNameTaken: (name) => alert(`A file named ${name} already exists`),
   });
+
+  const entryFileId = () => workspace.byName(ENTRY_FILE)?.id ?? workspace.files()[0]?.id;
+
+  const isMobile = createMediaQuery('(max-width: 767px)');
+  const mobileViews = createMobileViews(
+    workspace,
+    untrack(() => [entryFileId(), 'Preview'].filter((id): id is string => !!id)),
+  );
+  const previewVisible = () => (isMobile() ? mobileViews.openIds().includes('Preview') : desktopPreviewVisible());
+  const outputVisible = () => (isMobile() ? mobileViews.openIds().includes('Output') : desktopOutputVisible());
+  const activeFileId = () => (isMobile() ? mobileViews.activeFileId() : desktopActiveFileId());
 
   const commands = createEditorCommands({
     activeView: () => {
@@ -154,14 +164,13 @@ export const Repl: ReplComponent = (props) => {
     setDisplayErrors,
   });
 
-  const cmTabs = createCodemirrorTabs(props.id, {
+  const cmTabs = createCodemirrorTabs({
     workspace,
     isDark: () => !!props.dark,
     fontSize: () => zoomState.fontSize,
     displayErrors,
-    solidV2: () => isSolidV2(props.version),
+    solidV2: () => isSolidV2(solidVersion()),
     formatter,
-    linter,
     keyBindings: keyBindingsOf(commands),
     onUserEdit: () => props.onUserEdit?.(),
     loadEditorState: (fileId) => props.storage?.getEditorState?.(fileId),
@@ -177,27 +186,23 @@ export const Repl: ReplComponent = (props) => {
 
   const onCompileFailed = (e: unknown) => {
     console.error(e);
-    setError(e instanceof globalThis.Error ? e.message : String(e));
+    setError(e instanceof Error ? e.message : String(e));
   };
 
-  const requestRollup = latest((tabs: Tab[]) =>
-    compiler.request<RollupResult>('ROLLUP', { tabs, version: props.version }),
+  const requestCompile = latest((tabs: Tab[]) =>
+    compiler.request<CompileResult>('COMPILE', { tabs, version: solidVersion() }),
   );
   const requestBabel = latest((tab: Tab, compileOpts: SolidCompileOptions) =>
-    compiler.request<{ compiled: string }>('BABEL', { tab, compileOpts, version: props.version }),
+    compiler.request<{ compiled: string }>('BABEL', { tab, compileOpts, version: solidVersion() }),
   );
 
   const compilePreview = throttle(async (tabs: Tab[]) => {
-    const started = performance.now();
     try {
-      const result = await requestRollup(tabs);
+      const result = await requestCompile(tabs);
       if (!result) return;
-      console.log(`Compilation took: ${performance.now() - started}ms`);
-      batch(() => {
-        setError('');
-        setOutput(result.compiled);
-        importMap.syncExternals(result.externals);
-      });
+      setError('');
+      setOutput(result.compiled);
+      importMap.syncExternals(result.externals);
     } catch (e) {
       onCompileFailed(e);
     }
@@ -214,28 +219,40 @@ export const Repl: ReplComponent = (props) => {
     }
   }, 250);
 
-  createEffect(() => {
-    void props.version;
-    const tabs = props.tabs.filter((tab) => tab.name !== IMPORT_MAP_FILE);
-    if (previewVisible() && tabs.length) compilePreview(tabs);
-  });
+  createEffect(
+    () => {
+      void solidVersion();
+      const tabs = props.tabs.filter((tab) => tab.name !== IMPORT_MAP_FILE);
+      return previewVisible() && tabs.length ? tabs : undefined;
+    },
+    (tabs) => {
+      if (tabs) compilePreview(tabs);
+    },
+  );
 
-  createEffect(() => {
-    void props.version;
-    const active = activeName();
-    if (!outputVisible() || !active || !/\.[tj]sx$/.test(active)) return;
-    const tab = props.tabs.find((tab) => tab.name === active);
-    if (!tab) return;
-    const current = mode();
-    compileOutput(
-      tab,
-      current === compileOptions.UNIVERSAL ? { ...current, moduleName: universalModuleName() } : current,
-    );
-  });
+  createEffect(
+    () => {
+      void solidVersion();
+      const active = activeName();
+      if (!outputVisible() || !active || !/\.[tj]sx$/.test(active)) return undefined;
+      const tab = props.tabs.find((tab) => tab.name === active);
+      if (!tab) return undefined;
+      const current = mode();
+      const compileOpts: SolidCompileOptions =
+        current === compileOptions.UNIVERSAL ? { ...current, moduleName: universalModuleName() } : current;
+      return { tab, compileOpts };
+    },
+    (job) => {
+      if (job) compileOutput(job.tab, job.compileOpts);
+    },
+  );
 
-  createEffect(() => cmTabs.syncTypes(importMap.state().imports));
-
-  const isMobile = createMediaQuery('(max-width: 767px)');
+  createEffect(
+    () => importMap.state().imports,
+    (imports) => {
+      cmTabs.syncTypes(imports);
+    },
+  );
 
   const previewSection = (interactive: () => boolean) => (
     <Preview
@@ -259,270 +276,285 @@ export const Repl: ReplComponent = (props) => {
     </section>
   );
 
-  const entryFileId = () => workspace.byName(ENTRY_FILE)?.id ?? workspace.files()[0]?.id;
-
   const DesktopRepl = () => {
     let ref!: HTMLDivElement;
+    const owner = getOwner();
+    let dockview: DockviewComponent | undefined;
 
-    onMount(() => {
-      const openPanel = (options: AddPanelOptions) => {
-        const panel = dockview.getGroupPanel(options.id);
-        if (panel) panel.focus();
-        else dockview.addPanel(options);
-      };
-      const openFile = (fileId: string) =>
-        openPanel({ id: fileId, title: workspace.nameOf(fileId), tabComponent: 'file', component: 'editor' });
-      const openPane = (id: string) =>
-        openPanel({
-          id,
-          tabComponent: 'default',
-          component: id.toLowerCase(),
-          renderer: id === 'Preview' ? 'always' : undefined,
-        });
-      const open = (id: string) => (workspace.byId(id) ? openFile(id) : openPane(id));
-
-      createEffect(() => {
-        const live = new Set(workspace.files().map((f) => f.id));
+    createEffect(
+      () => new Set(workspace.files().map((f) => f.id)),
+      (live) => {
+        if (!dockview) return;
         for (const panel of dockview.panels) {
           if (panel.view?.contentComponent === 'editor' && !live.has(panel.id)) panel.api.close();
         }
-      });
+      },
+    );
 
-      const dockview = new DockviewComponent(ref, {
-        theme: themeAbyssSpaced,
-        defaultTabComponent: 'default',
-        createLeftHeaderActionComponent: () =>
-          solidPart<IGroupHeaderProps>(headerActions, (params) => (
-            <IconButton
-              icon={plus}
-              class={css({ h: '28px' })}
-              onClick={() => {
-                params.group.focus();
-                openPanel({ id: 'newTab', title: 'New Tab', tabComponent: 'default', component: 'newTab' });
-              }}
-              title="New Tab"
-            >
-              <span class={css({ srOnly: true })}>New tab</span>
-            </IconButton>
-          )),
-        createTabComponent: (panel) =>
-          solidPart<GroupPanelPartInitParameters>(tabBody, (params) => {
-            const isFile = panel.name == 'file';
-            const fileId = params.api.id;
-            const label = () => (isFile ? workspace.nameOf(fileId) : undefined) ?? params.title;
+    // Dockview calls back from `onSettled` (no primitives allowed) and from unowned user actions.
+    onSettled(() =>
+      runWithOwner(null, () => {
+        const openPanel = (options: AddPanelOptions) => {
+          const panel = view.getGroupPanel(options.id);
+          if (panel) panel.focus();
+          else view.addPanel(options);
+        };
+        const openFile = (fileId: string) =>
+          openPanel({ id: fileId, title: workspace.nameOf(fileId), tabComponent: 'file', component: 'editor' });
+        const openPane = (id: string) =>
+          openPanel({
+            id,
+            tabComponent: 'default',
+            component: id.toLowerCase(),
+            renderer: id === 'Preview' ? 'always' : undefined,
+          });
+        const open = (id: string) => (workspace.byId(id) ? openFile(id) : openPane(id));
 
-            if (isFile) {
-              createEffect(() => {
-                const name = workspace.nameOf(fileId);
-                if (name && name !== params.api.title) params.api.setTitle(name);
-              });
-            }
-
-            const items = () => fileMenuItems(workspace, fileId);
-            const { Content, openAt } = useMenu(items);
-
-            return (
-              <div
-                class={tabLayout}
-                onContextMenu={(e) => {
-                  if (!isFile || items().length === 0) return;
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openAt(e.clientX, e.clientY);
+        const view = new DockviewComponent(ref, {
+          theme: themeAbyssSpaced,
+          defaultTabComponent: 'default',
+          createLeftHeaderActionComponent: () =>
+            solidPart<IGroupHeaderProps>(owner, headerActions, (params) => (
+              <IconButton
+                icon={plus}
+                class={css({ h: '28px' })}
+                onClick={() => {
+                  params.group.focus();
+                  openPanel({ id: 'NewTab', title: 'New Tab', tabComponent: 'default', component: 'newTab' });
                 }}
+                title="New Tab"
               >
-                <span
-                  class={css({
-                    fontSize: 'sm',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  })}
-                >
-                  {label()}
-                </span>
-                <button
-                  class={`tab-close ${tabClose}`}
-                  onClick={(e) => {
-                    if (e.defaultPrevented) return;
+                <span class={css({ srOnly: true })}>New tab</span>
+              </IconButton>
+            )),
+          createTabComponent: (panel) =>
+            solidPart<GroupPanelPartInitParameters>(owner, tabBody, (params) => {
+              const isFile = panel.name === 'file';
+              const fileId = params.api.id;
+              const label = () => (isFile ? workspace.nameOf(fileId) : undefined) ?? params.title;
+
+              if (isFile) {
+                createEffect(
+                  () => workspace.nameOf(fileId),
+                  (name) => {
+                    if (name && name !== params.api.title) params.api.setTitle(name);
+                  },
+                );
+              }
+
+              const items = () => fileMenuItems(workspace, fileId);
+              const { Content, openAt } = useMenu(items);
+
+              return (
+                <div
+                  class={tabLayout}
+                  onContextMenu={(e) => {
+                    if (!isFile || items().length === 0) return;
                     e.preventDefault();
-                    params.api.close();
+                    e.stopPropagation();
+                    openAt(e.clientX, e.clientY);
                   }}
-                  title="Close tab"
                 >
-                  <Icon path={xMark} class={css({ h: 3, w: 3, color: 'neutral.500' })} />
-                </button>
-                <Content portal />
-              </div>
-            );
-          }),
-        createRightHeaderActionComponent: () => {
-          const [isTSX, setIsTSX] = createSignal(false);
+                  <span
+                    class={css({
+                      fontSize: 'sm',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    })}
+                  >
+                    {label()}
+                  </span>
+                  <button
+                    class={`tab-close ${tabClose}`}
+                    onClick={(e) => {
+                      if (e.defaultPrevented) return;
+                      e.preventDefault();
+                      params.api.close();
+                    }}
+                    title="Close tab"
+                  >
+                    <Icon path={xMark} class={css({ h: 3, w: 3, color: 'neutral.500' })} />
+                  </button>
+                  <Content portal />
+                </div>
+              );
+            }),
+          createRightHeaderActionComponent: () => {
+            const [activePanelId, setActivePanelId] = createSignal<string>();
+            const isTSX = () => /\.[tj]sx$/.test(workspace.nameOf(activePanelId() ?? '') ?? '');
 
-          return solidPart<IGroupHeaderProps>(
-            `${headerActions} ${css({ justifyContent: 'flex-end' })}`,
-            () => (
-              <Show when={isTSX()}>
-                <IconButton
-                  icon={trash}
-                  class={css({ h: '28px' })}
-                  onClick={() => {
-                    if (!confirm('Are you sure you want to reset the editor?')) return;
-                    props.reset();
-                  }}
-                  title="Reset Editor"
-                >
-                  <span class={css({ srOnly: true })}>Reset Editor</span>
-                </IconButton>
-              </Show>
-            ),
-            (params) => {
-              const disposable = params.group.api.onDidActivePanelChange((e) => {
-                if (!e) return;
-                setIsTSX(/\.[tj]sx$/.test(e.panel.id));
-              });
-              return () => disposable.dispose();
-            },
-          );
-        },
-        createComponent(options) {
-          let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
-          let component: (params: GroupPanelPartInitParameters) => JSX.Element = () => null;
-
-          switch (options.name) {
-            case 'newTab':
-              component = (params) => <NewTab onOpen={open} onClose={() => params.api.close()} />;
-              break;
-            case 'editor':
-              component = (params) => <FilePanel fileId={params.api.id} />;
-              break;
-            case 'preview': {
-              setPreviewVisible(true);
-              onCleanup(() => setPreviewVisible(false));
-              const [previewIsActive, setPreviewIsActive] = createSignal(false);
-              component = () => previewSection(previewIsActive);
-              onInit = (params) => {
-                setPreviewIsActive(params.api.isActive);
-                const disposable = params.api.onDidActiveChange((e) => setPreviewIsActive(e.isActive));
+            return solidPart<IGroupHeaderProps>(
+              owner,
+              `${headerActions} ${css({ justifyContent: 'flex-end' })}`,
+              () => (
+                <Show when={isTSX()}>
+                  <IconButton
+                    icon={trash}
+                    class={css({ h: '28px' })}
+                    onClick={() => {
+                      if (!confirm('Are you sure you want to reset the editor?')) return;
+                      props.reset();
+                    }}
+                    title="Reset Editor"
+                  >
+                    <span class={css({ srOnly: true })}>Reset Editor</span>
+                  </IconButton>
+                </Show>
+              ),
+              (params) => {
+                const disposable = params.group.api.onDidActivePanelChange((e) => setActivePanelId(e?.panel.id));
                 return () => disposable.dispose();
-              };
-              break;
+              },
+            );
+          },
+          createComponent(options) {
+            let onInit: ((params: GroupPanelPartInitParameters) => (() => void) | void) | undefined;
+            let component: (params: GroupPanelPartInitParameters) => JSX.Element = () => null;
+
+            switch (options.name) {
+              case 'newTab':
+                component = (params) => <NewTab onOpen={open} onClose={() => params.api.close()} />;
+                break;
+              case 'editor':
+                component = (params) => <FilePanel fileId={params.api.id} />;
+                break;
+              case 'preview': {
+                const [previewIsActive, setPreviewIsActive] = createSignal(false);
+                component = () => previewSection(previewIsActive);
+                onInit = (params) => {
+                  setPreviewVisible(true);
+                  setPreviewIsActive(params.api.isActive);
+                  const disposable = params.api.onDidActiveChange((e) => setPreviewIsActive(e.isActive));
+                  return () => {
+                    disposable.dispose();
+                    setPreviewVisible(false);
+                  };
+                };
+                break;
+              }
+              case 'output':
+                component = outputSection;
+                onInit = () => {
+                  setOutputVisible(true);
+                  return () => setOutputVisible(false);
+                };
+                break;
             }
-            case 'output':
-              setOutputVisible(true);
-              onCleanup(() => setOutputVisible(false));
-              component = outputSection;
-              break;
-          }
 
-          return solidPart<GroupPanelPartInitParameters>(
-            css({ display: 'flex', flexDirection: 'column', h: 'full' }),
-            (params) => <ReplContext.Provider value={api}>{component(params)}</ReplContext.Provider>,
-            onInit,
-          );
-        },
-      });
+            return solidPart<GroupPanelPartInitParameters>(
+              owner,
+              css({ display: 'flex', flexDirection: 'column', h: 'full' }),
+              (params) => <ReplContext value={api}>{component(params)}</ReplContext>,
+              onInit,
+            );
+          },
+        });
 
-      const entryId = entryFileId() ?? ENTRY_FILE;
+        const entryId = entryFileId() ?? ENTRY_FILE;
 
-      const defaultLayout = {
-        grid: {
-          root: {
-            type: 'branch' as const,
-            data: [
-              {
-                type: 'leaf' as const,
-                data: { views: [entryId], activeView: entryId, id: '1' },
-                size: 400,
-              },
-              {
-                type: 'leaf' as const,
-                data: {
-                  views: ['Preview', 'Output'],
-                  activeView: 'Preview',
-                  id: '2',
+        const defaultLayout = {
+          grid: {
+            root: {
+              type: 'branch' as const,
+              data: [
+                {
+                  type: 'leaf' as const,
+                  data: { views: [entryId], activeView: entryId, id: '1' },
+                  size: 400,
                 },
-                size: 250,
-              },
-            ],
-            size: 480,
+                {
+                  type: 'leaf' as const,
+                  data: {
+                    views: ['Preview', 'Output'],
+                    activeView: 'Preview',
+                    id: '2',
+                  },
+                  size: 250,
+                },
+              ],
+              size: 480,
+            },
+            width: 1600,
+            height: 480,
+            orientation: props.vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL,
           },
-          width: 1600,
-          height: 480,
-          orientation: props.vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL,
-        },
-        activeGroup: '1',
-        panels: {
-          Output: {
-            id: 'Output',
-            tabComponent: 'default',
-            contentComponent: 'output',
+          activeGroup: '1',
+          panels: {
+            Output: {
+              id: 'Output',
+              tabComponent: 'default',
+              contentComponent: 'output',
+            },
+            Preview: {
+              id: 'Preview',
+              contentComponent: 'preview',
+              tabComponent: 'default',
+              renderer: 'always' as const,
+            },
+            [entryId]: {
+              id: entryId,
+              title: workspace.nameOf(entryId) ?? ENTRY_FILE,
+              tabComponent: 'file',
+              contentComponent: 'editor',
+            },
           },
-          Preview: {
-            id: 'Preview',
-            contentComponent: 'preview',
-            tabComponent: 'default',
-            renderer: 'always' as const,
-          },
-          [entryId]: {
-            id: entryId,
-            title: workspace.nameOf(entryId) ?? ENTRY_FILE,
-            tabComponent: 'file',
-            contentComponent: 'editor',
-          },
-        },
-      };
+        };
 
-      let restored = false;
-      const stored = props.storage?.getLayout?.();
-      if (stored) {
-        try {
-          const validIds = new Set(
-            workspace
-              .files()
-              .map((f) => f.id)
-              .concat(['Output', 'Preview']),
-          );
-          for (const id in stored.panels) {
-            if (!validIds.has(id)) delete stored.panels[id];
-          }
-          dockview.fromJSON(stored);
-          restored = dockview.panels.length > 0;
-        } catch {}
-      }
-      if (!restored) dockview.fromJSON(defaultLayout);
+        let restored = false;
+        const stored = props.storage?.getLayout?.();
+        if (stored) {
+          try {
+            const validIds = new Set(
+              workspace
+                .files()
+                .map((f) => f.id)
+                .concat(['Output', 'Preview']),
+            );
+            for (const id in stored.panels) {
+              if (!validIds.has(id)) delete stored.panels[id];
+            }
+            view.fromJSON(stored);
+            restored = view.panels.length > 0;
+          } catch {}
+        }
+        if (!restored) view.fromJSON(defaultLayout);
+        dockview = view;
 
-      if (props.storage?.setLayout) {
-        const saveLayout = throttle(() => props.storage!.setLayout!(dockview.toJSON()), 300);
-        const layoutDisp = dockview.onDidLayoutChange(saveLayout);
-        onCleanup(() => layoutDisp.dispose());
-      }
+        const disposables = new DockviewCompositeDisposable(
+          view.onDidActivePanelChange((e) => {
+            // Dockview fires this synchronously from panel operations, possibly inside effects.
+            if (e.panel && untrack(() => workspace.byId(e.panel!.id))) setActiveFileId(e.panel.id);
+          }),
+        );
 
-      dockview.onDidActivePanelChange((e) => {
-        if (e.panel && workspace.byId(e.panel.id)) setActiveFileId(e.panel.id);
-      });
-    });
+        const storage = props.storage;
+        if (storage?.setLayout) {
+          const saveLayout = throttle(() => storage.setLayout!(view.toJSON()), 300);
+          disposables.addDisposables(view.onDidLayoutChange(saveLayout), { dispose: saveLayout.clear });
+        }
+        disposables.addDisposables(view);
+
+        return () => {
+          dockview = undefined;
+          disposables.dispose();
+        };
+      }),
+    );
 
     return <div ref={ref} class={replBody} />;
   };
 
   return (
-    <ReplContext.Provider value={api}>
+    <ReplContext value={api}>
       <div class={replHost}>
         <Show when={isMobile()} fallback={<DesktopRepl />}>
-          <MobileRepl
-            initialViews={[entryFileId(), 'Preview'].filter((id): id is string => !!id)}
-            preview={previewSection}
-            outputPane={outputSection}
-            onPreviewOpen={setPreviewVisible}
-            onOutputOpen={setOutputVisible}
-            onActiveFile={setActiveFileId}
-          />
+          <MobileRepl views={mobileViews} preview={previewSection} outputPane={outputSection} />
         </Show>
         <Show when={error()}>
-          <Error message={error()} onDismiss={() => setError('')} />
+          <ErrorBanner message={error()} onDismiss={() => setError('')} />
         </Show>
       </div>
-    </ReplContext.Provider>
+    </ReplContext>
   );
 };

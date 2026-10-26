@@ -1,5 +1,4 @@
-import { createEffect, createMemo, onCleanup } from 'solid-js';
-import { batched } from '../../kernel/batched';
+import { createEffect, onCleanup, runWithOwner, untrack } from 'solid-js';
 import { throttle } from '@solid-primitives/scheduled';
 import {
   drawSelection,
@@ -29,7 +28,7 @@ import {
 } from './typescriptLsp';
 import { darkTheme, lightTheme, darkHighlightStyle, lightHighlightStyle } from './themes';
 import type { WorkerClient } from '../../kernel/workerClient';
-import type { FileEntry, Workspace } from '../../kernel/workspace';
+import type { Workspace } from '../../kernel/workspace';
 
 export interface CodemirrorTabsOptions {
   workspace: Workspace;
@@ -38,7 +37,6 @@ export interface CodemirrorTabsOptions {
   displayErrors: () => boolean;
   solidV2: () => boolean;
   formatter?: WorkerClient;
-  linter?: WorkerClient;
   keyBindings?: KeyBinding[];
   onUserEdit?: () => void;
   loadEditorState?: (fileId: string) => EditorPersistedState | undefined;
@@ -114,36 +112,9 @@ const languageExtensions = (uri: string, session: TypescriptSession): Extension 
   return [];
 };
 
-interface LintResponse {
-  markers?: LintMarker[];
-  output?: string;
-  fixed?: boolean;
-}
-
-interface LintMarker {
-  startLineNumber: number;
-  endLineNumber: number;
-  startColumn: number;
-  endColumn: number;
-  message: string;
-  severity: number;
-}
-
-const markersToDiagnostics = (view: EditorView, markers: LintMarker[]): Diagnostic[] => {
-  const doc = view.state.doc;
-  return markers.map((m) => {
-    const startLine = doc.line(Math.min(Math.max(m.startLineNumber, 1), doc.lines));
-    const endLine = doc.line(Math.min(Math.max(m.endLineNumber, 1), doc.lines));
-    const from = startLine.from + Math.max(0, m.startColumn - 1);
-    const to = endLine.from + Math.max(0, m.endColumn - 1);
-    return {
-      from,
-      to: Math.max(from, to),
-      severity: m.severity === 8 ? 'error' : 'warning',
-      message: m.message,
-      source: 'eslint',
-    };
-  });
+const clampToDoc = (view: EditorView, diagnostics: Diagnostic[]): Diagnostic[] => {
+  const length = view.state.doc.length;
+  return diagnostics.map((d) => ({ ...d, from: Math.min(d.from, length), to: Math.min(d.to, length) }));
 };
 
 // `forceLinting` only flushes an already-pending lint; the linter treats this effect as a
@@ -157,17 +128,18 @@ const lintExtensions = (
 ): Extension => [
   linter(
     async (view) => {
-      if (!opts.displayErrors()) return [];
-      const uri = currentUri();
+      // CodeMirror may run this synchronously (forceLinting from an effect), so read state untracked.
+      if (!untrack(opts.displayErrors)) return [];
+      const uri = untrack(currentUri);
       if (!uri || !isTsFile(uri)) return [];
 
       session.client.sync();
-      const diagnostics = await session.getDiagnostics(uri, view);
-      const res = await opts.linter?.tryRequest<LintResponse>('LINT', {
+      const diagnostics = await session.getDiagnostics(uri);
+      const res = await session.eslint.tryRequest<{ diagnostics: Diagnostic[] }>('LINT', {
         code: view.state.doc.toString(),
-        v2: opts.solidV2(),
+        v2: untrack(opts.solidV2),
       });
-      return diagnostics.concat(markersToDiagnostics(view, res?.markers ?? []));
+      return clampToDoc(view, diagnostics.concat(res?.diagnostics ?? []));
     },
     {
       delay: 250,
@@ -177,7 +149,7 @@ const lintExtensions = (
   lintGutter(),
 ];
 
-export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions): CodemirrorTabs => {
+export const createCodemirrorTabs = (opts: CodemirrorTabsOptions): CodemirrorTabs => {
   const { workspace } = opts;
   const session = createTypescriptSession();
   const editors = new Map<string, FileEditor>();
@@ -201,11 +173,11 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
 
   const fixView = async (view: EditorView) => {
     if (!opts.displayErrors()) return;
-    const res = await opts.linter?.tryRequest<LintResponse>('FIX', {
+    const res = await session.eslint.tryRequest<{ output: string; fixed: boolean }>('FIX', {
       code: view.state.doc.toString(),
       v2: opts.solidV2(),
     });
-    if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
+    if (res?.fixed) replaceDoc(view, res.output);
   };
 
   const buildEditor = (fileId: string, initialSource: string): FileEditor => {
@@ -226,7 +198,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
         topPos: lastTopPos,
       });
     };
-    const persist = throttle(writeState, 500);
+    const persist = runWithOwner(null, () => throttle(writeState, 500));
 
     const currentUri = () => workspace.uriOf(fileId);
 
@@ -240,23 +212,21 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
           appearance.of(appearanceExtensions(opts.isDark(), opts.fontSize())),
           lintExtensions(currentUri, session, opts),
           language.of(languageExtensions(currentUri() ?? '', session)),
-          EditorView.updateListener.of(
-            batched((u) => {
-              if (u.docChanged) {
-                workspace.setSource(fileId, u.state.doc.toString());
-                const userEdit = u.transactions.some(
-                  (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
-                );
-                if (userEdit) opts.onUserEdit?.();
-              }
-              if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
-                lastTopPos = u.view.viewport.from;
-                persist();
-              } else if (u.docChanged || u.selectionSet) {
-                persist();
-              }
-            }),
-          ),
+          EditorView.updateListener.of((u) => {
+            if (u.docChanged) {
+              workspace.setSource(fileId, u.state.doc.toString());
+              const userEdit = u.transactions.some(
+                (tr) => tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'),
+              );
+              if (userEdit) opts.onUserEdit?.();
+            }
+            if (u.viewportChanged && u.view.viewport.from !== lastTopPos) {
+              lastTopPos = u.view.viewport.from;
+              persist();
+            } else if (u.docChanged || u.selectionSet) {
+              persist();
+            }
+          }),
         ],
       }),
       scrollTo: lastTopPos > 0 ? EditorView.scrollIntoView(lastTopPos, { y: 'start' }) : undefined,
@@ -273,56 +243,15 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
         if (focus) view.focus();
       },
       destroy() {
+        persist.clear();
         writeState();
         view.destroy();
       },
     };
   };
 
-  const registered = new Map<string, string>();
-
-  const sync = createMemo(() => {
-    const files = workspace.files();
-    const liveIds = new Set(files.map((f) => f.id));
-    const liveUris = new Map<string, FileEntry>(files.map((f) => [`file:///${folder}/${f.name}`, f]));
-
-    for (const [id, editor] of editors) {
-      if (!liveIds.has(id)) {
-        editor.destroy();
-        editors.delete(id);
-        opts.saveEditorState?.(id, null);
-      }
-    }
-
-    for (const uri of registered.keys()) {
-      if (!liveUris.has(uri)) {
-        session.worker.postMessage({ method: 'textDocument/didClose', params: { textDocument: { uri } } });
-        registered.delete(uri);
-      }
-    }
-
-    for (const [uri, file] of liveUris) {
-      if (!isTsFile(uri) || registered.get(uri) === file.source) continue;
-      const isOpen = registered.has(uri);
-      registered.set(uri, file.source);
-      session.worker.postMessage(
-        isOpen
-          ? {
-              method: 'textDocument/didChange',
-              params: { textDocument: { uri, version: 0 }, contentChanges: [{ text: file.source }] },
-            }
-          : {
-              method: 'textDocument/didOpen',
-              params: { textDocument: { uri, languageId: 'typescript', version: 0, text: file.source } },
-            },
-      );
-    }
-
-    return files;
-  });
-
   const ensureEditor = (fileId: string): FileEditor | undefined => {
-    const file = sync().find((f) => f.id === fileId);
+    const file = workspace.byId(fileId);
     if (!file) return undefined;
     let editor = editors.get(fileId);
     if (!editor) {
@@ -332,34 +261,45 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
     return editor;
   };
 
-  createEffect(() => {
-    for (const file of sync()) {
-      const editor = editors.get(file.id);
-      if (editor) replaceDoc(editor.view, file.source);
-    }
-  });
+  createEffect(
+    () => workspace.files(),
+    (files) => {
+      const liveIds = new Set(files.map((f) => f.id));
+      for (const [id, editor] of editors) {
+        if (!liveIds.has(id)) {
+          editor.destroy();
+          editors.delete(id);
+          opts.saveEditorState?.(id, null);
+        }
+      }
 
-  createEffect(() => {
-    const ext = appearanceExtensions(opts.isDark(), opts.fontSize());
-    for (const { view, appearance } of styled()) view.dispatch({ effects: appearance.reconfigure(ext) });
-  });
+      session.setDocuments(new Map(files.filter((f) => isTsFile(f.name)).map((f) => [f.uri, f.source])));
 
-  createEffect(() => {
-    for (const file of workspace.files()) {
-      const editor = editors.get(file.id);
-      const uri = `file:///${folder}/${file.name}`;
-      if (!editor || editor.languageUri === uri) continue;
-      editor.languageUri = uri;
-      editor.view.dispatch({ effects: editor.language.reconfigure(languageExtensions(uri, session)) });
-      forceLinting(editor.view);
-    }
-  });
+      for (const file of files) {
+        const editor = editors.get(file.id);
+        if (!editor) continue;
+        replaceDoc(editor.view, file.source);
+        if (editor.languageUri === file.uri) continue;
+        editor.languageUri = file.uri;
+        editor.view.dispatch({ effects: editor.language.reconfigure(languageExtensions(file.uri, session)) });
+        forceLinting(editor.view);
+      }
+    },
+  );
 
-  createEffect(() => {
-    opts.displayErrors();
-    opts.solidV2();
-    relint();
-  });
+  createEffect(
+    () => appearanceExtensions(opts.isDark(), opts.fontSize()),
+    (ext) => {
+      for (const { view, appearance } of styled()) view.dispatch({ effects: appearance.reconfigure(ext) });
+    },
+  );
+
+  createEffect(
+    () => [opts.displayErrors(), opts.solidV2()],
+    () => {
+      relint();
+    },
+  );
 
   onCleanup(() => {
     for (const editor of editors.values()) editor.destroy();

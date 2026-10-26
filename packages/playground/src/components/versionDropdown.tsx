@@ -1,8 +1,7 @@
-import { Component, createResource } from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { check, cube } from 'solid-heroicons/outline';
-import { useMenu } from 'solid-repl/src/components/ui/Menu';
-import { Button } from 'solid-repl/src/components/ui/Button';
+import { createSignal, onSettled, type Component } from 'solid-js';
+import { DEFAULT_SOLID_VERSION } from 'solid-repl/src';
+import { Icon, useMenu, Button } from 'solid-repl/src/internal';
+import { check, cube } from '../icons';
 import { css } from 'styled-system/css';
 
 interface VersionOption {
@@ -35,11 +34,19 @@ const buildOptions = (tags: Record<string, string>, versions: string[]): Version
   return options;
 };
 
+let packageInfo: Promise<{ tags: Record<string, string>; versions: string[] }> | undefined;
+
+export const fetchSolidPackageInfo = () =>
+  (packageInfo ??= fetch('https://data.jsdelivr.com/v1/package/npm/solid-js')
+    .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
+    .catch((e) => {
+      packageInfo = undefined;
+      throw e;
+    }));
+
 const fetchVersions = async (): Promise<VersionOption[]> => {
   try {
-    const res = await fetch('https://data.jsdelivr.com/v1/package/npm/solid-js');
-    if (!res.ok) throw new Error(res.statusText);
-    const { tags, versions } = (await res.json()) as { tags: Record<string, string>; versions: string[] };
+    const { tags, versions } = await fetchSolidPackageInfo();
     return buildOptions(tags, versions);
   } catch (e) {
     console.error('Failed to fetch solid-js versions', e);
@@ -52,7 +59,10 @@ export const VersionDropdown: Component<{
   onChange: (version: string) => void;
   showOnMobile: boolean;
 }> = (props) => {
-  const [options] = createResource(fetchVersions, { initialValue: [] });
+  const [options, setOptions] = createSignal<VersionOption[]>([]);
+  onSettled(() => {
+    void fetchVersions().then(setOptions);
+  });
 
   const label = () => {
     if (!props.version) return 'Solid';
@@ -63,7 +73,7 @@ export const VersionDropdown: Component<{
 
   const menu = useMenu(
     () =>
-      [{ value: '', label: 'Default (bundled)' }, ...options()].map((option) => ({
+      [{ value: '', label: `Bundled (v${DEFAULT_SOLID_VERSION})` }, ...options()].map((option) => ({
         value: option.value || 'default',
         label: option.label,
         icon: option.value === props.version ? check : undefined,

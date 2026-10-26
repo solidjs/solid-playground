@@ -38,9 +38,9 @@ async function fetchWithCache(event) {
   const cached = await cache.match(event.request);
   const fresh = fetchAndCache(cache, event);
   if (cached) {
-    fresh.then((response) => {
+    void fresh.then((response) => {
       if (response && responsesDiffer(cached, response)) {
-        notifyClient(event);
+        void notifyClient(event);
       }
     });
     return cached;

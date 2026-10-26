@@ -1,9 +1,14 @@
-import { Navigate, useSearchParams } from '@solidjs/router';
+import { onSettled } from 'solid-js';
+import { useNavigate, useSearchParams } from '@solidjs/router';
 import { useAppContext } from '../context';
 
 export const Login = () => {
   const [params] = useSearchParams();
-  const context = useAppContext()!;
-  context.token = `${params.token ?? ''}`;
-  return <Navigate href="/" />;
+  const navigate = useNavigate();
+  const context = useAppContext();
+  onSettled(() => {
+    context.token = String(params.token ?? '');
+    navigate('/', { replace: true });
+  });
+  return null;
 };

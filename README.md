@@ -7,7 +7,7 @@
 This is the source code of the [solid playground](https://playground.solidjs.com) website.
 Through it you can quickly discover what the solid compiler will generate from your JSX templates.
 
-There are 3 modes available:
+There are 4 compile modes available:
 
 - DOM: The classic SPA generation mechanism
 - SSR: The server side generation mechanism
@@ -16,9 +16,9 @@ There are 3 modes available:
 
 ## Getting up and running
 
-This project is built using the [pnpm](https://pnpm.js.org/) package manager.
+This project is built using the [pnpm](https://pnpm.io/) package manager.
 
-Once you got it up and running you can follow these steps the have a fully working environement:
+Once you have it installed, follow these steps to get a fully working environment:
 
 ```bash
 # Clone the project
@@ -38,9 +38,10 @@ $ pnpm run build
 
 - [solid-js](https://github.com/solidjs/solid/): The view library
 - [@babel/standalone](https://babeljs.io/docs/en/babel-standalone): The in-browser compiler. Solid compiler relies on babel
-- [monaco](https://microsoft.github.io/monaco-editor/): The in-browser code editor. This is the code editor that powers VS Code
-- [Windi CSS](https://windicss.org/): The CSS framework
+- [CodeMirror](https://codemirror.net/): The in-browser code editor, backed by the TypeScript language service and ESLint in a web worker
+- [dockview](https://dockview.dev/): The panel layout
+- [Panda CSS](https://panda-css.com/): The CSS framework
+- [Zag](https://zagjs.com/): The UI state machines
 - [vite](https://vitejs.dev/): The module bundler
-- [workbox](https://developers.google.com/web/tools/workbox): The service worker generator
-- [pnpm](https://pnpm.js.org/): The package manager
-- [lz-string](https://github.com/pieroxy/lz-string): The string compression algorithm used to share REPL
+- [pnpm](https://pnpm.io/): The package manager
+- [lz-string](https://github.com/pieroxy/lz-string): The string compression algorithm used by legacy share links

@@ -1,15 +1,14 @@
 import type { Tab } from '../src/types';
 
 import { transform } from '@babel/standalone';
-import type { PluginTarget, Visitor } from '@babel/core';
+import type { PluginAPI, PluginTarget, Visitor } from '@babel/core';
 import type { Node } from '@babel/types';
 // @ts-ignore
-import babelPresetSolid from 'babel-preset-solid';
+import solidBabelPlugin from '@solidjs/babel-plugin';
 import babelSyntaxJsx from '@babel/plugin-syntax-jsx';
 
-import dd from 'dedent';
-
 import { serveWorker } from '../src/kernel/workerServer';
+import { version as bundledVersion } from '@solidjs/babel-plugin/package.json';
 import type { SolidCompileOptions } from '../src/components/CompileMode';
 
 // Stable package patch numbers drift from solid-js (1.9.14 vs 1.9.12), so resolve by major.minor.
@@ -29,12 +28,16 @@ type BabelOptions = NonNullable<Parameters<typeof transform>[1]>;
 type PluginItem = NonNullable<BabelOptions['plugins']>[number];
 type PresetItem = NonNullable<BabelOptions['presets']>[number];
 
+const WEB_MODULES = new Set(['@solidjs/web', 'solid-js/web']);
+
 type SolidCompiler = { solid: PluginTarget; isPlugin: boolean };
 
 const solidCache = new Map<string, Promise<SolidCompiler>>();
 
+const bundled: SolidCompiler = { solid: solidBabelPlugin, isPlugin: true };
+
 function loadSolid(version: string | undefined): Promise<SolidCompiler> {
-  if (!version) return Promise.resolve({ solid: babelPresetSolid, isPlugin: false });
+  if (!version || version === bundledVersion) return Promise.resolve(bundled);
   let cached = solidCache.get(version);
   if (!cached) {
     const isPlugin = usesBabelPlugin(version);
@@ -65,12 +68,6 @@ const babelOptions = (
   };
 };
 
-function uid(str: string) {
-  return Array.from(str)
-    .reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0)
-    .toString();
-}
-
 function babelTransform(filename: string, code: string, externals: Set<string>, compiler: SolidCompiler) {
   const handleImportee = (node: Node | null | undefined) => {
     if (node?.type !== 'StringLiteral') return;
@@ -82,8 +79,20 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
     }
   };
 
-  const importRewriter = (): { visitor: Visitor } => ({
+  const importRewriter = ({ types: t }: PluginAPI): { visitor: Visitor } => ({
     visitor: {
+      CallExpression(path) {
+        const callee = path.get('callee');
+        if (!callee.isIdentifier() || !path.parentPath.isExpressionStatement()) return;
+        const binding = path.scope.getBinding(callee.node.name)?.path;
+        if (!binding?.isImportSpecifier() || !binding.parentPath.isImportDeclaration()) return;
+        const imported = binding.node.imported;
+        const name = imported.type === 'Identifier' ? imported.name : imported.value;
+        if (name !== 'render' || !WEB_MODULES.has(binding.parentPath.node.source.value)) return;
+        path.replaceWith(
+          t.assignmentExpression('=', t.memberExpression(t.identifier('window'), t.identifier('dispose')), path.node),
+        );
+      },
       Import(path) {
         if (path.parent.type === 'CallExpression') handleImportee(path.parent.arguments[0]);
       },
@@ -102,30 +111,24 @@ function babelTransform(filename: string, code: string, externals: Set<string>, 
     },
   });
 
-  const transformedCode = transform(code, {
+  return transform(code, {
     ...babelOptions(compiler, { generate: 'dom', hydratable: false }, [importRewriter]),
     filename,
-  })?.code;
-
-  return transformedCode!.replace('render(', 'window.dispose = render(');
+  })!.code!;
 }
 
 function transformTab(tab: Tab, externals: Set<string>, compiler: SolidCompiler): string {
   if (tab.name.endsWith('.css')) {
-    const id = uid(tab.name);
-    return dd`
-      (() => {
-        let stylesheet = document.getElementById('${id}');
-        if (!stylesheet) {
-          stylesheet = document.createElement('style')
-          stylesheet.setAttribute('id', '${id}')
-          document.head.appendChild(stylesheet)
-        }
-        const styles = document.createTextNode(\`${tab.source.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}\`)
-        stylesheet.innerHTML = ''
-        stylesheet.appendChild(styles)
-      })()
-    `;
+    const id = JSON.stringify(tab.name);
+    return `(() => {
+  let stylesheet = document.getElementById(${id});
+  if (!stylesheet) {
+    stylesheet = document.createElement('style');
+    stylesheet.id = ${id};
+    document.head.appendChild(stylesheet);
+  }
+  stylesheet.textContent = ${JSON.stringify(tab.source)};
+})()`;
   }
   return babelTransform(tab.name, tab.source, externals, compiler);
 }
@@ -148,7 +151,7 @@ async function babel(tab: Tab, compileOpts: SolidCompileOptions, version: string
 }
 
 serveWorker({
-  ROLLUP: ({ tabs, version }: { tabs: Tab[]; version?: string }) => compile(tabs, version),
+  COMPILE: ({ tabs, version }: { tabs: Tab[]; version?: string }) => compile(tabs, version),
   BABEL: ({ tab, compileOpts, version }: { tab: Tab; compileOpts: SolidCompileOptions; version?: string }) =>
     babel(tab, compileOpts, version),
 });

@@ -2,11 +2,19 @@ import { javascriptLanguage } from '@codemirror/lang-javascript';
 import { syntaxTree } from '@codemirror/language';
 import type { Diagnostic } from '@codemirror/lint';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin } from '@codemirror/view';
-import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { LSPClient, type Transport, jumpToDefinition, languageServerExtensions } from '@codemirror/lsp-client';
-import TsWorker from './tsWorker?worker';
-
-const monospace = 'Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace';
+import { type Extension, StateEffect, StateField, Text } from '@codemirror/state';
+import {
+  LSPClient,
+  LSPPlugin,
+  Workspace,
+  type Transport,
+  type WorkspaceFile,
+  jumpToDefinition,
+  languageServerExtensions,
+} from '@codemirror/lsp-client';
+import LanguageWorker from '../../languageWorker/worker?worker';
+import { type WorkerClient, createWorkerClient } from '../../kernel/workerClient';
+import { monospace } from './themes';
 
 export const typescriptLspTheme: Extension = EditorView.theme({
   '.cm-lsp-hover-tooltip, .cm-lsp-signature-tooltip, .cm-lsp-completion-documentation': {
@@ -158,6 +166,7 @@ export const typescriptLspExtras: Extension = [
 function workerTransport(worker: Worker): Transport {
   const handlers = new Set<(value: string) => void>();
   worker.addEventListener('message', (e: MessageEvent) => {
+    if (!e.data?.jsonrpc) return;
     const json = JSON.stringify(e.data);
     for (const h of handlers) h(json);
   });
@@ -174,30 +183,87 @@ function workerTransport(worker: Worker): Transport {
   };
 }
 
-const tsSeverity = (cat: number): Diagnostic['severity'] => {
-  if (cat === 1) return 'error';
-  if (cat === 0) return 'warning';
-  if (cat === 2) return 'hint';
-  return 'info';
-};
+class PlaygroundFile implements WorkspaceFile {
+  languageId = 'typescript';
+  version = 0;
+  view: EditorView | null = null;
+  constructor(
+    public uri: string,
+    public doc: Text,
+  ) {}
+  getView() {
+    return this.view;
+  }
+}
 
-interface TsDiagnostic {
-  start: number;
-  length: number;
-  severity: number;
-  message: string;
+class PlaygroundWorkspace extends Workspace {
+  files: PlaygroundFile[] = [];
+
+  setDocuments(docs: Map<string, string>) {
+    for (const file of this.files) {
+      if (!docs.has(file.uri)) this.client.didClose(file.uri);
+    }
+    this.files = this.files.filter((file) => docs.has(file.uri));
+    for (const [uri, text] of docs) {
+      const file = this.files.find((f) => f.uri === uri);
+      if (!file) {
+        this.open(uri, Text.of(text.split('\n')));
+      } else if (!file.view && file.doc.toString() !== text) {
+        file.doc = Text.of(text.split('\n'));
+        file.version++;
+        this.client.notification('textDocument/didChange', {
+          textDocument: { uri, version: file.version },
+          contentChanges: [{ text }],
+        });
+      }
+    }
+  }
+
+  syncFiles() {
+    const updates = [];
+    for (const file of this.files) {
+      const plugin = file.view && LSPPlugin.get(file.view);
+      if (!plugin || plugin.unsyncedChanges.empty) continue;
+      updates.push({ file, prevDoc: file.doc, changes: plugin.unsyncedChanges });
+      file.doc = plugin.view.state.doc;
+      file.version++;
+      plugin.clear();
+    }
+    return updates;
+  }
+
+  openFile(uri: string, _languageId: string, view: EditorView) {
+    const file = this.files.find((f) => f.uri === uri) ?? this.open(uri, view.state.doc);
+    file.view = view;
+  }
+
+  closeFile(uri: string) {
+    const file = this.files.find((f) => f.uri === uri);
+    if (file) file.view = null;
+  }
+
+  private open(uri: string, doc: Text) {
+    const file = new PlaygroundFile(uri, doc);
+    this.files.push(file);
+    this.client.didOpen(file);
+    return file;
+  }
 }
 
 export interface TypescriptSession {
   client: LSPClient;
   worker: Worker;
-  getDiagnostics(uri: string, view: EditorView): Promise<Diagnostic[]>;
+  eslint: WorkerClient;
+  setDocuments(docs: Map<string, string>): void;
+  getDiagnostics(uri: string): Promise<Diagnostic[]>;
   syncTypes(importMap: Record<string, string>): Promise<boolean>;
 }
 
 export function createTypescriptSession(): TypescriptSession {
-  const worker = new TsWorker();
+  const worker = new LanguageWorker();
+  let workspace!: PlaygroundWorkspace;
   const client = new LSPClient({
+    workspace: (client) => (workspace = new PlaygroundWorkspace(client)),
     extensions: languageServerExtensions(),
     // Type acquisition legitimately exceeds the 3s default on first sync.
     timeout: 60_000,
@@ -209,19 +275,10 @@ export function createTypescriptSession(): TypescriptSession {
   return {
     client,
     worker,
-    async getDiagnostics(uri, view) {
-      const raw = (await client.request<{ uri: string }, TsDiagnostic[]>('playground/diagnostics', { uri })) ?? [];
-      const docLength = view.state.doc.length;
-      return raw.map((d) => {
-        const from = Math.min(d.start, docLength);
-        return {
-          from,
-          to: Math.min(from + d.length, docLength),
-          severity: tsSeverity(d.severity),
-          message: d.message,
-          source: 'typescript',
-        };
-      });
+    eslint: createWorkerClient(worker),
+    setDocuments: (docs) => workspace.setDocuments(docs),
+    async getDiagnostics(uri) {
+      return (await client.request<{ uri: string }, Diagnostic[]>('playground/diagnostics', { uri })) ?? [];
     },
     async syncTypes(importMap) {
       const res = await client.request<{ importMap: Record<string, string> }, { changed: boolean }>(

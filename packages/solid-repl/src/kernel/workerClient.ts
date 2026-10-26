@@ -1,3 +1,6 @@
+import { onCleanup } from 'solid-js';
+import { makeEventListener } from '@solid-primitives/event-listener';
+
 export interface WorkerErrorPayload {
   message: string;
   stack?: string;
@@ -13,7 +16,6 @@ export interface WorkerMessage {
 export interface WorkerClient {
   request<R = WorkerMessage>(event: string, payload?: Record<string, unknown>): Promise<R>;
   tryRequest<R = WorkerMessage>(event: string, payload?: Record<string, unknown>): Promise<R | undefined>;
-  dispose(): void;
 }
 
 interface PendingRequest {
@@ -28,7 +30,7 @@ export function createWorkerClient(worker: Worker): WorkerClient {
 
   const onMessage = ({ data }: MessageEvent<WorkerMessage>) => {
     const id = data?.id;
-    if (typeof id !== 'number') return;
+    if (typeof id !== 'number' || !data.event) return;
     const entry = pending.get(id);
     if (!entry) return;
     pending.delete(id);
@@ -42,7 +44,8 @@ export function createWorkerClient(worker: Worker): WorkerClient {
     }
   };
 
-  worker.addEventListener('message', onMessage);
+  makeEventListener<{ message: MessageEvent<WorkerMessage> }>(worker, 'message', onMessage);
+  onCleanup(() => pending.clear());
 
   const request = <R>(event: string, payload?: Record<string, unknown>) => {
     const id = ++nextId;
@@ -56,10 +59,6 @@ export function createWorkerClient(worker: Worker): WorkerClient {
     request,
     tryRequest: <R>(event: string, payload?: Record<string, unknown>) =>
       request<R>(event, payload).catch(() => undefined),
-    dispose() {
-      worker.removeEventListener('message', onMessage);
-      pending.clear();
-    },
   };
 }
 

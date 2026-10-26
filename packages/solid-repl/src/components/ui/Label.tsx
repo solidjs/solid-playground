@@ -1,5 +1,6 @@
-import { ParentComponent, JSX, splitProps } from 'solid-js';
-import { css, cx } from 'styled-system/css';
+import { omit, type ParentComponent } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { css } from 'styled-system/css';
 
 const labelStyles = css({
   fontSize: 'sm',
@@ -9,11 +10,11 @@ const labelStyles = css({
 });
 
 export const Label: ParentComponent<JSX.LabelHTMLAttributes<HTMLLabelElement>> = (props) => {
-  const [local, others] = splitProps(props, ['class', 'children']);
+  const others = omit(props, 'class', 'children');
 
   return (
-    <label {...others} class={cx(labelStyles, local.class)}>
-      {local.children}
+    <label {...others} class={[labelStyles, props.class]}>
+      {props.children}
     </label>
   );
 };

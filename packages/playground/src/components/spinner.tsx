@@ -1,10 +1,10 @@
 import type { Component } from 'solid-js';
-import { css, cx } from 'styled-system/css';
+import { css } from 'styled-system/css';
 
 const spinner = css({ color: 'neutral.500', animation: 'spin 1s linear infinite' });
 
 export const Spinner: Component<{ class?: string }> = (props) => (
-  <svg class={cx(spinner, props.class)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+  <svg class={[spinner, props.class]} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle class={css({ opacity: 0.25 })} cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
     <path
       class={css({ opacity: 0.75 })}

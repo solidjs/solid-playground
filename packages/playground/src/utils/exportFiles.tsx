@@ -1,6 +1,12 @@
 import pkg from '../../package.json';
 import type { Tab } from 'solid-repl/src';
-import { IMPORT_MAP_FILE, isSolidV2, parseImportMap, solidVersionFromImportMap } from 'solid-repl/src';
+import {
+  DEFAULT_SOLID_VERSION,
+  IMPORT_MAP_FILE,
+  isSolidV2,
+  parseImportMap,
+  solidVersionFromImportMap,
+} from 'solid-repl/src';
 import dedent from 'dedent';
 
 const viteConfigFile = (v2: boolean) => dedent`
@@ -70,7 +76,7 @@ const versionFromUrl = (url: string, name: string): string | undefined => {
   return match[2] ?? 'latest';
 };
 
-function manifest(imports: Record<string, string>, solidVersion: string | undefined) {
+function manifest(imports: Record<string, string>, solidVersion: string) {
   const v2 = isSolidV2(solidVersion);
   const dependencies: Record<string, string> = {};
   const custom: [string, string][] = [];
@@ -85,8 +91,8 @@ function manifest(imports: Record<string, string>, solidVersion: string | undefi
     dependencies[name] ??= version;
   }
 
-  dependencies['solid-js'] = solidVersion || pkg.dependencies['solid-js'];
-  if (v2) dependencies['@solidjs/web'] = solidVersion!;
+  dependencies['solid-js'] = solidVersion;
+  if (v2) dependencies['@solidjs/web'] = solidVersion;
   else delete dependencies['@solidjs/web'];
 
   const packageJson = JSON.stringify(
@@ -99,10 +105,10 @@ function manifest(imports: Record<string, string>, solidVersion: string | undefi
       },
       dependencies,
       devDependencies: {
-        'vite': pkg.devDependencies['vite'],
+        vite: pkg.devDependencies['vite'],
         ...(v2
-          ? { '@solidjs/vite-plugin': '3.0.0-next.50' }
-          : { 'vite-plugin-solid': pkg.devDependencies['vite-plugin-solid'] }),
+          ? { '@solidjs/vite-plugin': pkg.devDependencies['@solidjs/vite-plugin'] }
+          : { 'vite-plugin-solid': '^2.11.14' }),
       },
     },
     null,
@@ -127,7 +133,7 @@ export async function exportToZip(tabs: Tab[], previewVersion?: string): Promise
   const zip = new JSZip();
 
   const importMapSource = tabs.find((tab) => tab.name === IMPORT_MAP_FILE)?.source;
-  const solidVersion = solidVersionFromImportMap(importMapSource) || previewVersion || undefined;
+  const solidVersion = solidVersionFromImportMap(importMapSource) || previewVersion || DEFAULT_SOLID_VERSION;
   const v2 = isSolidV2(solidVersion);
   const { packageJson, custom } = manifest(parseImportMap(importMapSource).imports, solidVersion);
 

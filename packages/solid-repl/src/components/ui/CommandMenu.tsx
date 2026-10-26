@@ -1,12 +1,10 @@
-import { Component, For, Show, createMemo, createSignal, createUniqueId } from 'solid-js';
-import { batched } from '../../kernel/batched';
-import { Portal } from 'solid-js/web';
-import { Icon } from 'solid-heroicons';
-import { magnifyingGlass } from 'solid-heroicons/outline';
+import { For, Show, createMemo, createSignal, createUniqueId, type Component } from 'solid-js';
+import { Portal } from '@solidjs/web';
 import * as combobox from '@zag-js/combobox';
-import { useMachine, normalizeProps } from '@zag-js/solid';
 import { css, cva } from 'styled-system/css';
-import { IconSlot, type IconPath } from './icon';
+import { Icon, IconSlot, type IconPath } from './icon';
+import { magnifyingGlass } from './icons';
+import { useMachine } from './zag';
 
 export interface CommandItem {
   id: string;
@@ -74,35 +72,38 @@ export function useCommandMenu(items: () => CommandItem[]) {
     }),
   );
 
-  const service = useMachine(combobox.machine, () => ({
-    id,
-    collection: collection(),
-    inputValue: query(),
-    inputBehavior: 'autohighlight' as const,
-    selectionBehavior: 'clear' as const,
-    openOnClick: true,
-    onInputValueChange: ({ inputValue }) => {
-      setQuery(inputValue);
-    },
-    onOpenChange: ({ open }) => {
-      if (!open) setQuery('');
-    },
-    onSelect: ({ itemValue }) => {
-      const item = items().find((i) => i.id === itemValue);
-      if (item) {
-        api().setOpen(false);
-        item.onSelect();
-      }
-    },
-  }));
-  const api = createMemo(() => combobox.connect(service, normalizeProps));
+  const { api } = useMachine(
+    combobox.machine,
+    () => ({
+      id,
+      collection: collection(),
+      inputValue: query(),
+      inputBehavior: 'autohighlight' as const,
+      selectionBehavior: 'clear' as const,
+      openOnClick: true,
+      onInputValueChange: ({ inputValue }) => {
+        setQuery(inputValue);
+      },
+      onOpenChange: ({ open }) => {
+        if (!open) setQuery('');
+      },
+      onSelect: ({ itemValue }) => {
+        const item = items().find((i) => i.id === itemValue);
+        if (item) {
+          api().setOpen(false);
+          item.onSelect();
+        }
+      },
+    }),
+    combobox.connect,
+  );
 
-  const openAt = batched((x: number, y: number) => {
+  const openAt = (x: number, y: number) => {
     setPosition({ x, y });
     setQuery('');
     api().setOpen(true);
     queueMicrotask(() => api().focus());
-  });
+  };
 
   const Content: Component = () => (
     <Portal>

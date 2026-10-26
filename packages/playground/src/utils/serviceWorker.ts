@@ -1,14 +1,14 @@
 import { register } from 'register-service-worker';
 import { createSignal } from 'solid-js';
 
-const [eventBus, setEventBus] = createSignal();
+const [updateAvailable, setUpdateAvailable] = createSignal(false);
 
 function registerServiceWorker(): void {
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
       register('/sw.js', {
         updated() {
-          setEventBus(true);
+          setUpdateAvailable(true);
         },
       });
     });
@@ -18,9 +18,9 @@ function registerServiceWorker(): void {
 if (import.meta.env.PROD) {
   navigator.serviceWorker?.addEventListener('message', (event) => {
     if (event.data.type == 'cache') {
-      setEventBus(true);
+      setUpdateAvailable(true);
     }
   });
 }
 
-export { eventBus, setEventBus, registerServiceWorker };
+export { updateAvailable, setUpdateAvailable, registerServiceWorker };

@@ -8,5 +8,5 @@
     "allowImportingTsExtensions": false
   },
   "include": ["./src/**/*"],
-  "exclude": ["node_modules/", "src/components/editor/tsWorker.ts", "src/components/editor/typeAcquisition.ts"]
+  "exclude": ["node_modules/", "src/languageWorker/"]
 }

@@ -1,8 +1,10 @@
-import { Show, JSX, Suspense } from 'solid-js';
-import { Route, Router } from '@solidjs/router';
-import { eventBus, setEventBus } from './utils/serviceWorker';
+import { Errored, Loading, Show } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { createRouter } from '@solidjs/router';
+import { makeEventListener } from '@solid-primitives/event-listener';
+import { updateAvailable, setUpdateAvailable } from './utils/serviceWorker';
 import { Update } from './components/update';
-import { useZoom } from 'solid-repl/src/hooks/useZoom';
+import { useZoom } from 'solid-repl/src/internal';
 import { Edit } from './pages/edit';
 import { Home } from './pages/home';
 import { Login } from './pages/login';
@@ -21,9 +23,28 @@ const shell = css({
   _dark: { color: 'neutral.50', bg: 'neutral.950' },
 });
 
+const errorPanel = css({ m: 'auto', p: 6, textAlign: 'center', fontSize: 'sm' });
+const retryButton = css({
+  mt: 3,
+  px: 3,
+  py: 1.5,
+  rounded: 'md',
+  bg: 'solidc',
+  color: 'white',
+  _hover: { bg: 'solidc/90' },
+});
+
+const Router = createRouter({
+  routes: [
+    { path: ['/', '/:user/:repl'], component: Edit },
+    { path: '/login', component: Login },
+    { path: '/:user', component: Home },
+  ],
+});
+
 export const App = (): JSX.Element => {
   const { zoomState, updateZoom } = useZoom();
-  document.addEventListener('keydown', (e) => {
+  makeEventListener(document, 'keydown', (e) => {
     if (!zoomState.overrideNative) return;
     if (!(e.ctrlKey || e.metaKey)) return;
 
@@ -38,19 +59,28 @@ export const App = (): JSX.Element => {
 
   return (
     <div class={shell}>
-      <Router
-        root={(props) => (
+      <Router>
+        {(props) => (
           <AppContextProvider>
-            <Suspense>{props.children}</Suspense>
+            <Errored
+              fallback={(err, reset) => (
+                <div class={errorPanel}>
+                  <p>Something went wrong: {String(err())}</p>
+                  <button class={retryButton} onClick={() => reset()}>
+                    Retry
+                  </button>
+                </div>
+              )}
+            >
+              <Loading>{props.children}</Loading>
+            </Errored>
           </AppContextProvider>
         )}
-      >
-        <Route path={['/', '/:user/:repl']} component={Edit} />
-        <Route path="/:user" component={Home} />
-        <Route path="/login" component={Login} />
       </Router>
 
-      <Show when={eventBus()} children={<Update onDismiss={() => setEventBus(false)} />} />
+      <Show when={updateAvailable()}>
+        <Update onDismiss={() => setUpdateAvailable(false)} />
+      </Show>
     </div>
   );
 };

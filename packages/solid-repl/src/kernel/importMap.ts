@@ -101,18 +101,15 @@ export interface ImportMapOptions {
 }
 
 export function createImportMap(opts: ImportMapOptions): ImportMapController {
-  const tabState = createMemo(
-    () => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_FILE)?.source),
-    undefined,
-    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
-  );
+  const tabState = createMemo(() => parseImportMap(opts.tabs().find((tab) => tab.name === IMPORT_MAP_FILE)?.source), {
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+  });
 
   const state = createMemo(
     () => {
       const tab = tabState();
       return syncEntries(tab, Object.keys(tab.imports), opts.version());
     },
-    undefined,
     { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
 
@@ -123,8 +120,7 @@ export function createImportMap(opts: ImportMapOptions): ImportMapController {
     if (!tab) {
       opts.setTabs(tabs.concat({ name: IMPORT_MAP_FILE, source }));
     } else if (tab.source !== source) {
-      tab.source = source;
-      opts.setTabs(tabs.slice());
+      opts.setTabs(tabs.map((t) => (t === tab ? { ...t, source } : t)));
     }
   };
 

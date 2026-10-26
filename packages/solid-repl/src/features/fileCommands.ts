@@ -1,8 +1,8 @@
-import { pencil, trash } from 'solid-heroicons/outline';
+import { pencil, trash } from '../components/ui/icons';
 import type { MenuItemDef } from '../components/ui/Menu';
 import type { Workspace } from '../kernel/workspace';
 
-export function fileMenuItems(workspace: Workspace, fileId: string): MenuItemDef[] {
+export function fileMenuItems(workspace: Workspace, fileId: string, startRename?: () => void): MenuItemDef[] {
   const editableFile = () => (workspace.isProtected(fileId) ? undefined : workspace.byId(fileId));
 
   if (!editableFile()) return [];
@@ -15,6 +15,7 @@ export function fileMenuItems(workspace: Workspace, fileId: string): MenuItemDef
       onSelect: () => {
         const file = editableFile();
         if (!file) return;
+        if (startRename) return startRename();
         const next = prompt('Rename file to:', file.name);
         if (next) workspace.rename(file.id, next);
       },

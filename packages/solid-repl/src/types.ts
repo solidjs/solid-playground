@@ -23,7 +23,6 @@ export interface ReplStorage {
 export interface ReplProps {
   compiler: Worker;
   formatter: Worker;
-  linter: Worker;
   dark: boolean;
   tabs: Tab[];
   id: string;

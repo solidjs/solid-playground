@@ -1,5 +1,6 @@
-import { Component, JSX, splitProps } from 'solid-js';
-import { css, cx } from 'styled-system/css';
+import { omit, type Component } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { css } from 'styled-system/css';
 
 const wrapperStyles = css({
   display: 'flex',
@@ -27,12 +28,12 @@ export interface CheckboxProps extends JSX.InputHTMLAttributes<HTMLInputElement>
 }
 
 export const Checkbox: Component<CheckboxProps> = (props) => {
-  const [local, others] = splitProps(props, ['label', 'class']);
+  const others = omit(props, 'label', 'class');
 
   return (
-    <label class={cx(wrapperStyles, local.class)}>
+    <label class={[wrapperStyles, props.class]}>
       <input type="checkbox" {...others} class={inputStyles} />
-      <span class={css({ fontSize: 'sm' })}>{local.label}</span>
+      <span class={css({ fontSize: 'sm' })}>{props.label}</span>
     </label>
   );
 };

@@ -1,10 +1,11 @@
-import { createMemo, type Accessor } from 'solid-js';
+import { createMemo, flush, untrack, type Accessor } from 'solid-js';
 import type { Tab } from '../types';
 
 export interface FileEntry {
   readonly id: string;
   readonly name: string;
   readonly source: string;
+  readonly uri: string;
 }
 
 export interface Workspace {
@@ -25,6 +26,7 @@ export interface WorkspaceOptions {
   setTabs(tabs: Tab[]): void;
   folder: Accessor<string>;
   entry: string;
+  onNameTaken?(name: string): void;
 }
 
 export function createWorkspace(opts: WorkspaceOptions): Workspace {
@@ -34,7 +36,7 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
       let id = tab.id ?? `name:${tab.name}`;
       if (seen.has(id)) id = `${id}#${index}`;
       seen.add(id);
-      return { id, name: tab.name, source: tab.source };
+      return { id, name: tab.name, source: tab.source, uri: `file:///${opts.folder()}/${tab.name}` };
     });
   });
 
@@ -49,45 +51,49 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
     byId,
     byName,
     nameOf: (id) => byId(id)?.name,
-    uriOf: (id) => {
-      const name = byId(id)?.name;
-      return name ? `file:///${opts.folder()}/${name}` : undefined;
-    },
+    uriOf: (id) => byId(id)?.uri,
     isProtected: (id) => byId(id)?.name === opts.entry,
 
-    create(name, source = '') {
-      const trimmed = name.trim();
-      if (!trimmed) return undefined;
-      if (byName(trimmed)) {
-        alert('A file with that name already exists');
-        return undefined;
-      }
-      opts.setTabs(opts.tabs().concat({ name: trimmed, source }));
-      return byName(trimmed);
-    },
+    create: (name, source = '') =>
+      untrack(() => {
+        const trimmed = name.trim();
+        if (!trimmed) return undefined;
+        if (byName(trimmed)) {
+          opts.onNameTaken?.(trimmed);
+          return undefined;
+        }
+        opts.setTabs(opts.tabs().concat({ name: trimmed, source }));
+        flush();
+        return byName(trimmed);
+      }),
 
-    rename(id, next) {
-      const file = byId(id);
-      const trimmed = next.trim();
-      if (!file || !trimmed || trimmed === file.name || file.name === opts.entry) return false;
-      if (byName(trimmed)) {
-        alert('A file with that name already exists');
-        return false;
-      }
-      update(file, { id, name: trimmed });
-      return true;
-    },
+    rename: (id, next) =>
+      untrack(() => {
+        const file = byId(id);
+        const trimmed = next.trim();
+        if (!file || !trimmed || trimmed === file.name || file.name === opts.entry) return false;
+        if (byName(trimmed)) {
+          opts.onNameTaken?.(trimmed);
+          return false;
+        }
+        update(file, { id, name: trimmed });
+        flush();
+        return true;
+      }),
 
-    remove(id) {
-      const file = byId(id);
-      if (!file || file.name === opts.entry) return false;
-      opts.setTabs(opts.tabs().filter((tab) => tab.name !== file.name));
-      return true;
-    },
+    remove: (id) =>
+      untrack(() => {
+        const file = byId(id);
+        if (!file || file.name === opts.entry) return false;
+        opts.setTabs(opts.tabs().filter((tab) => tab.name !== file.name));
+        flush();
+        return true;
+      }),
 
-    setSource(id, source) {
-      const file = byId(id);
-      if (file && file.source !== source) update(file, { source });
-    },
+    setSource: (id, source) =>
+      untrack(() => {
+        const file = byId(id);
+        if (file && file.source !== source) update(file, { source });
+      }),
   };
 }

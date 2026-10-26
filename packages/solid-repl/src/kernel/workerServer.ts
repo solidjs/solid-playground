@@ -1,6 +1,6 @@
 import type { WorkerMessage } from './workerClient';
 
-export type WorkerHandlers = Record<string, (payload: never) => unknown | Promise<unknown>>;
+export type WorkerHandlers = Record<string, (payload: never) => unknown>;
 
 const toErrorPayload = (e: unknown) => ({
   message: e instanceof Error ? e.message : String(e),

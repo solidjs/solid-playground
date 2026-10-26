@@ -1,13 +1,7 @@
 {
-  "name": "solid-playground-restructured",
+  "name": "solid-playground-workspace",
   "version": "1.0.0",
   "private": true,
-  "description": "",
-  "keywords": [],
-  "author": "",
-  "workspaces": [
-    "packages/*"
-  ],
   "type": "module",
   "scripts": {
     "prepare": "panda codegen",
@@ -16,16 +10,16 @@
     "dev": "cd packages/playground && pnpm dev",
     "panda:watch": "panda codegen --watch",
     "format": "oxfmt .",
-    "lint": "oxlint ."
+    "lint": "oxlint --type-aware ."
   },
   "devDependencies": {
-    "@changesets/cli": "3.0.3",
     "@pandacss/dev": "^2.2.0",
     "@pandacss/eslint-plugin": "^2.2.0",
     "@pandacss/preset-base": "^2.2.0",
     "@pandacss/preset-panda": "^2.2.0",
     "oxfmt": "^0.73.0",
-    "oxlint": "^1.88.0"
+    "oxlint": "^1.88.0",
+    "oxlint-tsgolint": "7.0.2004"
   },
   "packageManager": "pnpm@12.11.2"
 }

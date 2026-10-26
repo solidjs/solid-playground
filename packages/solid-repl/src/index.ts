@@ -3,9 +3,9 @@ import type { Tab } from './types';
 export type { EditorPersistedState, Repl, ReplProps, ReplStorage, Tab } from './types';
 
 export { IMPORT_MAP_FILE, isSolidV2, parseImportMap, solidVersionFromImportMap } from './kernel/importMap';
-export { batched } from './kernel/batched';
+export { DEFAULT_SOLID_VERSION } from './kernel/solidVersion';
 
-const indexTSX = `import { render } from "solid-js/web";
+const indexTSX = `import { render } from "@solidjs/web";
 import { createSignal } from "solid-js";
 
 function Counter() {

@@ -1,15 +1,11 @@
-import { A, useParams } from '@solidjs/router';
-import { Icon } from 'solid-heroicons';
-import { eye, eyeSlash, plus, xMark } from 'solid-heroicons/outline';
-import { createResource, createSignal, For, Show, Suspense } from 'solid-js';
-import { batched } from 'solid-repl/src';
-import { createStore, produce } from 'solid-js/store';
+import { useParams } from '@solidjs/router';
+import { createSignal, createStore, For, Loading, Show } from 'solid-js';
+import { Icon, Button, useDialog } from 'solid-repl/src/internal';
+import { eye, eyeSlash, plus, xMark } from '../icons';
 import { API, useAppContext } from '../context';
 import { Header } from '../components/header';
 import { Spinner } from '../components/spinner';
 import { timeAgo } from '../utils/date';
-import { Button } from 'solid-repl/src/components/ui/Button';
-import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
 
 interface ReplFile {
@@ -78,24 +74,23 @@ const dialogActions = css({ mt: 3, display: 'flex', justifyContent: 'flex-end', 
 
 export const Home = () => {
   const params = useParams();
-  const context = useAppContext()!;
+  const context = useAppContext();
 
-  const [repls, setRepls] = createStore<Repls>({ total: 0, list: [] });
-  const [resourceRepls] = createResource<Repls, { user: string | undefined }>(
-    () => ({ user: params.user }),
-    async ({ user }) => {
-      if (!user && !context.token) return { total: 0, list: [] };
-      let output = await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
-        headers: { Authorization: `Bearer ${context.token}` },
-      }).then((r) => r.json());
-      setRepls(output);
-      return output;
+  const [repls, setRepls] = createStore<Repls>(
+    async () => {
+      const user = params.user;
+      const token = context.token;
+      if (!user && !token) return { total: 0, list: [] };
+      const res = await fetch(`${API}/repl${user ? `/${user}/list` : '?'}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Failed to load repls: ${res.status} ${res.statusText}`);
+      const body = (await res.json()) as Repls;
+      if (!Array.isArray(body?.list)) throw new Error('Failed to load repls: unexpected response');
+      return body;
     },
+    { total: 0, list: [] },
   );
-  const get = <T,>(x: T) => {
-    resourceRepls();
-    return x;
-  };
 
   const [deleteId, setDeleteId] = createSignal<string>();
   const deleteDialog = useDialog({
@@ -120,9 +115,9 @@ export const Home = () => {
           fallback={<h1 class={css({ mb: 4, textAlign: 'center', fontSize: 'sm' })}>{`${params.user}'s`} Repls</h1>}
         >
           <div class={css({ mb: 8, display: 'flex', flexDirection: 'column', alignItems: 'stretch' })}>
-            <A href="/" class={newReplLink}>
+            <a href="/" class={newReplLink}>
               <Icon path={plus} class={css({ mr: 1, w: 6 })} /> Create new REPL
-            </A>
+            </a>
           </div>
         </Show>
         <table class={tableStyles}>
@@ -136,8 +131,8 @@ export const Home = () => {
             </tr>
           </thead>
           <tbody>
-            <tr class={css({ h: 1 })} aria-hidden />
-            <Suspense
+            <tr class={css({ h: 1 })} aria-hidden="true" />
+            <Loading
               fallback={
                 <tr class={css({ h: 10 })}>
                   <td colspan="3" class={css({ textAlign: 'center' })}>
@@ -146,16 +141,16 @@ export const Home = () => {
                 </tr>
               }
             >
-              <For each={get(repls.list)}>
+              <For each={repls.list}>
                 {(repl, i) => (
                   <tr
                     class={css({ cursor: 'pointer' }) + ' group'}
-                    onclick={(e) => {
+                    onClick={(e) => {
                       if (e.target.tagName !== 'A') e.currentTarget.querySelector('a')!.click();
                     }}
                   >
                     <td class={cell}>
-                      <A href={`/${params.user || context.profile()}/${repl.id}`}>{repl.title}</A>
+                      <a href={`/${params.user || context.profile()}/${repl.id}`}>{repl.title}</a>
                     </td>
                     <td class={cell + ' ' + css({ _lastOfType: { textAlign: 'right' } })}>
                       {timeAgo(Date.now() - new Date(repl.updated_at || repl.created_at).getTime())}
@@ -167,7 +162,7 @@ export const Home = () => {
                           class={css({ display: 'inline', w: 6, cursor: 'pointer' })}
                           onClick={async (e) => {
                             e.stopPropagation();
-                            fetch(`${API}/repl/${repl.id}`, {
+                            void fetch(`${API}/repl/${repl.id}`, {
                               method: 'PATCH',
                               headers: {
                                 'authorization': `Bearer ${context.token}`,
@@ -175,11 +170,9 @@ export const Home = () => {
                               },
                               body: JSON.stringify({ public: !repl.public }),
                             });
-                            setRepls(
-                              produce((x) => {
-                                x!.list[i()].public = !repl.public;
-                              }),
-                            );
+                            setRepls((x) => {
+                              x.list[i()].public = !repl.public;
+                            });
                           }}
                         />
                         <Icon
@@ -195,7 +188,7 @@ export const Home = () => {
                   </tr>
                 )}
               </For>
-            </Suspense>
+            </Loading>
           </tbody>
         </table>
       </div>
@@ -205,19 +198,16 @@ export const Home = () => {
           <Button onClick={() => setDeleteId(undefined)}>No</Button>
           <Button
             class={css({ color: 'red.700', _dark: { color: 'red.400' } })}
-            onClick={batched(() => {
+            onClick={() => {
               const id = deleteId();
               if (!id) return;
-              fetch(`${API}/repl/${id}`, {
+              void fetch(`${API}/repl/${id}`, {
                 method: 'DELETE',
                 headers: { authorization: `Bearer ${context.token}` },
               });
-              setRepls({
-                total: repls.total - 1,
-                list: repls.list.filter((x) => x.id !== id),
-              });
+              setRepls((x) => ({ total: x.total - 1, list: x.list.filter((r) => r.id !== id) }));
               setDeleteId(undefined);
-            })}
+            }}
           >
             Delete
           </Button>

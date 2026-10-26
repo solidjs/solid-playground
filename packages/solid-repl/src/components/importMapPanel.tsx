@@ -1,5 +1,5 @@
 import { Component, For, Show } from 'solid-js';
-import { trash } from 'solid-heroicons/outline';
+import { trash } from './ui/icons';
 import { useRepl } from './replContext';
 import { Input } from './ui/Input';
 import { IconButton } from './ui/IconButton';

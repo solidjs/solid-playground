@@ -8,6 +8,9 @@ import ts, {
   displayPartsToString,
   flattenDiagnosticMessageText,
 } from 'typescript';
+import type { Diagnostic } from '@codemirror/lint';
+import { serveWorker } from '../kernel/workerServer';
+import { fix, lint } from './eslint';
 import { createTypeAcquisition } from './typeAcquisition';
 
 const userPreferences: ts.UserPreferences = {
@@ -113,6 +116,13 @@ const completionItemKind: Record<string, number> = {
   'parameter': 6,
   'alias': 18,
   'primitive': 22,
+};
+
+const diagnosticSeverity: Record<ts.DiagnosticCategory, Diagnostic['severity']> = {
+  [ts.DiagnosticCategory.Warning]: 'warning',
+  [ts.DiagnosticCategory.Error]: 'error',
+  [ts.DiagnosticCategory.Suggestion]: 'hint',
+  [ts.DiagnosticCategory.Message]: 'info',
 };
 
 type Position = { line: number; character: number };
@@ -312,11 +322,12 @@ const handleRequest = (method: string, params: any) => {
       return [
         ...env.languageService.getSyntacticDiagnostics(params.uri),
         ...env.languageService.getSemanticDiagnostics(params.uri),
-      ].map((d) => ({
-        start: d.start ?? 0,
-        length: d.length ?? 0,
-        severity: d.category,
+      ].map((d): Diagnostic => ({
+        from: d.start ?? 0,
+        to: (d.start ?? 0) + (d.length ?? 0),
+        severity: diagnosticSeverity[d.category],
         message: flattenDiagnosticMessageText(d.messageText, '\n'),
+        source: 'typescript',
       }));
 
     default:
@@ -358,3 +369,5 @@ self.addEventListener('message', async (e: MessageEvent) => {
     handleNotification(msg.method, msg.params);
   }
 });
+
+serveWorker({ LINT: lint, FIX: fix });

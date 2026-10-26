@@ -1,12 +1,8 @@
-import { Component, createEffect, createMemo, createUniqueId, Show } from 'solid-js';
-import { Icon } from 'solid-heroicons';
-import { magnifyingGlassPlus, minus, plus } from 'solid-heroicons/outline';
+import { createEffect, createUniqueId, Show, untrack, type Component } from 'solid-js';
 import * as popover from '@zag-js/popover';
-import { useMachine, normalizeProps } from '@zag-js/solid';
-import { useZoom } from 'solid-repl/src/hooks/useZoom';
-import { Button } from 'solid-repl/src/components/ui/Button';
-import { Checkbox } from 'solid-repl/src/components/ui/Checkbox';
-import { css, cx } from 'styled-system/css';
+import { Icon, useMachine, useZoom, Button, Checkbox } from 'solid-repl/src/internal';
+import { magnifyingGlassPlus, minus, plus } from '../icons';
+import { css } from 'styled-system/css';
 
 const popupDuration = 1250;
 
@@ -49,24 +45,22 @@ const valueBox = css({
 export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
   const { zoomState, updateZoom, setOverrideNative, setScaleIframe } = useZoom();
 
-  const service = useMachine(popover.machine, {
-    id: createUniqueId(),
-    portalled: false,
-    positioning: { placement: 'bottom-end' },
-  });
-  const api = createMemo(() => popover.connect(service, normalizeProps));
+  const id = createUniqueId();
+  const { api } = useMachine(
+    popover.machine,
+    () => ({ id, portalled: false, positioning: { placement: 'bottom-end' as const } }),
+    popover.connect,
+  );
 
-  let prevZoom = zoomState.zoom;
-  let timeoutId: number | null = null;
-
-  createEffect(() => {
-    if (prevZoom === zoomState.zoom) return;
-    prevZoom = zoomState.zoom;
-
-    api().setOpen(true);
-    window.clearTimeout(timeoutId!);
-    timeoutId = window.setTimeout(() => api().setOpen(false), popupDuration);
-  });
+  createEffect(
+    () => zoomState.zoom,
+    () => {
+      untrack(api).setOpen(true);
+      const timeoutId = window.setTimeout(() => api().setOpen(false), popupDuration);
+      return () => window.clearTimeout(timeoutId);
+    },
+    { defer: true },
+  );
 
   return (
     <>
@@ -74,7 +68,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
         {...api().getTriggerProps()}
         type="button"
         mobile={props.showMenu}
-        class={cx(api().open && props.showMenu && css({ bg: 'gray.300', _dark: { color: 'black' } }))}
+        class={{ [css({ bg: 'gray.300', _dark: { color: 'black' } })]: api().open && props.showMenu }}
         title="Scale editor to make text larger or smaller"
       >
         <Icon class={css({ h: 6 })} path={magnifyingGlassPlus} />
@@ -85,7 +79,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
           <div {...api().getContentProps()} class={popoverPanel}>
             <div class={css({ display: 'flex', alignItems: 'center' })}>
               <button
-                class={cx(stepperBtn, css({ roundedLeft: 'md' }))}
+                class={[stepperBtn, css({ roundedLeft: 'md' })]}
                 aria-label="decrease font size"
                 onClick={() => updateZoom('decrease')}
               >
@@ -93,7 +87,7 @@ export const ZoomDropdown: Component<{ showMenu: boolean }> = (props) => {
               </button>
               <div class={valueBox}>{zoomState.zoom}%</div>
               <button
-                class={cx(stepperBtn, css({ roundedRight: 'md', mr: 4 }))}
+                class={[stepperBtn, css({ roundedRight: 'md', mr: 4 })]}
                 aria-label="increase font size"
                 onClick={() => updateZoom('increase')}
               >

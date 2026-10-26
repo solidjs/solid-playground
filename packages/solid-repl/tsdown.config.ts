@@ -1,45 +1,47 @@
 import { defineConfig } from 'tsdown';
 import { cpSync, readFileSync, renameSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { linterAliases, linterDefine } from './linterBuild.ts';
 
 export default defineConfig([
   {
-    entry: ['./repl/compiler.ts', './repl/formatter.ts', './repl/linter.ts', './repl/main.css'],
+    entry: ['./repl/compiler.ts', './repl/formatter.ts', './repl/main.css'],
     outDir: './dist',
     format: 'esm',
     platform: 'browser',
     minify: true,
     dts: false,
-    alias: linterAliases,
+    deps: { onlyBundle: false },
+    alias: {
+      ...linterAliases,
+      // Optional peer of @solidjs/babel-plugin, only needed for .tsrx sources.
+      '@tsrx/core': resolve(import.meta.dirname, 'linter/nodeStub.cjs'),
+    },
     css: {
       transformer: 'postcss',
     },
-    define: {
-      'process.env.NODE_DEBUG': 'false',
-      ...linterDefine,
-      'preventAssignment': 'true',
-    },
+    define: linterDefine,
     hooks: {
       'build:done': () => {
         renameSync('./dist/style.css', './dist/bundle.css');
         cpSync('../../styled-system', './dist/styled-system', {
           recursive: true,
-          filter: (src) => !src.includes('/types'),
+          // Panda's generated JSX factory targets Solid 1.
+          filter: (src) => !src.includes('/types') && !src.includes('/styled-system/jsx'),
         });
       },
     },
   },
   {
-    entry: { tsWorker: './src/components/editor/tsWorker.ts' },
-    outDir: './dist/components/editor',
+    entry: { worker: './src/languageWorker/worker.ts' },
+    outDir: './dist/languageWorker',
     format: 'esm',
     platform: 'browser',
     minify: true,
     dts: false,
     deps: { alwaysBundle: [/.*/], onlyBundle: false },
-    define: {
-      'process.env.NODE_DEBUG': 'false',
-    },
+    alias: linterAliases,
+    define: linterDefine,
     plugins: [
       {
         name: 'raw',

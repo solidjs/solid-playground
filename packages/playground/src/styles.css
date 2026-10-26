@@ -1,5 +1,3 @@
-@layer panda-reset, panda-base, panda-tokens, panda-recipes, panda-utilities;
-
 @import 'solid-repl/repl/main.css';
 
 #app .dockview-theme-abyss-spaced {
@@ -23,10 +21,6 @@
   src: url('/Gordita-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
-}
-
-div[contenteditable='true']:focus {
-  outline: none !important;
 }
 
 .dark {
