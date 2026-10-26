@@ -92,6 +92,8 @@ export const Edit = () => {
     },
   };
 
+  // The scratchpad resource reads localStorage before this effect runs, so a hash import must refetch it.
+  const [scratchpadVersion, setScratchpadVersion] = createSignal(0);
   createEffect(() => {
     if (!scratchpad()) return;
     if (location.query.hash) {
@@ -104,6 +106,7 @@ export const Edit = () => {
           files: initialTabs.map((x) => ({ name: x.name, content: x.source })),
         }),
       );
+      setScratchpadVersion((v) => v + 1);
       navigate('/', { replace: true });
     }
   });
@@ -189,8 +192,11 @@ export const Edit = () => {
     context.setSolidVersion(undefined);
   });
 
-  const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
-    () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
+  const [resource, { mutate }] = createResource<
+    APIRepl,
+    { repl: string | undefined; scratchpad: boolean; scratchpadVersion: number }
+  >(
+    () => ({ repl: params.repl, scratchpad: !!scratchpad(), scratchpadVersion: scratchpadVersion() }),
     async ({ repl, scratchpad }): Promise<APIRepl> => {
       if (disableFetch) {
         disableFetch = undefined;
