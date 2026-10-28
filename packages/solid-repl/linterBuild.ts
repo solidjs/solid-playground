@@ -16,6 +16,7 @@ export const linterAliases: Record<string, string> = {
   'node:url': nodeStub,
   'node:util': nodeStub,
   'node:path': pathe,
+  'assert': resolve(import.meta.dirname, 'linter/assertShim.cjs'),
   'esquery': createRequire(eslintUniversal).resolve('esquery/dist/esquery.min.js'),
 };
 
