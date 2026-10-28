@@ -36,10 +36,15 @@ function moduleUrl(importee: string, solidVersion?: string) {
     url += importee;
   }
 
-  const external = (isV2 ? EXTERNALIZED : ['solid-js']).filter(
-    (pkg) => pkg !== target && pkg !== match && !target.startsWith(`${pkg}/`),
-  );
-  if (external.length) url += `?external=${external.join(',')}`;
+  // Solid 2 subpaths import their own package (`solid-js/internal` imports `solid-js`), so only the
+  // module itself stays bundled; anything else would give the preview a second Solid runtime.
+  const external = isV2
+    ? EXTERNALIZED.filter((pkg) => pkg !== target)
+    : ['solid-js'].filter((pkg) => pkg !== target && pkg !== match && !target.startsWith(`${pkg}/`));
+  const params = external.length ? [`external=${external.join(',')}`] : [];
+  // esm.sh serves production builds by default; Solid's dev build carries its diagnostics.
+  if (isV2 && match) params.push('dev');
+  if (params.length) url += `?${params.join('&')}`;
   return url;
 }
 
