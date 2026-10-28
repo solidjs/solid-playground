@@ -1,6 +1,6 @@
 {
   "name": "solid-repl",
-  "version": "0.26.0",
+  "version": "1.0.0",
   "description": "Quickly discover what the solid compiler will generate from your JSX template",
   "homepage": "https://playground.solidjs.com",
   "author": "Alexandre Mouton-Brady",
