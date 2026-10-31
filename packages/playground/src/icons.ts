@@ -1,4 +1,5 @@
 // Vendored from heroicons v2 (MIT, https://heroicons.com) via solid-heroicons 3.2.4.
+// License text: public/THIRD_PARTY_NOTICES.txt (served with the app).
 
 import type { IconPath } from 'solid-repl/src/internal';
 

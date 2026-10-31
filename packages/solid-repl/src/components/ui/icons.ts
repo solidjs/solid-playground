@@ -1,4 +1,5 @@
 // Vendored from heroicons v2 (MIT, https://heroicons.com) via solid-heroicons 3.2.4.
+// License text: THIRD_PARTY_NOTICES.md (shipped with the package).
 
 export interface IconPath {
   outline: boolean;
