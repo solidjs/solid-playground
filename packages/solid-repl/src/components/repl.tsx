@@ -266,13 +266,13 @@ export const Repl: ReplComponent = (props) => {
 
   const outputSection = () => (
     <section class={outputPane}>
-      <OutputEditor />
       <CompileMode
         mode={mode()}
         setMode={setMode}
         universalModuleName={universalModuleName()}
         setUniversalModuleName={setUniversalModuleName}
       />
+      <OutputEditor />
     </section>
   );
 

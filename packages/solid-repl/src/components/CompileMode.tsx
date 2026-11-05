@@ -1,4 +1,4 @@
-import { Component, For, Setter } from 'solid-js';
+import { createUniqueId, For, Show, type Component, type Setter } from 'solid-js';
 import { Label } from './ui/Label';
 import { Input } from './ui/Input';
 import { css } from 'styled-system/css';
@@ -26,13 +26,37 @@ const labels = {
   DOM: 'Client side rendering',
   SSR: 'Server side rendering',
   HYDRATABLE: 'Client side rendering with hydration',
+  UNIVERSAL: 'Universal rendering',
 } as const;
 
-const radioRow = css({
-  'display': 'block',
-  'cursor': 'pointer',
-  'mr': 'auto',
-  '& > * + *': { ml: 2 },
+const modes = ['DOM', 'SSR', 'HYDRATABLE', 'UNIVERSAL'] as const;
+
+const toolbar = css({
+  display: 'flex',
+  flex: 'none',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: 2,
+  px: 2,
+  py: 1,
+  bg: 'white',
+  _dark: { bg: 'neutral.900' },
+});
+
+const modeSelect = css({
+  flex: '1 1 12rem',
+  minW: 0,
+  maxW: 'full',
+  fontSize: 'sm',
+  color: 'inherit',
+  bg: 'transparent',
+  border: '1px solid',
+  borderColor: 'neutral.200',
+  rounded: 'md',
+  px: 2,
+  py: 1,
+  _dark: { borderColor: 'neutral.700' },
+  _focusVisible: { outline: '2px solid', outlineColor: 'solidc', outlineOffset: '2px' },
 });
 
 interface CompileModeProps {
@@ -43,47 +67,37 @@ interface CompileModeProps {
 }
 
 export const CompileMode: Component<CompileModeProps> = (props) => {
+  const modeId = createUniqueId();
+  const moduleId = createUniqueId();
+
   return (
-    <div class={css({ p: 2 })}>
-      <Label class={css({ mb: 1, display: 'block' })}>Compile mode</Label>
-
-      <div class={css({ 'mt': 1, 'fontSize': 'sm', '& > * + *': { mt: 1 } })}>
-        <For each={['DOM', 'SSR', 'HYDRATABLE'] as const}>
-          {(m) => (
-            <label class={radioRow}>
-              <input
-                checked={props.mode === compileOptions[m]}
-                class={css({ accentColor: 'solidc' })}
-                onChange={() => props.setMode(compileOptions[m])}
-                type="radio"
-                name="dom"
-              />
-              <span>{labels[m]}</span>
-            </label>
-          )}
-        </For>
-
-        <label class={radioRow}>
-          <input
-            checked={props.mode.generate === 'universal'}
-            class={css({ accentColor: 'solidc' })}
-            onChange={() => props.setMode(compileOptions.UNIVERSAL)}
-            type="radio"
-            name="dom"
-          />
-          <span>Universal Rendering & moduleName:</span>
-          <Input
-            onFocus={() => props.setMode(compileOptions.UNIVERSAL)}
-            onInput={(e) => props.setUniversalModuleName(e.currentTarget.value)}
-            size="sm"
-            inline
-            class={css({ ml: 2 })}
-            type="text"
-            value={props.universalModuleName}
-            name="moduleName"
-          />
-        </label>
-      </div>
+    <div class={toolbar}>
+      <Label for={modeId} class={css({ srOnly: true })}>
+        Compile mode
+      </Label>
+      <select
+        id={modeId}
+        class={modeSelect}
+        value={modes.find((mode) => props.mode === compileOptions[mode]) ?? 'UNIVERSAL'}
+        onChange={(event) => props.setMode(compileOptions[event.currentTarget.value as (typeof modes)[number]])}
+      >
+        <For each={modes}>{(mode) => <option value={mode}>{labels[mode]}</option>}</For>
+      </select>
+      <Show when={props.mode.generate === 'universal'}>
+        <Label for={moduleId} class={css({ srOnly: true })}>
+          Module name
+        </Label>
+        <Input
+          id={moduleId}
+          onInput={(event) => props.setUniversalModuleName(event.currentTarget.value)}
+          size="sm"
+          class={css({ flex: '1 1 12rem', minW: 0, maxW: 'full' })}
+          type="text"
+          placeholder="Module name"
+          value={props.universalModuleName}
+          name="moduleName"
+        />
+      </Show>
     </div>
   );
 };
