@@ -1,6 +1,6 @@
 import { createUniqueId, For, Show, type Component, type Setter } from 'solid-js';
 import { Label } from './ui/Label';
-import { Input } from './ui/Input';
+import { Input, inputStyles } from './ui/Input';
 import { css } from 'styled-system/css';
 
 export interface SolidCompileOptions {
@@ -47,15 +47,6 @@ const modeSelect = css({
   flex: '1 1 12rem',
   minW: 0,
   maxW: 'full',
-  fontSize: 'sm',
-  color: 'inherit',
-  bg: 'transparent',
-  border: '1px solid',
-  borderColor: 'neutral.200',
-  rounded: 'md',
-  px: 2,
-  py: 1,
-  _dark: { borderColor: 'neutral.700' },
   _focusVisible: { outline: '2px solid', outlineColor: 'solidc', outlineOffset: '2px' },
 });
 
@@ -77,7 +68,7 @@ export const CompileMode: Component<CompileModeProps> = (props) => {
       </Label>
       <select
         id={modeId}
-        class={modeSelect}
+        class={[inputStyles({ size: 'sm' }), modeSelect]}
         value={modes.find((mode) => props.mode === compileOptions[mode]) ?? 'UNIVERSAL'}
         onChange={(event) => props.setMode(compileOptions[event.currentTarget.value as (typeof modes)[number]])}
       >

@@ -4,23 +4,33 @@
   padding: 0 10px 10px;
 }
 
+/* Gordita's capitals exceed its declared ascent. Normalize the shared UI metrics. */
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
+  ascent-override: 100%;
+  descent-override: 20%;
+  line-gap-override: 0%;
 }
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
+  ascent-override: 100%;
+  descent-override: 20%;
+  line-gap-override: 0%;
 }
 @font-face {
   font-family: 'Gordita';
   src: url('/Gordita-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
+  ascent-override: 100%;
+  descent-override: 20%;
+  line-gap-override: 0%;
 }
 
 .dark {
