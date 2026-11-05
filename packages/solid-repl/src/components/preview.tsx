@@ -261,7 +261,7 @@ export const Preview: Component<PreviewProps> = (props) => {
 
   const devtoolsUrl = URL.createObjectURL(new Blob([devtoolsHtml], { type: 'text/html' }));
   onCleanup(() => URL.revokeObjectURL(devtoolsUrl));
-  const devtoolsSrc = `${devtoolsUrl}#?embedded=${encodeURIComponent(location.origin)}`;
+  const devtoolsSrc = `${devtoolsUrl}#?embedded=${encodeURIComponent(location.origin)}&panel=console`;
 
   const pointerEvents = () => (props.pointerEvents ? 'inherit' : 'none');
 
@@ -354,7 +354,18 @@ export const Preview: Component<PreviewProps> = (props) => {
       createComponent: ({ id, name }) => new SolidSplitviewPanel(id, name, owner, views[name]),
     });
     splitview.addPanel({ id: 'preview', component: 'preview', minimumSize: 100 });
-    if (props.devtools) splitview.addPanel({ id: 'devtools', component: 'devtools', minimumSize: 100, snap: true });
+    if (props.devtools) {
+      // Seed the layout before adding DevTools so its size is not distributed equally.
+      const height = outerContainer.clientHeight || 480;
+      splitview.layout(outerContainer.clientWidth, height);
+      splitview.addPanel({
+        id: 'devtools',
+        component: 'devtools',
+        size: height / 3,
+        minimumSize: 100,
+        snap: true,
+      });
+    }
     return () => splitview.dispose();
   });
 
