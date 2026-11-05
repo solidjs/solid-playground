@@ -27,6 +27,8 @@ import {
   DockviewComponent,
   DockviewCompositeDisposable,
   Orientation,
+  type BaseGrid,
+  type DockviewGroupPanel,
   type AddPanelOptions,
   type GroupPanelPartInitParameters,
   type IGroupHeaderProps,
@@ -280,6 +282,23 @@ export const Repl: ReplComponent = (props) => {
     let ref!: HTMLDivElement;
     const owner = getOwner();
     let dockview: DockviewComponent | undefined;
+    let scheduleLayoutSave: (() => void) | undefined;
+    let vertical = untrack(() => !!props.vertical);
+
+    createEffect(
+      () => !!props.vertical,
+      (next) => {
+        if (next === vertical) return;
+        vertical = next;
+        if (!dockview) return;
+        // BaseGrid exposes the orientation option; Dockview's narrower options omit it.
+        // Flip the existing grid, keeping panel instances and the Preview's always-rendered overlay.
+        const grid: BaseGrid<DockviewGroupPanel> = dockview;
+        grid.updateOptions({ orientation: vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL });
+        // Dockview does not emit onDidLayoutChange for an orientation update.
+        scheduleLayoutSave?.();
+      },
+    );
 
     createEffect(
       () => new Set(workspace.files().map((f) => f.id)),
@@ -477,7 +496,7 @@ export const Repl: ReplComponent = (props) => {
             },
             width: 1600,
             height: 480,
-            orientation: props.vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL,
+            orientation: vertical ? Orientation.VERTICAL : Orientation.HORIZONTAL,
           },
           activeGroup: '1',
           panels: {
@@ -531,12 +550,14 @@ export const Repl: ReplComponent = (props) => {
         const storage = props.storage;
         if (storage?.setLayout) {
           const saveLayout = throttle(() => storage.setLayout!(view.toJSON()), 300);
+          scheduleLayoutSave = saveLayout;
           disposables.addDisposables(view.onDidLayoutChange(saveLayout), { dispose: saveLayout.clear });
         }
         disposables.addDisposables(view);
 
         return () => {
           dockview = undefined;
+          scheduleLayoutSave = undefined;
           disposables.dispose();
         };
       }),
