@@ -49,6 +49,9 @@ const memo = <T>(cache: Map<string, Promise<T>>, key: string, make: () => Promis
   return entry;
 };
 
+const versionCache = new Map<string, Promise<string | undefined>>();
+const packageCache = new Map<string, Promise<PackageFiles>>();
+
 export interface TypeAcquisition {
   sync(importMap: Record<string, string>): Promise<boolean>;
   jsxImportSource(): string | undefined;
@@ -62,9 +65,6 @@ export function createTypeAcquisition(fsMap: Map<string, string>): TypeAcquisiti
     const pkg = parsePackagePath(key.slice(MOUNT_PREFIX.length));
     return pkg?.subpath === '/package.json' ? [pkg.name] : [];
   });
-
-  const versionCache = new Map<string, Promise<string | undefined>>();
-  const packageCache = new Map<string, Promise<PackageFiles>>();
 
   const resolveVersion = (name: string, range: string) =>
     EXACT_VERSION.test(range)

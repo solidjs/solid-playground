@@ -9,6 +9,7 @@ export interface FileEntry {
 }
 
 export interface Workspace {
+  folder: string;
   files: Accessor<FileEntry[]>;
   byId(id: string): FileEntry | undefined;
   byName(name: string): FileEntry | undefined;
@@ -24,7 +25,7 @@ export interface Workspace {
 export interface WorkspaceOptions {
   tabs: Accessor<Tab[]>;
   setTabs(tabs: Tab[]): void;
-  folder: Accessor<string>;
+  folder: string;
   entry: string;
   onNameTaken?(name: string): void;
 }
@@ -36,7 +37,7 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
       let id = tab.id ?? `name:${tab.name}`;
       if (seen.has(id)) id = `${id}#${index}`;
       seen.add(id);
-      return { id, name: tab.name, source: tab.source, uri: `file:///${opts.folder()}/${tab.name}` };
+      return { id, name: tab.name, source: tab.source, uri: `file:///${opts.folder}/${tab.name}` };
     });
   });
 
@@ -47,6 +48,7 @@ export function createWorkspace(opts: WorkspaceOptions): Workspace {
     opts.setTabs(opts.tabs().map((tab) => (tab.name === file.name ? { ...tab, ...patch } : tab)));
 
   return {
+    folder: opts.folder,
     files,
     byId,
     byName,

@@ -1,4 +1,4 @@
-import { createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vfs';
+import { createSystem, createVirtualLanguageServiceHost } from '@typescript/vfs';
 import ts, {
   type CompilerOptions,
   JsxEmit,
@@ -11,7 +11,7 @@ import ts, {
 import type { Diagnostic } from '@codemirror/lint';
 import { serveWorker } from '../kernel/workerServer';
 import { fix, lint } from './eslint';
-import { createTypeAcquisition } from './typeAcquisition';
+import { type TypeAcquisition, createTypeAcquisition } from './typeAcquisition';
 
 const userPreferences: ts.UserPreferences = {
   includeCompletionsForImportStatements: true,
@@ -28,6 +28,8 @@ const compilerOptions: CompilerOptions = {
   jsxImportSource: 'solid-js',
   moduleResolution: ModuleResolutionKind.Bundler,
   allowNonTsExtensions: true,
+  esModuleInterop: true,
+  skipLibCheck: true,
 };
 
 const tsLibs = import.meta.glob<string>(
@@ -45,23 +47,45 @@ const solidTypes = import.meta.glob<string>('/node_modules/{solid-js,csstype}/**
   import: 'default',
 });
 
-const fsMap = new Map<string, string>();
+const baseFiles = new Map<string, string>();
 for (const path in tsLibs) {
-  fsMap.set(path.slice(path.lastIndexOf('/')), tsLibs[path]);
+  baseFiles.set(path.slice(path.lastIndexOf('/')), tsLibs[path]);
 }
 for (const path in solidTypes) {
-  fsMap.set(`file://${path}`, solidTypes[path]);
+  baseFiles.set(`file://${path}`, solidTypes[path]);
 }
 
-const system = createSystem(fsMap);
-const typeAcquisition = createTypeAcquisition(fsMap);
+// Projects can hold different files at the same path (two solid-js versions), which one registry
+// would conflate, so only TypeScript's own lib files are shared between them.
+const libRegistry = ts.createDocumentRegistry();
+const createRegistry = (): ts.DocumentRegistry =>
+  new Proxy(ts.createDocumentRegistry(), {
+    get:
+      (own, key) =>
+      (first: unknown, ...rest: unknown[]) => {
+        const registry = typeof first === 'string' && first.startsWith('/lib.') ? libRegistry : own;
+        return Reflect.apply(registry[key as keyof ts.DocumentRegistry], registry, [first, ...rest]);
+      },
+  });
 
-const openDocs = new Map<string, string>();
+interface Env {
+  languageService: ts.LanguageService;
+  getSourceFile(uri: string): ts.SourceFile | undefined;
+  setFile(uri: string, text: string): void;
+  deleteFile(uri: string): void;
+}
+
+interface Project {
+  fsMap: Map<string, string>;
+  typeAcquisition: TypeAcquisition;
+  docs: Map<string, string>;
+  env: Env;
+}
 
 // Auto-import only suggests exports of modules already in the program, so a synthetic root
 // pulls in every package entry point known to the vfs.
 const AUTO_IMPORT_ROOT = 'file:///__auto_imports__.d.ts';
-const autoImportSpecifiers = () => {
+const autoImportSpecifiers = ({ fsMap, typeAcquisition }: Omit<Project, 'env'>) => {
   const specs = new Set<string>();
   for (const pkg of typeAcquisition.packageNames()) {
     const name = pkg.startsWith('@types/') ? pkg.slice('@types/'.length).replace(/^([^_]+)__/, '@$1/') : pkg;
@@ -76,25 +100,54 @@ const autoImportSpecifiers = () => {
   return [...specs];
 };
 
-const buildEnv = () => {
-  fsMap.set(
+const buildEnv = (project: Omit<Project, 'env'>): Env => {
+  project.fsMap.set(
     AUTO_IMPORT_ROOT,
-    autoImportSpecifiers()
+    autoImportSpecifiers(project)
       .map((s) => `import '${s}';\n`)
       .join(''),
   );
-  return createVirtualTypeScriptEnvironment(system, [AUTO_IMPORT_ROOT], ts, {
+  const options = {
     ...compilerOptions,
-    jsxImportSource: typeAcquisition.jsxImportSource() ?? compilerOptions.jsxImportSource,
-  });
+    jsxImportSource: project.typeAcquisition.jsxImportSource() ?? compilerOptions.jsxImportSource,
+  };
+  const host = createVirtualLanguageServiceHost(createSystem(project.fsMap), [AUTO_IMPORT_ROOT], options, ts);
+  const languageService = ts.createLanguageService(host.languageServiceHost, createRegistry());
+  const env: Env = {
+    languageService,
+    getSourceFile: (uri) => languageService.getProgram()?.getSourceFile(uri),
+    setFile: (uri, text) => host.updateFile(ts.createSourceFile(uri, text, ScriptTarget.ESNext, false)),
+    deleteFile(uri) {
+      const file = env.getSourceFile(uri);
+      if (file) host.deleteFile(file);
+    },
+  };
+  for (const [uri, text] of project.docs) env.setFile(uri, text);
+  return env;
 };
 
-let env = buildEnv();
-
-const rebuildEnv = () => {
-  env = buildEnv();
-  for (const [uri, text] of openDocs) env.createFile(uri, text);
+const rebuildEnv = (project: Project) => {
+  const previous = project.env;
+  project.env = buildEnv(project);
+  previous.languageService.dispose();
 };
+
+const projects = new Map<string, Project>();
+
+const folderOf = (uri: string) => uri.slice('file:///'.length).split('/')[0];
+
+const projectFor = (folder: string) => {
+  let project = projects.get(folder);
+  if (!project) {
+    const fsMap = new Map(baseFiles);
+    const parts = { fsMap, typeAcquisition: createTypeAcquisition(fsMap), docs: new Map<string, string>() };
+    project = { ...parts, env: buildEnv(parts) };
+    projects.set(folder, project);
+  }
+  return project;
+};
+
+const envFor = (uri: string) => projectFor(folderOf(uri)).env;
 
 const completionItemKind: Record<string, number> = {
   'class': 7,
@@ -127,27 +180,28 @@ const diagnosticSeverity: Record<ts.DiagnosticCategory, Diagnostic['severity']> 
 
 type Position = { line: number; character: number };
 
-const offsetToPos = (uri: string, offset: number): Position =>
+const offsetToPos = (env: Env, uri: string, offset: number): Position =>
   env.getSourceFile(uri)?.getLineAndCharacterOfPosition(offset) ?? { line: 0, character: 0 };
 
-const posToOffset = (uri: string, pos: Position) => {
+const posToOffset = (env: Env, uri: string, pos: Position) => {
   const file = env.getSourceFile(uri);
   return file ? ts.getPositionOfLineAndCharacter(file, pos.line, pos.character) : 0;
 };
 
-const spanToRange = (uri: string, span: ts.TextSpan) => ({
-  start: offsetToPos(uri, span.start),
-  end: offsetToPos(uri, span.start + span.length),
+const spanToRange = (env: Env, uri: string, span: ts.TextSpan) => ({
+  start: offsetToPos(env, uri, span.start),
+  end: offsetToPos(env, uri, span.start + span.length),
 });
 
 const documentPosition = (params: any) => {
   const uri: string = params.textDocument.uri;
-  return { uri, offset: posToOffset(uri, params.position) };
+  const env = envFor(uri);
+  return { env, uri, offset: posToOffset(env, uri, params.position) };
 };
 
 const markdown = (text: string) => (text ? { kind: 'markdown', value: text } : undefined);
 
-const autoImportEdits = (uri: string, offset: number, c: ts.CompletionEntry) => {
+const autoImportEdits = (env: Env, uri: string, offset: number, c: ts.CompletionEntry) => {
   const details = env.languageService.getCompletionEntryDetails(
     uri,
     offset,
@@ -160,18 +214,22 @@ const autoImportEdits = (uri: string, offset: number, c: ts.CompletionEntry) => 
   return details?.codeActions
     ?.flatMap((action) => action.changes)
     .filter((change) => change.fileName === uri)
-    .flatMap((change) => change.textChanges.map((tc) => ({ range: spanToRange(uri, tc.span), newText: tc.newText })));
+    .flatMap((change) =>
+      change.textChanges.map((tc) => ({ range: spanToRange(env, uri, tc.span), newText: tc.newText })),
+    );
 };
 
 const ensureFile = (uri: string, text: string) => {
-  openDocs.set(uri, text);
-  if (env.getSourceFile(uri)) env.updateFile(uri, text);
-  else env.createFile(uri, text);
+  const project = projectFor(folderOf(uri));
+  project.docs.set(uri, text);
+  project.env.setFile(uri, text);
 };
 
 const removeFile = (uri: string) => {
-  openDocs.delete(uri);
-  if (env.getSourceFile(uri)) env.deleteFile(uri);
+  const project = projects.get(folderOf(uri));
+  if (!project) return;
+  project.docs.delete(uri);
+  project.env.deleteFile(uri);
 };
 
 class MethodNotFound extends Error {
@@ -199,7 +257,7 @@ const handleRequest = (method: string, params: any) => {
       return null;
 
     case 'textDocument/completion': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const completions = env.languageService.getCompletionsAtPosition(uri, offset, userPreferences);
       if (!completions) return null;
       return {
@@ -211,11 +269,11 @@ const handleRequest = (method: string, params: any) => {
           insertText: c.insertText,
           data: { uri, offset, name: c.name, source: c.source, data: c.data },
           ...(c.replacementSpan && {
-            textEdit: { range: spanToRange(uri, c.replacementSpan), newText: c.insertText ?? c.name },
+            textEdit: { range: spanToRange(env, uri, c.replacementSpan), newText: c.insertText ?? c.name },
             filterText: c.isImportStatementCompletion ? c.insertText : undefined,
           }),
           ...(c.sourceDisplay && { detail: displayPartsToString(c.sourceDisplay) }),
-          ...(c.hasAction && c.source && { additionalTextEdits: autoImportEdits(uri, offset, c) }),
+          ...(c.hasAction && c.source && { additionalTextEdits: autoImportEdits(env, uri, offset, c) }),
         })),
       };
     }
@@ -223,7 +281,7 @@ const handleRequest = (method: string, params: any) => {
     case 'completionItem/resolve': {
       const data = params.data;
       if (!data) return params;
-      const details = env.languageService.getCompletionEntryDetails(
+      const details = envFor(data.uri).languageService.getCompletionEntryDetails(
         data.uri,
         data.offset,
         data.name,
@@ -241,19 +299,19 @@ const handleRequest = (method: string, params: any) => {
     }
 
     case 'textDocument/hover': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const info = env.languageService.getQuickInfoAtPosition(uri, offset);
       if (!info) return null;
       const signature = displayPartsToString(info.displayParts);
       const docs = displayPartsToString(info.documentation ?? []);
       return {
         contents: markdown('```typescript\n' + signature + '\n```' + (docs ? '\n\n' + docs : '')),
-        range: spanToRange(uri, info.textSpan),
+        range: spanToRange(env, uri, info.textSpan),
       };
     }
 
     case 'textDocument/signatureHelp': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const help = env.languageService.getSignatureHelpItems(uri, offset, {});
       if (!help) return null;
       return {
@@ -278,47 +336,56 @@ const handleRequest = (method: string, params: any) => {
     }
 
     case 'textDocument/definition': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const defs = env.languageService.getDefinitionAtPosition(uri, offset);
       if (!defs?.length) return null;
-      return defs.map((d) => ({ uri: d.fileName, range: spanToRange(d.fileName, d.textSpan) }));
+      return defs.map((d) => ({ uri: d.fileName, range: spanToRange(env, d.fileName, d.textSpan) }));
     }
 
     case 'textDocument/references': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const refs = env.languageService.getReferencesAtPosition(uri, offset);
       if (!refs) return null;
-      return refs.map((r) => ({ uri: r.fileName, range: spanToRange(r.fileName, r.textSpan) }));
+      return refs.map((r) => ({ uri: r.fileName, range: spanToRange(env, r.fileName, r.textSpan) }));
     }
 
     case 'textDocument/prepareRename': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const info = env.languageService.getRenameInfo(uri, offset, { allowRenameOfImportPath: false });
       if (!info.canRename) return null;
-      return { range: spanToRange(uri, info.triggerSpan), placeholder: info.displayName };
+      return { range: spanToRange(env, uri, info.triggerSpan), placeholder: info.displayName };
     }
 
     case 'textDocument/rename': {
-      const { uri, offset } = documentPosition(params);
+      const { env, uri, offset } = documentPosition(params);
       const locations = env.languageService.findRenameLocations(uri, offset, false, false, {});
       if (!locations) return null;
       const changes: Record<string, { range: ReturnType<typeof spanToRange>; newText: string }[]> = {};
       for (const loc of locations) {
         (changes[loc.fileName] ??= []).push({
-          range: spanToRange(loc.fileName, loc.textSpan),
+          range: spanToRange(env, loc.fileName, loc.textSpan),
           newText: (loc.prefixText ?? '') + params.newName + (loc.suffixText ?? ''),
         });
       }
       return { changes };
     }
 
-    case 'playground/syncTypes':
-      return typeAcquisition.sync(params.importMap ?? {}).then((changed) => {
-        if (changed) rebuildEnv();
+    case 'playground/syncTypes': {
+      const { folder, importMap } = params;
+      if (!importMap) {
+        projects.get(folder)?.env.languageService.dispose();
+        projects.delete(folder);
+        return { changed: false };
+      }
+      const project = projectFor(folder);
+      return project.typeAcquisition.sync(importMap).then((changed) => {
+        if (changed && projects.get(folder) === project) rebuildEnv(project);
         return { changed };
       });
+    }
 
-    case 'playground/diagnostics':
+    case 'playground/diagnostics': {
+      const env = envFor(params.uri);
       return [
         ...env.languageService.getSyntacticDiagnostics(params.uri),
         ...env.languageService.getSemanticDiagnostics(params.uri),
@@ -329,6 +396,7 @@ const handleRequest = (method: string, params: any) => {
         message: flattenDiagnosticMessageText(d.messageText, '\n'),
         source: 'typescript',
       }));
+    }
 
     default:
       throw new MethodNotFound(method);

@@ -39,6 +39,8 @@ import 'dockview/dist/styles/dockview.css';
 
 const ENTRY_FILE = 'main.tsx';
 
+let instanceCount = 0;
+
 const replHost = css({
   display: 'flex',
   flex: 1,
@@ -136,7 +138,7 @@ export const Repl: ReplComponent = (props) => {
   const workspace = createWorkspace({
     tabs: () => props.tabs,
     setTabs: props.setTabs,
-    folder: () => props.id,
+    folder: `repl-${++instanceCount}`,
     entry: ENTRY_FILE,
     onNameTaken: (name) => alert(`A file named ${name} already exists`),
   });

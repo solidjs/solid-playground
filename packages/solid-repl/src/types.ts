@@ -25,7 +25,6 @@ export interface ReplProps {
   formatter: Worker;
   dark: boolean;
   tabs: Tab[];
-  id: string;
   version?: string;
   hideDevtools?: boolean;
   vertical?: boolean;

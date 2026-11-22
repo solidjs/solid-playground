@@ -8,7 +8,6 @@ export interface ImportMapState {
 
 export const IMPORT_MAP_FILE = 'import_map.json';
 
-// Import-map entries that esm.sh must leave bare so Solid packages share one runtime.
 const EXTERNALIZED = ['solid-js', 'solid-js/internal', '@solidjs/web'];
 const SOLID_FAMILY = ['solid-js', '@solidjs/web', '@solidjs/signals'];
 

@@ -353,7 +353,6 @@ export const Edit = () => {
             reset={reset}
             onUserEdit={onUserEdit}
             storage={replStorage}
-            id="repl"
           />
         </Show>
       </Loading>

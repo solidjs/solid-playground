@@ -3,6 +3,7 @@ import { syntaxTree } from '@codemirror/language';
 import type { Diagnostic } from '@codemirror/lint';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin } from '@codemirror/view';
 import { type Extension, StateEffect, StateField, Text } from '@codemirror/state';
+import { createRoot } from 'solid-js';
 import {
   LSPClient,
   LSPPlugin,
@@ -199,11 +200,10 @@ class PlaygroundFile implements WorkspaceFile {
 class PlaygroundWorkspace extends Workspace {
   files: PlaygroundFile[] = [];
 
-  setDocuments(docs: Map<string, string>) {
-    for (const file of this.files) {
-      if (!docs.has(file.uri)) this.client.didClose(file.uri);
-    }
-    this.files = this.files.filter((file) => docs.has(file.uri));
+  setDocuments(docs: Map<string, string>, owned: Iterable<string>) {
+    const stale = new Set([...owned].filter((uri) => !docs.has(uri)));
+    for (const uri of stale) this.client.didClose(uri);
+    this.files = this.files.filter((file) => !stale.has(file.uri));
     for (const [uri, text] of docs) {
       const file = this.files.find((f) => f.uri === uri);
       if (!file) {
@@ -252,40 +252,90 @@ class PlaygroundWorkspace extends Workspace {
 
 export interface TypescriptSession {
   client: LSPClient;
-  worker: Worker;
   eslint: WorkerClient;
   setDocuments(docs: Map<string, string>): void;
   getDiagnostics(uri: string): Promise<Diagnostic[]>;
-  syncTypes(importMap: Record<string, string>): Promise<boolean>;
+  syncTypes(folder: string, importMap: Record<string, string>): Promise<boolean>;
+  dispose(): void;
 }
 
-export function createTypescriptSession(): TypescriptSession {
-  const worker = new LanguageWorker();
-  let workspace!: PlaygroundWorkspace;
-  const client = new LSPClient({
-    workspace: (client) => (workspace = new PlaygroundWorkspace(client)),
-    extensions: languageServerExtensions(),
-    // Type acquisition legitimately exceeds the 3s default on first sync.
-    timeout: 60_000,
-    highlightLanguage: (name) =>
-      name === 'typescript' || name === 'javascript' || name === 'ts' || name === 'js' ? javascriptLanguage : null,
+interface SharedSession {
+  client: LSPClient;
+  eslint: WorkerClient;
+  workspace: PlaygroundWorkspace;
+  dispose(): void;
+}
+
+let shared: SharedSession | undefined;
+let users = 0;
+
+const openSharedSession = (): SharedSession =>
+  createRoot((dispose) => {
+    const worker = new LanguageWorker();
+    let workspace!: PlaygroundWorkspace;
+    const client = new LSPClient({
+      workspace: (client) => (workspace = new PlaygroundWorkspace(client)),
+      extensions: languageServerExtensions(),
+      timeout: 60_000,
+      highlightLanguage: (name) =>
+        name === 'typescript' || name === 'javascript' || name === 'ts' || name === 'js' ? javascriptLanguage : null,
+    });
+    client.connect(workerTransport(worker));
+    const eslint = createWorkerClient(worker);
+
+    return {
+      client,
+      eslint,
+      workspace,
+      dispose() {
+        client.disconnect();
+        worker.terminate();
+        dispose();
+      },
+    };
   });
-  client.connect(workerTransport(worker));
+
+export function createTypescriptSession(): TypescriptSession {
+  const session = (shared ??= openSharedSession());
+  users++;
+
+  let documents = new Set<string>();
+  let typesFolder: string | undefined;
+
+  const requestTypes = async (folder: string, importMap: Record<string, string> | null) => {
+    const res = await session.client.request<
+      { folder: string; importMap: Record<string, string> | null },
+      { changed: boolean }
+    >('playground/syncTypes', { folder, importMap });
+    return !!res?.changed;
+  };
+  const dropTypes = () => {
+    if (typesFolder !== undefined) void requestTypes(typesFolder, null).catch(() => {});
+  };
 
   return {
-    client,
-    worker,
-    eslint: createWorkerClient(worker),
-    setDocuments: (docs) => workspace.setDocuments(docs),
-    async getDiagnostics(uri) {
-      return (await client.request<{ uri: string }, Diagnostic[]>('playground/diagnostics', { uri })) ?? [];
+    client: session.client,
+    eslint: session.eslint,
+    setDocuments(docs) {
+      session.workspace.setDocuments(docs, documents);
+      documents = new Set(docs.keys());
     },
-    async syncTypes(importMap) {
-      const res = await client.request<{ importMap: Record<string, string> }, { changed: boolean }>(
-        'playground/syncTypes',
-        { importMap },
-      );
-      return !!res?.changed;
+    async getDiagnostics(uri) {
+      return (await session.client.request<{ uri: string }, Diagnostic[]>('playground/diagnostics', { uri })) ?? [];
+    },
+    syncTypes(folder, importMap) {
+      if (folder !== typesFolder) dropTypes();
+      typesFolder = folder;
+      return requestTypes(folder, importMap);
+    },
+    dispose() {
+      if (--users > 0) {
+        session.workspace.setDocuments(new Map(), documents);
+        dropTypes();
+        return;
+      }
+      shared = undefined;
+      session.dispose();
     },
   };
 }

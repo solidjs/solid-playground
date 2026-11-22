@@ -306,8 +306,7 @@ export const createCodemirrorTabs = (opts: CodemirrorTabsOptions): CodemirrorTab
     editors.clear();
     output?.view.destroy();
     output = undefined;
-    session.client.disconnect();
-    session.worker.terminate();
+    session.dispose();
   });
 
   const buildOutput = () => {
@@ -345,7 +344,7 @@ export const createCodemirrorTabs = (opts: CodemirrorTabsOptions): CodemirrorTab
     },
     syncTypes(importMap) {
       session
-        .syncTypes(importMap)
+        .syncTypes(workspace.folder, importMap)
         .then((changed) => changed && relint())
         .catch((e) => console.warn('[solid-repl] type acquisition failed', e));
     },

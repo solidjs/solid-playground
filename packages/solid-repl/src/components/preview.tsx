@@ -250,7 +250,6 @@ export const Preview: Component<PreviewProps> = (props) => {
     iframe.contentWindow?.postMessage(msg, '*');
   };
 
-  // A DevTools session is tied to one preview document: reload it whenever the document is replaced.
   const reloadDevtools = () => {
     pendingDevtools.length = 0;
     devtoolsIframe?.contentWindow?.location.reload();
