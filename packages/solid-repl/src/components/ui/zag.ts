@@ -37,7 +37,7 @@ export function useMachine<S extends MachineSchema, Api>(
   createEffect(props, (next) => {
     if (next === current) return;
     current = next;
-    insideSolidQueue(() => (vm as unknown as { notify(): void }).notify());
+    insideSolidQueue(() => vm.updateProps({} as InputProps<S>));
   });
 
   onSettled(() => {

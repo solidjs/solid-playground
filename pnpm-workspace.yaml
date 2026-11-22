@@ -3,8 +3,3 @@ packages:
 allowBuilds:
   '@parcel/watcher': true
   esbuild: true
-minimumReleaseAgeExclude:
-  - solid-js@2.0.0
-  - '@solidjs/web@2.0.0'
-  - '@solidjs/babel-plugin@2.0.0'
-  - '@solidjs/signals@2.0.0'
