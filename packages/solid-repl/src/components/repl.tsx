@@ -42,15 +42,17 @@ const ENTRY_FILE = 'main.tsx';
 let instanceCount = 0;
 
 const replHost = css({
-  display: 'flex',
-  flex: 1,
-  flexDirection: 'column',
-  minH: 0,
-  h: 'full',
-  overflow: 'clip',
-  fontFamily: 'sans',
-  color: 'black',
-  _dark: { color: 'white' },
+  'display': 'flex',
+  'flex': 1,
+  'flexDirection': 'column',
+  'minH': 0,
+  'h': 'full',
+  'overflow': 'clip',
+  'fontFamily': 'sans',
+  'color': 'black',
+  '_dark': { color: 'white' },
+  // Dockview's unlayered CSS otherwise overrides Panda's native-control theme.
+  '& .dockview-theme-abyss-spaced': { colorScheme: 'inherit !important' },
 });
 
 const replBody = css({
@@ -268,13 +270,13 @@ export const Repl: ReplComponent = (props) => {
 
   const outputSection = () => (
     <section class={outputPane}>
-      <OutputEditor />
       <CompileMode
         mode={mode()}
         setMode={setMode}
         universalModuleName={universalModuleName()}
         setUniversalModuleName={setUniversalModuleName}
       />
+      <OutputEditor />
     </section>
   );
 
@@ -549,7 +551,7 @@ export const Repl: ReplComponent = (props) => {
 
   return (
     <ReplContext value={api}>
-      <div class={replHost}>
+      <div class={replHost} style={{ 'color-scheme': props.dark ? 'dark' : 'light' }}>
         <Show when={isMobile()} fallback={<DesktopRepl />}>
           <MobileRepl views={mobileViews} preview={previewSection} outputPane={outputSection} />
         </Show>

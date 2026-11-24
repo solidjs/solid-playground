@@ -2,9 +2,13 @@ import { omit, type Component } from 'solid-js';
 import type { JSX } from '@solidjs/web';
 import { cva } from 'styled-system/css';
 
-const input = cva({
+export const inputStyles = cva({
   base: {
     fontSize: 'sm',
+    boxSizing: 'border-box',
+    // CSS initial is normal; Panda's normal token is 1.5.
+    lineHeight: 'initial',
+    appearance: 'auto',
     color: 'inherit',
     bg: 'transparent',
     border: '1px solid',
@@ -17,8 +21,8 @@ const input = cva({
   },
   variants: {
     size: {
-      sm: { px: 2, py: 1 },
-      md: { px: 3, py: 2 },
+      sm: { h: 8, px: 2, py: 1 },
+      md: { h: 10, px: 3, py: 2 },
     },
     inline: {
       true: { display: 'inline-block', width: 'auto' },
@@ -39,5 +43,5 @@ export interface InputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
 export const Input: Component<InputProps> = (props) => {
   const others = omit(props, 'class', 'size', 'inline');
 
-  return <input {...others} class={[input({ size: props.size, inline: props.inline }), props.class]} />;
+  return <input {...others} class={[inputStyles({ size: props.size, inline: props.inline }), props.class]} />;
 };
