@@ -20,9 +20,9 @@
     "@pandacss/eslint-plugin": "^2.6.0",
     "@pandacss/preset-base": "^2.6.0",
     "@pandacss/preset-panda": "^2.6.0",
-    "oxfmt": "^0.79.0",
-    "oxlint": "^1.94.0",
-    "oxlint-tsgolint": "7.0.2007"
+    "oxfmt": "^0.80.0",
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "7.0.2008"
   },
   "packageManager": "pnpm@12.15.0"
 }
